@@ -1,8 +1,9 @@
+import type { PickerTaggedExercise } from "@/components/app/exercise-picker-filters";
 import type { StationDraftItem } from "@/lib/block-items";
 
 export type TrainingPhase = "activation" | "main" | "cooldown";
 
-export interface AvailableExercise {
+export interface AvailableExercise extends PickerTaggedExercise {
   id: string;
   name: string;
   category: string;
