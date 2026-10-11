@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { classListItems, classLists, classes } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { classDraftVisibility } from "@/lib/classes/visibility";
 
 type RouteContext = { params: Promise<{ listId: string }> };
 
@@ -67,7 +68,8 @@ export async function POST(request: Request, context: RouteContext) {
             user.id,
             classActiveClubId
           )
-        )!
+        )!,
+        classDraftVisibility(user.id)
       )
     )
     .limit(1);

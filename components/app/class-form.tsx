@@ -105,6 +105,7 @@ export interface ClassInitialData {
   aspectosImportantes: string | null;
   isLibrary: boolean;
   autoria?: string | null;
+  status?: "draft" | "published";
   blocks: {
     orderIndex: number;
     title: string | null;
@@ -165,6 +166,7 @@ export function ClassForm({
   );
   const [isLibrary, setIsLibrary] = useState(initialData?.isLibrary ?? false);
   const [autoria, setAutoria] = useState(initialData?.autoria ?? "libre");
+  const isDraft = initialData?.status === "draft";
 
   const [blocks, setBlocks] = useState<BlockState[]>(() => {
     const base = BLOCK_TITLES.map((b) => ({
@@ -475,6 +477,12 @@ export function ClassForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    // El botón pulsado decide si se guarda como borrador o se publica.
+    const submitter = (e.nativeEvent as SubmitEvent).submitter;
+    const status =
+      submitter instanceof HTMLButtonElement && submitter.value === "draft"
+        ? "draft"
+        : "published";
     if (!name.trim()) {
       setError("El nombre de la clase es obligatorio.");
       return;
@@ -497,6 +505,7 @@ export function ClassForm({
       golpes: golpes.length > 0 ? golpes : null,
       isLibrary: isAdmin ? isLibrary : false,
       autoria: isAdmin ? autoria : undefined,
+      status,
       blocks: blocks
         .filter((b) => b.items.length > 0 || b.notes.trim())
         .map((b) => ({
@@ -1483,14 +1492,31 @@ export function ClassForm({
       )}
 
       <div className="flex items-center gap-3 border-t border-foreground/10 pt-4">
+        {/* El primer botón es el que usa Enter: en clases nuevas o en
+            borrador, guarda como borrador para no publicar por accidente. */}
+        {(mode === "create" || isDraft) && (
+          <button
+            type="submit"
+            value="draft"
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-5 py-2.5 text-sm font-semibold text-foreground/70 transition-all hover:border-foreground/30 hover:text-foreground active:scale-95 disabled:opacity-60"
+          >
+            {isDraft ? "Guardar borrador" : "Guardar como borrador"}
+          </button>
+        )}
         <button
           type="submit"
+          value="published"
           disabled={submitting}
           className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-6 py-2.5 text-sm font-bold text-[#050505] transition-all hover:bg-[#c8f52e] active:scale-95 disabled:opacity-60"
         >
           {submitting && <Loader2 className="size-4 animate-spin" />}
           {mode === "edit" ? null : <Plus className="size-4" />}
-          {mode === "edit" ? "Guardar cambios" : "Crear clase"}
+          {mode === "edit"
+            ? isDraft
+              ? "Publicar clase"
+              : "Guardar cambios"
+            : "Crear clase"}
         </button>
       </div>
     </form>

@@ -11,6 +11,7 @@ import { loadClassPlan } from "@/lib/classes/plan";
 import { ClassPdf, type PdfClass, type PdfExercise } from "@/lib/classes/pdf";
 import { autoriaLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { canSeeClassDraft } from "@/lib/classes/visibility";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -60,6 +61,9 @@ export async function GET(_request: Request, context: RouteContext) {
   }
   if (!cls.isLibrary && !isOwner && !sharedViaClub) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!canSeeClassDraft(cls, user?.id)) {
+    return NextResponse.json({ error: "Class not found" }, { status: 404 });
   }
 
   let coachName = "TenPlanner";

@@ -104,6 +104,9 @@ export default async function EditClassPage({ params }: PageProps) {
     aspectosImportantes: cls.aspectosImportantes,
     isLibrary: cls.isLibrary,
     autoria: cls.autoria,
+    status: (cls.status === "draft" ? "draft" : "published") as
+      | "draft"
+      | "published",
     blocks: blocks.map((b) => ({
       orderIndex: b.orderIndex,
       title: b.title,

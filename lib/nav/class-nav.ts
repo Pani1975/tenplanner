@@ -83,7 +83,7 @@ export async function getFilteredClassIds(
       )
     : null;
 
-  const conds: SQL[] = [];
+  const conds: SQL[] = [eq(classes.status, "published")];
   if (activeTab === "mine" && userId) {
     conds.push(mineOrClub!);
   } else if (activeTab === "library") {

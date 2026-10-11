@@ -22,6 +22,7 @@ import type {
 } from "@/components/app/session-wizard/types";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import {
   createTextItem,
@@ -135,6 +136,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         isLibrary: classes.isLibrary,
         createdBy: classes.createdBy,
         clubId: classes.clubId,
+        status: classes.status,
       })
       .from(classes)
       .where(eq(classes.id, fromClassId))
@@ -146,7 +148,11 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         : null;
     const sharedViaClub = !!cls?.clubId && cls.clubId === classActiveClubId;
 
-    if (cls && (cls.isLibrary || cls.createdBy === user.id || sharedViaClub)) {
+    if (
+      cls &&
+      canSeeClassDraft(cls, user.id) &&
+      (cls.isLibrary || cls.createdBy === user.id || sharedViaClub)
+    ) {
       fromClass = {
         id: cls.id,
         name: cls.name,
