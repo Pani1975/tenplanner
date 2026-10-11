@@ -31,6 +31,7 @@ import Image from "next/image";
 import { ExerciseForm } from "@/components/app/exercise-form";
 import { ExerciseRating } from "@/components/app/exercise-rating";
 import { ExerciseListPicker } from "@/components/app/exercise-list-picker";
+import { AddToClassButton } from "@/components/app/add-to-class-dialog";
 import {
   ASPECTO_JUEGO_LABELS,
   autoriaLabel,
@@ -522,6 +523,10 @@ export function ExerciseDetailClient({
                 </button>
                 <AddToSessionButton
                   exerciseIds={[exercise.id]}
+                  label={exercise.name}
+                />
+                <AddToClassButton
+                  exerciseId={exercise.id}
                   label={exercise.name}
                 />
               </>
