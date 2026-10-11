@@ -801,6 +801,9 @@ export const classes = pgTable(
     }),
     // Deporte de la clase (biblioteca de plantillas por deporte).
     sport: sportEnum("sport").default("tenis").notNull(),
+    // "published" | "draft". Un borrador solo lo ve quien lo creó (aún se
+    // está configurando); ver lib/classes/visibility.ts.
+    status: varchar("status", { length: 16 }).default("published").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -819,6 +822,7 @@ export const classes = pgTable(
     index("classes_autoria_idx").on(t.autoria),
     index("classes_club_id_idx").on(t.clubId),
     index("classes_sport_idx").on(t.sport),
+    index("classes_status_idx").on(t.status),
   ]
 );
 
