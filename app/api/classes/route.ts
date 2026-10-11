@@ -19,6 +19,7 @@ import {
 import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import { CLASS_STATUSES } from "@/lib/classes/visibility";
 
 const stationItemSchema = z
   .object({
@@ -87,6 +88,7 @@ const createSchema = z.object({
   isLibrary: z.boolean().optional().default(false),
   autoria: z.enum(AUTORIA_VALUES).optional().nullable(),
   blocks: z.array(blockSchema).max(3).default([]),
+  status: z.enum(CLASS_STATUSES).optional().default("published"),
 });
 
 function normalizeMultiValue(
@@ -129,7 +131,11 @@ export async function GET(request: Request) {
     : null;
 
   const conds = [];
-  if (tab === "mine" && user) {
+  if (tab === "drafts") {
+    // Borradores: solo las clases propias aún sin publicar.
+    if (!user) return NextResponse.json({ data: [] });
+    conds.push(eq(classes.createdBy, user.id), eq(classes.status, "draft"));
+  } else if (tab === "mine" && user) {
     conds.push(mineOrClub!);
   } else if (tab === "library") {
     conds.push(eq(classes.isLibrary, true));
@@ -141,6 +147,7 @@ export async function GET(request: Request) {
         : eq(classes.isLibrary, true)
     );
   }
+  if (tab !== "drafts") conds.push(eq(classes.status, "published"));
   if (activeSport) conds.push(eq(classes.sport, activeSport));
   if (q) conds.push(ilike(classes.name, `%${q}%`));
   if (nivel) {
@@ -172,6 +179,7 @@ export async function GET(request: Request) {
       aspectoJuego: classes.aspectoJuego,
       aspectosJuego: classes.aspectosJuego,
       isLibrary: classes.isLibrary,
+      status: classes.status,
       autoria: classes.autoria,
       createdBy: classes.createdBy,
       createdAt: classes.createdAt,
@@ -303,6 +311,7 @@ export async function POST(request: Request) {
           autoria: isAdmin && d.autoria ? d.autoria : "libre",
           clubId,
           sport,
+          status: d.status,
         })
         .returning();
 
