@@ -333,26 +333,48 @@ export function AddToClassDialog({
 export function AddToClassButton({
   exerciseId,
   label,
+  variant = "pill",
   className,
 }: {
   exerciseId: string;
   label: string;
+  /** "icon": botón compacto para la cabecera de las tarjetas. */
+  variant?: "pill" | "icon";
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]",
-          className
-        )}
-      >
-        <GraduationCap className="size-4 text-brand" strokeWidth={1.6} />
-        Añadir a clase
-      </button>
+      {variant === "icon" ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          title="Añadir a una clase en borrador"
+          aria-label="Añadir a una clase en borrador"
+          className={cn(
+            "flex size-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-[#D6FF38]",
+            className
+          )}
+        >
+          <GraduationCap className="size-4" strokeWidth={1.7} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]",
+            className
+          )}
+        >
+          <GraduationCap className="size-4 text-brand" strokeWidth={1.6} />
+          Añadir a clase
+        </button>
+      )}
       <AddToClassDialog
         open={open}
         onOpenChange={setOpen}
