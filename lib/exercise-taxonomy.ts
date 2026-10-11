@@ -278,6 +278,7 @@ export const AUTORIAS = [
   { id: "guia_latinoamericana", label: "Guía latinoamericana" },
   { id: "rfet", label: "RFET" },
   { id: "itf", label: "ITF" },
+  { id: "begreatattennis", label: "Be Gr8 at Tennis (Rob Cherry)" },
   { id: "libre", label: "Libre" },
 ] as const;
 
