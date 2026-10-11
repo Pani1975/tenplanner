@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { classes, classFavorites, classDrafts, users } from "@/db/schema";
+import { classes, classFavorites, users } from "@/db/schema";
 import { Plus, Search, FileText, Heart } from "lucide-react";
 import {
   classNavQueryString,
@@ -146,20 +146,27 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   let draftCount = 0;
   let draftRows: Array<{
     id: string;
-    payload: Record<string, unknown>;
+    name: string;
     updatedAt: Date;
   }> = [];
 
   if (user) {
+    // Borradores: clases propias aún sin publicar (status = "draft").
     draftRows = await db
       .select({
-        id: classDrafts.id,
-        payload: classDrafts.payload,
-        updatedAt: classDrafts.updatedAt,
+        id: classes.id,
+        name: classes.name,
+        updatedAt: classes.updatedAt,
       })
-      .from(classDrafts)
-      .where(eq(classDrafts.userId, user.id))
-      .orderBy(desc(classDrafts.updatedAt))
+      .from(classes)
+      .where(
+        and(
+          eq(classes.createdBy, user.id),
+          eq(classes.status, "draft"),
+          eq(classes.sport, sport)
+        )
+      )
+      .orderBy(desc(classes.updatedAt))
       .limit(50);
     draftCount = draftRows.length;
   }
@@ -175,7 +182,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     : null;
 
   if (activeTab !== "drafts") {
-    const conds = [eq(classes.sport, sport)];
+    const conds = [eq(classes.sport, sport), eq(classes.status, "published")];
     if (activeTab === "mine" && user) {
       conds.push(mineOrClub!);
     } else if (activeTab === "library") {
@@ -395,10 +402,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
           ) : (
             <ul className="space-y-2">
               {draftRows.map((draft, i) => {
-                const name =
-                  (typeof draft.payload?.name === "string" &&
-                    (draft.payload.name as string).trim()) ||
-                  "Clase sin título";
+                const name = draft.name.trim() || "Clase sin título";
                 return (
                   <li
                     key={draft.id}
@@ -419,7 +423,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       </p>
                     </div>
                     <Link
-                      href={`/classes/new?draft=${draft.id}`}
+                      href={`/classes/${draft.id}/edit`}
                       className="inline-flex items-center gap-1 rounded-full bg-[#D6FF38] px-3 py-1.5 text-[12px] font-semibold text-[#050505] transition hover:bg-[#050505] hover:text-white dark:hover:bg-white"
                     >
                       Continuar
