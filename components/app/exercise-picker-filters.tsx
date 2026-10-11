@@ -5,6 +5,7 @@ import {
   ASPECTO_JUEGO_LABELS,
   FASES,
   NIVEL_IDS,
+  NIVELES,
   nivelLabel,
 } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,12 @@ const GOLPE_LABELS: Record<string, string> = {
   dejada: "Dejada",
 };
 const GOLPE_ORDER = Object.keys(GOLPE_LABELS);
+
+/** "Descubrimiento (4-6 años)": nombre del nivel con su tramo de edad. */
+function nivelOptionLabel(id: string): string {
+  const edad = NIVELES.find((n) => n.id === id)?.edad;
+  return edad ? `${nivelLabel(id)} (${edad})` : nivelLabel(id);
+}
 
 function nivelesOf(ex: PickerTaggedExercise): string[] {
   if (ex.niveles && ex.niveles.length > 0) return ex.niveles;
@@ -129,7 +136,7 @@ export function ExercisePickerFilters({
           <option value="">Nivel: todos</option>
           {niveles.map((id) => (
             <option key={id} value={id}>
-              {nivelLabel(id)}
+              {nivelOptionLabel(id)}
             </option>
           ))}
         </select>
