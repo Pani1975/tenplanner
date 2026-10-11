@@ -21,6 +21,7 @@ import {
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { embedSession } from "@/lib/ai/semantic-search";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { classDraftVisibility } from "@/lib/classes/visibility";
 import { sumBlocksDuration, type StationItemJson } from "@/lib/block-items";
 
 function internalServerError() {
@@ -526,7 +527,8 @@ export async function PUT(request: Request, context: RouteContext) {
                 user.id,
                 classActiveClubId
               )
-            )
+            ),
+            classDraftVisibility(user.id)
           )
         )
         .limit(1);
