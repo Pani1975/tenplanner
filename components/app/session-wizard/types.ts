@@ -97,6 +97,8 @@ export interface WizardState {
   recurrence: WizardRecurrence;
   /** Nombre del grupo para el código de la sesión (AAMMDD_Grupo). */
   groupName?: string;
+  /** Grupo al que se imparte la sesión (se guarda en sessions.group_id). */
+  groupId?: string | null;
   /** Si está activo, cada sesión se llama AAMMDD_Grupo según su fecha. */
   useCodeTitle?: boolean;
 }

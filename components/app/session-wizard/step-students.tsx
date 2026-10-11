@@ -88,6 +88,12 @@ export function StepStudents({ state, update }: StepStudentsProps) {
     }
     update({
       studentIds: Array.from(set),
+      // La sesión queda vinculada al grupo elegido (se quita si se deselecciona).
+      groupId: allSelected
+        ? state.groupId === group.id
+          ? null
+          : (state.groupId ?? null)
+        : group.id,
       // Propone el nombre del grupo para el código de la sesión.
       ...(!allSelected && !state.groupName?.trim()
         ? {

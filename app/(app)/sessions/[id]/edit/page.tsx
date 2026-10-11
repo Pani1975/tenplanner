@@ -130,6 +130,7 @@ export default async function EditSessionPage({ params }: PageProps) {
                   durationMinutes: sessionRow.durationMinutes,
                   location: sessionRow.location ?? "",
                   placeId: sessionRow.placeId ?? null,
+                  groupId: sessionRow.groupId ?? null,
                   objective: sessionRow.objective ?? "",
                   material: sessionRow.material ?? "",
                   observations: sessionRow.observations ?? "",

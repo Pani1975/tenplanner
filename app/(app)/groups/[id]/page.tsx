@@ -2,9 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { groups, groupStudents, students, users } from "@/db/schema";
-import { and, eq, notInArray } from "drizzle-orm";
-import { ArrowLeft, Users } from "lucide-react";
+import {
+  groups,
+  groupStudents,
+  sessions,
+  students,
+  users,
+} from "@/db/schema";
+import { and, desc, eq, ne, notInArray } from "drizzle-orm";
+import { ArrowLeft, CalendarDays, Clock, Users } from "lucide-react";
 import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
 import { FeatureLocked } from "@/components/app/feature-locked";
@@ -13,6 +19,82 @@ import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+type GroupSessionRow = {
+  id: string;
+  title: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  status: "scheduled" | "completed" | "cancelled";
+};
+
+const sessionDateFormat = new Intl.DateTimeFormat("es-ES", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Madrid",
+});
+
+function GroupSessionsList({
+  title,
+  emptyText,
+  rows,
+  pastList,
+}: {
+  title: string;
+  emptyText: string;
+  rows: GroupSessionRow[];
+  pastList?: boolean;
+}) {
+  return (
+    <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <CalendarDays className="size-4 text-brand" />
+        <h2 className="text-sm font-black uppercase tracking-wide text-foreground">
+          {title}
+        </h2>
+        <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+          {rows.length}
+        </span>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyText}</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {rows.map((row) => (
+            <li key={row.id}>
+              <Link
+                href={`/sessions/${row.id}`}
+                className="flex items-center gap-3 py-2.5 transition-colors hover:text-brand"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-foreground">
+                    {row.title}
+                  </span>
+                  <span className="block text-xs capitalize text-muted-foreground">
+                    {sessionDateFormat.format(row.scheduledAt)}
+                  </span>
+                </span>
+                {pastList && row.status !== "completed" && (
+                  <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    Sin cerrar
+                  </span>
+                )}
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="size-3" />
+                  {row.durationMinutes} min
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 export default async function GroupDetailPage({ params }: PageProps) {
@@ -80,6 +162,29 @@ export default async function GroupDetailPage({ params }: PageProps) {
     .orderBy(students.name);
 
   const memberIds = memberRows.map((m) => m.id);
+
+  // Sesiones vinculadas a este grupo (sessions.group_id). Las canceladas no
+  // se muestran.
+  const groupSessions: GroupSessionRow[] = await db
+    .select({
+      id: sessions.id,
+      title: sessions.title,
+      scheduledAt: sessions.scheduledAt,
+      durationMinutes: sessions.durationMinutes,
+      status: sessions.status,
+    })
+    .from(sessions)
+    .where(and(eq(sessions.groupId, id), ne(sessions.status, "cancelled")))
+    .orderBy(desc(sessions.scheduledAt));
+  const now = new Date();
+  // Impartidas: completadas o con la fecha ya pasada (más reciente primero).
+  const pastSessions = groupSessions.filter(
+    (s) => s.status === "completed" || s.scheduledAt < now
+  );
+  // Próximas: aún por llegar (la más cercana primero).
+  const upcomingSessions = groupSessions
+    .filter((s) => s.status !== "completed" && s.scheduledAt >= now)
+    .reverse();
 
   const availableStudents = await db
     .select({
@@ -152,6 +257,20 @@ export default async function GroupDetailPage({ params }: PageProps) {
           availableStudents={availableStudents}
           isOwner={isOwner}
         />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <GroupSessionsList
+            title="Sesiones impartidas"
+            emptyText="Todavía no hay sesiones impartidas con este grupo."
+            rows={pastSessions}
+            pastList
+          />
+          <GroupSessionsList
+            title="Próximas sesiones"
+            emptyText="No hay sesiones programadas para este grupo."
+            rows={upcomingSessions}
+          />
+        </div>
       </div>
     </div>
   );
