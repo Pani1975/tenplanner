@@ -5,6 +5,7 @@ import { db } from "@/db";
 import {
   classes,
   exercises,
+  groups,
   sessionBlockItems,
   sessionBlocks,
   sessionExercises,
@@ -511,6 +512,31 @@ export async function PUT(request: Request, context: RouteContext) {
       }
     }
 
+    if (sessionFields.groupId) {
+      const groupActiveClubId = await getActiveWorkClubId(user.id);
+      const [accessibleGroup] = await db
+        .select({ id: groups.id })
+        .from(groups)
+        .where(
+          and(
+            eq(groups.id, sessionFields.groupId),
+            sharedWithClubCondition(
+              groups.coachId,
+              groups.clubId,
+              user.id,
+              groupActiveClubId
+            )
+          )
+        )
+        .limit(1);
+      if (!accessibleGroup) {
+        return NextResponse.json(
+          { error: "El grupo no existe o no es accesible" },
+          { status: 400 }
+        );
+      }
+    }
+
     if (sessionFields.sourceClassId) {
       const classActiveClubId = await getActiveWorkClubId(user.id);
       const [sourceClass] = await db
@@ -587,6 +613,8 @@ export async function PUT(request: Request, context: RouteContext) {
       updateValues.location = sessionFields.location;
     if (sessionFields.placeId !== undefined)
       updateValues.placeId = sessionFields.placeId;
+    if (sessionFields.groupId !== undefined)
+      updateValues.groupId = sessionFields.groupId;
     if (tags !== undefined) {
       updateValues.tags =
         tags && tags.length > 0
