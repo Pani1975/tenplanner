@@ -34,6 +34,13 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
+  EMPTY_PICKER_FILTERS,
+  ExercisePickerFilters,
+  hasPickerFilters,
+  matchesPickerFilters,
+  type PickerFilters,
+} from "@/components/app/exercise-picker-filters";
+import {
   emptyStationDraft,
   STATION_COUNT_MAX,
   STATION_COUNT_MIN,
@@ -134,6 +141,8 @@ export function StepExercises({
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
   const [search, setSearch] = useState("");
   const [libCategoryFilter, setLibCategoryFilter] = useState<string>("all");
+  const [pickerFilters, setPickerFilters] =
+    useState<PickerFilters>(EMPTY_PICKER_FILTERS);
   const [editingDurationIdx, setEditingDurationIdx] = useState<number | null>(
     null
   );
@@ -207,7 +216,12 @@ export function StepExercises({
     const matchesSearch = ex.name.toLowerCase().includes(search.toLowerCase());
     const matchesCategory =
       libCategoryFilter === "all" || ex.category === libCategoryFilter;
-    return notSelected && matchesSearch && matchesCategory;
+    return (
+      notSelected &&
+      matchesSearch &&
+      matchesCategory &&
+      matchesPickerFilters(ex, pickerFilters)
+    );
   });
 
   useEffect(() => {
@@ -714,13 +728,21 @@ export function StepExercises({
                 </button>
               ))}
             </div>
+            <ExercisePickerFilters
+              exercises={libraryExercises}
+              value={pickerFilters}
+              onChange={setPickerFilters}
+              className="mt-2"
+            />
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-border/50 max-h-80">
             {filteredAvailable.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <Filter className="size-6 text-muted-foreground mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  {search || libCategoryFilter !== "all"
+                  {search ||
+                libCategoryFilter !== "all" ||
+                hasPickerFilters(pickerFilters)
                     ? "Sin resultados para ese filtro"
                     : libraryExercises.length === 0
                       ? "No hay ejercicios en la biblioteca"
@@ -882,16 +904,14 @@ export function StepExercises({
               return (
                 <div
                   key={phase}
-                  className="flex flex-col rounded-2xl border border-border overflow-hidden"
+                  className="flex flex-col rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5"
                 >
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/20 shrink-0">
-                    <CalendarDays className="size-4 text-brand" />
-                    <span className="text-sm font-bold text-foreground uppercase tracking-wide">
-                      {PHASE_LABELS[phase]}
+                  <div className="flex items-center gap-3 px-4 pt-4 sm:px-5">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-brand">
+                      {String(PHASE_ORDER.indexOf(phase) + 1).padStart(2, "0")}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {blockEntries.length}{" "}
-                      {blockEntries.length === 1 ? "item" : "items"}
+                    <span className="font-heading text-lg text-foreground">
+                      {PHASE_LABELS[phase]}
                     </span>
                     {blockDuration > 0 && (
                       <span className="ml-auto flex items-center gap-1.5 text-xs font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-lg">
@@ -902,26 +922,18 @@ export function StepExercises({
                   </div>
 
                   <div
-                    className="p-3"
+                    className="px-4 pb-4 pt-3 sm:px-5"
                     onDragOver={(e) => {
                       if (dragSrcIdx !== null) e.preventDefault();
                     }}
                     onDrop={(e) => onBlockEndDrop(e, phase)}
                   >
                     {blockEntries.length === 0 ? (
-                      <div
-                        className={cn(
-                          "w-full flex flex-col items-center text-center py-6 rounded-xl border-2 border-dashed transition-colors",
-                          dragSrcIdx !== null
-                            ? "border-brand bg-brand/5"
-                            : "border-border"
-                        )}
-                      >
-                        <p className="text-xs text-muted-foreground">
-                          Sin items en este bloque. Arrastra desde la biblioteca
-                          o usa los botones de abajo.
-                        </p>
-                      </div>
+                      dragSrcIdx !== null ? (
+                        <div className="w-full rounded-xl border-2 border-dashed border-brand bg-brand/5 py-4 text-center text-xs text-muted-foreground">
+                          Suelta aquí para moverlo a este bloque
+                        </div>
+                      ) : null
                     ) : (
                       <div className="space-y-1">
                         {blockEntries.map(({ ex, flatIdx }, localIdx) => {
