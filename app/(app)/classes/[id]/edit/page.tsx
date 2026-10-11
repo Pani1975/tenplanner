@@ -74,9 +74,14 @@ export default async function EditClassPage({ params }: PageProps) {
       description: exercises.description,
     })
     .from(exercises)
-    .where(or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!)
+    .where(
+      and(
+        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id)),
+        eq(exercises.sport, cls.sport)
+      )
+    )
     .orderBy(exercises.name)
-    .limit(500);
+    .limit(2000);
 
   const initialData = {
     name: cls.name,

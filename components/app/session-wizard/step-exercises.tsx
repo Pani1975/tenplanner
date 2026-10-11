@@ -86,6 +86,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 /** Orden fijo de los 3 bloques predefinidos de la sesión. */
 const PHASE_ORDER: TrainingPhase[] = ["activation", "main", "cooldown"];
 
+/** Máximo de resultados que muestra el buscador de ejercicios a la vez. */
+const VISIBLE_RESULTS = 30;
+
 interface StepExercisesProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
@@ -161,6 +164,8 @@ export function StepExercises({
     itemIdx: number;
     stationIdx: number;
   } | null>(null);
+  /** Bloque en el que está abierto el buscador de ejercicios (como en Clases). */
+  const [pickerPhase, setPickerPhase] = useState<TrainingPhase | null>(null);
 
   const selected = state.exercises;
 
@@ -334,6 +339,7 @@ export function StepExercises({
       name: ex.name,
     });
     setPickingStation(null);
+    setPickerPhase(null);
   }
 
   function removeExercise(id: string) {
@@ -583,6 +589,248 @@ export function StepExercises({
     await refreshLibrary(exercise);
   }
 
+  // Buscador de ejercicios (Biblioteca / Listas). Se abre dentro del bloque
+  // en el que se pulsa "Añadir ejercicio" (o al elegir el ejercicio de una
+  // estación), como en el formulario de clases, en vez de ocupar una columna
+  // fija con toda la biblioteca.
+  const sourcesPanel = (
+    <div className="mt-3 flex flex-col rounded-xl border border-border overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20 shrink-0">
+        <div className="inline-flex rounded-full border border-border bg-background p-1">
+          <button
+            type="button"
+            onClick={() => setSourceTab("library")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              sourceTab === "library"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <BookOpen className="size-3.5" />
+            Biblioteca
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceTab("lists")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              sourceTab === "lists"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <CalendarDays className="size-3.5" />
+            Listas
+          </button>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {sourceTab === "library" && filteredAvailable.length > 0 ? (
+            <span className="text-xs text-muted-foreground hidden sm:block">
+              {filteredAvailable.length} disponibles
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setShowQuickCreate(true)}
+            className="inline-flex items-center gap-1 text-[10px] font-bold text-brand bg-brand/10 hover:bg-brand/20 px-2 py-1 rounded-lg transition-colors"
+          >
+            <Plus className="size-3" />
+            Nuevo
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPickerPhase(null);
+              setPickingStation(null);
+            }}
+            aria-label="Cerrar buscador de ejercicios"
+            title="Cerrar"
+            className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {pickingStation && (
+        <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
+          <LayoutGrid className="size-3.5 text-brand shrink-0" />
+          <span className="text-xs font-semibold text-foreground">
+            Elige un ejercicio para la estación{" "}
+            {pickingStation.stationIdx + 1}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setPickingStation(null);
+              setPickerPhase(null);
+            }}
+            className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {sourceTab === "lists" ? (
+        <div className="flex-1 overflow-y-auto max-h-80">
+          <SessionExerciseLists
+            selectedExerciseIds={Array.from(selectedIds)}
+            onApplyList={(items) =>
+              addExercisesFromList(items, activeAddPhase)
+            }
+          />
+        </div>
+      ) : (
+        <>
+          <div className="px-3 pt-2 pb-1.5 border-b border-border shrink-0">
+            <div className="relative mb-2">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar ejercicios…"
+                className="w-full h-8 pl-8 pr-3 text-xs bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="flex gap-1 overflow-x-auto pb-0.5">
+              {["all", ...availableCategories].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setLibCategoryFilter(cat)}
+                  className={cn(
+                    "shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full transition-colors whitespace-nowrap",
+                    libCategoryFilter === cat
+                      ? "bg-brand text-brand-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {cat === "all"
+                    ? "Todos"
+                    : (CATEGORY_LABELS[cat] ?? cat)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto divide-y divide-border/50 max-h-80">
+            {filteredAvailable.length === 0 ? (
+              <div className="text-center py-8 px-4">
+                <Filter className="size-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">
+                  {search || libCategoryFilter !== "all"
+                    ? "Sin resultados para ese filtro"
+                    : libraryExercises.length === 0
+                      ? "No hay ejercicios en la biblioteca"
+                      : "Todos los ejercicios están en la sesión"}
+                </p>
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickCreate(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
+                  >
+                    <Plus className="size-3.5" />
+                    Crear ejercicio rápido
+                  </button>
+                  {refreshingLibrary ? (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Loader2 className="size-3 animate-spin" />
+                      Actualizando biblioteca…
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              filteredAvailable.slice(0, VISIBLE_RESULTS).map((ex) => (
+                <div
+                  key={ex.id}
+                  draggable
+                  onDragStart={(e) => onLibraryDragStart(e, ex)}
+                  className="group flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing"
+                >
+                  <div
+                    className={cn(
+                      "w-0.5 h-7 rounded-full shrink-0",
+                      CATEGORY_BAR[ex.category] ?? "bg-muted"
+                    )}
+                  />
+                  <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate leading-snug">
+                      {ex.name}
+                    </p>
+                    {ex.description && (
+                      <p className="truncate text-[11px] text-muted-foreground leading-snug">
+                        {ex.description}
+                      </p>
+                    )}
+                    <span
+                      className={cn(
+                        "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                        CATEGORY_COLORS[ex.category] ??
+                          "text-muted-foreground bg-muted"
+                      )}
+                    >
+                      {CATEGORY_LABELS[ex.category] ?? ex.category}
+                    </span>
+                  </div>
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                    <Clock className="size-3" />
+                    {ex.durationMinutes} min
+                  </span>
+                  <NextLink
+                    href={`/exercises/${ex.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Ver ficha completa del ejercicio"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </NextLink>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      pickingStation
+                        ? setStationExercise(
+                            pickingStation.itemIdx,
+                            pickingStation.stationIdx,
+                            ex
+                          )
+                        : addExercise(ex, activeAddPhase)
+                    }
+                    title={
+                      pickingStation
+                        ? "Añadir a esta estación"
+                        : `Añadir a ${PHASE_LABELS[activeAddPhase]}`
+                    }
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand transition-colors hover:bg-brand/20",
+                      pickingStation
+                        ? "opacity-100"
+                        : "sm:opacity-0 sm:group-hover:opacity-100"
+                    )}
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+          {filteredAvailable.length > VISIBLE_RESULTS && (
+            <p className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+              Mostrando {VISIBLE_RESULTS} de {filteredAvailable.length}.
+              Escribe en el buscador para encontrar el resto.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <>
       <Dialog open={showQuickCreate} onOpenChange={setShowQuickCreate}>
@@ -620,8 +868,8 @@ export function StepExercises({
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 min-h-[440px]">
-          {/* LEFT: los 3 bloques predefinidos */}
+        <div>
+          {/* Los 3 bloques predefinidos */}
           <div className="flex flex-col gap-3">
             {PHASE_ORDER.map((phase) => {
               const blockEntries = grouped[phase];
@@ -987,6 +1235,7 @@ export function StepExercises({
                                                         stationIdx,
                                                       });
                                                       setSourceTab("library");
+                                                      setPickerPhase(phase);
                                                     }}
                                                     className={cn(
                                                       "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
@@ -1031,6 +1280,7 @@ export function StepExercises({
                                                           stationIdx,
                                                         });
                                                         setSourceTab("library");
+                                                        setPickerPhase(phase);
                                                       }}
                                                       className={cn(
                                                         "min-w-0 flex-1 truncate text-left text-xs hover:text-brand",
@@ -1221,11 +1471,16 @@ export function StepExercises({
                           type="button"
                           onClick={() => {
                             setAddPhaseOverride(phase);
+                            setPickingStation(null);
                             setSourceTab("library");
+                            setSearch("");
+                            setPickerPhase((current) =>
+                              current === phase ? null : phase
+                            );
                           }}
                           className={cn(
                             "inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors",
-                            activeAddPhase === phase && sourceTab === "library"
+                            pickerPhase === phase && !pickingStation
                               ? "border-brand/60 bg-brand/10 text-brand"
                               : "border-border bg-background text-foreground hover:border-brand/50 hover:bg-brand/10"
                           )}
@@ -1262,251 +1517,12 @@ export function StepExercises({
                         </button>
                       </div>
                     )}
+
+                    {pickerPhase === phase && sourcesPanel}
                   </div>
                 </div>
               );
             })}
-          </div>
-
-          {/* RIGHT: sources */}
-          <div className="flex flex-col rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20 shrink-0">
-              <div className="inline-flex rounded-full border border-border bg-background p-1">
-                <button
-                  type="button"
-                  onClick={() => setSourceTab("library")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                    sourceTab === "library"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <BookOpen className="size-3.5" />
-                  Biblioteca
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSourceTab("lists")}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                    sourceTab === "lists"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <CalendarDays className="size-3.5" />
-                  Listas
-                </button>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                {sourceTab === "library" && filteredAvailable.length > 0 ? (
-                  <span className="text-xs text-muted-foreground hidden sm:block">
-                    {filteredAvailable.length} disponibles
-                  </span>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setShowQuickCreate(true)}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold text-brand bg-brand/10 hover:bg-brand/20 px-2 py-1 rounded-lg transition-colors"
-                >
-                  <Plus className="size-3" />
-                  Nuevo
-                </button>
-              </div>
-            </div>
-
-            {!pickingStation && (
-              <div className="flex items-center gap-1.5 border-b border-border bg-background px-3 py-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
-                  Añadiendo a
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {PHASE_ORDER.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setAddPhaseOverride(p)}
-                      className={cn(
-                        "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
-                        activeAddPhase === p
-                          ? "border-brand/50 bg-brand/10 text-brand"
-                          : "border-border text-muted-foreground hover:border-brand/40"
-                      )}
-                    >
-                      {PHASE_LABELS[p]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {pickingStation && (
-              <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
-                <LayoutGrid className="size-3.5 text-brand shrink-0" />
-                <span className="text-xs font-semibold text-foreground">
-                  Elige un ejercicio para la estación{" "}
-                  {pickingStation.stationIdx + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPickingStation(null)}
-                  className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  Cancelar
-                </button>
-              </div>
-            )}
-
-            {sourceTab === "lists" ? (
-              <div className="flex-1 overflow-y-auto max-h-[360px] lg:max-h-none">
-                <SessionExerciseLists
-                  selectedExerciseIds={Array.from(selectedIds)}
-                  onApplyList={(items) =>
-                    addExercisesFromList(items, activeAddPhase)
-                  }
-                />
-              </div>
-            ) : (
-              <>
-                <div className="px-3 pt-2 pb-1.5 border-b border-border shrink-0">
-                  <div className="relative mb-2">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-                    <input
-                      type="text"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Buscar ejercicios…"
-                      className="w-full h-8 pl-8 pr-3 text-xs bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-                  <div className="flex gap-1 overflow-x-auto pb-0.5">
-                    {["all", ...availableCategories].map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setLibCategoryFilter(cat)}
-                        className={cn(
-                          "shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full transition-colors whitespace-nowrap",
-                          libCategoryFilter === cat
-                            ? "bg-brand text-brand-foreground"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {cat === "all"
-                          ? "Todos"
-                          : (CATEGORY_LABELS[cat] ?? cat)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex-1 overflow-y-auto divide-y divide-border/50 max-h-[360px] lg:max-h-none">
-                  {filteredAvailable.length === 0 ? (
-                    <div className="text-center py-8 px-4">
-                      <Filter className="size-6 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">
-                        {search || libCategoryFilter !== "all"
-                          ? "Sin resultados para ese filtro"
-                          : libraryExercises.length === 0
-                            ? "No hay ejercicios en la biblioteca"
-                            : "Todos los ejercicios están en la sesión"}
-                      </p>
-                      <div className="mt-4 flex flex-col items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowQuickCreate(true)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
-                        >
-                          <Plus className="size-3.5" />
-                          Crear ejercicio rápido
-                        </button>
-                        {refreshingLibrary ? (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            <Loader2 className="size-3 animate-spin" />
-                            Actualizando biblioteca…
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : (
-                    filteredAvailable.map((ex) => (
-                      <div
-                        key={ex.id}
-                        draggable
-                        onDragStart={(e) => onLibraryDragStart(e, ex)}
-                        className="group flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors cursor-grab active:cursor-grabbing"
-                      >
-                        <div
-                          className={cn(
-                            "w-0.5 h-7 rounded-full shrink-0",
-                            CATEGORY_BAR[ex.category] ?? "bg-muted"
-                          )}
-                        />
-                        <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate leading-snug">
-                            {ex.name}
-                          </p>
-                          {ex.description && (
-                            <p className="truncate text-[11px] text-muted-foreground leading-snug">
-                              {ex.description}
-                            </p>
-                          )}
-                          <span
-                            className={cn(
-                              "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                              CATEGORY_COLORS[ex.category] ??
-                                "text-muted-foreground bg-muted"
-                            )}
-                          >
-                            {CATEGORY_LABELS[ex.category] ?? ex.category}
-                          </span>
-                        </div>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                          <Clock className="size-3" />
-                          {ex.durationMinutes} min
-                        </span>
-                        <NextLink
-                          href={`/exercises/${ex.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Ver ficha completa del ejercicio"
-                          className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <ExternalLink className="size-3.5" />
-                        </NextLink>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            pickingStation
-                              ? setStationExercise(
-                                  pickingStation.itemIdx,
-                                  pickingStation.stationIdx,
-                                  ex
-                                )
-                              : addExercise(ex, activeAddPhase)
-                          }
-                          title={
-                            pickingStation
-                              ? "Añadir a esta estación"
-                              : `Añadir a ${PHASE_LABELS[activeAddPhase]}`
-                          }
-                          className={cn(
-                            "flex size-6 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand transition-colors hover:bg-brand/20",
-                            pickingStation
-                              ? "opacity-100"
-                              : "sm:opacity-0 sm:group-hover:opacity-100"
-                          )}
-                        >
-                          <Plus className="size-3.5" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

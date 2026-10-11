@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
@@ -32,9 +32,14 @@ export default async function NewClassPage() {
       description: exercises.description,
     })
     .from(exercises)
-    .where(or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!)
+    .where(
+      and(
+        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id)),
+        eq(exercises.sport, sport)
+      )
+    )
     .orderBy(exercises.name)
-    .limit(500);
+    .limit(2000);
 
   return (
     <div className="px-4 py-8 sm:px-6 md:px-10">
