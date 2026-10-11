@@ -25,6 +25,7 @@ import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { classNavQueryString, getFilteredClassIds } from "@/lib/nav/class-nav";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { canSeeClassDraft } from "@/lib/classes/visibility";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -65,6 +66,7 @@ export default async function ClassDetailPage({
     sharedViaClub = cls.clubId === activeClubId;
   }
   if (!cls.isLibrary && !isOwner && !sharedViaClub) notFound();
+  if (!canSeeClassDraft(cls, user?.id)) notFound();
 
   const authorName =
     sharedViaClub && cls.createdBy
@@ -160,6 +162,11 @@ export default async function ClassDetailPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
+                {cls.status === "draft" && (
+                  <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">
+                    Borrador
+                  </span>
+                )}
                 {cls.isLibrary && (
                   <span className="rounded-full bg-[#D6FF38] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#050505]">
                     Biblioteca
@@ -217,7 +224,9 @@ export default async function ClassDetailPage({
                     href={`/classes/${cls.id}/edit`}
                     className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
                   >
-                    Editar
+                    {cls.status === "draft"
+                      ? "Terminar y publicar"
+                      : "Editar"}
                   </Link>
                 )}
                 <ClassActions classId={cls.id} initialFavorite={isFav} />
