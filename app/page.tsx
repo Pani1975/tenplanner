@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { desc, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { TenPlannerLanding } from "@/components/landing/tenplanner-landing";
 import { db } from "@/db";
 import { classes, exercises } from "@/db/schema";
@@ -50,7 +50,7 @@ export default async function LandingPage() {
         numAlumnos: classes.numAlumnos,
       })
       .from(classes)
-      .where(eq(classes.isLibrary, true))
+      .where(and(eq(classes.isLibrary, true), eq(classes.status, "published")))
       .orderBy(desc(classes.createdAt))
       .limit(3),
   ]);
