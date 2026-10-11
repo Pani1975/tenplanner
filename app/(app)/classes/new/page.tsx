@@ -30,6 +30,12 @@ export default async function NewClassPage() {
       name: exercises.name,
       category: exercises.category,
       description: exercises.description,
+      nivel: exercises.nivel,
+      niveles: exercises.niveles,
+      phase: exercises.phase,
+      aspectoJuego: exercises.aspectoJuego,
+      aspectosJuego: exercises.aspectosJuego,
+      golpes: exercises.golpes,
     })
     .from(exercises)
     .where(
