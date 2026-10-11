@@ -18,6 +18,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  EMPTY_PICKER_FILTERS,
+  ExercisePickerFilters,
+  matchesPickerFilters,
+  type PickerFilters,
+  type PickerTaggedExercise,
+} from "@/components/app/exercise-picker-filters";
+import {
   emptyStationDraft,
   STATION_COUNT_MAX,
   STATION_COUNT_MIN,
@@ -58,7 +65,7 @@ const BLOCK_TITLES = [
   { idx: 3, label: "Bloque final" },
 ];
 
-interface AvailableExercise {
+interface AvailableExercise extends PickerTaggedExercise {
   id: string;
   name: string;
   category: string;
@@ -195,6 +202,8 @@ export function ClassForm({
   const [submitting, setSubmitting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [pickerFilters, setPickerFilters] =
+    useState<PickerFilters>(EMPTY_PICKER_FILTERS);
   const [pickerSourceTab, setPickerSourceTab] = useState<"search" | "lists">(
     "search"
   );
@@ -595,8 +604,10 @@ export function ClassForm({
   }
 
   const filteredExercises = (search: string) =>
-    availableExercises.filter((e) =>
-      e.name.toLowerCase().includes(search.toLowerCase())
+    availableExercises.filter(
+      (e) =>
+        e.name.toLowerCase().includes(search.toLowerCase()) &&
+        matchesPickerFilters(e, pickerFilters)
     );
 
   return (
@@ -1168,6 +1179,11 @@ export function ClassForm({
                   placeholder="Buscar ejercicio…"
                   className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
                 />
+                <ExercisePickerFilters
+                  exercises={availableExercises}
+                  value={pickerFilters}
+                  onChange={setPickerFilters}
+                />
                 <ul className="max-h-64 overflow-y-auto space-y-1">
                   {filteredExercises(search)
                     .slice(0, 30)
@@ -1285,6 +1301,11 @@ export function ClassForm({
                       autoFocus
                       placeholder="Buscar ejercicio…"
                       className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+                    />
+                    <ExercisePickerFilters
+                      exercises={availableExercises}
+                      value={pickerFilters}
+                      onChange={setPickerFilters}
                     />
                     <ul className="max-h-64 overflow-y-auto space-y-1">
                       {filteredExercises(search)
