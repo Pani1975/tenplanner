@@ -95,3 +95,4 @@ Every PR runs lint, Prettier check, and type-check via GitHub Actions.
 
 - **RAT, subencargados, retención, brechas, DPA:** `docs/legal/`.
 - **Autoridad de control:** [Agencia Española de Protección de Datos (AEPD)](https://www.aepd.es).
+
