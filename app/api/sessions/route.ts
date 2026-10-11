@@ -15,6 +15,7 @@ import { db } from "@/db";
 import {
   classes,
   exercises,
+  groups,
   sessionBlockItems,
   sessionBlocks,
   sessionExercises,
@@ -458,6 +459,7 @@ export async function POST(request: Request) {
     tags,
     location,
     placeId,
+    groupId,
     studentIds,
     exercises: exerciseItems,
     blocks,
@@ -505,6 +507,30 @@ export async function POST(request: Request) {
       if (ownedRows.length !== uniqueStudentIds.length) {
         return NextResponse.json(
           { error: "Algunos alumnos no pertenecen al entrenador" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (groupId) {
+      const [accessibleGroup] = await db
+        .select({ id: groups.id })
+        .from(groups)
+        .where(
+          and(
+            eq(groups.id, groupId),
+            sharedWithClubCondition(
+              groups.coachId,
+              groups.clubId,
+              user.id,
+              clubId ?? null
+            )
+          )
+        )
+        .limit(1);
+      if (!accessibleGroup) {
+        return NextResponse.json(
+          { error: "El grupo no existe o no es accesible" },
           { status: 400 }
         );
       }
@@ -602,6 +628,7 @@ export async function POST(request: Request) {
           tags: normalizedTags,
           location: location ?? null,
           placeId: placeId ?? null,
+          groupId: groupId ?? null,
           clubId: clubId ?? null,
           sport: sessionSport,
         })
