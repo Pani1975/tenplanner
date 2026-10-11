@@ -12,7 +12,7 @@ import {
   places,
   users,
 } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { and, eq, asc } from "drizzle-orm";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import type {
@@ -22,6 +22,7 @@ import type {
 } from "@/components/app/session-wizard/types";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { getActiveSport } from "@/lib/sports";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import {
@@ -90,6 +91,10 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     user.email ||
     "Monitor";
 
+  // Todos los ejercicios del deporte activo (antes se cortaba en 200 por
+  // orden alfabético y mezclando deportes). El paso de ejercicios solo pinta
+  // los 30 primeros resultados del buscador.
+  const sport = await getActiveSport(user.id);
   const allExercises = await db
     .select({
       id: exercises.id,
@@ -101,12 +106,15 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     })
     .from(exercises)
     .where(
-      publicExercisesEnabled
-        ? exerciseVisibleToUserCondition(user.id)
-        : eq(exercises.createdBy, user.id)
+      and(
+        publicExercisesEnabled
+          ? exerciseVisibleToUserCondition(user.id)
+          : eq(exercises.createdBy, user.id),
+        eq(exercises.sport, sport)
+      )
     )
     .orderBy(exercises.name)
-    .limit(200);
+    .limit(2000);
 
   const {
     exercises: exerciseParam,
