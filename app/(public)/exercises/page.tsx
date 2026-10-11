@@ -54,6 +54,7 @@ import {
 } from "@/lib/exercise-taxonomy";
 import {
   Plus,
+  Play,
   ArrowLeft,
   ArrowUpRight,
   Search,
@@ -451,6 +452,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           difficulty: exercisesTable.difficulty,
           durationMinutes: exercisesTable.durationMinutes,
           imageUrl: exercisesTable.imageUrl,
+          videoUrl: exercisesTable.videoUrl,
           isAiGenerated: exercisesTable.isAiGenerated,
           isGlobal: exercisesTable.isGlobal,
           autoria: exercisesTable.autoria,
@@ -1356,6 +1358,19 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                                   />
                                   {owner.label}
                                 </span>
+                              )}
+                              {exercise.videoUrl && (
+                                <a
+                                  href={exercise.videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="Ver vídeo del ejercicio"
+                                  aria-label={`Ver vídeo de ${exercise.name}`}
+                                  className="inline-flex items-center gap-1 rounded-full border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white/80 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                                >
+                                  <Play className="size-3" strokeWidth={2} />
+                                  Vídeo
+                                </a>
                               )}
                               {user && (
                                 <AddToSessionButton
