@@ -18,6 +18,7 @@ import {
 } from "@/lib/block-items";
 import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { CLASS_STATUSES, canSeeClassDraft } from "@/lib/classes/visibility";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -88,6 +89,7 @@ const updateSchema = z.object({
   isLibrary: z.boolean().optional(),
   autoria: z.enum(AUTORIA_VALUES).nullable().optional(),
   blocks: z.array(blockSchema).max(3).optional(),
+  status: z.enum(CLASS_STATUSES).optional(),
 });
 
 function normalizeMultiValue(
@@ -129,6 +131,9 @@ export async function GET(_req: Request, ctx: Ctx) {
   }
   if (!cls.isLibrary && !isOwner && !sharedViaClub) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!canSeeClassDraft(cls, user?.id)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const blocks = await db
@@ -294,6 +299,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         updateValues.isLibrary = isAdmin && d.isLibrary === true;
       if (isAdmin && d.autoria !== undefined)
         updateValues.autoria = d.autoria ?? "libre";
+      if (d.status !== undefined) updateValues.status = d.status;
 
       if (Object.keys(updateValues).length > 0) {
         await tx.update(classes).set(updateValues).where(eq(classes.id, id));
