@@ -422,6 +422,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 
   const listWhere = and(...listConditions);
   const offset = (currentPage - 1) * PAGE_SIZE;
+
+  // Total de ejercicios que cumplen los filtros activos (no solo los de la
+  // página actual ni el total de la pestaña), para el contador de resultados.
+  const resultCountPromise = db
+    .select({ total: count() })
+    .from(exercisesTable)
+    .where(listWhere)
+    .then((rows) => Number(rows[0]?.total ?? 0));
   const navQs = exerciseNavQueryString(params);
 
   const draftCountRows = user
@@ -497,6 +505,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 
   const hasNextPage = rowPage.length > PAGE_SIZE;
   const filtered = hasNextPage ? rowPage.slice(0, PAGE_SIZE) : rowPage;
+  const resultCount = await resultCountPromise;
   const exerciseListCountRows =
     user && filtered.length > 0
       ? await db
@@ -1258,8 +1267,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 {filtered.length > 0 && (
                   <div className="flex items-center justify-between">
                     <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-foreground/40">
-                      {tabCounts[activeTab]} resultado
-                      {tabCounts[activeTab] !== 1 ? "s" : ""}
+                      {resultCount} resultado
+                      {resultCount !== 1 ? "s" : ""}
                     </p>
                     <a
                       href={`/api/exercises/pdf${navQs ? `?${navQs}` : ""}`}
