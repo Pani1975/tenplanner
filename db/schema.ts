@@ -276,6 +276,11 @@ export const sessions = pgTable(
     placeId: uuid("place_id").references(() => places.id, {
       onDelete: "set null",
     }),
+    // Grupo al que se imparte la sesión (se elige en el asistente). null =
+    // sin grupo (alumnos sueltos o clase particular).
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "set null",
+    }),
     // null = particular (personal work). Set when the coach creates this
     // on behalf of a club they're linked to — the club only sees items
     // tagged with its own id, never the coach's other work.
@@ -302,6 +307,7 @@ export const sessions = pgTable(
     index("sessions_place_id_idx").on(t.placeId),
     index("sessions_club_id_idx").on(t.clubId),
     index("sessions_sport_idx").on(t.sport),
+    index("sessions_group_id_idx").on(t.groupId),
   ]
 );
 
