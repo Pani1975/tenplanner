@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ClipboardList,
   Dumbbell,
+  FileText,
   GraduationCap,
   Heart,
   LayoutDashboard,
@@ -75,6 +76,7 @@ const navItems: NavItem[] = [
       { href: "/exercises", label: "Biblioteca", icon: BookOpen },
       { href: "/exercises?tab=mine", label: "Mis ejercicios", icon: Dumbbell },
       { href: "/exercises?tab=favorites", label: "Favoritos", icon: Heart },
+      { href: "/exercises?tab=drafts", label: "Borradores", icon: FileText },
       {
         href: "/exercises/new",
         label: "Nuevo ejercicio",
@@ -93,6 +95,7 @@ const navItems: NavItem[] = [
       { href: "/classes", label: "Biblioteca", icon: BookOpen },
       { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
       { href: "/classes?tab=favorites", label: "Favoritos", icon: Heart },
+      { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
       { href: "/classes/new", label: "Nueva clase", icon: Plus },
     ],
   },
@@ -104,6 +107,7 @@ const navItems: NavItem[] = [
     submenu: [
       { href: "/sessions", label: "Mis sesiones", icon: ClipboardList },
       { href: "/sessions/favorites", label: "Favoritas", icon: Heart },
+      { href: "/sessions?filter=drafts", label: "Borradores", icon: FileText },
       { href: "/sessions/new", label: "Nueva sesión", icon: Plus },
     ],
   },
