@@ -32,6 +32,7 @@ import {
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getBooleanSetting, getNumberSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { classDraftVisibility } from "@/lib/classes/visibility";
 import { getActiveSport } from "@/lib/sports";
 import { embedSession } from "@/lib/ai/semantic-search";
 import { sumBlocksDuration, type StationItemJson } from "@/lib/block-items";
@@ -525,7 +526,8 @@ export async function POST(request: Request) {
                 user.id,
                 classActiveClubId
               )
-            )
+            ),
+            classDraftVisibility(user.id)
           )
         )
         .limit(1);
