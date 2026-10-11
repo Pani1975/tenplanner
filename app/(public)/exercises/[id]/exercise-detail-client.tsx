@@ -41,6 +41,7 @@ import {
   type TipoPelota,
   TIPO_ACTIVIDAD_LABELS,
 } from "@/lib/exercise-taxonomy";
+import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 
@@ -372,6 +373,8 @@ export function ExerciseDetailClient({
       : exercise.tipoActividad
         ? [exercise.tipoActividad]
         : [];
+
+  const videoEmbedUrl = getYouTubeEmbedUrl(exercise.videoUrl);
 
   const hasParams =
     exercise.formato ||
@@ -811,6 +814,19 @@ export function ExerciseDetailClient({
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
                 Vídeo de referencia
               </p>
+              {videoEmbedUrl && (
+                <div className="relative mb-2 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
+                  <iframe
+                    src={videoEmbedUrl}
+                    title={`Vídeo: ${exercise.name}`}
+                    className="absolute inset-0 size-full"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              )}
               <a
                 href={exercise.videoUrl}
                 target="_blank"
@@ -818,7 +834,7 @@ export function ExerciseDetailClient({
                 className="inline-flex items-center gap-2 text-sm text-brand hover:text-brand/80 transition-colors font-medium"
               >
                 <Video className="size-4" />
-                Ver vídeo
+                {videoEmbedUrl ? "Ver en YouTube" : "Ver vídeo"}
                 <ExternalLink className="size-3" />
               </a>
             </div>

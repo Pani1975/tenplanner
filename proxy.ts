@@ -32,6 +32,7 @@ function buildCsp(nonce: string): string {
     "default-src 'self'",
     "base-uri 'self'",
     "frame-ancestors 'none'",
+    "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
     "form-action 'self'",
     "img-src 'self' data: blob: https://*.supabase.co https://images.pexels.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com",
     "font-src 'self' data:",
