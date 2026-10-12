@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { sessionStudents, sessions, students, users } from "@/db/schema";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { loadSessionPlan } from "@/lib/sessions/plan";
+import { DEFAULT_BLOCK_ITEM_DURATION } from "@/lib/block-items";
 import type { PdfExercise, PdfSession } from "@/lib/sessions/pdf";
 
 export type SessionRow = typeof sessions.$inferSelect;
@@ -87,7 +88,11 @@ export async function buildPdfSession(
           category: "warm-up" as const,
           difficulty: "beginner" as const,
           orderIndex,
-          durationMinutes: item.durationMinutes,
+          // Si el monitor no tocó la duración se queda sin guardar (usa el
+          // valor por defecto de la línea de tiempo), así que hay que
+          // aplicar aquí el mismo valor por defecto o el PDF saldría sin
+          // tiempo de calentamiento.
+          durationMinutes: item.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
           notes: item.notes,
           phase: item.phase,
           intensity: null,
@@ -107,7 +112,7 @@ export async function buildPdfSession(
           category: "technique" as const,
           difficulty: "beginner" as const,
           orderIndex,
-          durationMinutes: item.durationMinutes,
+          durationMinutes: item.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
           notes: item.notes,
           phase: item.phase,
           intensity: null,
@@ -124,7 +129,7 @@ export async function buildPdfSession(
         category: "technique" as const,
         difficulty: "beginner" as const,
         orderIndex,
-        durationMinutes: item.durationMinutes,
+        durationMinutes: item.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
         notes: item.notes,
         phase: item.phase,
         intensity: null,
