@@ -112,12 +112,6 @@ const LEVELS: { id: PlayerLevel; label: string; desc: string }[] = [
   { id: "especializacion", label: "Especialización", desc: "10-12 años" },
   { id: "precompeticion", label: "Precompetición", desc: "12-14 años" },
   { id: "competicion", label: "Competición", desc: "14-18 años" },
-  { id: "adultos_iniciacion", label: "Adultos iniciación", desc: "Empiezan" },
-  {
-    id: "adultos_medio_alto",
-    label: "Adultos medio-alto",
-    desc: "Con base técnica",
-  },
 ];
 
 // Niveles legacy que pueden venir en datos antiguos. Se muestran si están
@@ -128,6 +122,8 @@ const LEGACY_LEVEL_LABELS: Record<string, string> = {
   intermediate: "Intermedio (legacy)",
   advanced: "Avanzado (legacy)",
   competitive: "Competitivo (legacy)",
+  adultos_iniciacion: "Adultos iniciación (legacy)",
+  adultos_medio_alto: "Adultos medio-alto (legacy)",
 };
 
 export interface StudentFormProps {
