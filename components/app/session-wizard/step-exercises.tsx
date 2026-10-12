@@ -41,11 +41,14 @@ import {
   type PickerFilters,
 } from "@/components/app/exercise-picker-filters";
 import {
+  ASPECTO_JUEGO_VALUES,
   emptyStationDraft,
   STATION_COUNT_MAX,
   STATION_COUNT_MIN,
+  type AspectoJuego,
   type StationDraftItem,
 } from "@/lib/block-items";
+import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
 import {
   PHASE_LABELS,
   type AvailableExercise,
@@ -160,6 +163,17 @@ export function StepExercises({
   } | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [refreshingLibrary, setRefreshingLibrary] = useState(false);
+  /** Item de texto libre que se está "convirtiendo" en ficha de ejercicio
+   * (su clave local, p. ej. "text-..."): al crear el ejercicio, lo
+   * sustituye en vez de añadirse al final. */
+  const [convertingItemKey, setConvertingItemKey] = useState<string | null>(
+    null
+  );
+  const [quickCreateInitialData, setQuickCreateInitialData] = useState<{
+    name?: string;
+    description?: string | null;
+    aspectoJuego?: AspectoJuego | null;
+  } | null>(null);
 
   /** A qué bloque se añade lo siguiente desde el panel derecho (Biblioteca/Listas). */
   const [addPhaseOverride, setAddPhaseOverride] =
@@ -257,6 +271,39 @@ export function StepExercises({
       intensity: null,
     };
     setExercises([...selected, item]);
+  }
+
+  /** Sustituye un item de texto libre (por su clave local) por un ejercicio
+   * de biblioteca recién creado, conservando bloque, duración y notas. */
+  function replaceItemWithExercise(key: string, ex: AvailableExercise) {
+    setExercises(
+      selected.map((item) =>
+        item.exerciseId === key
+          ? ({
+              exerciseId: ex.id,
+              name: ex.name,
+              category: ex.category,
+              durationMinutes: ex.durationMinutes,
+              overrideDuration: item.overrideDuration,
+              notes: item.notes,
+              phase: item.phase,
+              intensity: item.intensity,
+            } satisfies WizardExercise)
+          : item
+      )
+    );
+  }
+
+  /** Usado tras crear un ejercicio desde el diálogo rápido: si se abrió
+   * para convertir un texto libre concreto, lo sustituye; si no, lo añade
+   * al final del bloque activo (comportamiento normal de "Nuevo"). */
+  function addOrReplaceExercise(ex: AvailableExercise) {
+    if (convertingItemKey) {
+      replaceItemWithExercise(convertingItemKey, ex);
+      setConvertingItemKey(null);
+    } else {
+      addExercise(ex, activeAddPhase);
+    }
   }
 
   function addExercisesFromList(
@@ -529,7 +576,7 @@ export function StepExercises({
             );
             return [fallbackExercise, ...next];
           });
-          addExercise(fallbackExercise, activeAddPhase);
+          addOrReplaceExercise(fallbackExercise);
         }
         return;
       }
@@ -584,7 +631,7 @@ export function StepExercises({
           ) ?? fallbackExercise;
 
         if (createdFromList) {
-          addExercise(createdFromList, activeAddPhase);
+          addOrReplaceExercise(createdFromList);
         }
       }
     } catch {
@@ -603,7 +650,7 @@ export function StepExercises({
           );
           return [fallbackExercise, ...next];
         });
-        addExercise(fallbackExercise, activeAddPhase);
+        addOrReplaceExercise(fallbackExercise);
       }
     } finally {
       setRefreshingLibrary(false);
@@ -612,8 +659,30 @@ export function StepExercises({
 
   async function handleQuickCreateSuccess(exercise?: ExerciseFormResult) {
     setShowQuickCreate(false);
-    if (!exercise) return;
+    setQuickCreateInitialData(null);
+    if (!exercise) {
+      setConvertingItemKey(null);
+      return;
+    }
     await refreshLibrary(exercise);
+  }
+
+  function closeQuickCreate() {
+    setShowQuickCreate(false);
+    setQuickCreateInitialData(null);
+    setConvertingItemKey(null);
+  }
+
+  /** Abre el diálogo de "crear ejercicio" con el texto libre de un item
+   * como punto de partida, para convertirlo en una ficha completa. */
+  function openQuickCreateFromText(item: WizardExercise) {
+    setConvertingItemKey(item.exerciseId);
+    setQuickCreateInitialData({
+      name: (item.title || item.freeText || "").slice(0, 255),
+      description: item.freeText?.trim() || null,
+      aspectoJuego: item.aspecto ?? null,
+    });
+    setShowQuickCreate(true);
   }
 
   // Buscador de ejercicios (Biblioteca / Listas). Se abre dentro del bloque
@@ -878,22 +947,32 @@ export function StepExercises({
 
   return (
     <>
-      <Dialog open={showQuickCreate} onOpenChange={setShowQuickCreate}>
+      <Dialog
+        open={showQuickCreate}
+        onOpenChange={(open) => (open ? setShowQuickCreate(true) : closeQuickCreate())}
+      >
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Crear ejercicio rápido</DialogTitle>
+            <DialogTitle>
+              {convertingItemKey
+                ? "Convertir en ficha de ejercicio"
+                : "Crear ejercicio rápido"}
+            </DialogTitle>
             <DialogDescription>
-              Crea un ejercicio mínimo sin salir de la sesión y añádelo
-              automáticamente a esta sesión.
+              {convertingItemKey
+                ? "Completa la ficha a partir de tu texto libre. Al guardar, sustituye al texto en esta sesión y queda disponible en tu biblioteca."
+                : "Crea un ejercicio mínimo sin salir de la sesión y añádelo automáticamente a esta sesión."}
             </DialogDescription>
           </DialogHeader>
           <ExerciseForm
+            key={convertingItemKey ?? "new"}
             mode="create"
             initialFormMode="quick"
-            enableDrafts
+            enableDrafts={!convertingItemKey}
             draftQueryParam="exerciseDraft"
+            initialData={quickCreateInitialData ?? undefined}
             onSuccess={handleQuickCreateSuccess}
-            onCancel={() => setShowQuickCreate(false)}
+            onCancel={closeQuickCreate}
           />
         </DialogContent>
       </Dialog>
@@ -1177,7 +1256,7 @@ export function StepExercises({
                                     title="Ajustes"
                                     className={cn(
                                       "size-6 rounded-md flex items-center justify-center transition-colors shrink-0",
-                                      isExpanded || ex.notes
+                                      isExpanded || ex.notes || ex.aspecto
                                         ? "text-brand bg-brand/10"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100"
                                     )}
@@ -1448,6 +1527,58 @@ export function StepExercises({
                                         ))}
                                       </div>
                                     </div>
+
+                                    {isTextItem(ex) && (
+                                      <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/20 p-2.5">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                            ¿Es un ejercicio?
+                                          </label>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              openQuickCreateFromText(ex)
+                                            }
+                                            disabled={
+                                              !ex.freeText?.trim() &&
+                                              !ex.title?.trim()
+                                            }
+                                            className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand transition-colors hover:bg-brand/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                          >
+                                            <Plus className="size-3" />
+                                            Crear ficha de ejercicio
+                                          </button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">
+                                          Si no, dinos al menos de qué tipo es
+                                          para que cuente en las estadísticas:
+                                        </p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {ASPECTO_JUEGO_VALUES.map((a) => (
+                                            <button
+                                              key={a}
+                                              type="button"
+                                              onClick={() =>
+                                                patchItem(flatIdx, {
+                                                  aspecto:
+                                                    ex.aspecto === a
+                                                      ? null
+                                                      : a,
+                                                })
+                                              }
+                                              className={cn(
+                                                "h-6 px-2 text-[10px] font-semibold rounded-full border transition-colors",
+                                                ex.aspecto === a
+                                                  ? "bg-foreground text-background border-foreground"
+                                                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+                                              )}
+                                            >
+                                              {ASPECTO_JUEGO_LABELS[a]}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
 
                                     <textarea
                                       value={ex.notes}

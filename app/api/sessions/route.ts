@@ -73,6 +73,7 @@ type SessionBlockInputItem = {
     freeText?: string | null;
     durationMinutes?: number | null;
   }> | null;
+  aspecto?: string | null;
 };
 
 type SessionBlockInput = {
@@ -695,6 +696,7 @@ export async function POST(request: Request) {
                   item.kind === "stations"
                     ? buildStations(item.stations)
                     : null,
+                aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
               };
             })
           );

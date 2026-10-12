@@ -1,5 +1,5 @@
 import type { PickerTaggedExercise } from "@/components/app/exercise-picker-filters";
-import type { StationDraftItem } from "@/lib/block-items";
+import type { AspectoJuego, StationDraftItem } from "@/lib/block-items";
 
 export type TrainingPhase = "activation" | "main" | "cooldown";
 
@@ -47,6 +47,13 @@ export interface WizardExercise {
   notes: string;
   phase: TrainingPhase | null;
   intensity: number | null;
+  /**
+   * Aspecto del juego (técnica/táctica/física/mental) para items de texto,
+   * descanso o estaciones sin ejercicio de biblioteca: permite contarlos en
+   * las estadísticas aunque no se haya creado una ficha completa. No se usa
+   * en items "exercise" (su aspecto sale de la ficha del ejercicio).
+   */
+  aspecto?: AspectoJuego | null;
 }
 
 export interface WizardBlockItem {
@@ -57,6 +64,7 @@ export interface WizardBlockItem {
   durationMinutes?: number | null;
   notes?: string | null;
   stations?: StationDraftItem[] | null;
+  aspecto?: AspectoJuego | null;
 }
 
 export interface WizardSessionBlock {

@@ -1,6 +1,7 @@
 import {
   DEFAULT_BLOCK_ITEM_DURATION,
   emptyStationDraft,
+  type AspectoJuego,
   type StationDraftItem,
 } from "@/lib/block-items";
 import type {
@@ -50,7 +51,8 @@ export function createTextItem(
   phase: TrainingPhase | null = null,
   durationMinutes: number | null = null,
   notes = "",
-  title = ""
+  title = "",
+  aspecto: AspectoJuego | null = null
 ): WizardExercise {
   return {
     exerciseId: `${TEXT_ITEM_PREFIX}${randomKey()}`,
@@ -64,6 +66,7 @@ export function createTextItem(
     notes,
     phase,
     intensity: null,
+    aspecto,
   };
 }
 
@@ -167,7 +170,8 @@ export function textItemsFromBlocks(
             phase,
             item.durationMinutes ?? null,
             item.notes ?? "",
-            item.title?.trim() ?? ""
+            item.title?.trim() ?? "",
+            item.aspecto ?? null
           ),
         ];
       }
@@ -184,6 +188,7 @@ export type BlockPayloadItem = {
   durationMinutes: number | null;
   notes: string | null;
   stations?: StationDraftItem[];
+  aspecto?: AspectoJuego | null;
 };
 
 export type BlockPayload = {
@@ -236,6 +241,7 @@ export function buildBlocksPayload(
         title,
         durationMinutes: item.overrideDuration ?? null,
         notes: item.notes.trim() || null,
+        aspecto: item.aspecto ?? null,
       });
     } else {
       block.items.push({
@@ -308,6 +314,7 @@ type PlanItemLike =
       durationMinutes: number | null;
       notes: string | null;
       phase: TrainingPhase;
+      aspecto?: AspectoJuego | null;
     }
   | {
       kind: "warmup";
@@ -339,7 +346,8 @@ export function planItemsToWizard(items: PlanItemLike[]): WizardExercise[] {
         item.phase,
         item.durationMinutes,
         item.notes ?? "",
-        item.title ?? ""
+        item.title ?? "",
+        item.aspecto ?? null
       );
     }
     if (item.kind === "warmup") {

@@ -386,6 +386,12 @@ export const sessionBlockItems = pgTable(
     kind: varchar("kind", { length: 16 }),
     // Sub-items for kind="stations" (2-10 estaciones); see lib/block-items.ts.
     stations: jsonb("stations").$type<StationItemJson[]>(),
+    // Aspecto del juego (tecnica|tactica|fisico|mental) para items de texto
+    // libre sin ejercicio de biblioteca asociado: permite que las
+    // estadísticas de la sesión cuenten su tiempo aunque no se haya creado
+    // una ficha completa. Null para ejercicios de biblioteca (su aspecto
+    // sale de exercises.aspecto_juego) y para items sin clasificar.
+    aspectoJuego: varchar("aspecto_juego", { length: 16 }),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),
@@ -871,6 +877,12 @@ export const classBlockExercises = pgTable(
     kind: varchar("kind", { length: 16 }),
     // Sub-items for kind="stations" (2-10 estaciones); see lib/block-items.ts.
     stations: jsonb("stations").$type<StationItemJson[]>(),
+    // Aspecto del juego (tecnica|tactica|fisico|mental) para items de texto
+    // libre sin ejercicio de biblioteca asociado: permite que las
+    // estadísticas de la sesión cuenten su tiempo aunque no se haya creado
+    // una ficha completa. Null para ejercicios de biblioteca (su aspecto
+    // sale de exercises.aspecto_juego) y para items sin clasificar.
+    aspectoJuego: varchar("aspecto_juego", { length: 16 }),
   },
   (t) => [
     index("class_block_exercises_block_id_idx").on(t.blockId),

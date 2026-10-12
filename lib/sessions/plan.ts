@@ -6,7 +6,11 @@ import {
   sessionBlocks,
   sessionExercises,
 } from "@/db/schema";
-import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import {
+  resolveItemKind,
+  type AspectoJuego,
+  type StationItemJson,
+} from "@/lib/block-items";
 
 export type SessionPlanPhase = "activation" | "main" | "cooldown";
 
@@ -42,6 +46,8 @@ export type SessionPlanItem =
       description: string | null;
       durationMinutes: number | null;
       notes: string | null;
+      /** Aspecto del juego elegido para este texto libre, si lo tiene. */
+      aspecto: AspectoJuego | null;
     }
   | {
       kind: "warmup";
@@ -133,6 +139,7 @@ export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
       itemNotes: sessionBlockItems.notes,
       itemKind: sessionBlockItems.kind,
       itemStations: sessionBlockItems.stations,
+      itemAspectoJuego: sessionBlockItems.aspectoJuego,
       exId: exercises.id,
       exName: exercises.name,
       exDescription: exercises.description,
@@ -244,6 +251,7 @@ export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
           : (row.itemExerciseDescription ?? null),
         durationMinutes: row.itemDuration ?? null,
         notes: row.itemNotes ?? null,
+        aspecto: (row.itemAspectoJuego as AspectoJuego | null) ?? null,
       });
     }
     return { blocks, items };

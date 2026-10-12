@@ -23,6 +23,20 @@ export const BLOCK_ITEM_KINDS = [
 
 export type BlockItemKind = (typeof BLOCK_ITEM_KINDS)[number];
 
+// Aspecto del juego con el que se puede etiquetar un item de texto libre,
+// descanso o estaciones que no tiene ficha de ejercicio propia (misma
+// clasificación que `exercises.aspectoJuego`). Se usa para que las
+// estadísticas de la sesión puedan contar su tiempo por categoría aunque
+// el monitor no haya creado un ejercicio completo.
+export const ASPECTO_JUEGO_VALUES = [
+  "tecnica",
+  "tactica",
+  "fisico",
+  "mental",
+] as const;
+
+export type AspectoJuego = (typeof ASPECTO_JUEGO_VALUES)[number];
+
 export const STATION_COUNT_MIN = 2;
 export const STATION_COUNT_MAX = 10;
 

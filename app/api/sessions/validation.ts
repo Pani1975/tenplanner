@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  ASPECTO_JUEGO_VALUES,
   BLOCK_ITEM_KINDS,
   STATION_COUNT_MAX,
   STATION_COUNT_MIN,
@@ -63,6 +64,9 @@ const sessionBlockItemSchema = z
       .max(STATION_COUNT_MAX)
       .optional()
       .nullable(),
+    // Aspecto del juego (técnica/táctica/física/mental) para items de texto
+    // sin ejercicio de biblioteca asociado; opcional.
+    aspecto: z.enum(ASPECTO_JUEGO_VALUES).optional().nullable(),
   })
   .refine(
     (item) => {

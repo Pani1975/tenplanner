@@ -158,6 +158,9 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
       description: null,
       durationMinutes: row.itemDuration ?? null,
       notes: null,
+      // La clasificación por aspecto del juego para texto libre sin ficha
+      // solo está implementada en el creador de sesiones por ahora.
+      aspecto: null,
     });
   }
 

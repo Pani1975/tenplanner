@@ -31,6 +31,7 @@ import type { AvailableExercise } from "@/components/app/session-form";
 import { SessionAnalyticsView } from "@/components/app/session-analytics";
 import type { SessionAnalytics } from "@/lib/sessions/analytics";
 import { cn } from "@/lib/utils";
+import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
 import { Target, MapPin, Hash, Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 
@@ -178,8 +179,12 @@ export interface SessionBlockData {
       freeText: string | null;
       durationMinutes: number | null;
     }>;
+    /** Aspecto del juego (técnica/táctica/física/mental) para items sin
+     * ejercicio de biblioteca, elegido al crear el texto libre. */
+    aspectoJuego?: string | null;
   }>;
 }
+
 
 function MetadataChips({ session }: { session: SessionData }) {
   const hasAny =
@@ -881,6 +886,16 @@ export function SessionDetailClient({
                               item.freeText ||
                               "Texto libre"
                             )}
+                            {!item.exerciseId &&
+                              item.kind !== "warmup" &&
+                              item.kind !== "stations" &&
+                              item.aspectoJuego && (
+                                <span className="ml-2 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground align-middle">
+                                  {ASPECTO_JUEGO_LABELS[
+                                    item.aspectoJuego as keyof typeof ASPECTO_JUEGO_LABELS
+                                  ] ?? item.aspectoJuego}
+                                </span>
+                              )}
                           </div>
                           <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
                             <Clock className="size-3" />

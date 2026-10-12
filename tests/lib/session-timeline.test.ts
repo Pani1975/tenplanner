@@ -53,6 +53,7 @@ describe("session timeline", () => {
         title: null,
         durationMinutes: 3,
         notes: null,
+        aspecto: null,
       },
     ]);
     expect(blocks[1].items.map((i) => i.exerciseId ?? i.freeText)).toEqual([
@@ -66,6 +67,7 @@ describe("session timeline", () => {
         title: null,
         durationMinutes: 5,
         notes: "suave",
+        aspecto: null,
       },
     ]);
   });
@@ -176,6 +178,7 @@ describe("session timeline", () => {
         title: "Recordatorio: traer petos",
         durationMinutes: null,
         notes: null,
+        aspecto: null,
       },
       {
         kind: "text",
@@ -183,6 +186,7 @@ describe("session timeline", () => {
         title: "Partido final",
         durationMinutes: 8,
         notes: null,
+        aspecto: null,
       },
     ]);
   });
