@@ -146,6 +146,11 @@ export default function PrivacidadPage() {
             "Dirección IP, logs de acceso, identificadores de sesión (Supabase Auth).",
             "Generados automáticamente.",
           ],
+          [
+            "Analítica web agregada",
+            "Páginas visitadas, país aproximado y tipo de dispositivo, sin cookies ni IP completa (Vercel Analytics). No se asocia a tu cuenta.",
+            "Generados automáticamente al navegar por la web.",
+          ],
         ]}
       />
 
@@ -218,6 +223,11 @@ export default function PrivacidadPage() {
             "Interés legítimo (art. 6.1.f).",
             "IP, logs de autenticación.",
           ],
+          [
+            "Medir el uso de la web de forma agregada y mejorar el servicio.",
+            "Interés legítimo (art. 6.1.f). Al no usar cookies ni identificar a la persona, no requiere consentimiento (art. 22.2 LSSI-CE).",
+            "Páginas vistas, país aproximado, dispositivo (Vercel Analytics).",
+          ],
         ]}
       />
 
@@ -257,7 +267,7 @@ export default function PrivacidadPage() {
           ],
           [
             "Vercel Inc.",
-            "Hosting y entrega de la aplicación web.",
+            "Hosting y entrega de la aplicación web, y analítica web agregada sin cookies (Vercel Analytics).",
             "EE. UU. (red global CDN).",
             "DPA + SCC.",
           ],
