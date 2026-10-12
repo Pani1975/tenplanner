@@ -25,7 +25,11 @@ import {
 } from "@/lib/sessions/analytics";
 import { getFavoritedSessionIds } from "@/lib/sessions/favorites";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
-import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import {
+  resolveItemKind,
+  resolveBlockItemDuration,
+  type StationItemJson,
+} from "@/lib/block-items";
 import {
   getFilteredSessionIds,
   sessionNavQueryString,
@@ -132,6 +136,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         itemNotes: sessionBlockItems.notes,
         itemKind: sessionBlockItems.kind,
         itemStations: sessionBlockItems.stations,
+        itemAspectoJuego: sessionBlockItems.aspectoJuego,
       })
       .from(sessionBlocks)
       .leftJoin(
@@ -183,24 +188,30 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
     description: e.description ?? null,
   }));
 
-  const analyticsInput: AnalyticsExerciseInput[] = exerciseRows.map((e) => ({
-    orderIndex: e.orderIndex,
-    durationMinutes: e.durationMinutes ?? e.defaultDurationMinutes,
-    category: e.category,
-    difficulty: e.difficulty,
-    resolvedPhase: resolvePhase(e.overridePhase, e.exercisePhase),
-    resolvedIntensity: resolveIntensity(
-      e.overrideIntensity,
-      e.exerciseIntensity
-    ),
-    name: e.name,
-    aspectos:
-      Array.isArray(e.aspectosJuego) && e.aspectosJuego.length > 0
-        ? e.aspectosJuego
-        : e.aspectoJuego
-          ? [e.aspectoJuego]
-          : null,
-  }));
+  // Ejercicios de biblioteca vinculados directamente a la sesión (no
+  // cuentan el tiempo de calentamientos, textos libres ni estaciones:
+  // eso se añade más abajo a partir de los bloques, para que la duración
+  // total del resumen coincida con la duración real del plan).
+  const exerciseAnalyticsInput: AnalyticsExerciseInput[] = exerciseRows.map(
+    (e) => ({
+      orderIndex: e.orderIndex,
+      durationMinutes: e.durationMinutes ?? e.defaultDurationMinutes,
+      category: e.category,
+      difficulty: e.difficulty,
+      resolvedPhase: resolvePhase(e.overridePhase, e.exercisePhase),
+      resolvedIntensity: resolveIntensity(
+        e.overrideIntensity,
+        e.exerciseIntensity
+      ),
+      name: e.name,
+      aspectos:
+        Array.isArray(e.aspectosJuego) && e.aspectosJuego.length > 0
+          ? e.aspectosJuego
+          : e.aspectoJuego
+            ? [e.aspectoJuego]
+            : null,
+    })
+  );
 
   const tags = Array.isArray(session.tags) ? session.tags : [];
 
@@ -222,6 +233,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         notes: string | null;
         kind: "exercise" | "text" | "warmup" | "stations";
         stations: StationItemJson[];
+        aspectoJuego: string | null;
       }>;
     }>
   >((blocks, row) => {
@@ -253,10 +265,80 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
           freeText: row.itemFreeText,
         }),
         stations: (row.itemStations as StationItemJson[] | null) ?? [],
+        aspectoJuego: row.itemAspectoJuego,
       });
     }
     return blocks;
   }, []);
+
+  // Duración por defecto de un ejercicio de biblioteca, para resolver la
+  // de los items de bloque de tipo "exercise" que no tengan duración
+  // propia (p. ej. estaciones que referencian un ejercicio).
+  const exerciseDurationById = new Map(
+    exerciseRows.map((e) => [e.exerciseId, e.defaultDurationMinutes])
+  );
+
+  function blockOrderToPhase(orderIndex: number) {
+    if (orderIndex === 1) return "activation" as const;
+    if (orderIndex === 3) return "cooldown" as const;
+    return "main" as const;
+  }
+
+  // Calentamientos, textos libres y estaciones no están en sessionExercises
+  // (esa tabla solo guarda los ejercicios de biblioteca de los bloques), así
+  // que su duración se añade aquí para que "Duración" en el resumen de la
+  // sesión coincida con la duración real del plan (la que se ve en la
+  // cabecera y se usó para calcular session.durationMinutes al guardar).
+  const blockExtrasAnalyticsInput: AnalyticsExerciseInput[] = [];
+  for (const block of sessionBlocksData) {
+    const phase = blockOrderToPhase(block.orderIndex);
+    for (const item of block.items) {
+      if (item.kind === "exercise") continue; // ya contado arriba
+      const durationMinutes = resolveBlockItemDuration(
+        {
+          kind: item.kind,
+          exerciseId: item.exerciseId,
+          freeText: item.freeText,
+          durationMinutes: item.durationMinutes,
+        },
+        exerciseDurationById
+      );
+      // El aspecto que el monitor eligió al crear el texto libre (si lo
+      // hizo) alimenta tanto el desglose por categoría como el de aspecto
+      // del juego, para que cuente en las estadísticas sin necesidad de
+      // una ficha de ejercicio completa.
+      const aspecto = item.aspectoJuego;
+      const categoryFromAspecto: Record<string, string> = {
+        tecnica: "technique",
+        tactica: "tactics",
+        fisico: "fitness",
+      };
+      blockExtrasAnalyticsInput.push({
+        orderIndex: 1000 + block.orderIndex * 100 + item.orderIndex,
+        durationMinutes,
+        category:
+          item.kind === "warmup"
+            ? "warm-up"
+            : (aspecto && categoryFromAspecto[aspecto]) || "unclassified",
+        difficulty: "unclassified",
+        resolvedPhase: phase,
+        resolvedIntensity: null,
+        name:
+          item.title?.trim() ||
+          (item.kind === "warmup"
+            ? "Descanso"
+            : item.kind === "stations"
+              ? "Estaciones"
+              : item.freeText?.trim().slice(0, 60) || "Texto libre"),
+        aspectos: aspecto ? [aspecto] : null,
+      });
+    }
+  }
+
+  const analyticsInput = [
+    ...exerciseAnalyticsInput,
+    ...blockExtrasAnalyticsInput,
+  ];
 
   const analytics = computeSessionAnalytics(
     analyticsInput,
