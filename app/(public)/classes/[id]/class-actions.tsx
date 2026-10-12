@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heart, Plus, Loader2, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClassListPicker } from "./class-list-picker";
+import { ShareButton } from "@/components/app/share-button";
 
 interface ClassActionsProps {
   classId: string;
@@ -64,6 +65,12 @@ export function ClassActions({ classId, initialFavorite }: ClassActionsProps) {
         <span className="sm:hidden">Añadir</span>
       </button>
       <ClassListPicker classId={classId} />
+      <ShareButton
+        title="Clase"
+        text="Mira esta clase en Ten Planner"
+        iconOnly
+        className="flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
+      />
       <button
         type="button"
         onClick={handleDownloadPdf}
