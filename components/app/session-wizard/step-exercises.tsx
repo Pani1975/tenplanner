@@ -194,13 +194,26 @@ export function StepExercises({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const textCount = selected.filter(isTextItem).length;
-  const exerciseCount = selected.length - textCount;
   const totalDuration = selected.reduce(
     (sum, e) => sum + (e.overrideDuration ?? e.durationMinutes),
     0
   );
   const selectedIds = new Set(selected.map((e) => e.exerciseId));
+  // Sumatorio del tiempo por tipo de elemento (ejercicios, descansos...).
+  const minutesByKind = { exercise: 0, rest: 0, text: 0, stations: 0 };
+  for (const e of selected) {
+    const minutes = e.overrideDuration ?? e.durationMinutes;
+    if (isWarmupItem(e)) minutesByKind.rest += minutes;
+    else if (isStationsItem(e)) minutesByKind.stations += minutes;
+    else if (isTextItem(e)) minutesByKind.text += minutes;
+    else minutesByKind.exercise += minutes;
+  }
+  const timeParts = [
+    { label: "Ejercicios", minutes: minutesByKind.exercise },
+    { label: "Estaciones", minutes: minutesByKind.stations },
+    { label: "Textos/actividades", minutes: minutesByKind.text },
+    { label: "Descansos", minutes: minutesByKind.rest },
+  ].filter((p) => p.minutes > 0);
   const availableCategories = Array.from(
     new Set(libraryExercises.map((e) => e.category))
   );
@@ -781,8 +794,18 @@ export function StepExercises({
                   />
                   <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate leading-snug">
-                      {ex.name}
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
+                      <NextLink
+                        href={`/exercises/${ex.exerciseId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        draggable={false}
+                        title="Ver la ficha del ejercicio"
+                        className="min-w-0 truncate hover:text-brand hover:underline"
+                      >
+                        {ex.name}
+                      </NextLink>
+                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
                     </p>
                     {ex.description && (
                       <p className="truncate text-[11px] text-muted-foreground leading-snug">
@@ -877,15 +900,19 @@ export function StepExercises({
 
       <div className="space-y-4">
         {selected.length > 0 && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {exerciseCount} ejercicio{exerciseCount !== 1 ? "s" : ""}
-              {textCount > 0
-                ? ` · ${textCount} texto${textCount !== 1 ? "s" : ""} libre${textCount !== 1 ? "s" : ""}`
-                : ""}
+          <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+              {timeParts.map((part) => (
+                <span key={part.label}>
+                  {part.label}{" "}
+                  <strong className="font-semibold text-foreground">
+                    {formatMinutes(part.minutes)}
+                  </strong>
+                </span>
+              ))}
             </span>
-            <span className="font-semibold text-foreground">
-              {formatMinutes(totalDuration)}
+            <span className="text-sm font-bold text-foreground">
+              Total: {formatMinutes(totalDuration)}
             </span>
           </div>
         )}

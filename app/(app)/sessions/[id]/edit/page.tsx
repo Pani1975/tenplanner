@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -68,15 +68,24 @@ export default async function EditSessionPage({ params }: PageProps) {
           difficulty: exercises.difficulty,
           durationMinutes: exercises.durationMinutes,
           description: exercises.description,
+          nivel: exercises.nivel,
+          niveles: exercises.niveles,
+          phase: exercises.phase,
+          aspectoJuego: exercises.aspectoJuego,
+          aspectosJuego: exercises.aspectosJuego,
+          golpes: exercises.golpes,
         })
         .from(exercises)
         .where(
-          publicExercisesEnabled
-            ? exerciseVisibleToUserCondition(user.id)
-            : eq(exercises.createdBy, user.id)
+          and(
+            publicExercisesEnabled
+              ? exerciseVisibleToUserCondition(user.id)
+              : eq(exercises.createdBy, user.id),
+            eq(exercises.sport, sessionRow.sport)
+          )
         )
         .orderBy(exercises.name)
-        .limit(200),
+        .limit(2000),
     ]);
 
   const monitorName =
