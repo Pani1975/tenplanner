@@ -796,7 +796,7 @@ export function StepExercises({
                   <div className="flex-1 min-w-0">
                     <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
                       <NextLink
-                        href={`/exercises/${ex.exerciseId}`}
+                        href={`/exercises/${ex.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         draggable={false}
