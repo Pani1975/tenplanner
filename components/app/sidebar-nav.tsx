@@ -27,6 +27,7 @@ import {
   Users,
   Users2,
   X,
+  XCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,11 @@ const navItems: NavItem[] = [
       { href: "/sessions", label: "Mis sesiones", icon: ClipboardList },
       { href: "/sessions/favorites", label: "Favoritas", icon: Heart },
       { href: "/sessions?filter=drafts", label: "Borradores", icon: FileText },
+      {
+        href: "/sessions?filter=cancelled",
+        label: "Canceladas",
+        icon: XCircle,
+      },
       { href: "/sessions/new", label: "Nueva sesión", icon: Plus },
     ],
   },

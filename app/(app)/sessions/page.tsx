@@ -36,7 +36,7 @@ import {
   SESSION_SORTS,
   type SessionSort,
 } from "@/lib/nav/session-nav";
-type Filter = "upcoming" | "past" | "all" | "drafts";
+type Filter = "upcoming" | "past" | "all" | "drafts" | "cancelled";
 const PAGE_SIZE = 20;
 
 const SORT_LABELS: Record<SessionSort, string> = {
@@ -114,7 +114,8 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     filter === "past" ||
     filter === "upcoming" ||
     filter === "all" ||
-    filter === "drafts"
+    filter === "drafts" ||
+    filter === "cancelled"
       ? filter
       : "all";
   const searchTerm = q?.trim() ?? "";
@@ -131,6 +132,8 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     whereConditions.push(sql`${sessionsTable.scheduledAt} >= now()`);
   else if (activeFilter === "past")
     whereConditions.push(sql`${sessionsTable.scheduledAt} < now()`);
+  else if (activeFilter === "cancelled")
+    whereConditions.push(eq(sessionsTable.status, "cancelled"));
   if (searchTerm) {
     const searchWhere = or(
       ilike(sessionsTable.title, `%${searchTerm}%`),
@@ -146,28 +149,34 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     ? and(mineOrClub, eq(sessionsTable.userId, monitorFilter))!
     : mineOrClub;
 
-  const [allCountRows, filteredCountRows, upcomingCountRows, pastCountRows] =
-    await Promise.all([
-      db.select({ total: count() }).from(sessionsTable).where(baseCountClause),
-      db.select({ total: count() }).from(sessionsTable).where(whereClause),
-      db
-        .select({ total: count() })
-        .from(sessionsTable)
-        .where(
-          and(baseCountClause, sql`${sessionsTable.scheduledAt} >= now()`)!
-        ),
-      db
-        .select({ total: count() })
-        .from(sessionsTable)
-        .where(
-          and(baseCountClause, sql`${sessionsTable.scheduledAt} < now()`)!
-        ),
-    ]);
+  const [
+    allCountRows,
+    filteredCountRows,
+    upcomingCountRows,
+    pastCountRows,
+    cancelledCountRows,
+  ] = await Promise.all([
+    db.select({ total: count() }).from(sessionsTable).where(baseCountClause),
+    db.select({ total: count() }).from(sessionsTable).where(whereClause),
+    db
+      .select({ total: count() })
+      .from(sessionsTable)
+      .where(and(baseCountClause, sql`${sessionsTable.scheduledAt} >= now()`)!),
+    db
+      .select({ total: count() })
+      .from(sessionsTable)
+      .where(and(baseCountClause, sql`${sessionsTable.scheduledAt} < now()`)!),
+    db
+      .select({ total: count() })
+      .from(sessionsTable)
+      .where(and(baseCountClause, eq(sessionsTable.status, "cancelled"))!),
+  ]);
 
   const totalSessions = Number(allCountRows[0]?.total ?? 0);
   const totalFiltered = Number(filteredCountRows[0]?.total ?? 0);
   const upcomingCount = Number(upcomingCountRows[0]?.total ?? 0);
   const pastCount = Number(pastCountRows[0]?.total ?? 0);
+  const cancelledCount = Number(cancelledCountRows[0]?.total ?? 0);
 
   const [draftCountRows] = await db
     .select({ total: count() })
@@ -254,6 +263,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     { key: "all", label: "Todas", n: totalSessions },
     { key: "upcoming", label: "Próximas", n: upcomingCount },
     { key: "past", label: "Pasadas", n: pastCount },
+    { key: "cancelled", label: "Canceladas", n: cancelledCount },
     { key: "drafts", label: "Borradores", n: draftCount },
   ];
   return (
@@ -437,7 +447,9 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                         ? "No tienes sesiones próximas"
                         : activeFilter === "past"
                           ? "No tienes sesiones pasadas"
-                          : "Sin sesiones todavía"}
+                          : activeFilter === "cancelled"
+                            ? "No tienes sesiones canceladas"
+                            : "Sin sesiones todavía"}
                   </p>
                   <p className="text-[13px] text-foreground/55 max-w-sm mx-auto mb-5">
                     {searchTerm
@@ -475,6 +487,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                     return {
                       id: session.id,
                       title: session.title,
+                      status: session.status,
                       dayMonth: formatDayMonth(date),
                       weekdayTime: `${formatWeekday(date)} · ${formatTime(date)}`,
                       statusLabel:
