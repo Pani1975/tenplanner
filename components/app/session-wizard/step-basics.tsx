@@ -3,7 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import { DateTimePicker } from "@/components/app/date-time-picker";
 import { cn } from "@/lib/utils";
-import { LOCATION_OPTIONS, type WizardState } from "./types";
+import type { WizardState } from "./types";
 import { sessionCode } from "./recurrence";
 import { hasPlanContent } from "./timeline";
 
@@ -194,36 +194,6 @@ export function StepBasics({
               Se recalcula sola a partir de los ejercicios y textos del plan.
             </p>
           )}
-        </div>
-      </div>
-
-      {/* Location */}
-      <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Ubicación{" "}
-          <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-            opcional
-          </span>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {LOCATION_OPTIONS.map((loc) => {
-            const isSelected = state.location === loc;
-            return (
-              <button
-                key={loc}
-                type="button"
-                onClick={() => update({ location: isSelected ? "" : loc })}
-                className={cn(
-                  "h-9 px-4 text-xs font-semibold rounded-full border transition-all",
-                  isSelected
-                    ? "bg-brand text-brand-foreground border-brand"
-                    : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-brand/40 hover:bg-brand/5"
-                )}
-              >
-                {loc}
-              </button>
-            );
-          })}
         </div>
       </div>
     </div>
