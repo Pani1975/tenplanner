@@ -9,6 +9,7 @@ import {
   Clock,
   Dumbbell,
   Loader2,
+  RotateCcw,
   Trash2,
 } from "lucide-react";
 import { SessionFavoriteToggle } from "@/components/app/session-favorite-toggle";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 export interface SessionListItem {
   id: string;
   title: string;
+  status: "scheduled" | "completed" | "cancelled";
   dayMonth: string;
   weekdayTime: string;
   statusLabel: string;
@@ -53,6 +55,7 @@ export function SessionsBulkList({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState<string | null>(null);
 
   const pageIds = items.map((i) => i.id);
 
@@ -92,6 +95,27 @@ export function SessionsBulkList({
       setError("Error de red. Inténtalo de nuevo.");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function recoverSession(id: string) {
+    setRecovering(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/sessions/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "scheduled" }),
+      });
+      if (!res.ok) {
+        setError("No se pudo recuperar la sesión. Inténtalo de nuevo.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Error de red. Inténtalo de nuevo.");
+    } finally {
+      setRecovering(null);
     }
   }
 
@@ -269,12 +293,29 @@ export function SessionsBulkList({
                       <ArrowRight className="size-4" />
                     </span>
                   </Link>
-                  <SessionFavoriteToggle
-                    sessionId={session.id}
-                    sessionTitle={session.title}
-                    initialFavorited={session.favorited}
-                    className="absolute right-[4.25rem] top-1/2 -translate-y-1/2"
-                  />
+                  {session.status === "cancelled" ? (
+                    <button
+                      type="button"
+                      aria-label="Recuperar sesión"
+                      title="Recuperar sesión"
+                      disabled={recovering === session.id}
+                      onClick={() => void recoverSession(session.id)}
+                      className="absolute right-[4.25rem] top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#D6FF38]/15 hover:text-foreground disabled:opacity-50"
+                    >
+                      {recovering === session.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="size-4" />
+                      )}
+                    </button>
+                  ) : (
+                    <SessionFavoriteToggle
+                      sessionId={session.id}
+                      sessionTitle={session.title}
+                      initialFavorited={session.favorited}
+                      className="absolute right-[4.25rem] top-1/2 -translate-y-1/2"
+                    />
+                  )}
                 </>
               )}
             </li>
