@@ -161,15 +161,11 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     db
       .select({ total: count() })
       .from(sessionsTable)
-      .where(
-        and(baseCountClause, sql`${sessionsTable.scheduledAt} >= now()`)!
-      ),
+      .where(and(baseCountClause, sql`${sessionsTable.scheduledAt} >= now()`)!),
     db
       .select({ total: count() })
       .from(sessionsTable)
-      .where(
-        and(baseCountClause, sql`${sessionsTable.scheduledAt} < now()`)!
-      ),
+      .where(and(baseCountClause, sql`${sessionsTable.scheduledAt} < now()`)!),
     db
       .select({ total: count() })
       .from(sessionsTable)
