@@ -5,6 +5,7 @@ import {
   ASPECTO_JUEGO_LABELS,
   FASES,
   NIVEL_IDS,
+  NIVEL_LEGACY_IDS,
   NIVELES,
   nivelLabel,
 } from "@/lib/exercise-taxonomy";
@@ -74,8 +75,7 @@ export function matchesPickerFilters(
   if (filters.fase && ex.phase !== filters.fase) return false;
   if (filters.aspecto && !aspectosOf(ex).includes(filters.aspecto))
     return false;
-  if (filters.golpe && !(ex.golpes ?? []).includes(filters.golpe))
-    return false;
+  if (filters.golpe && !(ex.golpes ?? []).includes(filters.golpe)) return false;
   return true;
 }
 
@@ -111,7 +111,7 @@ export function ExercisePickerFilters({
   const niveles = presentValues(
     exercises.flatMap(nivelesOf),
     NIVEL_IDS as readonly string[]
-  );
+  ).filter((id) => !NIVEL_LEGACY_IDS.includes(id));
   const fases = FASES.filter((f) => exercises.some((ex) => ex.phase === f.id));
   const aspectos = presentValues(
     exercises.flatMap(aspectosOf),

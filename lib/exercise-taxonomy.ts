@@ -164,6 +164,14 @@ export const NIVEL_LEGACY = [
 
 export type NivelLegacyId = (typeof NIVEL_LEGACY)[number]["id"];
 
+// Ids de NIVEL_LEGACY, para que las UI que listan niveles "presentes" en
+// datos ya guardados (filtros de buscador, etc.) puedan excluirlos: siguen
+// siendo válidos a efectos de guardado, pero no se ofrecen ni se muestran
+// como opción nunca más.
+export const NIVEL_LEGACY_IDS: readonly string[] = NIVEL_LEGACY.map(
+  (n) => n.id
+);
+
 // Todos los ids de nivel posibles (tenis/pickleball/tenis playa + pádel +
 // legacy), usado para validar en el esquema sin importar qué deporte esté
 // activo.
