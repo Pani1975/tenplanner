@@ -96,6 +96,7 @@ export interface SessionExerciseData {
   executionNotes: string | null;
   wasSkipped: boolean;
   materials: string[];
+  description?: string | null;
 }
 
 function formatDate(isoString: string) {
@@ -419,138 +420,6 @@ function StudentsSection({
   );
 }
 
-const CATEGORY_BAR: Record<string, string> = {
-  technique: "bg-blue-500",
-  tactics: "bg-purple-500",
-  fitness: "bg-amber-500",
-  "warm-up": "bg-brand",
-};
-
-const CATEGORY_BAR_LIGHT: Record<string, string> = {
-  technique: "bg-blue-500/15 border-blue-500/30",
-  tactics: "bg-purple-500/15 border-purple-500/30",
-  fitness: "bg-amber-500/15 border-amber-500/30",
-  "warm-up": "bg-brand/15 border-brand/30",
-};
-
-function SessionRoadmap({
-  exercises,
-  totalMinutes,
-}: {
-  exercises: SessionExerciseData[];
-  totalMinutes: number;
-}) {
-  const total =
-    totalMinutes > 0
-      ? totalMinutes
-      : exercises.reduce((s, e) => s + e.durationMinutes, 0);
-  return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-border/50">
-        <h2 className="font-semibold text-sm text-foreground">Hoja de ruta</h2>
-      </div>
-      <div className="p-6 space-y-4">
-        {/* Timeline bar */}
-        <div className="flex h-8 rounded-xl overflow-hidden gap-px">
-          {exercises.map((ex) => {
-            const pct =
-              total > 0
-                ? (ex.durationMinutes / total) * 100
-                : 100 / exercises.length;
-            return (
-              <div
-                key={ex.exerciseId}
-                className={cn(
-                  "h-full relative group",
-                  CATEGORY_BAR[ex.category] ?? "bg-muted"
-                )}
-                style={{ width: `${pct}%`, minWidth: "2px" }}
-                title={`${ex.name} · ${ex.durationMinutes} min`}
-              />
-            );
-          })}
-        </div>
-
-        {/* Step list */}
-        <div className="space-y-2">
-          {exercises.map((ex, idx) => {
-            const pct =
-              total > 0 ? Math.round((ex.durationMinutes / total) * 100) : 0;
-            const elapsed = exercises
-              .slice(0, idx)
-              .reduce((s, e) => s + e.durationMinutes, 0);
-            return (
-              <div key={ex.exerciseId} className="flex items-center gap-3">
-                {/* Timeline dot + line */}
-                <div className="flex flex-col items-center shrink-0 w-4">
-                  <div
-                    className={cn(
-                      "size-2.5 rounded-full border-2",
-                      CATEGORY_BAR_LIGHT[ex.category] ??
-                        "bg-muted border-muted-foreground/30",
-                      "border-current"
-                    )}
-                  />
-                  {idx < exercises.length - 1 && (
-                    <div className="w-px flex-1 min-h-[1.25rem] bg-border/60 mt-1" />
-                  )}
-                </div>
-
-                {/* Content */}
-                <div
-                  className={cn(
-                    "flex-1 flex items-center justify-between gap-3 px-3 py-2 rounded-xl border text-xs",
-                    CATEGORY_BAR_LIGHT[ex.category] ??
-                      "bg-muted/30 border-border"
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate">
-                      {ex.name}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5">
-                      {CATEGORY_LABELS[ex.category] ?? ex.category}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0 text-muted-foreground">
-                    <p className="font-mono">
-                      {elapsed}′ – {elapsed + ex.durationMinutes}′
-                    </p>
-                    <p className="text-[10px] mt-0.5">
-                      {ex.durationMinutes} min · {pct}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-wrap gap-3 pt-1">
-          {(["warm-up", "technique", "tactics", "fitness"] as const)
-            .filter((cat) => exercises.some((e) => e.category === cat))
-            .map((cat) => (
-              <div
-                key={cat}
-                className="flex items-center gap-1.5 text-[10px] text-muted-foreground"
-              >
-                <div className={cn("size-2 rounded-sm", CATEGORY_BAR[cat])} />
-                {CATEGORY_LABELS[cat]}
-                <span className="font-mono">
-                  {exercises
-                    .filter((e) => e.category === cat)
-                    .reduce((s, e) => s + e.durationMinutes, 0)}{" "}
-                  min
-                </span>
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function SessionDetailClient({
   session,
   sessionExercises,
@@ -659,6 +528,18 @@ export function SessionDetailClient({
     router.push("/sessions");
     router.refresh();
   }
+
+  // Minutos de cada elemento de los bloques: los propios o, si no los tiene,
+  // los del ejercicio de la sesión (o 5 min por defecto en textos, descansos
+  // y estaciones), igual que calcula el servidor.
+  const exerciseMinutes = new Map(
+    sessionExercises.map((e) => [e.exerciseId, e.durationMinutes])
+  );
+  const itemMinutes = (item: SessionBlockData["items"][number]) =>
+    item.durationMinutes ??
+    (item.kind === "exercise" || (!item.kind && item.exerciseId)
+      ? ((item.exerciseId ? exerciseMinutes.get(item.exerciseId) : null) ?? 0)
+      : 5);
 
   return (
     <div className="min-h-full w-full space-y-6 bg-[#F4F4F1] px-4 py-8 dark:bg-[#050505] sm:px-6 md:px-8">
@@ -926,14 +807,6 @@ export function SessionDetailClient({
         isOwner={isOwner}
       />
 
-      {/* Roadmap */}
-      {sessionExercises.length > 0 && (
-        <SessionRoadmap
-          exercises={sessionExercises}
-          totalMinutes={session.durationMinutes}
-        />
-      )}
-
       {sessionBlocks.length > 0 && (
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
@@ -941,7 +814,16 @@ export function SessionDetailClient({
               Bloques de la sesión
             </h2>
             <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              Snapshot
+              {sessionBlocks.reduce(
+                (sum, block) =>
+                  sum +
+                  block.items.reduce(
+                    (blockSum, item) => blockSum + itemMinutes(item),
+                    0
+                  ),
+                0
+              )}{" "}
+              min
             </span>
           </div>
           <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-3">
@@ -950,9 +832,18 @@ export function SessionDetailClient({
                 key={block.id}
                 className="rounded-lg border border-border/80 bg-background p-4"
               >
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  {block.title ?? `Bloque ${block.orderIndex}`}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {block.title ?? `Bloque ${block.orderIndex}`}
+                  </p>
+                  <span className="shrink-0 text-[11px] font-semibold tabular-nums text-foreground">
+                    {block.items.reduce(
+                      (sum, item) => sum + itemMinutes(item),
+                      0
+                    )}{" "}
+                    min
+                  </span>
+                </div>
                 {block.notes && (
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     {block.notes}
@@ -964,78 +855,18 @@ export function SessionDetailClient({
                       Sin items definidos.
                     </p>
                   ) : (
-                    block.items.map((item) =>
-                      item.kind === "warmup" ? (
-                        <div
-                          key={item.id}
-                          className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
-                        >
-                          <p className="text-sm font-medium text-foreground">
-                            Descanso
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                            {item.durationMinutes && (
-                              <span>{item.durationMinutes} min</span>
-                            )}
-                            {item.notes && <span>{item.notes}</span>}
-                          </div>
-                        </div>
-                      ) : item.kind === "stations" ? (
-                        <div
-                          key={item.id}
-                          className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium text-foreground">
-                              Estaciones ({item.stations?.length ?? 0})
-                            </p>
-                            {item.durationMinutes && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {item.durationMinutes} min/estación
-                              </span>
-                            )}
-                          </div>
-                          {item.freeText && (
-                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                              {item.freeText}
-                            </p>
-                          )}
-                          <ul className="mt-2 space-y-1">
-                            {(item.stations ?? []).map((station, idx) => (
-                              <li
-                                key={idx}
-                                className="text-xs text-muted-foreground"
-                              >
-                                {idx + 1}.{" "}
-                                {station.kind === "exercise" &&
-                                station.exerciseId ? (
-                                  <Link
-                                    href={`/exercises/${station.exerciseId}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-foreground hover:text-brand hover:underline"
-                                  >
-                                    {station.exerciseName ?? "Ejercicio"}
-                                  </Link>
-                                ) : (
-                                  (station.freeText ?? station.exerciseName)
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                          {item.notes && (
-                            <p className="mt-1 text-[11px] text-muted-foreground">
-                              {item.notes}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div
-                          key={item.id}
-                          className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
-                        >
-                          <p className="text-sm font-medium text-foreground">
-                            {item.exerciseId && item.exerciseName ? (
+                    block.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 text-sm font-medium text-foreground">
+                            {item.kind === "warmup" ? (
+                              "Descanso"
+                            ) : item.kind === "stations" ? (
+                              `Estaciones (${item.stations?.length ?? 0})`
+                            ) : item.exerciseId && item.exerciseName ? (
                               <Link
                                 href={`/exercises/${item.exerciseId}`}
                                 target="_blank"
@@ -1048,28 +879,68 @@ export function SessionDetailClient({
                               item.title ||
                               item.exerciseName ||
                               item.freeText ||
-                              "Item"
+                              "Texto libre"
                             )}
-                          </p>
-                          {item.exerciseDescription && (
-                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                              {item.exerciseDescription}
-                            </p>
-                          )}
-                          {!item.exerciseId && item.title && item.freeText && (
+                          </div>
+                          <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
+                            <Clock className="size-3" />
+                            {itemMinutes(item)} min
+                            {item.kind === "stations" ? "/estación" : ""}
+                          </span>
+                        </div>
+                        {item.kind === "stations" && (
+                          <>
+                            {item.freeText && (
+                              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                                {item.freeText}
+                              </p>
+                            )}
+                            <ul className="mt-2 space-y-1">
+                              {(item.stations ?? []).map((station, idx) => (
+                                <li
+                                  key={idx}
+                                  className="text-xs text-muted-foreground"
+                                >
+                                  {idx + 1}.{" "}
+                                  {station.kind === "exercise" &&
+                                  station.exerciseId ? (
+                                    <Link
+                                      href={`/exercises/${station.exerciseId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-foreground hover:text-brand hover:underline"
+                                    >
+                                      {station.exerciseName ?? "Ejercicio"}
+                                    </Link>
+                                  ) : (
+                                    (station.freeText ?? station.exerciseName)
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                        {item.kind !== "stations" &&
+                          item.kind !== "warmup" &&
+                          !item.exerciseId &&
+                          item.title &&
+                          item.freeText && (
                             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                               {item.freeText}
                             </p>
                           )}
-                          <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                            {item.durationMinutes && (
-                              <span>{item.durationMinutes} min</span>
-                            )}
-                            {item.notes && <span>{item.notes}</span>}
-                          </div>
-                        </div>
-                      )
-                    )
+                        {item.exerciseDescription && (
+                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                            {item.exerciseDescription}
+                          </p>
+                        )}
+                        {item.notes && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {item.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -1164,6 +1035,11 @@ export function SessionDetailClient({
                           {diff?.label ?? ex.difficulty}
                         </span>
                       </div>
+                      {ex.description && (
+                        <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                          {ex.description}
+                        </p>
+                      )}
                       {ex.materials && ex.materials.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {ex.materials.map((m) => (
@@ -1181,7 +1057,7 @@ export function SessionDetailClient({
                         <ExerciseDiagramView
                           diagram={diagrams[ex.exerciseId]}
                           className="mt-3"
-                          maxWidth={200}
+                          maxWidth={260}
                         />
                       )}
                       {ex.notes && (
@@ -1226,6 +1102,7 @@ export function SessionDetailClient({
                         <Clock className="size-3" />
                         {ex.durationMinutes} min
                       </span>
+                      {status === "completed" && (
                       <div
                         className="flex items-center gap-0.5"
                         title="Valorar ejercicio"
@@ -1249,6 +1126,7 @@ export function SessionDetailClient({
                           </button>
                         ))}
                       </div>
+                      )}
                     </div>
                   </div>
                 </div>
