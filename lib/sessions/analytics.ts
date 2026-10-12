@@ -1,6 +1,8 @@
 export type TrainingPhase = "activation" | "main" | "cooldown";
 export type ExerciseCategory = "technique" | "tactics" | "fitness" | "warm-up";
 export type ExerciseDifficulty = "beginner" | "intermediate" | "advanced";
+/** Aspectos del juego con los que se etiquetan los ejercicios. */
+export type ExerciseAspect = "tecnica" | "tactica" | "fisico" | "mental";
 
 export interface AnalyticsExerciseInput {
   orderIndex: number;
@@ -10,6 +12,13 @@ export interface AnalyticsExerciseInput {
   resolvedPhase: TrainingPhase;
   resolvedIntensity: number | null;
   name: string;
+  /** Aspectos del juego del ejercicio (etiquetas de la biblioteca). */
+  aspectos?: string[] | null;
+}
+
+export interface AspectBreakdown {
+  aspect: ExerciseAspect;
+  minutes: number;
 }
 
 export interface PhaseBreakdown {
@@ -64,11 +73,21 @@ export interface SessionAnalytics {
   phaseBreakdown: PhaseBreakdown[];
   phaseTargets: PhaseTarget[];
   categoryBreakdown: CategoryBreakdown[];
+  /** Minutos por aspecto del juego, sacados de las etiquetas de los ejercicios. */
+  aspectBreakdown: AspectBreakdown[];
   difficultyBreakdown: DifficultyBreakdown[];
   intensityCurve: IntensityPoint[];
 }
 
 const ALL_PHASES: TrainingPhase[] = ["activation", "main", "cooldown"];
+const ALL_ASPECTS: ExerciseAspect[] = ["tecnica", "tactica", "fisico", "mental"];
+// Si un ejercicio no tiene aspectos etiquetados se usa su categoría.
+const CATEGORY_TO_ASPECT: Record<string, ExerciseAspect> = {
+  technique: "tecnica",
+  tactics: "tactica",
+  fitness: "fisico",
+  "warm-up": "fisico",
+};
 const ALL_CATEGORIES: ExerciseCategory[] = [
   "warm-up",
   "technique",
@@ -170,6 +189,31 @@ export function computeSessionAnalytics(
   const balanceScore = Math.round(
     (categoriesCovered / ALL_CATEGORIES.length) * 100
   );
+
+  // ── Aspectos del juego ──────────────────────────────────
+  // Los minutos de cada ejercicio se reparten a partes iguales entre sus
+  // aspectos, para que la suma coincida con la duración total.
+  const aspectMinutes = new Map<ExerciseAspect, number>();
+  for (const aspect of ALL_ASPECTS) aspectMinutes.set(aspect, 0);
+  for (const ex of sorted) {
+    let aspects = (ex.aspectos ?? []).filter((a): a is ExerciseAspect =>
+      ALL_ASPECTS.includes(a as ExerciseAspect)
+    );
+    if (aspects.length === 0) {
+      const fallback = CATEGORY_TO_ASPECT[ex.category];
+      aspects = fallback ? [fallback] : [];
+    }
+    for (const aspect of aspects) {
+      aspectMinutes.set(
+        aspect,
+        (aspectMinutes.get(aspect) ?? 0) + ex.durationMinutes / aspects.length
+      );
+    }
+  }
+  const aspectBreakdown: AspectBreakdown[] = ALL_ASPECTS.map((aspect) => ({
+    aspect,
+    minutes: Math.round((aspectMinutes.get(aspect) ?? 0) * 10) / 10,
+  }));
 
   // ── Dificultad ──────────────────────────────────────────
   const difficultyMinutes = new Map<ExerciseDifficulty, number>();
@@ -276,6 +320,7 @@ export function computeSessionAnalytics(
     phaseBreakdown,
     phaseTargets,
     categoryBreakdown,
+    aspectBreakdown,
     difficultyBreakdown,
     intensityCurve,
   };
