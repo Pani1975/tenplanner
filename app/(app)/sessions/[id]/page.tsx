@@ -77,6 +77,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         executionNotes: sessionExercises.executionNotes,
         wasSkipped: sessionExercises.wasSkipped,
         materials: exercises.materials,
+        description: exercises.description,
+        aspectosJuego: exercises.aspectosJuego,
+        aspectoJuego: exercises.aspectoJuego,
       })
       .from(sessionExercises)
       .innerJoin(exercises, eq(sessionExercises.exerciseId, exercises.id))
@@ -177,6 +180,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
     executionNotes: e.executionNotes,
     wasSkipped: e.wasSkipped,
     materials: Array.isArray(e.materials) ? e.materials : [],
+    description: e.description ?? null,
   }));
 
   const analyticsInput: AnalyticsExerciseInput[] = exerciseRows.map((e) => ({
@@ -190,6 +194,12 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       e.exerciseIntensity
     ),
     name: e.name,
+    aspectos:
+      Array.isArray(e.aspectosJuego) && e.aspectosJuego.length > 0
+        ? e.aspectosJuego
+        : e.aspectoJuego
+          ? [e.aspectoJuego]
+          : null,
   }));
 
   const tags = Array.isArray(session.tags) ? session.tags : [];
