@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { CookieBanner } from "@/components/app/cookie-banner";
 import { ServiceWorkerRegister } from "@/components/app/sw-register";
 import { Toaster } from "@/components/ui/sonner";
@@ -135,6 +136,7 @@ export default async function RootLayout({
         <CookieBanner />
         <Toaster />
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   );

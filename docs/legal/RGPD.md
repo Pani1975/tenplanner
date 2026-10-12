@@ -26,6 +26,7 @@ No tocar salvo regresión. Referencia rápida:
 - [x] Cascada de storage al borrar alumno (`app/api/students/[id]/route.ts` DELETE).
 - [x] Cron diario de retención 180 días para chats Dr. Planner (`vercel.json`).
 - [x] Documentación interna: RAT, subencargados, retención, brechas, DPA (`docs/legal/`).
+- [x] Analítica web agregada sin cookies (Vercel Analytics) — `app/layout.tsx`, documentada en RAT Actividad 6, `subprocessors.md` y `/privacidad` + `/cookies`.
 
 ---
 
@@ -220,7 +221,7 @@ Si el roadmap incluye alguno de estos, re-evaluar:
 
 | Cambio                                                | Requisito añadido                                                                                |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Analytics (Vercel Analytics, Plausible, GA4).         | Banner granular (opt-in), actualizar `/cookies`, añadir proveedor a RAT.                         |
+| Analytics con cookies o identificación individual (GA4, Plausible con cookies, etc.). | Banner granular (opt-in), actualizar `/cookies`, añadir proveedor a RAT. (Vercel Analytics, al ser cookieless y agregado, ya está implementado sin opt-in — ver Fase 0 y RAT Actividad 6; si se cambia por una herramienta que use cookies o identifique personas, aplicar esta fila.) |
 | Pagos (Stripe, etc.).                                 | Datos de facturación = nueva finalidad en RAT. Plazo conservación fiscal 6 años (Cód. Comercio). |
 | Email marketing.                                      | Consentimiento separado, opt-in doble, proveedor en RAT, opción de baja.                         |
 | Datos de menores <14.                                 | Mecanismo verificable de consentimiento parental (art. 8.2 RGPD). Re-diseñar flow `/s/[token]`.  |

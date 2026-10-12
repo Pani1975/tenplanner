@@ -39,10 +39,11 @@ export default function CookiesPage() {
       </p>
 
       <div className="mt-8 border-l-2 border-brand pl-4 py-1 text-[13px] text-foreground/70">
-        Actualmente TenPlanner{" "}
-        <strong>no utiliza cookies de analítica ni de publicidad</strong>. Solo
-        se emplean cookies y almacenamiento local estrictamente necesarios para
-        el funcionamiento del servicio.
+        TenPlanner <strong>no utiliza cookies de publicidad ni de tracking
+        entre sitios</strong>. Solo empleamos cookies y almacenamiento local
+        estrictamente necesarios para el funcionamiento del servicio, además
+        de una analítica web agregada y sin cookies (Vercel Analytics) para
+        saber cuánta gente visita la web.
       </div>
 
       <H2 id="que-son">1. Qué es una cookie</H2>
@@ -129,18 +130,41 @@ export default function CookiesPage() {
         están exentas del deber de consentimiento previo (art. 22.2 LSSI-CE).
       </P>
 
-      <H2 id="control">3. Cómo desactivarlas</H2>
+      <H2 id="analitica">3. Analítica web</H2>
+      <P>
+        Usamos <strong>Vercel Analytics</strong> para saber cuántas personas
+        visitan la web y qué páginas usan más. No instala ninguna cookie, no
+        usa huellas digitales (fingerprinting) ni almacena tu dirección IP
+        completa, y los datos se muestran siempre de forma agregada: no
+        podemos identificarte a partir de ellos. Al no depender de cookies ni
+        de tratamiento individualizado, no le aplica el deber de
+        consentimiento previo del art. 22.2 LSSI-CE, pero te informamos aquí
+        por transparencia.
+      </P>
+      <P>
+        Proveedor: Vercel Inc. (EE. UU., amparado por Cláusulas Contractuales
+        Tipo). Más detalle en la{" "}
+        <a
+          href="/privacidad#encargados"
+          className="font-bold underline decoration-foreground/24 underline-offset-4 hover:text-foreground"
+        >
+          Política de Privacidad
+        </a>
+        .
+      </P>
+
+      <H2 id="control">4. Cómo desactivarlas</H2>
       <P>
         Puedes borrar o bloquear las cookies y el almacenamiento local desde los
         ajustes de tu navegador. Si las deshabilitas, es posible que no puedas
         iniciar sesión o que pierdas preferencias visuales.
       </P>
 
-      <H2 id="futuro">4. Cambios futuros</H2>
+      <H2 id="futuro">5. Cambios futuros</H2>
       <P>
-        Si en el futuro añadimos cookies de analítica, tracking o publicidad,
-        solicitaremos tu consentimiento previo mediante un banner granular y
-        actualizaremos esta política.
+        Si en el futuro añadimos cookies de tracking entre sitios o
+        publicidad, solicitaremos tu consentimiento previo mediante un banner
+        granular y actualizaremos esta política.
       </P>
     </article>
   );

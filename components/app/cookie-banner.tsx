@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Cookie, X } from "lucide-react";
 
 const STORAGE_KEY = "cookie-consent";
-const CURRENT_VERSION = "v1-essential-only";
+const CURRENT_VERSION = "v2-essential-plus-cookieless-analytics";
 
 function subscribe(onChange: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -82,15 +82,17 @@ export function CookieBanner() {
               id="cookie-banner-title"
               className="text-sm font-black uppercase tracking-[0.14em]"
             >
-              Solo cookies técnicas
+              Cookies técnicas y analítica sin cookies
             </p>
             <p
               id="cookie-banner-copy"
               className="mt-2 text-[13px] font-medium leading-relaxed text-[#050505]/68 dark:text-white/62"
             >
               Usamos cookies y almacenamiento local estrictamente necesarios
-              (sesión y preferencias). No hay analíticas ni tracking. Más info
-              en la{" "}
+              (sesión y preferencias). Además medimos las visitas de forma
+              agregada y anónima con Vercel Analytics, que no usa cookies ni
+              te identifica. No hay publicidad ni tracking entre sitios. Más
+              info en la{" "}
               <Link
                 href="/cookies"
                 className="font-bold underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:decoration-white/24 dark:hover:text-white"

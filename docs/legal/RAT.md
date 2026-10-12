@@ -74,6 +74,21 @@ Documento exigido por el art. 30 RGPD. Este RAT es interno; debe poder entregars
 | Plazo de supresión        | 12 meses (retención del proveedor).                     |
 | Medidas técnicas          | Acceso restringido a los logs al titular.               |
 
+## Actividad 6 — Analítica web agregada (Vercel Analytics)
+
+| Campo                           | Valor                                                                                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Finalidad                      | Medir visitas y uso de la web (páginas vistas, país aproximado, dispositivo) para mejorar el producto.                                                       |
+| Base jurídica                  | Art. 6.1.f RGPD — interés legítimo. No usa cookies ni identifica a la persona individual, por lo que no requiere consentimiento previo (art. 22.2 LSSI-CE).  |
+| Categorías de interesados      | Visitantes de la web (con o sin cuenta).                                                                                                                      |
+| Categorías de datos            | Página vista, referrer, país aproximado (derivado de IP, no almacenada), tipo de dispositivo/navegador. Agregado, no vinculado a `user_id` ni a cookies.      |
+| Destinatarios                  | Vercel Inc. (Vercel Analytics, parte del hosting).                                                                                                            |
+| Transferencias internacionales | EE. UU. vía SCC (cubiertas por DPA de Vercel).                                                                                                                |
+| Plazo de supresión             | Retención agregada según plan de Vercel (no hay perfil individual que suprimir).                                                                              |
+| Medidas técnicas               | Sin cookies, sin fingerprinting, sin almacenamiento de IP completa. `<Analytics />` de `@vercel/analytics` en `app/layout.tsx`.                                |
+
+Actualiza también `docs/legal/subprocessors.md` (fila Vercel) y `/privacidad` + `/cookies` si cambia el alcance de esta analítica.
+
 ---
 
 ## Evaluación de impacto (PIA/EIPD)
