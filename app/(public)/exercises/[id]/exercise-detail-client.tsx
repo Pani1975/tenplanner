@@ -44,6 +44,7 @@ import {
 } from "@/lib/exercise-taxonomy";
 import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
+import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
@@ -509,6 +510,11 @@ export function ExerciseDetailClient({
 
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2">
+            <ShareButton
+              title={exercise.name}
+              text={`Ejercicio: ${exercise.name}`}
+              className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]"
+            />
             {userId && (
               <>
                 <button
