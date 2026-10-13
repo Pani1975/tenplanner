@@ -3,7 +3,7 @@ import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { classes, classFavorites, users } from "@/db/schema";
-import { Plus, Search, FileText, Heart } from "lucide-react";
+import { Plus, Search, FileText } from "lucide-react";
 import {
   classNavQueryString,
   classOrderBy,
@@ -11,17 +11,14 @@ import {
   parseClassSort,
   type ClassSort,
 } from "@/lib/nav/class-nav";
-import {
-  autoriaLabel,
-  nivelesForSport,
-  nivelLabel,
-} from "@/lib/exercise-taxonomy";
+import { nivelesForSport } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { SportGate } from "@/components/public/sport-gate";
 import { SportChangePill } from "@/components/public/sport-change-pill";
 import { ClassListsSection } from "@/components/app/class-lists-section";
+import { ClassesGrid } from "./classes-grid";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 type Tab = (typeof TABS)[number];
@@ -80,14 +77,6 @@ const SORT_LABELS: Record<ClassSort, string> = {
 
 interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-function classValues(values: string[] | null, fallback: string | null) {
-  return Array.isArray(values) && values.length > 0
-    ? values
-    : fallback
-      ? [fallback]
-      : [];
 }
 
 function paramList(value: string | string[] | undefined) {
@@ -640,94 +629,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 )}
               </div>
             ) : (
-              <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {rows.map((cls) => (
-                  <li key={cls.id}>
-                    <Link
-                      href={`/classes/${cls.id}${navQs ? `?${navQs}` : ""}`}
-                      className="group flex h-full flex-col justify-between overflow-hidden rounded-lg border border-[#050505]/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#D6FF38] hover:shadow-[0_24px_50px_rgba(5,5,5,0.12)] dark:border-white/10 dark:bg-white/[0.04]"
-                    >
-                      <div>
-                        <div className="mb-4 flex items-start justify-between gap-3 bg-[#050505] px-5 py-3 text-white">
-                          <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11.5px] font-bold tabular-nums text-[#050505]">
-                            {cls.duracionMinutes} min
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            {cls.status === "draft" && (
-                              <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                                Borrador
-                              </span>
-                            )}
-                            {cls.isLibrary && (
-                              <span className="rounded-full border border-[#D6FF38]/50 bg-[#D6FF38]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D6FF38]">
-                                Biblioteca
-                              </span>
-                            )}
-                            {cls.autoria && cls.autoria !== "libre" && (
-                              <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/80">
-                                {autoriaLabel(cls.autoria)}
-                              </span>
-                            )}
-                            {favorites.has(cls.id) && (
-                              <Heart
-                                className="size-3.5 fill-pink-500 text-pink-500"
-                                aria-label="Favorito"
-                              />
-                            )}
-                          </div>
-                        </div>
-                        <div className="px-5">
-                          <h3 className="line-clamp-3 font-heading text-[19px] font-semibold leading-snug text-foreground transition-colors group-hover:text-[#6D7F00] dark:group-hover:text-[#D6FF38]">
-                            {cls.name}
-                          </h3>
-                          {cls.authorName && (
-                            <span className="mt-1.5 inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase text-foreground/50">
-                              {cls.authorName}
-                            </span>
-                          )}
-                          {cls.objetivos && (
-                            <p className="mt-3 line-clamp-3 text-[13px] leading-5 text-muted-foreground">
-                              {cls.objetivos}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mx-5 mb-5 mt-5 flex flex-wrap gap-1.5 border-t border-border pt-4">
-                        <span className="rounded-full border border-border px-2 py-1 text-[10.5px] text-foreground/60">
-                          {cls.numAlumnos
-                            ? `${cls.numAlumnos} alumnos`
-                            : cls.alumnosTipo === "individual"
-                              ? "1 alumno"
-                              : "Grupo"}
-                        </span>
-                        {cls.alumnosTipo && (
-                          <span className="rounded-full border border-border px-2 py-1 text-[10.5px] capitalize text-foreground/60">
-                            {cls.alumnosTipo}
-                          </span>
-                        )}
-                        {classValues(cls.niveles, cls.nivel).map((nivel) => (
-                          <span
-                            key={nivel}
-                            className="rounded-full border border-[#D6FF38]/40 bg-[#D6FF38]/15 px-2 py-1 text-[10.5px] text-[#5E6F00] dark:text-[#D6FF38]"
-                          >
-                            {nivelLabel(nivel)}
-                          </span>
-                        ))}
-                        {classValues(cls.aspectosJuego, cls.aspectoJuego).map(
-                          (aspecto) => (
-                            <span
-                              key={aspecto}
-                              className="rounded-full border border-border px-2 py-1 text-[10.5px] text-foreground/60"
-                            >
-                              {aspecto.replace(/_/g, " ")}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <ClassesGrid
+                items={rows.map((cls) => ({
+                  ...cls,
+                  favorited: favorites.has(cls.id),
+                }))}
+                navQs={navQs}
+                canSelect={!!user}
+              />
             )}
           </>
         )}
