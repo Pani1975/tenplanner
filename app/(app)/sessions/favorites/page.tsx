@@ -24,7 +24,7 @@ export default async function FavoriteSessionsPage() {
             Sesiones
           </p>
           <h1 className="text-3xl font-black text-foreground sm:text-4xl">
-            Favoritas
+            Listas
           </h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
             Tus sesiones guardadas, organizadas por listas. Pulsa el corazón en

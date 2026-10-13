@@ -27,7 +27,7 @@ const TAB_LABELS: Record<Tab, string> = {
   all: "Ver todas",
   library: "Biblioteca",
   mine: "Mis clases",
-  favorites: "Favoritos",
+  favorites: "Listas",
   drafts: "Borradores",
 };
 

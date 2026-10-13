@@ -95,7 +95,7 @@ const navItems: NavItem[] = [
     submenu: [
       { href: "/classes", label: "Biblioteca", icon: BookOpen },
       { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
-      { href: "/classes?tab=favorites", label: "Favoritos", icon: Heart },
+      { href: "/classes?tab=favorites", label: "Listas", icon: Heart },
       { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
       { href: "/classes/new", label: "Nueva clase", icon: Plus },
     ],
@@ -107,7 +107,7 @@ const navItems: NavItem[] = [
     allLabel: "Ver todas",
     submenu: [
       { href: "/sessions", label: "Mis sesiones", icon: ClipboardList },
-      { href: "/sessions/favorites", label: "Favoritas", icon: Heart },
+      { href: "/sessions/favorites", label: "Listas", icon: Heart },
       { href: "/sessions?filter=drafts", label: "Borradores", icon: FileText },
       {
         href: "/sessions?filter=cancelled",
