@@ -9,6 +9,8 @@ import {
   classes,
   classBlocks,
   classBlockExercises,
+  groups,
+  groupStudents,
   places,
   users,
 } from "@/db/schema";
@@ -21,7 +23,7 @@ import type {
   WizardSessionBlock,
 } from "@/components/app/session-wizard/types";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { getActiveWorkClubId } from "@/lib/clubs";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { loadSessionPlan } from "@/lib/sessions/plan";
@@ -47,6 +49,7 @@ interface PageProps {
     step?: string;
     from?: string;
     fromClass?: string;
+    group?: string;
   }>;
 }
 
@@ -126,7 +129,40 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     exercises: exerciseParam,
     from: fromSessionId,
     fromClass: fromClassId,
+    group: groupIdParam,
   } = await searchParams;
+
+  // Preasignar un grupo (p. ej. desde "Asignar clase" en la ficha de grupo):
+  // precarga el grupo y a sus alumnos, igual que si se eligieran a mano en
+  // el paso de alumnos.
+  let fromGroup: { id: string; name: string } | null = null;
+  let fromGroupStudentIds: string[] = [];
+  if (groupIdParam) {
+    const groupActiveClubId = await getActiveWorkClubId(user.id);
+    const [grp] = await db
+      .select({ id: groups.id, name: groups.name })
+      .from(groups)
+      .where(
+        and(
+          eq(groups.id, groupIdParam),
+          sharedWithClubCondition(
+            groups.coachId,
+            groups.clubId,
+            user.id,
+            groupActiveClubId
+          )
+        )
+      )
+      .limit(1);
+    if (grp) {
+      fromGroup = grp;
+      const memberRows = await db
+        .select({ studentId: groupStudents.studentId })
+        .from(groupStudents)
+        .where(eq(groupStudents.groupId, grp.id));
+      fromGroupStudentIds = memberRows.map((m) => m.studentId);
+    }
+  }
 
   // Pre-fill from a class library template
   let fromClass: {
@@ -493,6 +529,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
               initialLocation={fromSession?.location ?? undefined}
+              initialGroupId={fromGroup?.id ?? null}
+              initialGroupName={fromGroup?.name}
+              initialStudentIds={fromGroupStudentIds}
               places={coachPlaces}
               monitorName={monitorName}
               allowDraftRestore={allowDraftRestore}

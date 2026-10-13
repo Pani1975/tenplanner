@@ -49,6 +49,10 @@ interface SessionWizardProps {
   initialBlocks?: WizardSessionBlock[];
   initialLocation?: string;
   initialPlaceId?: string | null;
+  /** Grupo al que se preasigna la sesión (p. ej. desde "Asignar clase" en la ficha de grupo). */
+  initialGroupId?: string | null;
+  initialGroupName?: string;
+  initialStudentIds?: string[];
   places?: { id: string; name: string }[];
   monitorName?: string;
   allowDraftRestore?: boolean;
@@ -149,6 +153,9 @@ function createInitialState({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialGroupId,
+  initialGroupName,
+  initialStudentIds,
 }: Pick<
   SessionWizardProps,
   | "initialExercises"
@@ -160,10 +167,20 @@ function createInitialState({
   | "initialBlocks"
   | "initialLocation"
   | "initialPlaceId"
+  | "initialGroupId"
+  | "initialGroupName"
+  | "initialStudentIds"
 >): WizardState {
+  const scheduledAt = defaultScheduledAt();
+  // Si la sesión viene preasignada a un grupo (p. ej. "Asignar clase" desde
+  // la ficha de grupo), se activa el mismo nombre automático AAMMDD_Grupo
+  // que usa el paso de alumnos al elegir un grupo manualmente.
+  const useCodeTitle = !!initialGroupId && !initialTitle;
   return {
-    title: initialTitle ?? "",
-    scheduledAt: defaultScheduledAt(),
+    title: useCodeTitle
+      ? sessionCode(new Date(scheduledAt), initialGroupName ?? "")
+      : initialTitle ?? "",
+    scheduledAt,
     durationMinutes: 60,
     location: initialLocation ?? "",
     placeId: initialPlaceId ?? null,
@@ -173,7 +190,7 @@ function createInitialState({
     sourceClassId: initialSourceClassId ?? null,
     intensity: null,
     tags: [],
-    studentIds: [],
+    studentIds: initialStudentIds ?? [],
     exercises: [
       ...(initialExercises ?? []),
       ...textItemsFromBlocks(initialBlocks),
@@ -186,6 +203,9 @@ function createInitialState({
       weekdays: [],
       mode: "until",
     },
+    groupId: initialGroupId ?? null,
+    groupName: initialGroupName,
+    useCodeTitle,
   };
 }
 
@@ -296,6 +316,9 @@ export function SessionWizard({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialGroupId,
+  initialGroupName,
+  initialStudentIds,
   places = [],
   monitorName,
   allowDraftRestore = true,
@@ -321,6 +344,9 @@ export function SessionWizard({
       initialBlocks,
       initialLocation,
       initialPlaceId,
+      initialGroupId,
+      initialGroupName,
+      initialStudentIds,
     });
     return edit ? { ...base, ...edit.initialState } : base;
   });
