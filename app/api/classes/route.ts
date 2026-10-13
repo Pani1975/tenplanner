@@ -38,6 +38,7 @@ const blockExerciseSchema = z
     kind: z.enum(BLOCK_ITEM_KINDS).optional(),
     exerciseId: z.string().uuid().optional().nullable(),
     freeText: z.string().trim().max(2000).optional().nullable(),
+    title: z.string().trim().max(120).optional().nullable(),
     durationMinutes: z.number().int().min(1).max(300).optional().nullable(),
     stations: z
       .array(stationItemSchema)
@@ -340,6 +341,7 @@ export async function POST(request: Request) {
               blockId: createdBlock.id,
               exerciseId: item.exerciseId ?? null,
               freeText: item.freeText ?? null,
+              title: item.title ?? null,
               orderIndex: idx,
               durationMinutes: item.durationMinutes ?? null,
               kind: item.kind ?? null,

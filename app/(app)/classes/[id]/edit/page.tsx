@@ -51,6 +51,7 @@ export default async function EditClassPage({ params }: PageProps) {
           blockId: classBlockExercises.blockId,
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
+          title: classBlockExercises.title,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -157,6 +158,7 @@ export default async function EditClassPage({ params }: PageProps) {
             : {
                 kind: "text" as const,
                 freeText: it.freeText ?? "",
+                title: it.title ?? "",
                 durationMinutes: it.durationMinutes,
               };
         }),

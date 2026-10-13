@@ -91,6 +91,7 @@ export default async function ClassDetailPage({
           blockId: classBlockExercises.blockId,
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
+          title: classBlockExercises.title,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -224,9 +225,7 @@ export default async function ClassDetailPage({
                     href={`/classes/${cls.id}/edit`}
                     className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
                   >
-                    {cls.status === "draft"
-                      ? "Terminar y publicar"
-                      : "Editar"}
+                    {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
                   </Link>
                 )}
                 <ClassActions
@@ -362,6 +361,10 @@ export default async function ClassDetailPage({
                                 >
                                   {item.exerciseName}
                                 </Link>
+                              ) : item.title ? (
+                                <span className="font-medium text-foreground">
+                                  {item.title}
+                                </span>
                               ) : (
                                 (item.freeText ?? "-")
                               )}
@@ -375,6 +378,13 @@ export default async function ClassDetailPage({
                                 item.exerciseDescription && (
                                   <span className="mt-1 block text-xs leading-5 text-muted-foreground line-clamp-2">
                                     {item.exerciseDescription}
+                                  </span>
+                                )}
+                              {itemKind === "text" &&
+                                item.title &&
+                                item.freeText && (
+                                  <span className="mt-1 block text-xs leading-5 text-muted-foreground line-clamp-2">
+                                    {item.freeText}
                                   </span>
                                 )}
                             </span>

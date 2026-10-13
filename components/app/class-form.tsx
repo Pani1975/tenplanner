@@ -90,7 +90,12 @@ type BlockItem =
       name: string;
       durationMinutes: number | null;
     }
-  | { kind: "text"; freeText: string; durationMinutes: number | null }
+  | {
+      kind: "text";
+      freeText: string;
+      title: string;
+      durationMinutes: number | null;
+    }
   | { kind: "warmup"; durationMinutes: number | null }
   | {
       kind: "stations";
@@ -284,7 +289,12 @@ export function ClassForm({
               ...b,
               items: [
                 ...b.items,
-                { kind: "text" as const, freeText: "", durationMinutes: null },
+                {
+                  kind: "text" as const,
+                  freeText: "",
+                  title: "",
+                  durationMinutes: null,
+                },
               ],
             }
           : b
@@ -582,6 +592,7 @@ export function ClassForm({
               kind: "text" as const,
               exerciseId: null,
               freeText: item.freeText.trim() || null,
+              title: item.title.trim() || null,
               durationMinutes: item.durationMinutes,
             };
           }),
@@ -1033,18 +1044,33 @@ export function ClassForm({
                           ) : item.kind === "text" ? (
                             <div className="flex items-start gap-2">
                               <Type className="size-3.5 text-muted-foreground mt-1 shrink-0" />
-                              <textarea
-                                rows={2}
-                                value={item.freeText}
-                                onChange={(e) =>
-                                  updateItem(blockIdx, itemIdx, {
-                                    kind: "text",
-                                    freeText: e.target.value,
-                                  } as Partial<BlockItem>)
-                                }
-                                placeholder="Escribe la actividad…"
-                                className="flex-1 text-sm bg-transparent border-0 focus:outline-none text-foreground resize-none placeholder:text-muted-foreground"
-                              />
+                              <div className="flex-1 space-y-1">
+                                <input
+                                  type="text"
+                                  value={item.title}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      kind: "text",
+                                      title: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  maxLength={120}
+                                  placeholder="Título (opcional)"
+                                  className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-foreground focus:outline-none placeholder:font-normal placeholder:text-muted-foreground"
+                                />
+                                <textarea
+                                  rows={2}
+                                  value={item.freeText}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      kind: "text",
+                                      freeText: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  placeholder="Describe la actividad…"
+                                  className="w-full text-sm bg-transparent border-0 p-0 focus:outline-none text-foreground resize-none placeholder:text-muted-foreground"
+                                />
+                              </div>
                             </div>
                           ) : item.kind === "warmup" ? (
                             <div className="flex items-center gap-2">
