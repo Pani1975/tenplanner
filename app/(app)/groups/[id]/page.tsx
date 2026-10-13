@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
+  classes,
   groups,
   groupStudents,
   sessions,
@@ -10,7 +11,14 @@ import {
   users,
 } from "@/db/schema";
 import { and, desc, eq, ne, notInArray } from "drizzle-orm";
-import { ArrowLeft, CalendarDays, Clock, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Clock,
+  GraduationCap,
+  Plus,
+  Users,
+} from "lucide-react";
 import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
 import { FeatureLocked } from "@/components/app/feature-locked";
@@ -27,6 +35,8 @@ type GroupSessionRow = {
   scheduledAt: Date;
   durationMinutes: number;
   status: "scheduled" | "completed" | "cancelled";
+  sourceClassId: string | null;
+  className: string | null;
 };
 
 const sessionDateFormat = new Intl.DateTimeFormat("es-ES", {
@@ -66,10 +76,10 @@ function GroupSessionsList({
       ) : (
         <ul className="divide-y divide-border">
           {rows.map((row) => (
-            <li key={row.id}>
+            <li key={row.id} className="py-2.5">
               <Link
                 href={`/sessions/${row.id}`}
-                className="flex items-center gap-3 py-2.5 transition-colors hover:text-brand"
+                className="flex items-center gap-3 transition-colors hover:text-brand"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-foreground">
@@ -89,6 +99,15 @@ function GroupSessionsList({
                   {row.durationMinutes} min
                 </span>
               </Link>
+              {row.className && row.sourceClassId && (
+                <Link
+                  href={`/classes/${row.sourceClassId}`}
+                  className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-brand"
+                >
+                  <GraduationCap className="size-3" />
+                  {row.className}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -163,8 +182,11 @@ export default async function GroupDetailPage({ params }: PageProps) {
 
   const memberIds = memberRows.map((m) => m.id);
 
-  // Sesiones vinculadas a este grupo (sessions.group_id). Las canceladas no
-  // se muestran.
+  // Sesiones vinculadas a este grupo (sessions.group_id): esto ES la
+  // planificación del grupo, ordenada en el tiempo. Las canceladas no se
+  // muestran. Se incluye de qué clase (plantilla) viene cada una, para que
+  // se vea de un vistazo qué contenido se ha dado y cuándo, sin tener que
+  // entrar sesión por sesión.
   const groupSessions: GroupSessionRow[] = await db
     .select({
       id: sessions.id,
@@ -172,8 +194,11 @@ export default async function GroupDetailPage({ params }: PageProps) {
       scheduledAt: sessions.scheduledAt,
       durationMinutes: sessions.durationMinutes,
       status: sessions.status,
+      sourceClassId: sessions.sourceClassId,
+      className: classes.name,
     })
     .from(sessions)
+    .leftJoin(classes, eq(classes.id, sessions.sourceClassId))
     .where(and(eq(sessions.groupId, id), ne(sessions.status, "cancelled")))
     .orderBy(desc(sessions.scheduledAt));
   const now = new Date();
@@ -258,19 +283,44 @@ export default async function GroupDetailPage({ params }: PageProps) {
           isOwner={isOwner}
         />
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <GroupSessionsList
-            title="Sesiones impartidas"
-            emptyText="Todavía no hay sesiones impartidas con este grupo."
-            rows={pastSessions}
-            pastList
-          />
-          <GroupSessionsList
-            title="Próximas sesiones"
-            emptyText="No hay sesiones programadas para este grupo."
-            rows={upcomingSessions}
-          />
-        </div>
+        {/* Planificación: la secuencia de sesiones del grupo en el tiempo,
+            con la clase (plantilla) de la que viene cada una. Esto es "el
+            plan del grupo", no solo un listado suelto. */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-foreground">
+                Planificación de {group.name}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {groupSessions.length === 0
+                  ? "Aún no hay sesiones programadas para este grupo."
+                  : `${groupSessions.length} sesión${groupSessions.length !== 1 ? "es" : ""} en total · ${pastSessions.length} impartida${pastSessions.length !== 1 ? "s" : ""} · ${upcomingSessions.length} próxima${upcomingSessions.length !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+            <Link
+              href="/sessions/new"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
+            >
+              <Plus className="size-4" />
+              Nueva sesión
+            </Link>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <GroupSessionsList
+              title="Sesiones impartidas"
+              emptyText="Todavía no hay sesiones impartidas con este grupo."
+              rows={pastSessions}
+              pastList
+            />
+            <GroupSessionsList
+              title="Próximas sesiones"
+              emptyText="No hay sesiones programadas para este grupo."
+              rows={upcomingSessions}
+            />
+          </div>
+        </section>
       </div>
     </div>
   );
