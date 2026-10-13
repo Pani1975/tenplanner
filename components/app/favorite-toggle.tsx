@@ -12,6 +12,13 @@ interface FavoriteToggleProps {
   exerciseName?: string;
   size?: "sm" | "md";
   locked?: boolean;
+  /**
+   * "card" (por defecto): pensado para una superficie clara (fondo de la
+   * tarjeta). "header": pensado para la cabecera oscura de la tarjeta
+   * (bg-[#050505]), con el mismo tratamiento que los botones vecinos
+   * (añadir a sesión / añadir a clase) para que se vea con contraste ahí.
+   */
+  variant?: "card" | "header";
 }
 
 export function FavoriteToggle({
@@ -20,6 +27,7 @@ export function FavoriteToggle({
   exerciseName,
   size = "sm",
   locked = false,
+  variant = "card",
 }: FavoriteToggleProps) {
   const [favorited, setFavorited] = useState(initialFavorited);
   const [open, setOpen] = useState(false);
@@ -29,10 +37,13 @@ export function FavoriteToggle({
       <Link
         href="/login"
         onClick={(e) => e.stopPropagation()}
-        aria-label="Inicia sesión para guardar en favoritos"
+        aria-label="Inicia sesión para guardar en una lista"
         className={cn(
-          "flex items-center justify-center rounded-full transition-all text-foreground/25 bg-foreground/5 hover:text-foreground/50 hover:bg-foreground/10",
-          size === "sm" ? "size-7" : "size-9"
+          "flex items-center justify-center rounded-full transition-all",
+          size === "sm" ? "size-7" : "size-9",
+          variant === "header"
+            ? "text-white/60 hover:bg-white/10 hover:text-[#D6FF38]"
+            : "text-foreground/25 bg-foreground/5 hover:text-foreground/50 hover:bg-foreground/10"
         )}
       >
         <Lock
@@ -59,7 +70,9 @@ export function FavoriteToggle({
           size === "sm" ? "size-7" : "size-9",
           favorited
             ? "text-red-400 bg-red-400/10 hover:bg-red-400/20"
-            : "text-foreground/30 bg-foreground/5 hover:text-red-400 hover:bg-red-400/10"
+            : variant === "header"
+              ? "text-white/60 hover:bg-white/10 hover:text-red-400"
+              : "text-foreground/30 bg-foreground/5 hover:text-red-400 hover:bg-red-400/10"
         )}
       >
         <Heart

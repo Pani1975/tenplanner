@@ -1393,6 +1393,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                                 exerciseName={exercise.name}
                                 size="sm"
                                 locked={!user}
+                                variant="header"
                               />
                             </div>
                           </div>
