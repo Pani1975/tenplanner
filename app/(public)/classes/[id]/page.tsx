@@ -4,7 +4,6 @@ import { and, asc, avg, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import {
   ArrowLeft,
   BarChart3,
-  CalendarPlus,
   Clock,
   Star,
   Users,
@@ -12,6 +11,7 @@ import {
   Package,
   GraduationCap,
 } from "lucide-react";
+import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
@@ -356,13 +356,7 @@ export default async function ClassDetailPage({
                 Uso en tus sesiones
               </h2>
             </div>
-            <Link
-              href={`/sessions/new?fromClass=${cls.id}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3 py-1.5 text-xs font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10"
-            >
-              <CalendarPlus className="size-3.5" />
-              Nueva sesión desde esta clase
-            </Link>
+            <AddClassMenuButton classId={cls.id} />
           </div>
 
           {classUsageSessions.length === 0 ? (
