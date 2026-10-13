@@ -53,6 +53,8 @@ interface SessionWizardProps {
   initialGroupId?: string | null;
   initialGroupName?: string;
   initialStudentIds?: string[];
+  /** "YYYY-MM-DDTHH:mm" ya calculado (p. ej. próximo día habitual del grupo). */
+  initialScheduledAt?: string;
   places?: { id: string; name: string }[];
   monitorName?: string;
   allowDraftRestore?: boolean;
@@ -156,6 +158,7 @@ function createInitialState({
   initialGroupId,
   initialGroupName,
   initialStudentIds,
+  initialScheduledAt,
 }: Pick<
   SessionWizardProps,
   | "initialExercises"
@@ -170,8 +173,9 @@ function createInitialState({
   | "initialGroupId"
   | "initialGroupName"
   | "initialStudentIds"
+  | "initialScheduledAt"
 >): WizardState {
-  const scheduledAt = defaultScheduledAt();
+  const scheduledAt = initialScheduledAt ?? defaultScheduledAt();
   // Si la sesión viene preasignada a un grupo (p. ej. "Asignar clase" desde
   // la ficha de grupo), se activa el mismo nombre automático AAMMDD_Grupo
   // que usa el paso de alumnos al elegir un grupo manualmente.
@@ -319,6 +323,7 @@ export function SessionWizard({
   initialGroupId,
   initialGroupName,
   initialStudentIds,
+  initialScheduledAt,
   places = [],
   monitorName,
   allowDraftRestore = true,
@@ -347,6 +352,7 @@ export function SessionWizard({
       initialGroupId,
       initialGroupName,
       initialStudentIds,
+      initialScheduledAt,
     });
     return edit ? { ...base, ...edit.initialState } : base;
   });

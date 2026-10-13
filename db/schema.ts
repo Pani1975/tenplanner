@@ -18,6 +18,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
+import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -494,6 +495,9 @@ export const groups = pgTable(
     // pertenecer a varios grupos del mismo o de distinto deporte —
     // ver group_students, que no lleva sport.
     sport: sportEnum("sport").default("tenis").notNull(),
+    // Días de la semana (y hora) en que el grupo tiene clase habitualmente;
+    // ver lib/groups/schedule.ts. Null/[] = sin horario fijo configurado.
+    weeklySchedule: jsonb("weekly_schedule").$type<GroupScheduleEntry[]>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

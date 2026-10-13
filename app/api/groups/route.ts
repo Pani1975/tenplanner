@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 
 const createSchema = z.object({
   name: z.string().min(1).max(255),
@@ -103,6 +104,7 @@ export async function GET(request: Request) {
       memberCount: count(groupStudents.id),
       coachId: groups.coachId,
       authorName: users.name,
+      weeklySchedule: groups.weeklySchedule,
     })
     .from(groups)
     .leftJoin(groupStudents, eq(groupStudents.groupId, groups.id))
@@ -120,6 +122,7 @@ export async function GET(request: Request) {
           memberCount: number;
           coachId: string;
           authorName: string | null;
+          weeklySchedule: GroupScheduleEntry[] | null;
         }[]
     );
 

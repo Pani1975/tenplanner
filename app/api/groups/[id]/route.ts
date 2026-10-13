@@ -6,6 +6,7 @@ import { groups, groupStudents, students } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { isValidScheduleEntry, sortSchedule } from "@/lib/groups/schedule";
 
 async function ensureGroupsEnabled() {
   const groupsEnabled = await getBooleanSetting("feature.groups_enabled");
@@ -18,10 +19,19 @@ async function ensureGroupsEnabled() {
 
 type Ctx = { params: Promise<{ id: string }> };
 
+const scheduleEntrySchema = z
+  .object({
+    weekday: z.number().int().min(0).max(6),
+    time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida (HH:MM)"),
+  })
+  .refine((v) => isValidScheduleEntry(v), { message: "Entrada inválida" });
+
 const updateSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().nullable().optional(),
   studentIds: z.array(z.string().uuid()).optional(),
+  // Días de la semana (y hora) habituales del grupo; [] o null los quita.
+  weeklySchedule: z.array(scheduleEntrySchema).max(7).nullable().optional(),
 });
 
 export async function GET(_req: Request, ctx: Ctx) {
@@ -105,16 +115,28 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (existing.coachId !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { studentIds, ...fields } = parsed.data;
+  const { studentIds, weeklySchedule, ...fields } = parsed.data;
 
   await db.transaction(async (tx) => {
-    if (fields.name !== undefined || fields.description !== undefined) {
+    if (
+      fields.name !== undefined ||
+      fields.description !== undefined ||
+      weeklySchedule !== undefined
+    ) {
       await tx
         .update(groups)
         .set({
           ...(fields.name !== undefined ? { name: fields.name } : {}),
           ...(fields.description !== undefined
             ? { description: fields.description }
+            : {}),
+          ...(weeklySchedule !== undefined
+            ? {
+                weeklySchedule:
+                  weeklySchedule && weeklySchedule.length > 0
+                    ? sortSchedule(weeklySchedule)
+                    : null,
+              }
             : {}),
         })
         .where(eq(groups.id, id));

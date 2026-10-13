@@ -13,11 +13,14 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScheduleChoiceStep } from "./schedule-choice-step";
+import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 
 interface GroupOption {
   id: string;
   name: string;
   memberCount: number;
+  weeklySchedule: GroupScheduleEntry[] | null;
 }
 
 /**
@@ -30,11 +33,12 @@ interface GroupOption {
 export function AddClassMenuButton({ classId }: { classId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<"menu" | "groups">("menu");
+  const [view, setView] = useState<"menu" | "groups" | "schedule">("menu");
   const [query, setQuery] = useState("");
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [pickedGroup, setPickedGroup] = useState<GroupOption | null>(null);
 
   useEffect(() => {
     if (!open || view !== "groups") return;
@@ -61,14 +65,24 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
     setOpen(false);
     setView("menu");
     setQuery("");
+    setPickedGroup(null);
   }
 
-  function goToSession(groupId?: string) {
+  function pickGroup(group: GroupOption) {
+    if (group.weeklySchedule && group.weeklySchedule.length > 0) {
+      setPickedGroup(group);
+      setView("schedule");
+      return;
+    }
+    goToSession(group.id);
+  }
+
+  function goToSession(groupId?: string, scheduledAt?: string) {
     setNavigatingTo(groupId ?? "new-session");
-    const qs = groupId
-      ? `fromClass=${classId}&group=${groupId}`
-      : `fromClass=${classId}`;
-    router.push(`/sessions/new?${qs}`);
+    const qs = new URLSearchParams({ fromClass: classId });
+    if (groupId) qs.set("group", groupId);
+    if (scheduledAt) qs.set("at", scheduledAt);
+    router.push(`/sessions/new?${qs.toString()}`);
   }
 
   const filteredGroups = groups.filter((g) =>
@@ -95,10 +109,12 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
           <div className="relative w-full overflow-hidden rounded-t-3xl border border-foreground/15 bg-background shadow-2xl sm:max-w-md sm:rounded-3xl">
             <div className="flex items-center justify-between border-b border-foreground/10 px-5 pb-4 pt-5">
               <div className="min-w-0 flex items-center gap-2">
-                {view === "groups" && (
+                {view !== "menu" && (
                   <button
                     type="button"
-                    onClick={() => setView("menu")}
+                    onClick={() =>
+                      view === "schedule" ? setView("groups") : setView("menu")
+                    }
                     aria-label="Volver"
                     className="flex size-7 shrink-0 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
                   >
@@ -106,7 +122,11 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                   </button>
                 )}
                 <h2 className="truncate text-lg font-black text-foreground">
-                  {view === "menu" ? "Añadir esta clase a..." : "Elige un grupo"}
+                  {view === "menu"
+                    ? "Añadir esta clase a..."
+                    : view === "groups"
+                      ? "Elige un grupo"
+                      : "¿Qué día?"}
                 </h2>
               </div>
               <button
@@ -164,6 +184,14 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                   <ChevronRight className="size-4 shrink-0 text-foreground/30" />
                 </button>
               </div>
+            ) : view === "schedule" && pickedGroup ? (
+              <ScheduleChoiceStep
+                schedule={pickedGroup.weeklySchedule ?? []}
+                busy={!!navigatingTo}
+                onChoose={(scheduledAt) =>
+                  goToSession(pickedGroup.id, scheduledAt)
+                }
+              />
             ) : (
               <>
                 <div className="border-b border-foreground/10 px-4 py-3">
@@ -195,7 +223,7 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                       <button
                         key={g.id}
                         type="button"
-                        onClick={() => goToSession(g.id)}
+                        onClick={() => pickGroup(g)}
                         disabled={!!navigatingTo}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",

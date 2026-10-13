@@ -50,6 +50,7 @@ interface PageProps {
     from?: string;
     fromClass?: string;
     group?: string;
+    at?: string;
   }>;
 }
 
@@ -130,7 +131,15 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     from: fromSessionId,
     fromClass: fromClassId,
     group: groupIdParam,
+    at: atParam,
   } = await searchParams;
+
+  // Fecha/hora ya calculada por quien nos trae aquí (p. ej. el próximo día
+  // habitual del grupo al "asignar clase"). Formato esperado:
+  // "YYYY-MM-DDTHH:mm"; si no es válido se ignora y el wizard usa su
+  // valor por defecto.
+  const initialScheduledAt =
+    atParam && !isNaN(new Date(atParam).getTime()) ? atParam : undefined;
 
   // Preasignar un grupo (p. ej. desde "Asignar clase" en la ficha de grupo):
   // precarga el grupo y a sus alumnos, igual que si se eligieran a mano en
@@ -532,6 +541,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialGroupId={fromGroup?.id ?? null}
               initialGroupName={fromGroup?.name}
               initialStudentIds={fromGroupStudentIds}
+              initialScheduledAt={initialScheduledAt}
               places={coachPlaces}
               monitorName={monitorName}
               allowDraftRestore={allowDraftRestore}

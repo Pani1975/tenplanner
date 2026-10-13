@@ -330,6 +330,13 @@
       "when": 1791830617276,
       "tag": "0046_block_items_aspecto",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791916531701,
+      "tag": "0047_groups_weekly_schedule",
+      "breakpoints": true
     }
   ]
 }

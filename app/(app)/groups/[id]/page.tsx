@@ -22,6 +22,7 @@ import {
 import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
 import { AssignClassToGroupButton } from "@/components/app/assign-class-to-group-button";
+import { GroupScheduleEditor } from "./group-schedule-editor";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
@@ -300,7 +301,10 @@ export default async function GroupDetailPage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <AssignClassToGroupButton groupId={id} />
+              <AssignClassToGroupButton
+                groupId={id}
+                weeklySchedule={group.weeklySchedule}
+              />
               <Link
                 href="/sessions/new"
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
@@ -310,6 +314,11 @@ export default async function GroupDetailPage({ params }: PageProps) {
               </Link>
             </div>
           </div>
+
+          <GroupScheduleEditor
+            groupId={id}
+            initialSchedule={group.weeklySchedule}
+          />
 
           <div className="grid gap-4 lg:grid-cols-2">
             <GroupSessionsList
