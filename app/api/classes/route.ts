@@ -136,18 +136,26 @@ export async function GET(request: Request) {
     if (!user) return NextResponse.json({ data: [] });
     conds.push(eq(classes.createdBy, user.id), eq(classes.status, "draft"));
   } else if (tab === "mine" && user) {
-    conds.push(mineOrClub!);
+    // "Mis clases" también incluye los borradores propios (ver comentario
+    // equivalente en app/(public)/classes/page.tsx): si no, una clase recién
+    // creada como borrador desaparece sin dejar rastro.
+    conds.push(
+      or(
+        and(eq(classes.status, "published"), mineOrClub!),
+        and(eq(classes.createdBy, user.id), eq(classes.status, "draft"))
+      )!
+    );
   } else if (tab === "library") {
-    conds.push(eq(classes.isLibrary, true));
+    conds.push(eq(classes.isLibrary, true), eq(classes.status, "published"));
   } else {
     // all: biblioteca pública + propias del usuario (+ compartidas por club)
     conds.push(
+      eq(classes.status, "published"),
       user
         ? or(eq(classes.isLibrary, true), mineOrClub!)!
         : eq(classes.isLibrary, true)
     );
   }
-  if (tab !== "drafts") conds.push(eq(classes.status, "published"));
   if (activeSport) conds.push(eq(classes.sport, activeSport));
   if (q) conds.push(ilike(classes.name, `%${q}%`));
   if (nivel) {

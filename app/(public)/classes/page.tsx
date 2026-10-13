@@ -139,6 +139,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     aspectosJuego: string[] | null;
     isLibrary: boolean;
     autoria: string | null;
+    status: string | null;
     createdAt: Date;
     createdBy: string | null;
     authorName: string | null;
@@ -182,21 +183,33 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     : null;
 
   if (activeTab !== "drafts") {
-    const conds = [eq(classes.sport, sport), eq(classes.status, "published")];
+    const conds = [eq(classes.sport, sport)];
     if (activeTab === "mine" && user) {
-      conds.push(mineOrClub!);
-    } else if (activeTab === "library") {
-      conds.push(eq(classes.isLibrary, true));
-    } else if (activeTab === "favorites" && user) {
+      // "Mis clases" también incluye los borradores propios: si no, una
+      // clase recién creada como borrador (p. ej. al pulsar Enter, que por
+      // seguridad guarda como borrador) desaparece sin dejar rastro y el
+      // monitor termina editando por error otra clase distinta.
       conds.push(
-        sql`${classes.id} IN (SELECT class_id FROM class_favorites WHERE user_id = ${user.id})`
+        or(
+          and(eq(classes.status, "published"), mineOrClub!),
+          and(eq(classes.createdBy, user.id), eq(classes.status, "draft"))
+        )!
       );
     } else {
-      conds.push(
-        user
-          ? or(eq(classes.isLibrary, true), mineOrClub!)!
-          : eq(classes.isLibrary, true)
-      );
+      conds.push(eq(classes.status, "published"));
+      if (activeTab === "library") {
+        conds.push(eq(classes.isLibrary, true));
+      } else if (activeTab === "favorites" && user) {
+        conds.push(
+          sql`${classes.id} IN (SELECT class_id FROM class_favorites WHERE user_id = ${user.id})`
+        );
+      } else {
+        conds.push(
+          user
+            ? or(eq(classes.isLibrary, true), mineOrClub!)!
+            : eq(classes.isLibrary, true)
+        );
+      }
     }
     if (q) conds.push(ilike(classes.name, `%${q}%`));
     if (nivel) {
@@ -252,6 +265,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
         aspectosJuego: classes.aspectosJuego,
         isLibrary: classes.isLibrary,
         autoria: classes.autoria,
+        status: classes.status,
         createdAt: classes.createdAt,
         createdBy: classes.createdBy,
         authorName: users.name,
@@ -636,6 +650,11 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                             {cls.duracionMinutes} min
                           </span>
                           <div className="flex items-center gap-1.5">
+                            {cls.status === "draft" && (
+                              <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">
+                                Borrador
+                              </span>
+                            )}
                             {cls.isLibrary && (
                               <span className="rounded-full border border-[#D6FF38]/50 bg-[#D6FF38]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D6FF38]">
                                 Biblioteca
