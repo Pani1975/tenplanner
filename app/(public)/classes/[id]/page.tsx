@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, asc, eq, or } from "drizzle-orm";
+import { and, asc, avg, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import {
   ArrowLeft,
+  BarChart3,
+  CalendarPlus,
   Clock,
+  Star,
   Users,
   Target,
   Package,
@@ -17,6 +20,9 @@ import {
   classBlockExercises,
   classFavorites,
   exercises,
+  groups,
+  sessions,
+  sessionStudents,
   users,
 } from "@/db/schema";
 import { ClassActions } from "./class-actions";
@@ -122,6 +128,73 @@ export default async function ClassDetailPage({
           .limit(1)
       )[0]
     : false;
+
+  // Uso de esta clase en las sesiones del propio usuario: cierra el círculo
+  // entre la plantilla (clase) y cómo le ha ido en la práctica (sesiones).
+  // Siempre sobre sus propias sesiones, aunque la clase sea de biblioteca o
+  // de otro monitor del club: lo que importa aquí es el feedback de quien
+  // la ha dado, no quién la escribió.
+  const classUsageSessions = user
+    ? await db
+        .select({
+          id: sessions.id,
+          scheduledAt: sessions.scheduledAt,
+          status: sessions.status,
+          groupId: sessions.groupId,
+          groupName: groups.name,
+        })
+        .from(sessions)
+        .leftJoin(groups, eq(groups.id, sessions.groupId))
+        .where(
+          and(
+            eq(sessions.sourceClassId, id),
+            eq(sessions.userId, user.id),
+            ne(sessions.status, "cancelled")
+          )
+        )
+        .orderBy(desc(sessions.scheduledAt))
+    : [];
+
+  const [ratingAgg] =
+    classUsageSessions.length > 0
+      ? await db
+          .select({
+            avgRating: avg(sessionStudents.rating),
+            ratingCount: count(sessionStudents.rating),
+          })
+          .from(sessionStudents)
+          .where(
+            inArray(
+              sessionStudents.sessionId,
+              classUsageSessions.map((s) => s.id)
+            )
+          )
+      : [];
+  const avgRating = ratingAgg?.avgRating ? Number(ratingAgg.avgRating) : null;
+  const ratingCount = ratingAgg?.ratingCount ?? 0;
+
+  // Agrupa por grupo: cuántas veces y cuándo fue la última (las sesiones ya
+  // vienen ordenadas por fecha descendente, así que el primer visto = última).
+  const groupUsageMap = new Map<
+    string,
+    { groupId: string; name: string; count: number; lastAt: Date }
+  >();
+  for (const s of classUsageSessions) {
+    if (!s.groupId) continue;
+    const existing = groupUsageMap.get(s.groupId);
+    if (existing) existing.count += 1;
+    else
+      groupUsageMap.set(s.groupId, {
+        groupId: s.groupId,
+        name: s.groupName ?? "Grupo",
+        count: 1,
+        lastAt: s.scheduledAt,
+      });
+  }
+  const groupUsage = Array.from(groupUsageMap.values());
+  const completedCount = classUsageSessions.filter(
+    (s) => s.status === "completed"
+  ).length;
 
   const blockTitles = ["Bloque inicial", "Bloque principal", "Bloque final"];
   const classNiveles = classValues(cls.niveles, cls.nivel);
@@ -270,6 +343,83 @@ export default async function ClassDetailPage({
           </div>
         )}
       </div>
+
+      {/* Uso en sesiones: cierra el círculo entre la plantilla y cómo le ha
+          ido en la práctica. Solo con sesión iniciada, y siempre sobre las
+          propias sesiones del usuario (su feedback, no el de otros). */}
+      {user && (
+        <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="size-4 text-brand" />
+              <h2 className="font-heading text-base text-foreground">
+                Uso en tus sesiones
+              </h2>
+            </div>
+            <Link
+              href={`/sessions/new?fromClass=${cls.id}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3 py-1.5 text-xs font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10"
+            >
+              <CalendarPlus className="size-3.5" />
+              Nueva sesión desde esta clase
+            </Link>
+          </div>
+
+          {classUsageSessions.length === 0 ? (
+            <p className="text-sm text-foreground/55">
+              Aún no has dado esta clase en ninguna sesión. Créala desde el
+              botón de arriba para empezar a ver aquí cómo te va con ella.
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-4 mb-4 text-sm">
+                <span className="text-foreground/80">
+                  <strong className="text-foreground">
+                    {classUsageSessions.length}
+                  </strong>{" "}
+                  sesión{classUsageSessions.length !== 1 ? "es" : ""}
+                  {completedCount > 0 &&
+                    ` · ${completedCount} completada${completedCount !== 1 ? "s" : ""}`}
+                </span>
+                {ratingCount > 0 && avgRating !== null && (
+                  <span className="inline-flex items-center gap-1 text-foreground/80">
+                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                    <strong className="text-foreground">
+                      {avgRating.toFixed(1)}
+                    </strong>
+                    /5 · {ratingCount} valoración
+                    {ratingCount !== 1 ? "es" : ""} de alumnos
+                  </span>
+                )}
+              </div>
+
+              {groupUsage.length > 0 && (
+                <ul className="divide-y divide-[#050505]/8 border-t border-[#050505]/8 dark:divide-white/8 dark:border-white/8">
+                  {groupUsage.map((g) => (
+                    <li
+                      key={g.groupId}
+                      className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                    >
+                      <Link
+                        href={`/groups/${g.groupId}`}
+                        className="font-medium text-foreground hover:text-brand"
+                      >
+                        {g.name}
+                      </Link>
+                      <span className="text-foreground/50 text-xs">
+                        {g.count} vez{g.count !== 1 ? "es" : ""} · última el{" "}
+                        {new Intl.DateTimeFormat("es-ES", {
+                          dateStyle: "medium",
+                        }).format(g.lastAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Resumen de bloques */}
       {blocks.length > 0 && (
