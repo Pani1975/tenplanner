@@ -21,6 +21,7 @@ import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { SportGate } from "@/components/public/sport-gate";
 import { SportChangePill } from "@/components/public/sport-change-pill";
+import { ClassListsSection } from "@/components/app/class-lists-section";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 type Tab = (typeof TABS)[number];
@@ -447,6 +448,8 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               })}
             </ul>
           )
+        ) : activeTab === "favorites" && user ? (
+          <ClassListsSection />
         ) : (
           <>
             {/* Filtros: search + nivel + duración + aspecto + golpe */}

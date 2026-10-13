@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     .values({
       userId: user.id,
       name: parsed.data.name,
-      emoji: parsed.data.emoji ?? "CL",
+      emoji: parsed.data.emoji ?? "🎓",
       isDefault: Number(total) === 0,
     })
     .returning();
