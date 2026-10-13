@@ -229,7 +229,12 @@ export default async function ClassDetailPage({
                       : "Editar"}
                   </Link>
                 )}
-                <ClassActions classId={cls.id} initialFavorite={isFav} />
+                <ClassActions
+                  classId={cls.id}
+                  initialFavorite={isFav}
+                  className={cls.name}
+                  canDelete={isOwner}
+                />
               </div>
             )}
           </div>
