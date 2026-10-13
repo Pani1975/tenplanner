@@ -32,6 +32,17 @@ import {
 } from "@/lib/block-items";
 import { AUTORIAS, nivelesForSport } from "@/lib/exercise-taxonomy";
 import { SessionExerciseLists } from "@/components/app/session-exercise-lists";
+import {
+  ExerciseForm,
+  type ExerciseFormResult,
+} from "@/components/app/exercise-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function nivelOptionsForSport(sport?: string | null) {
   return nivelesForSport(sport).map((n) => ({
@@ -207,6 +218,12 @@ export function ClassForm({
   const [pickerSourceTab, setPickerSourceTab] = useState<"search" | "lists">(
     "search"
   );
+  // Biblioteca local: arranca con lo que llega del servidor y se actualiza
+  // al vuelo cuando se crea un ejercicio nuevo desde aquí, sin recargar la
+  // página (igual que en el wizard de sesiones).
+  const [libraryExercises, setLibraryExercises] =
+    useState<AvailableExercise[]>(availableExercises);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
 
   function updateBlock(idx: number, patch: Partial<BlockState>) {
     setBlocks((prev) =>
@@ -604,942 +621,1035 @@ export function ClassForm({
   }
 
   const filteredExercises = (search: string) =>
-    availableExercises.filter(
+    libraryExercises.filter(
       (e) =>
         e.name.toLowerCase().includes(search.toLowerCase()) &&
         matchesPickerFilters(e, pickerFilters)
     );
 
+  /** Añade el ejercicio recién creado a la biblioteca local (sin duplicar)
+   * y lo devuelve en el formato que usa el resto del picker. */
+  function addCreatedExerciseToLibrary(
+    created: ExerciseFormResult
+  ): AvailableExercise {
+    const converted: AvailableExercise = {
+      id: created.id,
+      name: created.name,
+      category: created.category,
+      description: null,
+    };
+    setLibraryExercises((prev) =>
+      prev.some((e) => e.id === converted.id) ? prev : [converted, ...prev]
+    );
+    return converted;
+  }
+
+  /** Al guardar el ejercicio rápido, queda en la Biblioteca y se inserta
+   * automáticamente donde se abrió el diálogo (bloque o estación). */
+  function handleQuickCreateSuccess(exercise?: ExerciseFormResult) {
+    setShowQuickCreate(false);
+    if (!exercise) return;
+    const converted = addCreatedExerciseToLibrary(exercise);
+    if (stationPickerTarget) {
+      setStationExercise(
+        stationPickerTarget.blockIdx,
+        stationPickerTarget.itemIdx,
+        stationPickerTarget.stationIdx,
+        converted
+      );
+    } else if (pickerOpen !== null) {
+      addExerciseToBlock(pickerOpen, converted);
+    }
+  }
+
+  function closeQuickCreate() {
+    setShowQuickCreate(false);
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Identidad */}
-      <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
-        <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
-          <div className="flex size-9 items-center justify-center rounded-full border border-[#D6FF38]/40 bg-[#D6FF38]/12 text-[#D6FF38]">
-            <GraduationCap className="size-4" strokeWidth={1.8} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
-              Datos de la clase
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Identidad, nivel y duración
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="name"
-            className="block text-sm font-semibold text-foreground"
-          >
-            Nombre de la clase
-          </label>
-          <input
-            id="name"
-            type="text"
-            required
-            maxLength={255}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ej: Derecha y revés verde"
-            className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+    <>
+      <Dialog
+        open={showQuickCreate}
+        onOpenChange={(open) =>
+          open ? setShowQuickCreate(true) : closeQuickCreate()
+        }
+      >
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Crear ejercicio rápido</DialogTitle>
+            <DialogDescription>
+              Crea un ejercicio mínimo sin salir de la clase. Se guarda en tu
+              Biblioteca y se añade automáticamente aquí.
+            </DialogDescription>
+          </DialogHeader>
+          <ExerciseForm
+            mode="create"
+            initialFormMode="quick"
+            enableDrafts
+            draftQueryParam="exerciseDraft"
+            sport={sport}
+            onSuccess={handleQuickCreateSuccess}
+            onCancel={closeQuickCreate}
           />
-        </div>
+        </DialogContent>
+      </Dialog>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">
-              Duración
-            </label>
-            <select
-              value={duracionMinutes}
-              onChange={(e) => setDuracionMinutes(Number(e.target.value))}
-              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-            >
-              {DURACIONES.map((d) => (
-                <option key={d} value={d}>
-                  {d === 120 ? "Más de 90 min" : `${d} min`}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">
-              Tipo
-            </label>
-            <select
-              value={alumnosTipo}
-              onChange={(e) =>
-                setAlumnosTipo(e.target.value as "individual" | "grupal" | "")
-              }
-              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-            >
-              <option value="">— Selecciona —</option>
-              <option value="individual">Individual</option>
-              <option value="grupal">Grupal</option>
-            </select>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Identidad */}
+        <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
+          <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
+            <div className="flex size-9 items-center justify-center rounded-full border border-[#D6FF38]/40 bg-[#D6FF38]/12 text-[#D6FF38]">
+              <GraduationCap className="size-4" strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
+                Datos de la clase
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Identidad, nivel y duración
+              </p>
+            </div>
           </div>
 
           <div className="space-y-1.5">
             <label
-              htmlFor="numAlumnos"
+              htmlFor="name"
               className="block text-sm font-semibold text-foreground"
             >
-              Alumnos
+              Nombre de la clase
             </label>
             <input
-              id="numAlumnos"
-              type="number"
-              min={1}
-              max={60}
-              value={numAlumnos}
-              onChange={(e) =>
-                setNumAlumnos(e.target.value ? Number(e.target.value) : "")
-              }
-              placeholder="4"
-              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-foreground">
-            Nivel{" "}
-            <span className="font-normal text-muted-foreground">
-              (elige uno)
-            </span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {NIVELES.map((n) => {
-              const active = niveles.includes(n.id);
-              return (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => toggleNivel(n.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
-                    active
-                      ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
-                      : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  {n.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-foreground">
-            Aspecto del juego{" "}
-            <span className="font-normal text-muted-foreground">
-              (puedes elegir varios)
-            </span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {ASPECTOS.map((a) => {
-              const active = aspectosJuego.includes(a.id);
-              return (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => toggleAspecto(a.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
-                    active
-                      ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
-                      : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  {a.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-foreground">
-            Golpes{" "}
-            <span className="font-normal text-muted-foreground">
-              (puedes elegir varios)
-            </span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {GOLPES.map((g) => {
-              const active = golpes.includes(g.id);
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => toggleGolpe(g.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
-                    active
-                      ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
-                      : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Objetivos / Material / Vídeo */}
-      <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
-        <p className="border-b border-foreground/10 pb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
-          Contenido
-        </p>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="objetivos"
-            className="block text-sm font-semibold text-foreground"
-          >
-            Objetivos{" "}
-            <span className="font-normal text-muted-foreground">
-              (numera con 1) 2)…)
-            </span>
-          </label>
-          <textarea
-            id="objetivos"
-            rows={4}
-            maxLength={4000}
-            value={objetivos}
-            onChange={(e) => setObjetivos(e.target.value)}
-            placeholder="1) preparar la raqueta antes del bote 2) terminar el golpe…"
-            className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-          />
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="material"
-              className="block text-sm font-semibold text-foreground"
-            >
-              Material{" "}
-              <span className="font-normal text-muted-foreground">
-                (opcional)
-              </span>
-            </label>
-            <textarea
-              id="material"
-              rows={3}
-              maxLength={2000}
-              value={material}
-              onChange={(e) => setMaterial(e.target.value)}
-              placeholder="Pelotas verdes, 9 aros, conos…"
-              className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              id="name"
+              type="text"
+              required
+              maxLength={255}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Derecha y revés verde"
+              className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor="videoUrl"
-              className="block text-sm font-semibold text-foreground"
-            >
-              Vídeo{" "}
-              <span className="font-normal text-muted-foreground">
-                (opcional)
-              </span>
-            </label>
-            <input
-              id="videoUrl"
-              type="url"
-              maxLength={500}
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://…"
-              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Estructura por bloques */}
-      <section className="space-y-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
-          Estructura por bloques
-        </p>
-
-        {blocks.map((block, blockIdx) => (
-          <div
-            key={block.orderIndex}
-            className="space-y-4 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-brand">
-                  {String(block.orderIndex).padStart(2, "0")}
-                </span>
-                <input
-                  type="text"
-                  maxLength={120}
-                  value={block.title}
-                  onChange={(e) =>
-                    updateBlock(blockIdx, { title: e.target.value })
-                  }
-                  className="border-0 border-b border-transparent bg-transparent px-1 py-0.5 font-heading text-lg text-foreground transition-colors hover:border-foreground/20 focus:border-[#D6FF38] focus:outline-none"
-                />
-              </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-foreground">
+                Duración
+              </label>
+              <select
+                value={duracionMinutes}
+                onChange={(e) => setDuracionMinutes(Number(e.target.value))}
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              >
+                {DURACIONES.map((d) => (
+                  <option key={d} value={d}>
+                    {d === 120 ? "Más de 90 min" : `${d} min`}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {block.items.length > 0 && (
-              <ul
-                className="space-y-2"
-                onDragOver={(e) => {
-                  // permite drop sobre el bloque entero (cae al final si no toca un item)
-                  if (dragSource) e.preventDefault();
-                }}
-                onDrop={(e) => handleDropOnBlockEnd(e, blockIdx)}
-              >
-                {block.items.map((item, itemIdx) => {
-                  const isDraggingThis =
-                    dragSource?.blockIdx === blockIdx &&
-                    dragSource?.itemIdx === itemIdx;
-                  const isDropTarget =
-                    dragOverTarget?.blockIdx === blockIdx &&
-                    dragOverTarget?.itemIdx === itemIdx &&
-                    !isDraggingThis;
-                  return (
-                    <li
-                      key={itemIdx}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, blockIdx, itemIdx)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) =>
-                        handleDragOverItem(e, blockIdx, itemIdx)
-                      }
-                      onDrop={(e) => handleDropOnItem(e, blockIdx, itemIdx)}
-                      className={cn(
-                        "flex items-start gap-2 rounded-lg border bg-muted/30 p-3 transition-colors",
-                        isDraggingThis
-                          ? "opacity-40 border-brand/40"
-                          : isDropTarget
-                            ? "border-brand/60 bg-brand/5"
-                            : "border-foreground/10"
-                      )}
-                    >
-                      <span
-                        className="cursor-grab active:cursor-grabbing pt-1 text-muted-foreground/60 hover:text-foreground"
-                        title="Arrastrar"
-                      >
-                        <GripVertical className="size-3.5" />
-                      </span>
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums pt-1">
-                        {String(itemIdx + 1).padStart(2, "0")}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        {item.kind === "exercise" ? (
-                          <div className="flex items-center gap-2">
-                            <Dumbbell className="size-3.5 text-brand shrink-0" />
-                            <span className="text-sm text-foreground truncate">
-                              {item.name}
-                            </span>
-                          </div>
-                        ) : item.kind === "text" ? (
-                          <div className="flex items-start gap-2">
-                            <Type className="size-3.5 text-muted-foreground mt-1 shrink-0" />
-                            <textarea
-                              rows={2}
-                              value={item.freeText}
-                              onChange={(e) =>
-                                updateItem(blockIdx, itemIdx, {
-                                  kind: "text",
-                                  freeText: e.target.value,
-                                } as Partial<BlockItem>)
-                              }
-                              placeholder="Escribe la actividad…"
-                              className="flex-1 text-sm bg-transparent border-0 focus:outline-none text-foreground resize-none placeholder:text-muted-foreground"
-                            />
-                          </div>
-                        ) : item.kind === "warmup" ? (
-                          <div className="flex items-center gap-2">
-                            <Coffee className="size-3.5 text-sky-500 shrink-0" />
-                            <span className="text-sm font-medium text-foreground">
-                              Descanso
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <LayoutGrid className="size-3.5 text-brand shrink-0" />
-                              <span className="text-sm font-medium text-foreground">
-                                Estaciones ({item.stations.length})
-                              </span>
-                            </div>
-                            <textarea
-                              rows={1}
-                              value={item.introText}
-                              onChange={(e) =>
-                                updateItem(blockIdx, itemIdx, {
-                                  introText: e.target.value,
-                                } as Partial<BlockItem>)
-                              }
-                              placeholder="Explica el ejercicio de estaciones (opcional)…"
-                              className="w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
-                            />
-                            <ul className="space-y-2">
-                              {item.stations.map((station, stationIdx) => (
-                                <li
-                                  key={stationIdx}
-                                  className="flex items-start gap-2 rounded-lg border border-foreground/10 bg-background/40 p-2"
-                                >
-                                  <span className="pt-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground tabular-nums">
-                                    {String(stationIdx + 1).padStart(2, "0")}
-                                  </span>
-                                  <div className="flex-1 min-w-0 space-y-1.5">
-                                    <div className="flex gap-1.5">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setStationPickerTarget({
-                                            blockIdx,
-                                            itemIdx,
-                                            stationIdx,
-                                          });
-                                          setSearch("");
-                                        }}
-                                        className={cn(
-                                          "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
-                                          station.kind === "exercise"
-                                            ? "border-brand/40 bg-brand/10 text-brand"
-                                            : "border-foreground/15 text-muted-foreground hover:border-brand/40"
-                                        )}
-                                      >
-                                        Ejercicio
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          updateStation(
-                                            blockIdx,
-                                            itemIdx,
-                                            stationIdx,
-                                            {
-                                              kind: "text",
-                                              exerciseId: null,
-                                              name: "",
-                                            }
-                                          )
-                                        }
-                                        className={cn(
-                                          "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
-                                          station.kind === "text"
-                                            ? "border-brand/40 bg-brand/10 text-brand"
-                                            : "border-foreground/15 text-muted-foreground hover:border-brand/40"
-                                        )}
-                                      >
-                                        Texto libre
-                                      </button>
-                                    </div>
-                                    {station.kind === "exercise" ? (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setStationPickerTarget({
-                                            blockIdx,
-                                            itemIdx,
-                                            stationIdx,
-                                          });
-                                          setSearch("");
-                                        }}
-                                        className={cn(
-                                          "truncate text-left text-xs hover:text-brand",
-                                          stationPickerTarget?.blockIdx ===
-                                            blockIdx &&
-                                            stationPickerTarget?.itemIdx ===
-                                              itemIdx &&
-                                            stationPickerTarget?.stationIdx ===
-                                              stationIdx
-                                            ? "font-semibold text-brand"
-                                            : "text-foreground"
-                                        )}
-                                      >
-                                        {stationPickerTarget?.blockIdx ===
-                                          blockIdx &&
-                                        stationPickerTarget?.itemIdx ===
-                                          itemIdx &&
-                                        stationPickerTarget?.stationIdx ===
-                                          stationIdx
-                                          ? "Elige en la Biblioteca ↓"
-                                          : station.name || (
-                                              <span className="italic text-muted-foreground">
-                                                Elige un ejercicio…
-                                              </span>
-                                            )}
-                                      </button>
-                                    ) : (
-                                      <textarea
-                                        rows={1}
-                                        value={station.freeText}
-                                        onChange={(e) =>
-                                          updateStation(
-                                            blockIdx,
-                                            itemIdx,
-                                            stationIdx,
-                                            { freeText: e.target.value }
-                                          )
-                                        }
-                                        placeholder="Describe la estación…"
-                                        className="w-full resize-none rounded-lg border-0 bg-transparent text-xs text-foreground focus:outline-none placeholder:text-muted-foreground"
-                                      />
-                                    )}
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 flex-col items-center gap-0.5">
-                        <input
-                          type="number"
-                          min={1}
-                          max={300}
-                          placeholder="min"
-                          title={
-                            item.kind === "stations"
-                              ? "Duración de cada estación"
-                              : undefined
-                          }
-                          value={item.durationMinutes ?? ""}
-                          onChange={(e) =>
-                            updateItem(blockIdx, itemIdx, {
-                              durationMinutes: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            } as Partial<BlockItem>)
-                          }
-                          className="h-8 w-16 rounded-lg border border-foreground/15 bg-background/70 px-2 text-xs tabular-nums text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-1 focus:ring-[#D6FF38]/20"
-                        />
-                        {item.kind === "stations" && (
-                          <span className="text-[9px] text-muted-foreground">
-                            por estación
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(blockIdx, itemIdx)}
-                        aria-label="Quitar"
-                        className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            {/* Drop zone for empty block */}
-            {block.items.length === 0 && dragSource && (
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDropOnBlockEnd(e, blockIdx)}
-                className="rounded-lg border-2 border-dashed border-[#D6FF38]/50 bg-[#D6FF38]/10 px-4 py-6 text-center text-xs font-semibold text-foreground"
-              >
-                Suelta aquí para mover al bloque {block.orderIndex}
-              </div>
-            )}
-
-            {stationPickerTarget?.blockIdx === blockIdx ? (
-              <div className="space-y-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-foreground">
-                    Elige un ejercicio para la estación{" "}
-                    {stationPickerTarget.stationIdx + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStationPickerTarget(null);
-                      setSearch("");
-                    }}
-                    className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Cerrar"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoFocus
-                  placeholder="Buscar ejercicio…"
-                  className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-                />
-                <ExercisePickerFilters
-                  exercises={availableExercises}
-                  value={pickerFilters}
-                  onChange={setPickerFilters}
-                />
-                <ul className="max-h-64 overflow-y-auto space-y-1">
-                  {filteredExercises(search)
-                    .slice(0, 30)
-                    .map((ex) => (
-                      <li
-                        key={ex.id}
-                        className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setStationExercise(
-                              stationPickerTarget.blockIdx,
-                              stationPickerTarget.itemIdx,
-                              stationPickerTarget.stationIdx,
-                              ex
-                            )
-                          }
-                          className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
-                        >
-                          <span className="block truncate font-medium">
-                            {ex.name}
-                          </span>
-                          {ex.description && (
-                            <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                              {ex.description}
-                            </span>
-                          )}
-                        </button>
-                        <NextLink
-                          href={`/exercises/${ex.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Ver ficha completa del ejercicio"
-                          className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
-                        >
-                          <ExternalLink className="size-3.5" />
-                        </NextLink>
-                      </li>
-                    ))}
-                  {filteredExercises(search).length === 0 && (
-                    <li className="text-xs text-muted-foreground italic px-3 py-2">
-                      Sin resultados.
-                    </li>
-                  )}
-                </ul>
-              </div>
-            ) : pickerOpen === blockIdx ? (
-              <div className="space-y-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="inline-flex rounded-full border border-foreground/15 bg-background p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setPickerSourceTab("search")}
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
-                        pickerSourceTab === "search"
-                          ? "bg-[#050505] text-white dark:bg-white dark:text-[#050505]"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      Buscar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPickerSourceTab("lists")}
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
-                        pickerSourceTab === "lists"
-                          ? "bg-[#050505] text-white dark:bg-white dark:text-[#050505]"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      Favoritos
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPickerOpen(null);
-                      setSearch("");
-                      setPickerSourceTab("search");
-                    }}
-                    className="size-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Cerrar"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-
-                {pickerSourceTab === "lists" ? (
-                  <div className="max-h-64 overflow-y-auto rounded-lg border border-foreground/10 bg-background/60">
-                    <SessionExerciseLists
-                      selectedExerciseIds={block.items
-                        .filter(
-                          (
-                            item
-                          ): item is Extract<BlockItem, { kind: "exercise" }> =>
-                            item.kind === "exercise"
-                        )
-                        .map((item) => item.exerciseId)}
-                      onApplyList={(items) =>
-                        addExercisesToBlock(blockIdx, items)
-                      }
-                      contextLabel="la clase"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      type="text"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      autoFocus
-                      placeholder="Buscar ejercicio…"
-                      className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-                    />
-                    <ExercisePickerFilters
-                      exercises={availableExercises}
-                      value={pickerFilters}
-                      onChange={setPickerFilters}
-                    />
-                    <ul className="max-h-64 overflow-y-auto space-y-1">
-                      {filteredExercises(search)
-                        .slice(0, 30)
-                        .map((ex) => (
-                          <li
-                            key={ex.id}
-                            className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => addExerciseToBlock(blockIdx, ex)}
-                              className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
-                            >
-                              <span className="block truncate font-medium">
-                                {ex.name}
-                              </span>
-                              {ex.description && (
-                                <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                                  {ex.description}
-                                </span>
-                              )}
-                            </button>
-                            <NextLink
-                              href={`/exercises/${ex.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              title="Ver ficha completa del ejercicio"
-                              className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
-                            >
-                              <ExternalLink className="size-3.5" />
-                            </NextLink>
-                          </li>
-                        ))}
-                      {filteredExercises(search).length === 0 && (
-                        <li className="text-xs text-muted-foreground italic px-3 py-2">
-                          Sin resultados.
-                        </li>
-                      )}
-                    </ul>
-                  </>
-                )}
-              </div>
-            ) : stationsDraftBlock === blockIdx ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
-                <label className="text-xs font-semibold text-foreground">
-                  ¿Cuántas estaciones?
-                </label>
-                <input
-                  type="number"
-                  min={STATION_COUNT_MIN}
-                  max={STATION_COUNT_MAX}
-                  value={stationsDraftCount}
-                  onChange={(e) =>
-                    setStationsDraftCount(Number(e.target.value))
-                  }
-                  className="h-8 w-16 rounded-lg border border-foreground/15 bg-background/80 px-2 text-xs tabular-nums text-foreground focus:border-[#D6FF38]/70 focus:outline-none"
-                />
-                <span className="text-xs text-muted-foreground">
-                  (de {STATION_COUNT_MIN} a {STATION_COUNT_MAX})
-                </span>
-                <button
-                  type="button"
-                  onClick={confirmStationsDraft}
-                  className="rounded-full bg-[#050505] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505]"
-                >
-                  Crear estaciones
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStationsDraftBlock(null)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPickerOpen(blockIdx);
-                    setSearch("");
-                    setPickerSourceTab("search");
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
-                >
-                  <Dumbbell className="size-3.5" /> Añadir ejercicio
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addTextToBlock(blockIdx)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
-                >
-                  <Type className="size-3.5" /> Texto libre
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addWarmupToBlock(blockIdx)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
-                >
-                  <Coffee className="size-3.5" /> Descanso
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStationsDraftBlock(blockIdx);
-                    setStationsDraftCount(4);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
-                >
-                  <LayoutGrid className="size-3.5" /> Estaciones
-                </button>
-              </div>
-            )}
-
-            <details className="text-xs">
-              <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                <ChevronDown className="size-3" /> Notas del bloque
-              </summary>
-              <textarea
-                rows={2}
-                value={block.notes}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-foreground">
+                Tipo
+              </label>
+              <select
+                value={alumnosTipo}
                 onChange={(e) =>
-                  updateBlock(blockIdx, { notes: e.target.value })
+                  setAlumnosTipo(e.target.value as "individual" | "grupal" | "")
                 }
-                placeholder="Aspectos importantes de este bloque…"
-                className="mt-2 w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-1 focus:ring-[#D6FF38]/20"
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              >
+                <option value="">— Selecciona —</option>
+                <option value="individual">Individual</option>
+                <option value="grupal">Grupal</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="numAlumnos"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Alumnos
+              </label>
+              <input
+                id="numAlumnos"
+                type="number"
+                min={1}
+                max={60}
+                value={numAlumnos}
+                onChange={(e) =>
+                  setNumAlumnos(e.target.value ? Number(e.target.value) : "")
+                }
+                placeholder="4"
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               />
-            </details>
+            </div>
           </div>
-        ))}
-      </section>
 
-      {/* Aspectos importantes */}
-      <section className="space-y-3 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
-        <label
-          htmlFor="aspectos"
-          className="block text-sm font-semibold text-foreground"
-        >
-          Aspectos importantes y observaciones{" "}
-          <span className="font-normal text-muted-foreground">(opcional)</span>
-        </label>
-        <textarea
-          id="aspectos"
-          rows={4}
-          maxLength={4000}
-          value={aspectosImportantes}
-          onChange={(e) => setAspectosImportantes(e.target.value)}
-          placeholder="Información extra valiosa para quien imparta esta clase…"
-          className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-        />
-
-        {isAdmin && (
-          <label className="flex items-center gap-2 text-sm pt-2">
-            <input
-              type="checkbox"
-              checked={isLibrary}
-              onChange={(e) => setIsLibrary(e.target.checked)}
-              className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
-            />
-            <span className="text-foreground/80">
-              Marcar como Biblioteca Ten Planner (visible para todos)
-            </span>
-          </label>
-        )}
-
-        {isAdmin && (
-          <div className="space-y-1.5 pt-1">
+          <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Autoría
+              Nivel{" "}
+              <span className="font-normal text-muted-foreground">
+                (elige uno)
+              </span>
             </label>
-            <p className="text-xs text-muted-foreground">
-              De quién es esta clase dentro de la biblioteca pública.
-            </p>
             <div className="flex flex-wrap gap-2">
-              {AUTORIAS.map(({ id, label }) => {
-                const isSelected = (autoria ?? "libre") === id;
+              {NIVELES.map((n) => {
+                const active = niveles.includes(n.id);
                 return (
                   <button
-                    key={id}
+                    key={n.id}
                     type="button"
-                    onClick={() => setAutoria(id)}
+                    onClick={() => toggleNivel(n.id)}
                     className={cn(
-                      "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
-                      isSelected
-                        ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
-                        : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      active
+                        ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
+                        : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {label}
+                    {n.label}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-foreground">
+              Aspecto del juego{" "}
+              <span className="font-normal text-muted-foreground">
+                (puedes elegir varios)
+              </span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {ASPECTOS.map((a) => {
+                const active = aspectosJuego.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggleAspecto(a.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      active
+                        ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
+                        : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {a.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-foreground">
+              Golpes{" "}
+              <span className="font-normal text-muted-foreground">
+                (puedes elegir varios)
+              </span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {GOLPES.map((g) => {
+                const active = golpes.includes(g.id);
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => toggleGolpe(g.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                      active
+                        ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
+                        : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Objetivos / Material / Vídeo */}
+        <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
+          <p className="border-b border-foreground/10 pb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
+            Contenido
+          </p>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="objetivos"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Objetivos{" "}
+              <span className="font-normal text-muted-foreground">
+                (numera con 1) 2)…)
+              </span>
+            </label>
+            <textarea
+              id="objetivos"
+              rows={4}
+              maxLength={4000}
+              value={objetivos}
+              onChange={(e) => setObjetivos(e.target.value)}
+              placeholder="1) preparar la raqueta antes del bote 2) terminar el golpe…"
+              className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="material"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Material{" "}
+                <span className="font-normal text-muted-foreground">
+                  (opcional)
+                </span>
+              </label>
+              <textarea
+                id="material"
+                rows={3}
+                maxLength={2000}
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+                placeholder="Pelotas verdes, 9 aros, conos…"
+                className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="videoUrl"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Vídeo{" "}
+                <span className="font-normal text-muted-foreground">
+                  (opcional)
+                </span>
+              </label>
+              <input
+                id="videoUrl"
+                type="url"
+                maxLength={500}
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://…"
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Estructura por bloques */}
+        <section className="space-y-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
+            Estructura por bloques
+          </p>
+
+          {blocks.map((block, blockIdx) => (
+            <div
+              key={block.orderIndex}
+              className="space-y-4 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-brand">
+                    {String(block.orderIndex).padStart(2, "0")}
+                  </span>
+                  <input
+                    type="text"
+                    maxLength={120}
+                    value={block.title}
+                    onChange={(e) =>
+                      updateBlock(blockIdx, { title: e.target.value })
+                    }
+                    className="border-0 border-b border-transparent bg-transparent px-1 py-0.5 font-heading text-lg text-foreground transition-colors hover:border-foreground/20 focus:border-[#D6FF38] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {block.items.length > 0 && (
+                <ul
+                  className="space-y-2"
+                  onDragOver={(e) => {
+                    // permite drop sobre el bloque entero (cae al final si no toca un item)
+                    if (dragSource) e.preventDefault();
+                  }}
+                  onDrop={(e) => handleDropOnBlockEnd(e, blockIdx)}
+                >
+                  {block.items.map((item, itemIdx) => {
+                    const isDraggingThis =
+                      dragSource?.blockIdx === blockIdx &&
+                      dragSource?.itemIdx === itemIdx;
+                    const isDropTarget =
+                      dragOverTarget?.blockIdx === blockIdx &&
+                      dragOverTarget?.itemIdx === itemIdx &&
+                      !isDraggingThis;
+                    return (
+                      <li
+                        key={itemIdx}
+                        draggable
+                        onDragStart={(e) =>
+                          handleDragStart(e, blockIdx, itemIdx)
+                        }
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) =>
+                          handleDragOverItem(e, blockIdx, itemIdx)
+                        }
+                        onDrop={(e) => handleDropOnItem(e, blockIdx, itemIdx)}
+                        className={cn(
+                          "flex items-start gap-2 rounded-lg border bg-muted/30 p-3 transition-colors",
+                          isDraggingThis
+                            ? "opacity-40 border-brand/40"
+                            : isDropTarget
+                              ? "border-brand/60 bg-brand/5"
+                              : "border-foreground/10"
+                        )}
+                      >
+                        <span
+                          className="cursor-grab active:cursor-grabbing pt-1 text-muted-foreground/60 hover:text-foreground"
+                          title="Arrastrar"
+                        >
+                          <GripVertical className="size-3.5" />
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums pt-1">
+                          {String(itemIdx + 1).padStart(2, "0")}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          {item.kind === "exercise" ? (
+                            <div className="flex items-center gap-2">
+                              <Dumbbell className="size-3.5 text-brand shrink-0" />
+                              <span className="text-sm text-foreground truncate">
+                                {item.name}
+                              </span>
+                            </div>
+                          ) : item.kind === "text" ? (
+                            <div className="flex items-start gap-2">
+                              <Type className="size-3.5 text-muted-foreground mt-1 shrink-0" />
+                              <textarea
+                                rows={2}
+                                value={item.freeText}
+                                onChange={(e) =>
+                                  updateItem(blockIdx, itemIdx, {
+                                    kind: "text",
+                                    freeText: e.target.value,
+                                  } as Partial<BlockItem>)
+                                }
+                                placeholder="Escribe la actividad…"
+                                className="flex-1 text-sm bg-transparent border-0 focus:outline-none text-foreground resize-none placeholder:text-muted-foreground"
+                              />
+                            </div>
+                          ) : item.kind === "warmup" ? (
+                            <div className="flex items-center gap-2">
+                              <Coffee className="size-3.5 text-sky-500 shrink-0" />
+                              <span className="text-sm font-medium text-foreground">
+                                Descanso
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <LayoutGrid className="size-3.5 text-brand shrink-0" />
+                                <span className="text-sm font-medium text-foreground">
+                                  Estaciones ({item.stations.length})
+                                </span>
+                              </div>
+                              <textarea
+                                rows={1}
+                                value={item.introText}
+                                onChange={(e) =>
+                                  updateItem(blockIdx, itemIdx, {
+                                    introText: e.target.value,
+                                  } as Partial<BlockItem>)
+                                }
+                                placeholder="Explica el ejercicio de estaciones (opcional)…"
+                                className="w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
+                              />
+                              <ul className="space-y-2">
+                                {item.stations.map((station, stationIdx) => (
+                                  <li
+                                    key={stationIdx}
+                                    className="flex items-start gap-2 rounded-lg border border-foreground/10 bg-background/40 p-2"
+                                  >
+                                    <span className="pt-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground tabular-nums">
+                                      {String(stationIdx + 1).padStart(2, "0")}
+                                    </span>
+                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setStationPickerTarget({
+                                              blockIdx,
+                                              itemIdx,
+                                              stationIdx,
+                                            });
+                                            setSearch("");
+                                          }}
+                                          className={cn(
+                                            "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
+                                            station.kind === "exercise"
+                                              ? "border-brand/40 bg-brand/10 text-brand"
+                                              : "border-foreground/15 text-muted-foreground hover:border-brand/40"
+                                          )}
+                                        >
+                                          Ejercicio
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            updateStation(
+                                              blockIdx,
+                                              itemIdx,
+                                              stationIdx,
+                                              {
+                                                kind: "text",
+                                                exerciseId: null,
+                                                name: "",
+                                              }
+                                            )
+                                          }
+                                          className={cn(
+                                            "rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors",
+                                            station.kind === "text"
+                                              ? "border-brand/40 bg-brand/10 text-brand"
+                                              : "border-foreground/15 text-muted-foreground hover:border-brand/40"
+                                          )}
+                                        >
+                                          Texto libre
+                                        </button>
+                                      </div>
+                                      {station.kind === "exercise" ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setStationPickerTarget({
+                                              blockIdx,
+                                              itemIdx,
+                                              stationIdx,
+                                            });
+                                            setSearch("");
+                                          }}
+                                          className={cn(
+                                            "truncate text-left text-xs hover:text-brand",
+                                            stationPickerTarget?.blockIdx ===
+                                              blockIdx &&
+                                              stationPickerTarget?.itemIdx ===
+                                                itemIdx &&
+                                              stationPickerTarget?.stationIdx ===
+                                                stationIdx
+                                              ? "font-semibold text-brand"
+                                              : "text-foreground"
+                                          )}
+                                        >
+                                          {stationPickerTarget?.blockIdx ===
+                                            blockIdx &&
+                                          stationPickerTarget?.itemIdx ===
+                                            itemIdx &&
+                                          stationPickerTarget?.stationIdx ===
+                                            stationIdx
+                                            ? "Elige en la Biblioteca ↓"
+                                            : station.name || (
+                                                <span className="italic text-muted-foreground">
+                                                  Elige un ejercicio…
+                                                </span>
+                                              )}
+                                        </button>
+                                      ) : (
+                                        <textarea
+                                          rows={1}
+                                          value={station.freeText}
+                                          onChange={(e) =>
+                                            updateStation(
+                                              blockIdx,
+                                              itemIdx,
+                                              stationIdx,
+                                              { freeText: e.target.value }
+                                            )
+                                          }
+                                          placeholder="Describe la estación…"
+                                          className="w-full resize-none rounded-lg border-0 bg-transparent text-xs text-foreground focus:outline-none placeholder:text-muted-foreground"
+                                        />
+                                      )}
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 flex-col items-center gap-0.5">
+                          <input
+                            type="number"
+                            min={1}
+                            max={300}
+                            placeholder="min"
+                            title={
+                              item.kind === "stations"
+                                ? "Duración de cada estación"
+                                : undefined
+                            }
+                            value={item.durationMinutes ?? ""}
+                            onChange={(e) =>
+                              updateItem(blockIdx, itemIdx, {
+                                durationMinutes: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              } as Partial<BlockItem>)
+                            }
+                            className="h-8 w-16 rounded-lg border border-foreground/15 bg-background/70 px-2 text-xs tabular-nums text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-1 focus:ring-[#D6FF38]/20"
+                          />
+                          {item.kind === "stations" && (
+                            <span className="text-[9px] text-muted-foreground">
+                              por estación
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(blockIdx, itemIdx)}
+                          aria-label="Quitar"
+                          className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {/* Drop zone for empty block */}
+              {block.items.length === 0 && dragSource && (
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleDropOnBlockEnd(e, blockIdx)}
+                  className="rounded-lg border-2 border-dashed border-[#D6FF38]/50 bg-[#D6FF38]/10 px-4 py-6 text-center text-xs font-semibold text-foreground"
+                >
+                  Suelta aquí para mover al bloque {block.orderIndex}
+                </div>
+              )}
+
+              {stationPickerTarget?.blockIdx === blockIdx ? (
+                <div className="space-y-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-foreground">
+                      Elige un ejercicio para la estación{" "}
+                      {stationPickerTarget.stationIdx + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickCreate(true)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand transition-colors hover:bg-brand/20"
+                      >
+                        <Plus className="size-3" />
+                        Nuevo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStationPickerTarget(null);
+                          setSearch("");
+                        }}
+                        className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="Cerrar"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    autoFocus
+                    placeholder="Buscar ejercicio…"
+                    className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+                  />
+                  <ExercisePickerFilters
+                    exercises={libraryExercises}
+                    value={pickerFilters}
+                    onChange={setPickerFilters}
+                  />
+                  <ul className="max-h-64 overflow-y-auto space-y-1">
+                    {filteredExercises(search)
+                      .slice(0, 30)
+                      .map((ex) => (
+                        <li
+                          key={ex.id}
+                          className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setStationExercise(
+                                stationPickerTarget.blockIdx,
+                                stationPickerTarget.itemIdx,
+                                stationPickerTarget.stationIdx,
+                                ex
+                              )
+                            }
+                            className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
+                          >
+                            <span className="block truncate font-medium">
+                              {ex.name}
+                            </span>
+                            {ex.description && (
+                              <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
+                                {ex.description}
+                              </span>
+                            )}
+                          </button>
+                          <NextLink
+                            href={`/exercises/${ex.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Ver ficha completa del ejercicio"
+                            className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
+                          >
+                            <ExternalLink className="size-3.5" />
+                          </NextLink>
+                        </li>
+                      ))}
+                    {filteredExercises(search).length === 0 && (
+                      <li className="text-xs text-muted-foreground italic px-3 py-2">
+                        Sin resultados.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              ) : pickerOpen === blockIdx ? (
+                <div className="space-y-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="inline-flex rounded-full border border-foreground/15 bg-background p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setPickerSourceTab("search")}
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                          pickerSourceTab === "search"
+                            ? "bg-[#050505] text-white dark:bg-white dark:text-[#050505]"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Buscar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPickerSourceTab("lists")}
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                          pickerSourceTab === "lists"
+                            ? "bg-[#050505] text-white dark:bg-white dark:text-[#050505]"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Favoritos
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickCreate(true)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand transition-colors hover:bg-brand/20"
+                      >
+                        <Plus className="size-3" />
+                        Nuevo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPickerOpen(null);
+                          setSearch("");
+                          setPickerSourceTab("search");
+                        }}
+                        className="size-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="Cerrar"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {pickerSourceTab === "lists" ? (
+                    <div className="max-h-64 overflow-y-auto rounded-lg border border-foreground/10 bg-background/60">
+                      <SessionExerciseLists
+                        selectedExerciseIds={block.items
+                          .filter(
+                            (
+                              item
+                            ): item is Extract<
+                              BlockItem,
+                              { kind: "exercise" }
+                            > => item.kind === "exercise"
+                          )
+                          .map((item) => item.exerciseId)}
+                        onApplyList={(items) =>
+                          addExercisesToBlock(blockIdx, items)
+                        }
+                        contextLabel="la clase"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        autoFocus
+                        placeholder="Buscar ejercicio…"
+                        className="h-9 w-full rounded-lg border border-foreground/15 bg-background/80 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+                      />
+                      <ExercisePickerFilters
+                        exercises={libraryExercises}
+                        value={pickerFilters}
+                        onChange={setPickerFilters}
+                      />
+                      <ul className="max-h-64 overflow-y-auto space-y-1">
+                        {filteredExercises(search)
+                          .slice(0, 30)
+                          .map((ex) => (
+                            <li
+                              key={ex.id}
+                              className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => addExerciseToBlock(blockIdx, ex)}
+                                className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
+                              >
+                                <span className="block truncate font-medium">
+                                  {ex.name}
+                                </span>
+                                {ex.description && (
+                                  <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
+                                    {ex.description}
+                                  </span>
+                                )}
+                              </button>
+                              <NextLink
+                                href={`/exercises/${ex.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title="Ver ficha completa del ejercicio"
+                                className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
+                              >
+                                <ExternalLink className="size-3.5" />
+                              </NextLink>
+                            </li>
+                          ))}
+                        {filteredExercises(search).length === 0 && (
+                          <li className="text-xs text-muted-foreground italic px-3 py-2">
+                            Sin resultados.
+                          </li>
+                        )}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              ) : stationsDraftBlock === blockIdx ? (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
+                  <label className="text-xs font-semibold text-foreground">
+                    ¿Cuántas estaciones?
+                  </label>
+                  <input
+                    type="number"
+                    min={STATION_COUNT_MIN}
+                    max={STATION_COUNT_MAX}
+                    value={stationsDraftCount}
+                    onChange={(e) =>
+                      setStationsDraftCount(Number(e.target.value))
+                    }
+                    className="h-8 w-16 rounded-lg border border-foreground/15 bg-background/80 px-2 text-xs tabular-nums text-foreground focus:border-[#D6FF38]/70 focus:outline-none"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    (de {STATION_COUNT_MIN} a {STATION_COUNT_MAX})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={confirmStationsDraft}
+                    className="rounded-full bg-[#050505] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505]"
+                  >
+                    Crear estaciones
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStationsDraftBlock(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickerOpen(blockIdx);
+                      setSearch("");
+                      setPickerSourceTab("search");
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
+                  >
+                    <Dumbbell className="size-3.5" /> Añadir ejercicio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addTextToBlock(blockIdx)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
+                  >
+                    <Type className="size-3.5" /> Texto libre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addWarmupToBlock(blockIdx)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
+                  >
+                    <Coffee className="size-3.5" /> Descanso
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStationsDraftBlock(blockIdx);
+                      setStationsDraftCount(4);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-[#D6FF38]/50 hover:bg-[#D6FF38]/10"
+                  >
+                    <LayoutGrid className="size-3.5" /> Estaciones
+                  </button>
+                </div>
+              )}
+
+              <details className="text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+                  <ChevronDown className="size-3" /> Notas del bloque
+                </summary>
+                <textarea
+                  rows={2}
+                  value={block.notes}
+                  onChange={(e) =>
+                    updateBlock(blockIdx, { notes: e.target.value })
+                  }
+                  placeholder="Aspectos importantes de este bloque…"
+                  className="mt-2 w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-1 focus:ring-[#D6FF38]/20"
+                />
+              </details>
+            </div>
+          ))}
+        </section>
+
+        {/* Aspectos importantes */}
+        <section className="space-y-3 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
+          <label
+            htmlFor="aspectos"
+            className="block text-sm font-semibold text-foreground"
+          >
+            Aspectos importantes y observaciones{" "}
+            <span className="font-normal text-muted-foreground">
+              (opcional)
+            </span>
+          </label>
+          <textarea
+            id="aspectos"
+            rows={4}
+            maxLength={4000}
+            value={aspectosImportantes}
+            onChange={(e) => setAspectosImportantes(e.target.value)}
+            placeholder="Información extra valiosa para quien imparta esta clase…"
+            className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+          />
+
+          {isAdmin && (
+            <label className="flex items-center gap-2 text-sm pt-2">
+              <input
+                type="checkbox"
+                checked={isLibrary}
+                onChange={(e) => setIsLibrary(e.target.checked)}
+                className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
+              />
+              <span className="text-foreground/80">
+                Marcar como Biblioteca Ten Planner (visible para todos)
+              </span>
+            </label>
+          )}
+
+          {isAdmin && (
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-sm font-semibold text-foreground">
+                Autoría
+              </label>
+              <p className="text-xs text-muted-foreground">
+                De quién es esta clase dentro de la biblioteca pública.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {AUTORIAS.map(({ id, label }) => {
+                  const isSelected = (autoria ?? "libre") === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setAutoria(id)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
+                        isSelected
+                          ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
+                          : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {error && (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
         )}
-      </section>
 
-      {error && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3">
-          <p className="text-sm text-destructive">{error}</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-3 border-t border-foreground/10 pt-4">
-        {/* El primer botón es el que usa Enter: en clases nuevas o en
+        <div className="flex items-center gap-3 border-t border-foreground/10 pt-4">
+          {/* El primer botón es el que usa Enter: en clases nuevas o en
             borrador, guarda como borrador para no publicar por accidente. */}
-        {(mode === "create" || isDraft) && (
+          {(mode === "create" || isDraft) && (
+            <button
+              type="submit"
+              value="draft"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-5 py-2.5 text-sm font-semibold text-foreground/70 transition-all hover:border-foreground/30 hover:text-foreground active:scale-95 disabled:opacity-60"
+            >
+              {isDraft ? "Guardar borrador" : "Guardar como borrador"}
+            </button>
+          )}
           <button
             type="submit"
-            value="draft"
+            value="published"
             disabled={submitting}
-            className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-5 py-2.5 text-sm font-semibold text-foreground/70 transition-all hover:border-foreground/30 hover:text-foreground active:scale-95 disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-6 py-2.5 text-sm font-bold text-[#050505] transition-all hover:bg-[#c8f52e] active:scale-95 disabled:opacity-60"
           >
-            {isDraft ? "Guardar borrador" : "Guardar como borrador"}
+            {submitting && <Loader2 className="size-4 animate-spin" />}
+            {mode === "edit" ? null : <Plus className="size-4" />}
+            {mode === "edit"
+              ? isDraft
+                ? "Publicar clase"
+                : "Guardar cambios"
+              : "Crear clase"}
           </button>
-        )}
-        <button
-          type="submit"
-          value="published"
-          disabled={submitting}
-          className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-6 py-2.5 text-sm font-bold text-[#050505] transition-all hover:bg-[#c8f52e] active:scale-95 disabled:opacity-60"
-        >
-          {submitting && <Loader2 className="size-4 animate-spin" />}
-          {mode === "edit" ? null : <Plus className="size-4" />}
-          {mode === "edit"
-            ? isDraft
-              ? "Publicar clase"
-              : "Guardar cambios"
-            : "Crear clase"}
-        </button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </>
   );
 }
