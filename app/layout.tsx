@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { CookieBanner } from "@/components/app/cookie-banner";
 import { ServiceWorkerRegister } from "@/components/app/sw-register";
 import { Toaster } from "@/components/ui/sonner";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -26,9 +27,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://tenplanner.app";
 const isProd = process.env.NODE_ENV === "production";
 
 export const metadata: Metadata = {

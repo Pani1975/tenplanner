@@ -17,7 +17,7 @@ export default function NotFound() {
         </p>
       </div>
       <Link
-        href="/dashboard"
+        href="/"
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
       >
         Volver al inicio

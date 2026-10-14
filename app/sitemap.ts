@@ -1,33 +1,26 @@
 import type { MetadataRoute } from "next";
-
-function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    "https://tenplanner.com"
-  );
-}
+import { siteUrl } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = siteUrl();
   const now = new Date();
   return [
     {
-      url: `${base}/`,
+      url: `${siteUrl}/`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${base}/login`,
+      url: `${siteUrl}/register`,
       lastModified: now,
       changeFrequency: "yearly",
-      priority: 0.3,
+      priority: 0.5,
     },
-    {
-      url: `${base}/register`,
+    ...["/terminos", "/privacidad", "/cookies", "/aviso-legal"].map((path) => ({
+      url: `${siteUrl}${path}`,
       lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
+    })),
   ];
 }

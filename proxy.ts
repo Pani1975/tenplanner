@@ -20,6 +20,25 @@ const PUBLIC_PREFIXES = [
   "/api/public/sport",
 ];
 const PUBLIC_EXACT = new Set(["/"]);
+// Logged-out visitors are sent to /login only for these app pages. Any other
+// unknown path falls through to the router so it can answer with a real 404
+// instead of a 200 login page. The (app) and admin layouts still enforce auth.
+const PRIVATE_PAGE_PREFIXES = [
+  "/admin",
+  "/calendar",
+  "/classes",
+  "/club",
+  "/dashboard",
+  "/exercises",
+  "/groups",
+  "/mi-espacio",
+  "/places",
+  "/profile",
+  "/resources",
+  "/sessions",
+  "/setup",
+  "/students",
+];
 const RECOVERABLE_REFRESH_TOKEN_ERRORS = new Set([
   "refresh_token_already_used",
   "refresh_token_not_found",
@@ -195,6 +214,9 @@ export async function proxy(request: NextRequest) {
     isClassesReadApi ||
     isProfileBootstrapApi;
   const isApiRoute = pathname.startsWith("/api/");
+  const isPrivatePage = PRIVATE_PAGE_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
   const shouldCheckUser =
     !isPublic || pathname === "/login" || pathname === "/register";
 
@@ -228,6 +250,9 @@ export async function proxy(request: NextRequest) {
       if (shouldClearAuthCookies) clearSupabaseAuthCookies(request, response);
       return withSecurityHeaders(response, csp);
     }
+    if (!isPrivatePage) {
+      return withSecurityHeaders(supabaseResponse, csp);
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     const response = NextResponse.redirect(url);
@@ -246,6 +271,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    // Static PWA/SEO files must never hit the auth redirect: a service worker
+    // script behind a redirect fails to register.
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw.js|manifest.webmanifest|apple-icon.png|icon-.*\\.png|landing/).*)",
   ],
 };

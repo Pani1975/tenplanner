@@ -1,11 +1,5 @@
 import type { MetadataRoute } from "next";
-
-function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-    "https://tenplanner.app"
-  );
-}
+import { siteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -26,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${siteUrl()}/sitemap.xml`,
-    host: siteUrl(),
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   };
 }
