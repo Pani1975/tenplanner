@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useRouter } from "next/navigation";
@@ -25,6 +26,7 @@ import {
   StickyNote,
   Lock,
   ShieldAlert,
+  FileDown,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -219,6 +221,7 @@ export function ExerciseDetailClient({
   const [showListPicker, setShowListPicker] = useState(false);
   const [savedInLists, setSavedInLists] = useState<SavedListSummary[]>([]);
   const [loadingLists, setLoadingLists] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const cat = CATEGORY_META[exercise.category];
   const CategoryIcon = cat.icon;
@@ -263,6 +266,27 @@ export function ExerciseDetailClient({
     const id = window.setTimeout(() => void refreshSavedLists(), 0);
     return () => window.clearTimeout(id);
   }, [refreshSavedLists]);
+
+  async function handleDownloadPdf() {
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/exercises/${exercise.id}/pdf`);
+      if (!res.ok) throw new Error("Error generando PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] ??
+        `ejercicio-${exercise.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silencioso — el botón vuelve a su estado normal
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -515,6 +539,22 @@ export function ExerciseDetailClient({
               text={`Ejercicio: ${exercise.name}`}
               className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]"
             />
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]",
+                downloadingPdf && "opacity-60"
+              )}
+            >
+              {downloadingPdf ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <FileDown className="size-4" strokeWidth={1.6} />
+              )}
+              PDF
+            </button>
             {userId && (
               <>
                 <button

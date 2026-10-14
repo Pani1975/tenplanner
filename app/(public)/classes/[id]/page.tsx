@@ -295,24 +295,23 @@ export default async function ClassDetailPage({
               </div>
             </div>
 
-            {user && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {isOwner && (
-                  <Link
-                    href={`/classes/${cls.id}/edit`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
-                  >
-                    {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
-                  </Link>
-                )}
-                <ClassActions
-                  classId={cls.id}
-                  initialFavorite={isFav}
-                  className={cls.name}
-                  canDelete={isOwner}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {isOwner && (
+                <Link
+                  href={`/classes/${cls.id}/edit`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                >
+                  {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
+                </Link>
+              )}
+              <ClassActions
+                classId={cls.id}
+                initialFavorite={isFav}
+                className={cls.name}
+                canDelete={isOwner}
+                loggedIn={!!user}
+              />
+            </div>
           </div>
         </div>
         <div className="h-2 bg-[#D6FF38]" />

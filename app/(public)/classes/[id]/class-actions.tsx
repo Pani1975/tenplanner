@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, FileDown, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { Loader2, FileDown, Trash2, X, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClassFavoriteToggle } from "./class-favorite-toggle";
 import { ShareButton } from "@/components/app/share-button";
@@ -14,6 +15,11 @@ interface ClassActionsProps {
   className?: string;
   /** Solo el creador puede eliminarla. */
   canDelete?: boolean;
+  /**
+   * Compartir y descargar PDF funcionan sin sesión iniciada (clases de
+   * biblioteca públicas); guardar en lista sí la requiere.
+   */
+  loggedIn?: boolean;
 }
 
 export function ClassActions({
@@ -21,6 +27,7 @@ export function ClassActions({
   initialFavorite,
   className,
   canDelete = false,
+  loggedIn = true,
 }: ClassActionsProps) {
   const router = useRouter();
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -88,11 +95,22 @@ export function ClassActions({
             <FileDown className="size-4" strokeWidth={1.6} />
           )}
         </button>
-        <ClassFavoriteToggle
-          classId={classId}
-          className={className}
-          initialFavorited={initialFavorite}
-        />
+        {loggedIn ? (
+          <ClassFavoriteToggle
+            classId={classId}
+            className={className}
+            initialFavorited={initialFavorite}
+          />
+        ) : (
+          <Link
+            href="/login"
+            aria-label="Inicia sesión para guardar en una lista"
+            title="Inicia sesión para guardar en una lista"
+            className="flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
+          >
+            <Lock className="size-4" strokeWidth={1.6} />
+          </Link>
+        )}
         {canDelete && (
           <button
             type="button"
