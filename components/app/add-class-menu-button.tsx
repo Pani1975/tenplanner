@@ -142,7 +142,8 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
         className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3 py-1.5 text-xs font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10"
       >
         <Plus className="size-3.5" />
-        Añadir
+        <span className="hidden sm:inline">Añadir a un grupo o a una sesión</span>
+        <span className="sm:hidden">Añadir a grupo o sesión</span>
       </button>
 
       {open && (

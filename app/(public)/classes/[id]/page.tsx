@@ -18,7 +18,8 @@ import {
   classes,
   classBlocks,
   classBlockExercises,
-  classFavorites,
+  classListItems,
+  classLists,
   exercises,
   groups,
   sessions,
@@ -114,15 +115,18 @@ export default async function ClassDetailPage({
         )
     : [];
 
+  // Favorito = la clase está en al menos una de las listas del monitor
+  // (el corazón de la ficha abre ese selector; ver ClassFavoriteToggle).
   const isFav = user
     ? !!(
         await db
-          .select({ id: classFavorites.id })
-          .from(classFavorites)
+          .select({ id: classListItems.listId })
+          .from(classListItems)
+          .innerJoin(classLists, eq(classLists.id, classListItems.listId))
           .where(
             and(
-              eq(classFavorites.userId, user.id),
-              eq(classFavorites.classId, id)
+              eq(classLists.userId, user.id),
+              eq(classListItems.classId, id)
             )
           )
           .limit(1)

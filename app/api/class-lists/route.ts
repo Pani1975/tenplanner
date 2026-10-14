@@ -1,9 +1,24 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { classListItems, classLists, classes } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+
+// Crea la lista "Favoritos" la primera vez que el monitor guarda una clase
+// (por ejemplo, al pulsar el corazón de la ficha de clase sin elegir
+// explícitamente otra lista).
+async function ensureDefaultList(userId: string) {
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(classLists)
+    .where(eq(classLists.userId, userId));
+  if (Number(total) === 0) {
+    await db
+      .insert(classLists)
+      .values({ userId, name: "Favoritos", emoji: "⭐", isDefault: true });
+  }
+}
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -12,6 +27,8 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await ensureDefaultList(user.id);
 
   const classId = request.nextUrl.searchParams.get("classId");
   const includeClasses =
@@ -27,7 +44,8 @@ export async function GET(request: NextRequest) {
         createdAt: classLists.createdAt,
       })
       .from(classLists)
-      .where(eq(classLists.userId, user.id)),
+      .where(eq(classLists.userId, user.id))
+      .orderBy(desc(classLists.isDefault), classLists.createdAt),
     db
       .select({
         listId: classListItems.listId,
@@ -140,10 +158,7 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
-  const [{ total }] = await db
-    .select({ total: count() })
-    .from(classLists)
-    .where(eq(classLists.userId, user.id));
+  await ensureDefaultList(user.id);
 
   const [list] = await db
     .insert(classLists)
@@ -151,7 +166,6 @@ export async function POST(request: Request) {
       userId: user.id,
       name: parsed.data.name,
       emoji: parsed.data.emoji ?? "🎓",
-      isDefault: Number(total) === 0,
     })
     .returning();
 
