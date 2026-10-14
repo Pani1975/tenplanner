@@ -57,6 +57,7 @@ describe("proxy matcher", () => {
     "/manifest.webmanifest",
     "/icon-192x192.png",
     "/apple-icon.png",
+    "/opengraph-image",
     "/robots.txt",
     "/sitemap.xml",
   ])("skips %s", (path) => {

@@ -74,7 +74,7 @@ export function CookieBanner() {
     >
       <div className="pointer-events-auto mx-auto max-w-3xl rounded-lg border border-[#050505]/10 bg-white p-4 text-[#050505] shadow-[0_24px_70px_-30px_rgba(5,5,5,0.55)] backdrop-blur dark:border-white/12 dark:bg-[#101010] dark:text-white sm:p-5">
         <div className="flex items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#D6FF38]/60 bg-[#D6FF38] text-[#050505]">
+          <div className="hidden size-9 shrink-0 items-center sm:flex justify-center rounded-lg border border-[#D6FF38]/60 bg-[#D6FF38] text-[#050505]">
             <Cookie className="size-4" strokeWidth={1.8} />
           </div>
           <div className="min-w-0 flex-1">
@@ -82,17 +82,23 @@ export function CookieBanner() {
               id="cookie-banner-title"
               className="text-sm font-black uppercase tracking-[0.14em]"
             >
-              Cookies técnicas y analítica sin cookies
+              Solo cookies técnicas
             </p>
             <p
               id="cookie-banner-copy"
-              className="mt-2 text-[13px] font-medium leading-relaxed text-[#050505]/68 dark:text-white/62"
+              className="mt-1.5 text-[13px] font-medium leading-relaxed text-[#050505]/68 dark:text-white/62 sm:mt-2"
             >
-              Usamos cookies y almacenamiento local estrictamente necesarios
-              (sesión y preferencias). Además medimos las visitas de forma
-              agregada y anónima con Vercel Analytics, que no usa cookies ni
-              te identifica. No hay publicidad ni tracking entre sitios. Más
-              info en la{" "}
+              <span className="sm:hidden">
+                Sin publicidad ni rastreo: solo lo necesario para que la app
+                funcione y una analítica anónima. Más en la{" "}
+              </span>
+              <span className="hidden sm:inline">
+                Usamos cookies y almacenamiento local estrictamente necesarios
+                (sesión y preferencias). Además medimos las visitas de forma
+                agregada y anónima con Vercel Analytics, que no usa cookies ni
+                te identifica. No hay publicidad ni tracking entre sitios. Más
+                info en la{" "}
+              </span>
               <Link
                 href="/cookies"
                 className="font-bold underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:decoration-white/24 dark:hover:text-white"
@@ -101,16 +107,16 @@ export function CookieBanner() {
               </Link>
               .
             </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mt-3">
               <button
                 onClick={acknowledge}
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-[#050505] px-4 text-[12px] font-black text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-[#050505] px-4 text-[12px] font-black text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
               >
                 Entendido
               </button>
               <Link
                 href="/privacidad"
-                className="text-[12px] font-bold text-[#050505]/54 underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:text-white/52 dark:decoration-white/24 dark:hover:text-white"
+                className="inline-flex min-h-11 items-center text-[12px] font-bold text-[#050505]/54 underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:text-white/52 dark:decoration-white/24 dark:hover:text-white"
               >
                 Ver política de privacidad
               </Link>
@@ -119,7 +125,7 @@ export function CookieBanner() {
           <button
             onClick={acknowledge}
             aria-label="Cerrar aviso"
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#050505]/46 transition-colors hover:bg-[#050505]/5 hover:text-[#050505] dark:text-white/46 dark:hover:bg-white/10 dark:hover:text-white"
+            className="-m-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-[#050505]/46 transition-colors hover:bg-[#050505]/5 hover:text-[#050505] dark:text-white/46 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <X className="size-4" strokeWidth={1.6} />
           </button>

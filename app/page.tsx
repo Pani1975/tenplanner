@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { TenPlannerLanding } from "@/components/landing/tenplanner-landing";
 import { db } from "@/db";
 import { classes, exercises } from "@/db/schema";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "TenPlanner - Planificación para deportes de raqueta",
@@ -22,6 +23,38 @@ export const metadata: Metadata = {
     title: "TenPlanner",
     description: "Sistema digital para entrenadores de deportes de raqueta.",
   },
+};
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: "TenPlanner",
+      url: siteUrl,
+      logo: `${siteUrl}/icon-512x512.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      name: "TenPlanner",
+      url: siteUrl,
+      inLanguage: "es-ES",
+      publisher: { "@id": `${siteUrl}/#organization` },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "TenPlanner",
+      url: siteUrl,
+      applicationCategory: "SportsApplication",
+      operatingSystem: "Web",
+      inLanguage: "es-ES",
+      description:
+        "Planificador de clases para monitores de tenis: biblioteca de ejercicios y clases, calendario, grupos y pase de lista.",
+      publisher: { "@id": `${siteUrl}/#organization` },
+    },
+  ],
 };
 
 export const dynamic = "force-dynamic";
@@ -56,6 +89,15 @@ export default async function LandingPage() {
   ]);
 
   return (
-    <TenPlannerLanding exerciseCards={exerciseCards} classCards={classCards} />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <TenPlannerLanding
+        exerciseCards={exerciseCards}
+        classCards={classCards}
+      />
+    </>
   );
 }

@@ -273,6 +273,6 @@ export const config = {
   matcher: [
     // Static PWA/SEO files must never hit the auth redirect: a service worker
     // script behind a redirect fails to register.
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw.js|manifest.webmanifest|apple-icon.png|icon-.*\\.png|landing/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sw.js|manifest.webmanifest|apple-icon.png|icon-.*\\.png|opengraph-image|landing/).*)",
   ],
 };

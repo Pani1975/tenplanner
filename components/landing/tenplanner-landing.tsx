@@ -555,7 +555,15 @@ function Footer() {
       </div>
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs font-semibold text-white/42 sm:flex-row sm:items-center sm:justify-between">
         <p>Copyright {year} TenPlanner. Todos los derechos reservados.</p>
-        <p>Producto, cuenta y soporte para entrenadores.</p>
+        <nav
+          aria-label="Legal"
+          className="flex flex-wrap gap-x-4 gap-y-1 [&>a]:py-2 [&>a:hover]:text-white"
+        >
+          <Link href="/aviso-legal">Aviso legal</Link>
+          <Link href="/terminos">Términos</Link>
+          <Link href="/privacidad">Privacidad</Link>
+          <Link href="/cookies">Cookies</Link>
+        </nav>
       </div>
     </footer>
   );
