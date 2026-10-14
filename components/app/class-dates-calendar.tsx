@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import {
+  WEEKDAY_LABELS,
+  sortSchedule,
+  type GroupScheduleEntry,
+} from "@/lib/groups/schedule";
 
 const MONTH_FORMAT = new Intl.DateTimeFormat("es-ES", {
   month: "long",
@@ -180,7 +184,10 @@ export function ClassDatesCalendar({
       {schedule.length > 0 && (
         <p className="text-[11px] text-foreground/45">
           <span className="mr-1 inline-block size-1.5 rounded-full bg-brand" />
-          Días habituales de este grupo.
+          Días habituales de este grupo:{" "}
+          {sortSchedule(schedule)
+            .map((e) => `${WEEKDAY_LABELS[e.weekday]} ${e.time}`)
+            .join(" · ")}
         </p>
       )}
 
