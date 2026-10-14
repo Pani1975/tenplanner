@@ -318,39 +318,10 @@ export default async function ClassDetailPage({
         <div className="h-2 bg-[#D6FF38]" />
       </div>
 
-      {/* Objetivos / Material */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        {cls.objetivos && (
-          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="size-4 text-brand" />
-              <h2 className="font-heading text-base text-foreground">
-                Objetivos
-              </h2>
-            </div>
-            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-              {cls.objetivos}
-            </p>
-          </div>
-        )}
-        {cls.material && (
-          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center gap-2 mb-3">
-              <Package className="size-4 text-brand" />
-              <h2 className="font-heading text-base text-foreground">
-                Material
-              </h2>
-            </div>
-            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-              {cls.material}
-            </p>
-          </div>
-        )}
-      </div>
-
       {/* Uso en sesiones: cierra el círculo entre la plantilla y cómo le ha
           ido en la práctica. Solo con sesión iniciada, y siempre sobre las
-          propias sesiones del usuario (su feedback, no el de otros). */}
+          propias sesiones del usuario (su feedback, no el de otros). Va lo
+          primero: es lo que más se consulta al abrir una clase ya en uso. */}
       {user && (
         <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -418,6 +389,36 @@ export default async function ClassDetailPage({
           )}
         </div>
       )}
+
+      {/* Objetivos / Material */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {cls.objetivos && (
+          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="size-4 text-brand" />
+              <h2 className="font-heading text-base text-foreground">
+                Objetivos
+              </h2>
+            </div>
+            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
+              {cls.objetivos}
+            </p>
+          </div>
+        )}
+        {cls.material && (
+          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-center gap-2 mb-3">
+              <Package className="size-4 text-brand" />
+              <h2 className="font-heading text-base text-foreground">
+                Material
+              </h2>
+            </div>
+            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
+              {cls.material}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Resumen de bloques */}
       {blocks.length > 0 && (
