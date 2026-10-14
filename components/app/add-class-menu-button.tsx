@@ -13,8 +13,11 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ScheduleChoiceStep } from "./schedule-choice-step";
-import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import { ClassDatesCalendar } from "./class-dates-calendar";
+import {
+  toLocalDateTimeInput,
+  type GroupScheduleEntry,
+} from "@/lib/groups/schedule";
 
 interface GroupOption {
   id: string;
@@ -25,10 +28,11 @@ interface GroupOption {
 
 /**
  * Botón "Añadir" de la ficha de clase: deja elegir si la clase se usa para
- * una sesión nueva (sin grupo) o se asigna directamente a uno de los
- * grupos del monitor. En ambos casos se abre el wizard de sesión con la
- * clase precargada; si se elige grupo, también llega el grupo (y sus
- * alumnos) precargados, y solo falta decir el día y la hora.
+ * una sesión nueva (sin grupo) o se asigna a uno de los grupos del
+ * monitor. Al elegir grupo, un calendario deja decir qué día (o varios,
+ * para repetirla) — si el grupo tiene horario habitual, esos días se
+ * marcan, pero se puede elegir cualquier otro. Con una sola fecha se abre
+ * el wizard con todo precargado; con varias, se crean directamente.
  */
 export function AddClassMenuButton({ classId }: { classId: string }) {
   const router = useRouter();
@@ -38,6 +42,8 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pickedGroup, setPickedGroup] = useState<GroupOption | null>(null);
 
   useEffect(() => {
@@ -66,23 +72,62 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
     setView("menu");
     setQuery("");
     setPickedGroup(null);
+    setError(null);
+    setBusy(false);
   }
 
   function pickGroup(group: GroupOption) {
-    if (group.weeklySchedule && group.weeklySchedule.length > 0) {
-      setPickedGroup(group);
-      setView("schedule");
-      return;
-    }
-    goToSession(group.id);
+    setError(null);
+    setPickedGroup(group);
+    setView("schedule");
   }
 
-  function goToSession(groupId?: string, scheduledAt?: string) {
-    setNavigatingTo(groupId ?? "new-session");
+  function goToSession(scheduledAt?: string) {
+    setNavigatingTo("new-session");
     const qs = new URLSearchParams({ fromClass: classId });
-    if (groupId) qs.set("group", groupId);
     if (scheduledAt) qs.set("at", scheduledAt);
     router.push(`/sessions/new?${qs.toString()}`);
+  }
+
+  async function handleDates(dates: Date[]) {
+    if (!pickedGroup || dates.length === 0) return;
+    if (dates.length === 1) {
+      setBusy(true);
+      const qs = new URLSearchParams({
+        fromClass: classId,
+        group: pickedGroup.id,
+        at: toLocalDateTimeInput(dates[0]),
+      });
+      router.push(`/sessions/new?${qs.toString()}`);
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/sessions/from-class", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          classId,
+          groupId: pickedGroup.id,
+          dates: dates.map((d) => d.toISOString()),
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? "No se pudieron crear las sesiones.");
+        setBusy(false);
+        return;
+      }
+      router.push(`/groups/${pickedGroup.id}`);
+      router.refresh();
+    } catch {
+      setError("Error de red. Inténtalo de nuevo.");
+      setBusy(false);
+    }
   }
 
   const filteredGroups = groups.filter((g) =>
@@ -112,9 +157,10 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                 {view !== "menu" && (
                   <button
                     type="button"
-                    onClick={() =>
-                      view === "schedule" ? setView("groups") : setView("menu")
-                    }
+                    onClick={() => {
+                      setError(null);
+                      setView(view === "schedule" ? "groups" : "menu");
+                    }}
                     aria-label="Volver"
                     className="flex size-7 shrink-0 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
                   >
@@ -185,12 +231,11 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                 </button>
               </div>
             ) : view === "schedule" && pickedGroup ? (
-              <ScheduleChoiceStep
+              <ClassDatesCalendar
                 schedule={pickedGroup.weeklySchedule ?? []}
-                busy={!!navigatingTo}
-                onChoose={(scheduledAt) =>
-                  goToSession(pickedGroup.id, scheduledAt)
-                }
+                busy={busy}
+                error={error}
+                onConfirm={handleDates}
               />
             ) : (
               <>
@@ -224,11 +269,9 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                         key={g.id}
                         type="button"
                         onClick={() => pickGroup(g)}
-                        disabled={!!navigatingTo}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",
-                          "border-foreground/10 hover:border-foreground/25",
-                          navigatingTo === g.id && "opacity-60"
+                          "border-foreground/10 hover:border-foreground/25"
                         )}
                       >
                         <span className="min-w-0 flex-1">
@@ -240,9 +283,6 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                             {g.memberCount === 1 ? "alumno" : "alumnos"}
                           </span>
                         </span>
-                        {navigatingTo === g.id && (
-                          <Loader2 className="size-4 animate-spin text-foreground/40" />
-                        )}
                       </button>
                     ))
                   )}
