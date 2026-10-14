@@ -57,7 +57,7 @@ function buildCsp(nonce: string): string {
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
     `script-src 'self'${isProd ? ` 'nonce-${nonce}' 'strict-dynamic'` : " 'unsafe-inline' 'unsafe-eval'"}`,
-    "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://api.pexels.com",
+    "connect-src 'self' https://*.supabase.co https://api.pexels.com",
     "media-src 'self' blob: https://*.supabase.co",
     "object-src 'none'",
     "worker-src 'self' blob:",
