@@ -702,7 +702,11 @@ export function SessionWizard({
         setHasDraft(false);
       }
 
-      router.push("/sessions");
+      // Si la sesión queda vinculada a un grupo, volvemos a su
+      // planificación (y no a /sessions) para que se vea de inmediato: de
+      // paso evita que la ficha de grupo se quede con el listado de
+      // sesiones cacheado por el router de Next de antes de crearla.
+      router.push(state.groupId ? `/groups/${state.groupId}` : "/sessions");
       router.refresh();
     } catch {
       setServerError("Error de red. Inténtalo de nuevo.");
