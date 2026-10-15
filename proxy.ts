@@ -7,6 +7,7 @@ const PUBLIC_PREFIXES = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/ayuda",
   "/classes",
   "/exercises",
   "/s/",
