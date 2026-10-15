@@ -34,6 +34,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 import { WorkModeBadge } from "./work-mode-badge";
+import { spaceLabels } from "@/lib/space-labels";
 import { SportBadge } from "./sport-badge";
 import type { ClubOption } from "./club-context-select";
 import type { Sport } from "@/lib/sport-constants";
@@ -141,6 +142,28 @@ const navItems: NavItem[] = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
+// En modo club, los apartados propios se nombran como del club ("Clases
+// club"…) en vez de "Mis…" — ver lib/space-labels.ts.
+function navItemsForSpace(inClub: boolean): NavItem[] {
+  const labels = spaceLabels(inClub);
+  const bySubHref: Record<string, string> = {
+    "/exercises?tab=mine": labels.exercises,
+    "/exercises?tab=favorites": labels.favorites,
+    "/classes?tab=mine": labels.classes,
+    "/classes?tab=favorites": labels.lists,
+  };
+  return navItems.map((item) =>
+    item.submenu
+      ? {
+          ...item,
+          submenu: item.submenu.map((sub) =>
+            bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
+          ),
+        }
+      : item
+  );
+}
+
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
@@ -194,6 +217,7 @@ function NavContent({
   onSignOut: () => void;
   appName?: string;
 } & WorkModeProps) {
+  const items = navItemsForSpace(!!activeWorkClubId);
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName
@@ -207,7 +231,7 @@ function NavContent({
     () => {
       if (!user) return {};
       const initial: Record<string, boolean> = {};
-      for (const item of navItems) {
+      for (const item of items) {
         if (item.submenu && pathname.startsWith(item.href)) {
           initial[item.href] = true;
         }
@@ -251,7 +275,7 @@ function NavContent({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {navItems.map(
+          {items.map(
             ({
               href,
               label,

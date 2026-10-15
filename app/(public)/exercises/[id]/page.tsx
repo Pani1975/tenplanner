@@ -7,6 +7,7 @@ import { ExerciseDetailClient } from "./exercise-detail-client";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { canAccessExercise } from "@/lib/exercise-access";
+import { getActiveWorkClubId } from "@/lib/clubs";
 import {
   exerciseNavQueryString,
   getFilteredExerciseIds,
@@ -94,6 +95,7 @@ export default async function ExercisePage({
   const copyTargets: Array<"active" | "particular"> = [];
   if (user && isPublicExercise) copyTargets.push("active");
   if (user && isOwner && exercise.clubId) copyTargets.push("particular");
+  const inClub = user ? !!(await getActiveWorkClubId(user.id)) : false;
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"
@@ -117,6 +119,7 @@ export default async function ExercisePage({
     <ExerciseDetailClient
       canEdit={canEdit}
       copyTargets={copyTargets}
+      inClub={inClub}
       isAdmin={isAdmin}
       userId={user?.id ?? null}
       initialRating={userRating}

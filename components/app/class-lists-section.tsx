@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
+import { spaceLabels } from "@/lib/space-labels";
 
 interface ListedClass {
   id: string;
@@ -353,8 +354,11 @@ function ListCard({
 export function ClassListsSection({
   isAdmin = false,
   spaceLabel = null,
+  inClub = false,
 }: {
   isAdmin?: boolean;
+  /** Trabajando como un club: "Listas club" en vez de "Mis listas". */
+  inClub?: boolean;
   /** "Espacio particular" o el nombre del club del modo de trabajo. */
   spaceLabel?: string | null;
 } = {}) {
@@ -540,7 +544,7 @@ export function ClassListsSection({
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[0.28em] text-foreground/35 mb-1 flex items-center gap-1.5">
-            <FolderPlus className="size-3" /> Mis listas
+            <FolderPlus className="size-3" /> {spaceLabels(inClub).lists}
             {spaceLabel ? ` · ${spaceLabel}` : ""}
           </p>
           <h2 className="font-heading italic text-[20px] leading-tight text-foreground">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { spaceLabels } from "@/lib/space-labels";
 
 export type CopyTarget = "active" | "particular";
 
@@ -23,18 +24,23 @@ export function CopyToSpaceButton({
   id,
   targets,
   tone = "light",
+  inClub = false,
   className,
 }: {
   kind: "exercise" | "class";
   id: string;
   targets: CopyTarget[];
   tone?: "light" | "dark";
+  /** Trabajando como un club: el destino es "Clases club"/"Ejercicios club". */
+  inClub?: boolean;
   className?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<CopyTarget | null>(null);
 
   if (targets.length === 0) return null;
+  const labels = spaceLabels(inClub);
+  const activeDest = kind === "exercise" ? labels.exercises : labels.classes;
 
   async function copy(target: CopyTarget) {
     setBusy(target);
@@ -55,11 +61,7 @@ export function CopyToSpaceButton({
       }
       const what = kind === "exercise" ? "Ejercicio copiado" : "Clase copiada";
       const where =
-        target === "particular"
-          ? "a tu espacio particular"
-          : kind === "exercise"
-            ? "a Mis ejercicios"
-            : "a Mis clases";
+        target === "particular" ? "a tu espacio particular" : `a ${activeDest}`;
       toast.success(`${what} ${where}`);
       if (target === "active") {
         router.push(
@@ -99,9 +101,7 @@ export function CopyToSpaceButton({
           )}
           {target === "particular"
             ? "Copiar a mi espacio particular"
-            : kind === "exercise"
-              ? "Copiar a Mis ejercicios"
-              : "Copiar a Mis clases"}
+            : `Copiar a ${activeDest}`}
         </button>
       ))}
     </>

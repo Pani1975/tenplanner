@@ -328,6 +328,7 @@ export default async function ClassDetailPage({
                 id={cls.id}
                 targets={copyTargets}
                 tone="dark"
+                inClub={!!activeWorkClubId}
               />
               <ClassActions
                 classId={cls.id}

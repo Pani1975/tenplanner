@@ -299,13 +299,13 @@ async function DashboardBody({
     },
     {
       href: "/exercises?tab=favorites",
-      label: "Ejercicios favoritos",
-      desc: "Tus marcados",
+      label: activeClubId ? "Favoritos club" : "Ejercicios favoritos",
+      desc: activeClubId ? "Ejercicios marcados" : "Tus marcados",
       icon: Heart,
     },
     {
       href: "/classes?tab=favorites",
-      label: "Clases favoritas",
+      label: activeClubId ? "Listas club" : "Clases favoritas",
       desc: "Plantillas listas",
       icon: GraduationCap,
     },

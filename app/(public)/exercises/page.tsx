@@ -19,6 +19,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { spaceLabels } from "@/lib/space-labels";
 import { FavoriteToggle } from "@/components/app/favorite-toggle";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
@@ -99,13 +100,18 @@ const DIFFICULTIES = ["all", "beginner", "intermediate", "advanced"] as const;
 const TABS = ["all", "global", "mine", "favorites", "drafts"] as const;
 type Tab = (typeof TABS)[number];
 
-const TAB_LABELS: Record<Tab, string> = {
-  all: "Ver todos",
-  global: "Biblioteca",
-  mine: "Mis ejercicios",
-  favorites: "Favoritos",
-  drafts: "Borradores",
-};
+// "Mis ejercicios"/"Favoritos" pasan a "Ejercicios club"/"Favoritos club"
+// trabajando como un club (ver lib/space-labels.ts).
+function tabLabelsFor(inClub: boolean): Record<Tab, string> {
+  const labels = spaceLabels(inClub);
+  return {
+    all: "Ver todos",
+    global: "Biblioteca",
+    mine: labels.exercises,
+    favorites: labels.favorites,
+    drafts: "Borradores",
+  };
+}
 
 const PAGE_SIZE = 30;
 
@@ -273,6 +279,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         activeWorkClubId
       )
     : sql`1=0`;
+  const TAB_LABELS = tabLabelsFor(!!activeWorkClubId);
 
   // Unauthenticated users only see global exercises
   const allVisibleWhere = and(

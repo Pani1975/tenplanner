@@ -6,6 +6,7 @@ import { ChevronDown, Copy, Loader2, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
+import { spaceLabels } from "@/lib/space-labels";
 
 interface PublicList {
   id: string;
@@ -27,10 +28,14 @@ interface PublicList {
 export function PublicClassListsSection({
   sport,
   loggedIn,
+  inClub = false,
 }: {
   sport: string;
   loggedIn: boolean;
+  /** Trabajando como un club: la copia va a "Listas club". */
+  inClub?: boolean;
 }) {
+  const listsLabel = spaceLabels(inClub).lists;
   const [lists, setLists] = useState<PublicList[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [copyingId, setCopyingId] = useState<string | null>(null);
@@ -60,7 +65,7 @@ export function PublicClassListsSection({
         toast.error("No se pudo copiar la lista. Inténtalo de nuevo.");
         return;
       }
-      toast.success(`"${list.name}" copiada a Mis listas`, {
+      toast.success(`"${list.name}" copiada a ${listsLabel}`, {
         action: {
           label: "Ver",
           onClick: () => {
@@ -118,7 +123,7 @@ export function PublicClassListsSection({
                     type="button"
                     onClick={() => void copyList(list)}
                     disabled={copyingId !== null}
-                    title="Copiar a Mis listas"
+                    title={`Copiar a ${listsLabel}`}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#D6FF38] px-3 py-1.5 text-[12px] font-semibold text-[#050505] transition hover:bg-[#c8f52e] disabled:opacity-60"
                   >
                     {copyingId === list.id ? (

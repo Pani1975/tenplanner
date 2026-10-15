@@ -13,6 +13,7 @@ import {
 } from "@/lib/nav/class-nav";
 import { nivelesForSport } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { spaceLabels } from "@/lib/space-labels";
 import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { SportGate } from "@/components/public/sport-gate";
@@ -25,13 +26,18 @@ import { ClassesGrid } from "./classes-grid";
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 type Tab = (typeof TABS)[number];
 
-const TAB_LABELS: Record<Tab, string> = {
-  all: "Ver todas",
-  library: "Biblioteca",
-  mine: "Mis clases",
-  favorites: "Mis listas",
-  drafts: "Borradores",
-};
+// "Mis clases"/"Mis listas" pasan a "Clases club"/"Listas club" trabajando
+// como un club (ver lib/space-labels.ts).
+function tabLabelsFor(inClub: boolean): Record<Tab, string> {
+  const labels = spaceLabels(inClub);
+  return {
+    all: "Ver todas",
+    library: "Biblioteca",
+    mine: labels.classes,
+    favorites: labels.lists,
+    drafts: "Borradores",
+  };
+}
 
 function nivelFiltersForSport(sport?: string | null) {
   return [
@@ -116,8 +122,12 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     activeTab === "favorites" && user
       ? await Promise.all([
           isUserAdmin(user.id),
-          getActiveWorkClubId(user.id).then(getSpaceLabel),
-        ]).then(([isAdmin, spaceLabel]) => ({ isAdmin, spaceLabel }))
+          getActiveWorkClubId(user.id),
+        ]).then(async ([isAdmin, clubId]) => ({
+          isAdmin,
+          inClub: !!clubId,
+          spaceLabel: await getSpaceLabel(clubId),
+        }))
       : null;
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
@@ -175,6 +185,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   }
 
   const activeClubId = user ? await getActiveWorkClubId(user.id) : null;
+  const TAB_LABELS = tabLabelsFor(!!activeClubId);
   const mineOrClub = user
     ? sharedWithClubCondition(
         classes.createdBy,
@@ -453,11 +464,16 @@ export default async function ClassesPage({ searchParams }: PageProps) {
           <ClassListsSection
             isAdmin={listsMeta?.isAdmin ?? false}
             spaceLabel={listsMeta?.spaceLabel ?? null}
+            inClub={listsMeta?.inClub ?? false}
           />
         ) : (
           <>
             {activeTab === "library" && (
-              <PublicClassListsSection sport={sport} loggedIn={!!user} />
+              <PublicClassListsSection
+                sport={sport}
+                loggedIn={!!user}
+                inClub={!!activeClubId}
+              />
             )}
             {/* Filtros: search + nivel + duración + aspecto + golpe */}
             <form

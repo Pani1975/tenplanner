@@ -195,6 +195,7 @@ export function ExerciseDetailClient({
   exercise,
   canEdit = false,
   copyTargets = [],
+  inClub = false,
   isAdmin = false,
   userId = null,
   initialRating = null,
@@ -210,6 +211,7 @@ export function ExerciseDetailClient({
   exercise: ExerciseData;
   canEdit?: boolean;
   copyTargets?: CopyTarget[];
+  inClub?: boolean;
   isAdmin?: boolean;
   userId?: string | null;
   initialRating?: number | null;
@@ -487,6 +489,7 @@ export function ExerciseDetailClient({
                 kind="exercise"
                 id={exercise.id}
                 targets={copyTargets}
+                inClub={inClub}
                 className="flex-1 sm:flex-none"
               />
             </div>
