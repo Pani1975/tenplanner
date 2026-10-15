@@ -2,7 +2,7 @@ import Link from "next/link";
 import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { classes, classFavorites, users } from "@/db/schema";
+import { classes, classFavorites } from "@/db/schema";
 import { Plus, Search, FileText, ArrowLeft, ArrowRight } from "lucide-react";
 import {
   classNavQueryString,
@@ -162,7 +162,6 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     status: string | null;
     createdAt: Date;
     createdBy: string | null;
-    authorName: string | null;
   }> = [];
   let totalRows = 0;
   let currentPage = requestedPage;
@@ -302,18 +301,13 @@ export default async function ClassesPage({ searchParams }: PageProps) {
         status: classes.status,
         createdAt: classes.createdAt,
         createdBy: classes.createdBy,
-        authorName: users.name,
       })
       .from(classes)
-      .leftJoin(users, eq(users.id, classes.createdBy))
       .where(and(...conds))
       .orderBy(...classOrderBy(activeSort), classes.id)
       .limit(PAGE_SIZE)
       .offset((currentPage - 1) * PAGE_SIZE);
-    rows = rawRows.map((r) => ({
-      ...r,
-      authorName: user && r.createdBy !== user.id ? r.authorName : null,
-    }));
+    rows = rawRows;
   }
 
   // Favorites set para pintar el corazón si aplica

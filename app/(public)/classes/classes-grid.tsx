@@ -22,7 +22,6 @@ export interface ClassGridItem {
   isLibrary: boolean;
   autoria: string | null;
   status: string | null;
-  authorName: string | null;
   favorited: boolean;
 }
 
@@ -206,11 +205,6 @@ export function ClassesGrid({
                   <h3 className="line-clamp-3 font-heading text-[19px] font-semibold leading-snug text-foreground transition-colors group-hover:text-[#6D7F00] dark:group-hover:text-[#D6FF38]">
                     {cls.name}
                   </h3>
-                  {cls.authorName && (
-                    <span className="mt-1.5 inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase text-foreground/50">
-                      {cls.authorName}
-                    </span>
-                  )}
                   {cls.objetivos && (
                     <p className="mt-3 line-clamp-3 text-[13px] leading-5 text-muted-foreground">
                       {cls.objetivos}

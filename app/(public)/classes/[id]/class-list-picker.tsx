@@ -73,7 +73,9 @@ export function ClassListPicker({
           }
         }
         setLists(all);
-        const next = new Set(all.filter((l) => l.containsClass).map((l) => l.id));
+        const next = new Set(
+          all.filter((l) => l.containsClass).map((l) => l.id)
+        );
         setInLists(next);
         onFavoritedChange?.(next.size > 0);
       } catch {
