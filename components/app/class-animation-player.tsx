@@ -255,13 +255,19 @@ export function ClassAnimationPlayer({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
-            className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-xs tabular-nums text-white/80"
-            title="Minuto de la clase"
+            className="hidden rounded-full border border-white/10 px-2.5 py-1 font-mono text-[11px] tabular-nums text-white/55 sm:inline"
+            title="Minuto de la clase real"
           >
-            {formatClock(clockMin)}
+            Min {Math.floor(clockMin)} de {timeline.totalClassMinutes}
+          </span>
+          <span
+            className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-xs tabular-nums text-white/80"
+            title="Duración del vídeo"
+          >
+            {formatClock(t / 60)}
             <span className="text-white/40">
               {" "}
-              / {formatClock(timeline.totalClassMinutes)}
+              / {formatClock(timeline.totalSeconds / 60)}
             </span>
           </span>
           {onClose && (
