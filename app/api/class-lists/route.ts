@@ -117,6 +117,12 @@ export async function GET(request: NextRequest) {
     });
     itemsMap.set(item.listId, current);
   }
+  // Clases de cada lista en orden alfabético (numeración natural: 2 < 10).
+  for (const items of itemsMap.values()) {
+    items.sort((a, b) =>
+      a.name.localeCompare(b.name, "es", { numeric: true, sensitivity: "base" })
+    );
+  }
 
   return NextResponse.json({
     data: lists.map((list) => ({

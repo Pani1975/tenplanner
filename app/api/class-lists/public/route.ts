@@ -52,6 +52,10 @@ export async function GET(request: NextRequest) {
     )
     .orderBy(asc(classes.name));
 
+  items.sort((a, b) =>
+    a.name.localeCompare(b.name, "es", { numeric: true, sensitivity: "base" })
+  );
+
   const byList = new Map<string, typeof items>();
   for (const item of items) {
     const current = byList.get(item.listId) ?? [];
