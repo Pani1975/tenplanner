@@ -430,9 +430,15 @@ const clubSections: Section[] = [
   },
 ];
 
-export function HelpGuide({ defaultTab }: { defaultTab: string }) {
+export function HelpGuide({
+  defaultTab,
+  defaultLevel = "quick",
+}: {
+  defaultTab: string;
+  defaultLevel?: "quick" | "full";
+}) {
   const [tab, setTab] = useState(defaultTab);
-  const [level, setLevel] = useState<"quick" | "full">("quick");
+  const [level, setLevel] = useState<"quick" | "full">(defaultLevel);
 
   const stepsByTab: Record<string, Step[]> = {
     coach: coachSteps,

@@ -138,7 +138,7 @@ const navItems: NavItem[] = [
   { href: "/resources", label: "Mis recursos", icon: BookMarked },
   { href: "/club", label: "Mi club", icon: Building2 },
   { href: "/profile", label: "Perfil", icon: UserCircle },
-  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
 interface WorkModeProps {
