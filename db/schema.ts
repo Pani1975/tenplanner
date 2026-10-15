@@ -625,11 +625,20 @@ export const exerciseLists = pgTable(
     name: varchar("name", { length: 100 }).notNull(),
     emoji: varchar("emoji", { length: 10 }).default("📋"),
     isDefault: boolean("is_default").default(false).notNull(),
+    // Espacio de la lista de favoritos: null = particular (solo su autor);
+    // un club = "Favoritos club", compartidas y editables por todos los
+    // miembros activos del club. Ver lib/exercises/lists.ts.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
-  (t) => [index("exercise_lists_user_id_idx").on(t.userId)]
+  (t) => [
+    index("exercise_lists_user_id_idx").on(t.userId),
+    index("exercise_lists_club_id_idx").on(t.clubId),
+  ]
 );
 
 // Exercise list items (exercises in a list)

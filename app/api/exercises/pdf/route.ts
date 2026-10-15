@@ -23,6 +23,9 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveSport } from "@/lib/sports";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { spaceLabels } from "@/lib/space-labels";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { ExerciseListPdf, type PdfExercise } from "@/lib/exercises/pdf";
@@ -216,12 +219,25 @@ export async function GET(request: Request) {
 
   const sportWhere = eq(exercisesTable.sport, sport);
 
+  // Mismo espacio activo que la página /exercises ("Ejercicios club"…).
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
+  const mineWhere = user
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        user.id,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+
   const favRows = user
     ? await db
         .select({ exerciseId: exerciseListItems.exerciseId })
         .from(exerciseListItems)
         .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-        .where(eq(exerciseLists.userId, user.id))
+        .where(
+          exerciseListSpaceCondition(user.id, activeWorkClubId)
+        )
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
@@ -230,11 +246,8 @@ export async function GET(request: Request) {
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(
-            eq(exercisesTable.isGlobal, true),
-            eq(exercisesTable.createdBy, user.id)
-          ) ?? eq(exercisesTable.createdBy, user.id))
-        : eq(exercisesTable.createdBy, user.id)
+        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        : mineWhere
       : publicExercisesEnabled
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
@@ -247,7 +260,7 @@ export async function GET(request: Request) {
           publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
         )!
       : activeTab === "mine" && user
-        ? and(sportWhere, eq(exercisesTable.createdBy, user.id))!
+        ? and(sportWhere, mineWhere)!
         : allVisibleWhere;
 
   const conditions: SQL[] = [];
@@ -406,7 +419,9 @@ export async function GET(request: Request) {
   if (searchTerm) summaryParts.push(`"${searchTerm}"`);
   if (activeTab !== "all")
     summaryParts.push(
-      activeTab === "global" ? "Biblioteca" : activeTab === "mine" ? "Mis ejercicios" : "Favoritos"
+      activeTab === "global" ? "Biblioteca" : activeTab === "mine"
+        ? spaceLabels(!!activeWorkClubId).exercises
+        : spaceLabels(!!activeWorkClubId).favorites
     );
   for (const value of activeFormato) summaryParts.push(FORMATO_LABEL[value] ?? value);
   for (const value of activeNivel) summaryParts.push(value.replace(/_/g, " "));

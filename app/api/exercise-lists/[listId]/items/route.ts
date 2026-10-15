@@ -1,20 +1,18 @@
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { exerciseLists, exerciseListItems } from "@/db/schema";
+import { exerciseListItems } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { getExerciseListInActiveSpace } from "@/lib/exercises/lists";
 import { getAccessibleExerciseDurationMap } from "@/lib/exercise-access";
 import { z } from "zod";
 
 type Context = { params: Promise<{ listId: string }> };
 
+// Cualquier miembro del espacio de la lista (particular: su autor; club:
+// todos sus miembros activos) puede añadir y quitar ejercicios.
 async function assertOwner(userId: string, listId: string) {
-  const [list] = await db
-    .select({ id: exerciseLists.id })
-    .from(exerciseLists)
-    .where(and(eq(exerciseLists.id, listId), eq(exerciseLists.userId, userId)))
-    .limit(1);
-  return !!list;
+  return !!(await getExerciseListInActiveSpace(listId, userId));
 }
 
 export async function POST(request: Request, context: Context) {

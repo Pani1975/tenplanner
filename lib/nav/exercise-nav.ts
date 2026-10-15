@@ -25,6 +25,7 @@ import {
   type TipoPelota,
 } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -168,6 +169,7 @@ export async function getFilteredExerciseIds(
     (AUTORIA_VALUES as readonly string[]).includes(v)
   );
 
+  const activeWorkClubId = userId ? await getActiveWorkClubId(userId) : null;
   const favRows = userId
     ? await db
         .select({ exerciseId: exerciseListItems.exerciseId })
@@ -176,14 +178,13 @@ export async function getFilteredExerciseIds(
           exerciseLists,
           eq(exerciseLists.id, exerciseListItems.listId)
         )
-        .where(eq(exerciseLists.userId, userId))
+        .where(exerciseListSpaceCondition(userId, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
 
   // "Mis ejercicios" según el espacio activo — mantener igual que en
   // app/(public)/exercises/page.tsx.
-  const activeWorkClubId = userId ? await getActiveWorkClubId(userId) : null;
   const mineWhere = userId
     ? sharedWithClubCondition(
         exercisesTable.createdBy,

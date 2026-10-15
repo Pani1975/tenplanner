@@ -1,8 +1,9 @@
-import { and, count, eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { exerciseLists, exerciseListItems } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { getExerciseListInActiveSpace } from "@/lib/exercises/lists";
 import { z } from "zod";
 
 type Context = { params: Promise<{ listId: string }> };
@@ -17,11 +18,7 @@ export async function PATCH(request: Request, context: Context) {
 
   const { listId } = await context.params;
 
-  const [list] = await db
-    .select({ id: exerciseLists.id })
-    .from(exerciseLists)
-    .where(and(eq(exerciseLists.id, listId), eq(exerciseLists.userId, user.id)))
-    .limit(1);
+  const list = await getExerciseListInActiveSpace(listId, user.id);
 
   if (!list) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -61,11 +58,7 @@ export async function DELETE(_request: Request, context: Context) {
 
   const { listId } = await context.params;
 
-  const [list] = await db
-    .select({ id: exerciseLists.id, isDefault: exerciseLists.isDefault })
-    .from(exerciseLists)
-    .where(and(eq(exerciseLists.id, listId), eq(exerciseLists.userId, user.id)))
-    .limit(1);
+  const list = await getExerciseListInActiveSpace(listId, user.id);
 
   if (!list) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -85,11 +78,7 @@ export async function DELETE(_request: Request, context: Context) {
     }
   }
 
-  await db
-    .delete(exerciseLists)
-    .where(
-      and(eq(exerciseLists.id, listId), eq(exerciseLists.userId, user.id))
-    );
+  await db.delete(exerciseLists).where(eq(exerciseLists.id, list.id));
 
   return NextResponse.json({ ok: true });
 }

@@ -444,7 +444,12 @@ function CollectionCard({
   );
 }
 
-export function ExerciseListsSection() {
+export function ExerciseListsSection({
+  inClub = false,
+}: {
+  /** Trabajando como un club: listas comunes de "Favoritos club". */
+  inClub?: boolean;
+} = {}) {
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -620,7 +625,9 @@ export function ExerciseListsSection() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[0.28em] text-foreground/35 mb-1">
-            Método · Colecciones
+            {inClub
+              ? "Favoritos club · comunes a todo el club"
+              : "Método · Colecciones"}
           </p>
           <h2 className="font-heading italic text-[22px] leading-tight text-foreground">
             {lists.length === 1

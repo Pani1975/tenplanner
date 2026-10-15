@@ -20,6 +20,7 @@ import {
 } from "drizzle-orm";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { spaceLabels } from "@/lib/space-labels";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { FavoriteToggle } from "@/components/app/favorite-toggle";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
@@ -313,7 +314,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           exerciseLists,
           eq(exerciseLists.id, exerciseListItems.listId)
         )
-        .where(eq(exerciseLists.userId, user.id))
+        .where(exerciseListSpaceCondition(user.id, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favoritedIds = new Set(favRows.map((f) => f.exerciseId));
@@ -541,7 +542,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           )
           .where(
             and(
-              eq(exerciseLists.userId, user.id),
+              exerciseListSpaceCondition(user.id, activeWorkClubId),
               inArray(
                 exerciseListItems.exerciseId,
                 filtered.map((exercise) => exercise.id)
@@ -824,7 +825,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             {activeTab === "drafts" && user ? (
               <ExerciseDraftsPanel showEmptyState />
             ) : activeTab === "favorites" && user ? (
-              <ExerciseListsSection />
+              <ExerciseListsSection inClub={!!activeWorkClubId} />
             ) : (
               <>
                 {/* ─── Category strip ─── */}

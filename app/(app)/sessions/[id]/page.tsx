@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { SessionDetailClient } from "./session-detail-client";
 import { getExerciseDiagrams } from "@/lib/exercise-diagrams";
 import {
@@ -118,7 +119,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       .select({ exerciseId: exerciseListItems.exerciseId })
       .from(exerciseListItems)
       .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-      .where(eq(exerciseLists.userId, user.id)),
+      .where(
+        exerciseListSpaceCondition(user.id, await getActiveWorkClubId(user.id))
+      ),
     db
       .select({
         blockId: sessionBlocks.id,
