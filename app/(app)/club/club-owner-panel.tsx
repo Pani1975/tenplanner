@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Loader2, Mail, X } from "lucide-react";
+import { Check, Copy, Loader2, Mail, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,7 +49,9 @@ export function ClubOwnerPanel({
   defaultSport?: Sport;
 }) {
   const router = useRouter();
-  const [members] = useState(initialMembers);
+  const [members, setMembers] = useState(initialMembers);
+  const [editingMembers, setEditingMembers] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [invites, setInvites] = useState(initialInvites);
   const [email, setEmail] = useState("");
   const [sport, setSport] = useState<Sport>(defaultSport);
@@ -93,6 +95,29 @@ export function ClubOwnerPanel({
     await fetch(`/api/clubs/invites/${id}`, { method: "DELETE" });
     setInvites((prev) => prev.filter((i) => i.id !== id));
     router.refresh();
+  }
+
+  async function removeMember(member: Member) {
+    if (
+      !window.confirm(
+        `¿Desvincular a ${member.name} del club? Dejará de ver el contenido del club.`
+      )
+    )
+      return;
+    setRemovingId(member.id);
+    try {
+      const res = await fetch(`/api/clubs/members/${member.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        setError("No se pudo desvincular al monitor.");
+        return;
+      }
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+      router.refresh();
+    } finally {
+      setRemovingId(null);
+    }
   }
 
   async function copyLink(invite: Invite) {
@@ -212,9 +237,21 @@ export function ClubOwnerPanel({
       )}
 
       <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
-        <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
-          Monitores vinculados
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
+            Monitores vinculados
+          </h2>
+          {members.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingMembers((v) => !v)}
+            >
+              {editingMembers ? "Listo" : "Editar"}
+            </Button>
+          )}
+        </div>
         {members.length === 0 ? (
           <p className="mt-2 text-sm text-foreground/50">
             Todavía no hay monitores vinculados a este club.
@@ -234,9 +271,26 @@ export function ClubOwnerPanel({
                     {member.email}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
-                  {SPORT_LABELS[member.sport]}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
+                    {SPORT_LABELS[member.sport]}
+                  </span>
+                  {editingMembers && (
+                    <button
+                      type="button"
+                      onClick={() => void removeMember(member)}
+                      disabled={removingId === member.id}
+                      aria-label={`Desvincular a ${member.name}`}
+                      className="rounded-full p-1.5 text-foreground/50 transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                    >
+                      {removingId === member.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

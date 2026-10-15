@@ -222,7 +222,13 @@ export async function listClubRoster(clubId: string) {
       })
       .from(clubMembers)
       .innerJoin(users, eq(users.id, clubMembers.userId))
-      .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.role, "coach")))
+      .where(
+        and(
+          eq(clubMembers.clubId, clubId),
+          eq(clubMembers.role, "coach"),
+          eq(clubMembers.status, "active")
+        )
+      )
       .orderBy(desc(clubMembers.createdAt)),
     db
       .select()
