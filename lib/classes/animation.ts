@@ -1,9 +1,14 @@
 // Animación de los bloques de una clase (prueba piloto).
 //
-// Convierte los bloques/items de una clase en una línea de tiempo comprimida
-// (≤ 30 s) que reproduce ClassAnimationPlayer. La lógica vive aquí, separada
-// del componente, para poder testearla y para extenderla a todas las clases
-// cuando se valide el piloto: basta con ampliar `hasClassAnimation`.
+// Convierte los bloques/items de una clase en una línea de tiempo que
+// reproduce ClassAnimationPlayer: cada actividad se explica frase a frase
+// (con su descripción completa) mientras la pista muestra la organización.
+// La duración de cada actividad depende de cuánto texto hay que leer, no de
+// sus minutos reales (esos los marca el reloj de la clase).
+//
+// La lógica vive aquí, separada del componente, para poder testearla y
+// para extenderla a todas las clases cuando se valide el piloto: basta con
+// ampliar `hasClassAnimation`.
 
 import {
   DEFAULT_BLOCK_ITEM_DURATION,
@@ -19,18 +24,36 @@ export function hasClassAnimation(classId: string): boolean {
 }
 
 /** Duración máxima de la animación completa, en segundos. */
-export const ANIMATION_MAX_SECONDS = 30;
-const INTRO_SECONDS = 1.6;
-const OUTRO_SECONDS = 2.2;
-/** Tiempo mínimo en pantalla de cada actividad (para que se pueda leer). */
-const MIN_ITEM_SECONDS = 1.6;
+export const ANIMATION_MAX_SECONDS = 240;
+/** Velocidad de lectura cómoda (caracteres por segundo). */
+const READ_CHARS_PER_SEC = 16;
+/** Pausa extra por frase para que el ojo salte a la siguiente. */
+const SENTENCE_BASE_SECONDS = 1.2;
+/** Tiempo con solo el título en pantalla antes de la primera frase. */
+const STEP_LEAD_SECONDS = 2;
+/** Margen al final de cada actividad para terminar de leer. */
+const STEP_TAIL_SECONDS = 1.5;
+const MIN_STEP_SECONDS = 4.5;
+const REST_SECONDS = 5;
+const REST_LEAD_SECONDS = 0.6;
+const INTRO_LEAD_SECONDS = 2.5;
+const OUTRO_SECONDS = 4;
 
-export type AnimationScene = "warmup" | "rally" | "rest" | "cooldown";
+export type AnimationScene =
+  | "warmup"
+  | "tee"
+  | "guided"
+  | "juggle"
+  | "rally"
+  | "rest"
+  | "cooldown";
 
 export interface AnimationInputItem {
   kind?: string | null;
   exerciseId?: string | null;
   exerciseName?: string | null;
+  exerciseDescription?: string | null;
+  exerciseObjectives?: string | null;
   freeText?: string | null;
   title?: string | null;
   durationMinutes?: number | null;
@@ -43,11 +66,19 @@ export interface AnimationInputBlock {
   items: AnimationInputItem[];
 }
 
+export interface AnimationSentence {
+  /** Etiqueta opcional ("RETO", "Organización"…) extraída del texto. */
+  label: string | null;
+  text: string;
+  /** Segundo de la animación en el que aparece. */
+  at: number;
+}
+
 export interface AnimationStep {
   blockIndex: number; // 0..n-1 (posición del bloque)
   blockTitle: string;
   title: string;
-  description: string | null;
+  sentences: AnimationSentence[];
   kind: BlockItemKind;
   isRest: boolean;
   scene: AnimationScene;
@@ -60,6 +91,8 @@ export interface AnimationStep {
 }
 
 export interface AnimationTimeline {
+  /** Objetivos de la clase, frase a frase, durante la presentación. */
+  intro: AnimationSentence[];
   steps: AnimationStep[];
   totalClassMinutes: number;
   introSeconds: number;
@@ -83,30 +116,92 @@ function isRestItem(item: AnimationInputItem, kind: BlockItemKind) {
 function sceneFor(
   blockPos: number,
   blockCount: number,
-  isRest: boolean
+  isRest: boolean,
+  text: string
 ): AnimationScene {
   if (isRest) return "rest";
   if (blockPos === 0 && blockCount > 1) return "warmup";
   if (blockPos === blockCount - 1 && blockCount > 1) return "cooldown";
+  const t = text.toLowerCase();
+  if (/\btorre\b|\btee\b/.test(t)) return "tee";
+  // "guiada" antes que "malabares": "la mano sobre las cuerdas" del monitor
+  // describe un golpe guiado, no un ejercicio de control de pelota.
+  if (/guiad|mano sobre|acompaña/.test(t)) return "guided";
+  if (/malabar|toques|(sobre|encima de) las cuerdas|equilibrio/.test(t))
+    return "juggle";
   return "rally";
 }
 
-function shortText(text: string | null | undefined, max = 150) {
-  if (!text) return null;
-  const clean = text.replace(/\s+/g, " ").trim();
-  if (!clean) return null;
-  if (clean.length <= max) return clean;
-  const cut = clean.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  return `${cut.slice(0, lastSpace > 60 ? lastSpace : max).trimEnd()}…`;
+const LABEL_RE = /^([A-ZÁÉÍÓÚÑa-záéíóúñ][\wÁÉÍÓÚÑáéíóúñ ]{1,22}):\s+(.+)$/;
+
+/**
+ * Parte un texto en frases legibles. Respeta los saltos de línea, separa en
+ * puntos/exclamaciones/interrogaciones y en listas "1) … 2) …", junta los
+ * trozos muy cortos (p. ej. "NIVEL 1.") con la frase siguiente y extrae
+ * etiquetas del tipo "RETO: …".
+ */
+export function splitSentences(
+  text: string | null | undefined
+): { label: string | null; text: string }[] {
+  if (!text) return [];
+  const pieces = text
+    .split(/\n+/)
+    .flatMap((line) =>
+      line
+        .split(/(?<=[.!?…])\s+(?=[¡¿"«(A-ZÁÉÍÓÚÑ0-9])|\s+(?=\d+\)\s)/)
+        .map((p) => p.trim())
+    )
+    .filter(Boolean);
+
+  const merged: string[] = [];
+  let carry = "";
+  for (const p of pieces) {
+    const joined = carry ? `${carry} ${p}` : p;
+    if (joined.length < 14) carry = joined;
+    else {
+      merged.push(joined);
+      carry = "";
+    }
+  }
+  if (carry) {
+    if (merged.length) merged[merged.length - 1] += ` ${carry}`;
+    else merged.push(carry);
+  }
+
+  return merged.map((s) => {
+    const m = s.match(LABEL_RE);
+    // Una etiqueta es corta y no es una frase normal con dos puntos.
+    if (m && m[1].split(" ").length <= 3)
+      return { label: m[1].trim(), text: m[2].trim() };
+    return { label: null, text: s };
+  });
+}
+
+function readSeconds(text: string) {
+  return SENTENCE_BASE_SECONDS + text.length / READ_CHARS_PER_SEC;
+}
+
+const REST_FALLBACK = "Agua, recoger pelotas y breve comentario del monitor.";
+
+function restText(item: AnimationInputItem) {
+  const raw = (item.freeText ?? "").trim();
+  // "DESCANSO (1 min): agua, …" → "Agua, …"
+  const clean = raw.replace(/^descanso\s*(\([^)]*\))?\s*:?\s*/i, "");
+  if (!clean) return REST_FALLBACK;
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 export function buildAnimationTimeline(
   blocks: AnimationInputBlock[],
-  maxSeconds = ANIMATION_MAX_SECONDS
+  options: { objectives?: string | null; maxSeconds?: number } = {}
 ): AnimationTimeline {
+  const maxSeconds = options.maxSeconds ?? ANIMATION_MAX_SECONDS;
   const ordered = [...blocks].sort((a, b) => a.orderIndex - b.orderIndex);
-  const raw: Omit<AnimationStep, "start" | "end">[] = [];
+
+  type Draft = Omit<AnimationStep, "start" | "end" | "sentences"> & {
+    parts: { label: string | null; text: string }[];
+  };
+  const drafts: Draft[] = [];
   let classMin = 0;
 
   ordered.forEach((block, blockPos) => {
@@ -121,29 +216,34 @@ export function buildAnimationTimeline(
       const stationCount = Array.isArray(item.stations)
         ? item.stations.length
         : 0;
+      const hasName = !!(item.exerciseName || item.title);
       const title = isRest
         ? "Descanso"
         : kind === "stations"
           ? `Estaciones (${stationCount})`
           : item.exerciseName ||
             item.title ||
-            shortText(item.freeText, 60) ||
+            splitSentences(item.freeText)[0]?.text.slice(0, 60) ||
             "Actividad";
-      // Para un item de texto con título, el texto libre es su descripción;
-      // sin título, ya se ha usado como nombre.
-      const description = isRest
-        ? "Agua, recoger pelotas y breve comentario del monitor."
-        : item.exerciseName || item.title
-          ? shortText(item.freeText)
-          : null;
-      raw.push({
+      // Texto de la explicación: la descripción del ejercicio de biblioteca
+      // o el texto libre del item (si no se ha usado ya como título).
+      const body = isRest
+        ? restText(item)
+        : item.exerciseDescription?.trim() ||
+          (hasName ? item.freeText : null) ||
+          "";
+      let parts = splitSentences(body);
+      if (!hasName && !isRest && parts.length > 1) parts = parts.slice(1);
+      const objective = isRest ? null : item.exerciseObjectives?.trim();
+      if (objective) parts = [...parts, { label: "Objetivo", text: objective }];
+      drafts.push({
         blockIndex: blockPos,
         blockTitle,
         title,
-        description,
+        parts,
         kind,
         isRest,
-        scene: sceneFor(blockPos, ordered.length, isRest),
+        scene: sceneFor(blockPos, ordered.length, isRest, `${title} ${body}`),
         minutes,
         classStartMin: classMin,
       });
@@ -151,30 +251,59 @@ export function buildAnimationTimeline(
     }
   });
 
-  const totalClassMinutes = classMin;
-  const budget = Math.max(0, maxSeconds - INTRO_SECONDS - OUTRO_SECONDS);
-  const n = raw.length;
-  // Cada actividad recibe un mínimo legible y el resto del tiempo se reparte
-  // en proporción a sus minutos reales. Si hay tantas que no cabe el mínimo,
-  // se reparte a partes iguales.
-  const minEach = n > 0 ? Math.min(MIN_ITEM_SECONDS, budget / n) : 0;
-  const extra = budget - minEach * n;
+  const introParts = splitSentences(options.objectives);
 
-  let t = INTRO_SECONDS;
-  const steps: AnimationStep[] = raw.map((s) => {
-    const share =
-      totalClassMinutes > 0 ? (extra * s.minutes) / totalClassMinutes : 0;
+  // Duraciones "naturales" (a velocidad de lectura cómoda).
+  const introNatural =
+    INTRO_LEAD_SECONDS +
+    introParts.reduce((acc, p) => acc + readSeconds(p.text), 0) +
+    (introParts.length ? STEP_TAIL_SECONDS : 0);
+  const stepNatural = drafts.map((d) => {
+    // Los descansos se repiten y su texto es siempre parecido: pausa corta.
+    if (d.isRest) return REST_SECONDS;
+    const reading = d.parts.reduce((acc, p) => acc + readSeconds(p.text), 0);
+    return Math.max(
+      MIN_STEP_SECONDS,
+      STEP_LEAD_SECONDS + reading + STEP_TAIL_SECONDS
+    );
+  });
+  const natural =
+    introNatural + stepNatural.reduce((a, b) => a + b, 0) + OUTRO_SECONDS;
+  // Si no cabe en el máximo, se acelera todo por igual.
+  const k = natural > maxSeconds ? maxSeconds / natural : 1;
+
+  const placeSentences = (
+    parts: { label: string | null; text: string }[],
+    from: number
+  ) => {
+    let at = from;
+    return parts.map((p) => {
+      const s = { ...p, at };
+      at += readSeconds(p.text) * k;
+      return s;
+    });
+  };
+
+  const intro = placeSentences(introParts, INTRO_LEAD_SECONDS * k);
+  const introSeconds = introNatural * k;
+
+  let t = introSeconds;
+  const steps: AnimationStep[] = drafts.map((d, i) => {
     const start = t;
-    t += minEach + share;
-    return { ...s, start, end: t };
+    t += stepNatural[i] * k;
+    const { parts, ...rest } = d;
+    const lead = d.isRest ? REST_LEAD_SECONDS : STEP_LEAD_SECONDS;
+    const sentences = placeSentences(parts, start + lead * k);
+    return { ...rest, sentences, start, end: t };
   });
 
   return {
+    intro,
     steps,
-    totalClassMinutes,
-    introSeconds: INTRO_SECONDS,
+    totalClassMinutes: classMin,
+    introSeconds,
     stepsEnd: t,
-    totalSeconds: t + OUTRO_SECONDS,
+    totalSeconds: t + OUTRO_SECONDS * k,
   };
 }
 

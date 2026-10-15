@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Droplets, Loader2, Pause, Play, RotateCcw, X } from "lucide-react";
+import {
+  Droplets,
+  Loader2,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipBack,
+  SkipForward,
+  Target,
+  X,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
@@ -10,6 +20,7 @@ import {
   classMinuteAt,
   type AnimationInputBlock,
   type AnimationScene,
+  type AnimationSentence,
   type AnimationStep,
   type AnimationTimeline,
 } from "@/lib/classes/animation";
@@ -21,6 +32,7 @@ import {
 interface ClassData {
   name: string;
   duracionMinutes: number;
+  objetivos: string | null;
   blocks: AnimationInputBlock[];
 }
 
@@ -60,7 +72,7 @@ export function ClassAnimationButton({
           type="button"
           onClick={openPlayer}
           className={cn(
-            "group inline-flex items-center gap-2.5 rounded-full bg-[#D6FF38] py-1.5 pl-1.5 pr-4 text-sm font-bold text-[#050505] shadow-[0_0_0_0_rgba(214,255,56,0.5)] transition hover:shadow-[0_0_0_6px_rgba(214,255,56,0.18)]",
+            "group inline-flex items-center gap-2.5 rounded-full bg-[#D6FF38] py-1.5 pl-1.5 pr-4 text-sm font-bold text-[#050505] transition hover:shadow-[0_0_0_6px_rgba(214,255,56,0.18)]",
             className
           )}
         >
@@ -87,7 +99,7 @@ export function ClassAnimationButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton={false}
-          className="max-h-[calc(100dvh-1.5rem)] gap-0 overflow-y-auto border-white/10 bg-[#050505] p-0 text-white sm:max-w-3xl"
+          className="max-h-[calc(100dvh-1rem)] gap-0 overflow-y-auto border-white/10 bg-[#050505] p-0 text-white sm:max-w-5xl"
         >
           <DialogTitle className="sr-only">
             Animación de la clase {data?.name ?? ""}
@@ -95,6 +107,7 @@ export function ClassAnimationButton({
           {data ? (
             <ClassAnimationPlayer
               name={data.name}
+              objectives={data.objetivos}
               blocks={data.blocks}
               onClose={() => setOpen(false)}
             />
@@ -149,14 +162,19 @@ function formatClock(min: number) {
 
 export function ClassAnimationPlayer({
   name,
+  objectives,
   blocks,
   onClose,
 }: {
   name: string;
+  objectives?: string | null;
   blocks: AnimationInputBlock[];
   onClose?: () => void;
 }) {
-  const timeline = useMemo(() => buildAnimationTimeline(blocks), [blocks]);
+  const timeline = useMemo(
+    () => buildAnimationTimeline(blocks, { objectives }),
+    [blocks, objectives]
+  );
   const reduceMotion = useReducedMotion() ?? false;
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -182,18 +200,18 @@ export function ClassAnimationPlayer({
     return () => cancelAnimationFrame(raf);
   }, [playing, timeline.totalSeconds]);
 
+  const seek = (to: number) => {
+    const clamped = Math.max(0, Math.min(timeline.totalSeconds, to));
+    tRef.current = clamped;
+    setT(clamped);
+  };
   const restart = () => {
-    tRef.current = 0;
-    setT(0);
+    seek(0);
     setPlaying(true);
   };
   const togglePlay = () => {
     if (tRef.current >= timeline.totalSeconds) restart();
     else setPlaying((p) => !p);
-  };
-  const seekToStep = (step: AnimationStep) => {
-    tRef.current = step.start;
-    setT(step.start);
   };
 
   const { steps } = timeline;
@@ -210,6 +228,19 @@ export function ClassAnimationPlayer({
   const ended = t >= timeline.totalSeconds;
   const blockCount = new Set(steps.map((s) => s.blockIndex)).size;
 
+  // Saltar a la actividad anterior / siguiente. "Anterior" vuelve al
+  // principio de la actual si ya se lleva un rato en ella.
+  const goPrev = () => {
+    if (phase === "outro") return seek(steps.at(-1)?.start ?? 0);
+    if (!step) return seek(0);
+    if (t - step.start > 2) return seek(step.start);
+    seek(stepIndex > 0 ? steps[stepIndex - 1].start : 0);
+  };
+  const goNext = () => {
+    if (phase === "intro") return seek(steps[0]?.start ?? 0);
+    if (step) seek(step.end);
+  };
+
   return (
     <div className="relative">
       {/* Cabecera */}
@@ -223,7 +254,10 @@ export function ClassAnimationPlayer({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-xs tabular-nums text-white/80">
+          <span
+            className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 font-mono text-xs tabular-nums text-white/80"
+            title="Minuto de la clase"
+          >
             {formatClock(clockMin)}
             <span className="text-white/40">
               {" "}
@@ -243,101 +277,139 @@ export function ClassAnimationPlayer({
         </div>
       </div>
 
-      {/* Pista animada */}
-      <div className="relative mx-5 overflow-hidden rounded-lg border border-white/10 bg-[#0B1A2B]">
-        <Court
-          timeline={timeline}
-          t={t}
-          step={step}
-          phase={phase}
-          ballColor={ballColorFor(name)}
-          reduceMotion={reduceMotion}
-        />
-        <AnimatePresence mode="wait">
-          {phase === "intro" && (
-            <motion.div
-              key="intro"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.04 }}
-              transition={{ duration: 0.35 }}
-              className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505]/70 text-center backdrop-blur-[2px]"
-            >
-              <p className="font-heading text-2xl font-semibold sm:text-3xl">
-                {name}
-              </p>
-              <p className="mt-2 text-sm text-white/70">
-                {timeline.totalClassMinutes} min · {blockCount} bloques ·{" "}
-                {steps.filter((s) => !s.isRest).length} actividades
-              </p>
-            </motion.div>
-          )}
-          {phase === "outro" && (
-            <motion.div
-              key="outro"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#050505]/75 text-center backdrop-blur-[2px]"
-            >
-              <p className="font-heading text-2xl font-semibold text-[#D6FF38] sm:text-3xl">
-                ¡Clase completada!
-              </p>
-              <BlockSummary timeline={timeline} />
-              {ended && (
-                <button
-                  type="button"
-                  onClick={restart}
-                  className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold hover:border-[#D6FF38] hover:text-[#D6FF38]"
-                >
-                  <RotateCcw className="size-3.5" /> Repetir
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Actividad actual */}
-      <div className="min-h-[124px] px-5 pt-4">
-        <AnimatePresence mode="wait">
-          {step && (
-            <motion.div
-              key={stepIndex}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: reduceMotion ? 0 : 0.25 }}
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#050505]"
-                  style={{ backgroundColor: blockColor(step.blockIndex) }}
-                >
-                  {step.blockTitle}
-                </span>
-                <span className="font-mono text-[11px] tabular-nums text-white/50">
-                  min {Math.round(step.classStartMin)}–
-                  {Math.round(step.classStartMin + step.minutes)} ·{" "}
-                  {step.minutes} min
-                </span>
-              </div>
-              <p className="mt-2 flex items-center gap-2 font-heading text-xl font-semibold leading-snug">
-                {step.isRest && <Droplets className="size-5 text-sky-300" />}
-                {step.title}
-              </p>
-              {step.description && (
-                <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-white/65">
-                  {step.description}
+      <div className="grid gap-4 px-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        {/* Pista animada */}
+        <div className="relative self-start overflow-hidden rounded-lg border border-white/10 bg-[#0B1A2B]">
+          <Court
+            timeline={timeline}
+            t={t}
+            step={step}
+            phase={phase}
+            ballColor={ballColorFor(name)}
+            reduceMotion={reduceMotion}
+          />
+          <AnimatePresence>
+            {phase === "outro" && (
+              <motion.div
+                key="outro"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#050505]/75 text-center backdrop-blur-[2px]"
+              >
+                <p className="font-heading text-2xl font-semibold text-[#D6FF38] sm:text-3xl">
+                  ¡Clase completada!
                 </p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {ended && (
+                  <button
+                    type="button"
+                    onClick={restart}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                  >
+                    <RotateCcw className="size-3.5" /> Repetir
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <SceneLegend scene={phase === "steps" && step ? step.scene : null} />
+        </div>
+
+        {/* Explicación */}
+        <div className="min-h-[230px] lg:min-h-0">
+          <AnimatePresence mode="wait">
+            {phase === "intro" && (
+              <motion.div
+                key="intro"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: reduceMotion ? 0 : 0.3 }}
+              >
+                <p className="font-heading text-2xl font-semibold leading-tight">
+                  {name}
+                </p>
+                <p className="mt-1.5 text-sm text-white/60">
+                  {timeline.totalClassMinutes} min · {blockCount} bloques ·{" "}
+                  {steps.filter((s) => !s.isRest).length} actividades
+                </p>
+                {timeline.intro.length > 0 && (
+                  <>
+                    <p className="mt-5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#D6FF38]">
+                      <Target className="size-3.5" /> Objetivos de la clase
+                    </p>
+                    <Sentences
+                      sentences={timeline.intro}
+                      t={t}
+                      reduceMotion={reduceMotion}
+                    />
+                  </>
+                )}
+              </motion.div>
+            )}
+
+            {step && (
+              <motion.div
+                key={`step-${stepIndex}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: reduceMotion ? 0 : 0.3 }}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#050505]"
+                    style={{ backgroundColor: blockColor(step.blockIndex) }}
+                  >
+                    {step.blockTitle}
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-white/50">
+                    {step.minutes} min · minuto {Math.round(step.classStartMin)}
+                    –{Math.round(step.classStartMin + step.minutes)}
+                  </span>
+                </div>
+                <p className="mt-2.5 flex items-center gap-2 font-heading text-2xl font-semibold leading-tight">
+                  {step.isRest && (
+                    <Droplets className="size-5 shrink-0 text-sky-300" />
+                  )}
+                  {step.title}
+                </p>
+                <Sentences
+                  sentences={step.sentences}
+                  t={t}
+                  reduceMotion={reduceMotion}
+                />
+              </motion.div>
+            )}
+
+            {phase === "outro" && (
+              <motion.div
+                key="outro-text"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <p className="font-heading text-2xl font-semibold leading-tight">
+                  Resumen de la clase
+                </p>
+                <BlockSummary timeline={timeline} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Línea de tiempo + controles */}
-      <div className="flex items-center gap-3 px-5 pb-5 pt-3">
+      <div className="flex items-center gap-2 px-5 pb-5 pt-4 sm:gap-3">
+        <button
+          type="button"
+          onClick={goPrev}
+          aria-label="Actividad anterior"
+          title="Actividad anterior"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+        >
+          <SkipBack className="size-4" />
+        </button>
         <button
           type="button"
           onClick={togglePlay}
@@ -352,39 +424,110 @@ export function ClassAnimationPlayer({
             <Play className="size-4 translate-x-px fill-current" />
           )}
         </button>
+        <button
+          type="button"
+          onClick={goNext}
+          aria-label="Actividad siguiente"
+          title="Actividad siguiente"
+          disabled={phase === "outro"}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-30"
+        >
+          <SkipForward className="size-4" />
+        </button>
         <TimelineBar
           timeline={timeline}
           clockMin={clockMin}
           activeIndex={stepIndex}
-          onSeek={seekToStep}
+          onSeek={(s) => seek(s.start)}
         />
       </div>
     </div>
   );
 }
 
+/** Frases que van apareciendo una a una; la actual resaltada. */
+function Sentences({
+  sentences,
+  t,
+  reduceMotion,
+}: {
+  sentences: AnimationSentence[];
+  t: number;
+  reduceMotion: boolean;
+}) {
+  const visible = sentences.filter((s) => t >= s.at);
+  const current = visible.length - 1;
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Mantiene a la vista la frase nueva cuando el texto no cabe.
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [visible.length]);
+
+  return (
+    <ul
+      ref={listRef}
+      className="mt-4 max-h-[42vh] space-y-2.5 overflow-y-auto pr-1 lg:max-h-[300px]"
+    >
+      {visible.map((s, i) => (
+        <motion.li
+          key={i}
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className={cn(
+            "border-l-2 pl-3 text-[15px] leading-6 transition-colors duration-500",
+            i === current
+              ? "border-[#D6FF38] text-white"
+              : "border-white/15 text-white/55"
+          )}
+        >
+          {s.label && (
+            <span className="mr-1.5 inline-block rounded bg-[#D6FF38]/15 px-1.5 py-px align-[1px] text-[10px] font-bold uppercase tracking-wider text-[#D6FF38]">
+              {s.label}
+            </span>
+          )}
+          {s.text}
+        </motion.li>
+      ))}
+    </ul>
+  );
+}
+
 function BlockSummary({ timeline }: { timeline: AnimationTimeline }) {
-  const byBlock = new Map<number, { title: string; minutes: number }>();
+  const byBlock = new Map<
+    number,
+    { title: string; minutes: number; activities: string[] }
+  >();
   for (const s of timeline.steps) {
-    const b = byBlock.get(s.blockIndex) ?? { title: s.blockTitle, minutes: 0 };
+    const b = byBlock.get(s.blockIndex) ?? {
+      title: s.blockTitle,
+      minutes: 0,
+      activities: [],
+    };
     b.minutes += s.minutes;
+    if (!s.isRest) b.activities.push(s.title);
     byBlock.set(s.blockIndex, b);
   }
   return (
-    <div className="flex flex-wrap justify-center gap-2 px-4">
+    <ul className="mt-4 space-y-3">
       {[...byBlock.entries()].map(([i, b]) => (
-        <span
+        <li
           key={i}
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-xs text-white/80"
+          className="border-l-2 pl-3"
+          style={{ borderColor: blockColor(i) }}
         >
-          <span
-            className="size-2 rounded-full"
-            style={{ backgroundColor: blockColor(i) }}
-          />
-          {b.title} · {b.minutes} min
-        </span>
+          <p className="text-sm font-semibold">
+            {b.title}{" "}
+            <span className="font-normal text-white/50">· {b.minutes} min</span>
+          </p>
+          <p className="text-[13px] leading-5 text-white/60">
+            {b.activities.join(" · ")}
+          </p>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -401,7 +544,7 @@ function TimelineBar({
 }) {
   const total = timeline.totalClassMinutes || 1;
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className="relative ml-1 min-w-0 flex-1">
       <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">
         {timeline.steps.map((s, i) => (
           <button
@@ -428,6 +571,36 @@ function TimelineBar({
         className="pointer-events-none absolute -top-1 h-5 w-[3px] -translate-x-1/2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
         style={{ left: `${(clockMin / total) * 100}%` }}
       />
+    </div>
+  );
+}
+
+const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
+  warmup: "Carrera alrededor de la pista",
+  tee: "Golpeo desde la torre · resto: sombras por parejas",
+  guided: "El monitor guía el golpe",
+  juggle: "Cada alumno controla su pelota",
+  rally: "Golpeo con el monitor",
+  rest: "Descanso",
+  cooldown: "Estiramientos en corro",
+};
+
+function SceneLegend({ scene }: { scene: AnimationScene | null }) {
+  return (
+    <div className="pointer-events-none absolute left-2 top-2 flex items-center gap-2">
+      <AnimatePresence mode="wait">
+        {scene && SCENE_LEGEND[scene] && (
+          <motion.span
+            key={scene}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-full bg-[#050505]/70 px-2 py-0.5 text-[10.5px] font-semibold text-white/85"
+          >
+            {SCENE_LEGEND[scene]}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -473,11 +646,22 @@ function perimeter(u: number, inset: number): Pt {
   return { x: x0, y: y0 + h - d };
 }
 
+/** Bola que va de `from` a `to` con bote al 70 % del recorrido. */
+function flight(from: Pt, to: Pt, p: number, height = 44) {
+  const ground = lerpPt(from, to, p);
+  const lift =
+    p < 0.7
+      ? height * Math.sin((p / 0.7) * Math.PI)
+      : height * 0.36 * Math.sin(((p - 0.7) / 0.3) * Math.PI);
+  return { ball: { x: ground.x, y: ground.y - lift }, shadow: ground };
+}
+
 interface SceneFrame {
   coach: Pt;
   students: Pt[];
-  ball: Pt | null;
-  ballShadow: Pt | null;
+  balls: { ball: Pt; shadow: Pt | null }[];
+  tee?: Pt;
+  ring?: Pt;
 }
 
 function sceneFrame(
@@ -490,14 +674,72 @@ function sceneFrame(
     case "warmup": {
       // Los alumnos corren alrededor de la pista; el monitor en el centro.
       const students = Array.from({ length: STUDENTS }, (_, i) =>
-        perimeter(tt * 0.16 + i / STUDENTS, 12)
+        perimeter(tt * 0.06 + i / STUDENTS, 12)
       );
-      return {
-        coach: { x: NET_X, y: MID_Y },
-        students,
-        ball: null,
-        ballShadow: null,
-      };
+      return { coach: { x: NET_X, y: MID_Y }, students, balls: [] };
+    }
+    case "tee": {
+      // Alumno 1 golpea desde la torre con el monitor detrás; la bola va al
+      // aro del otro campo. Los demás, por parejas, hacen sombras.
+      const tee = { x: COURT.x + 70, y: MID_Y + 4 };
+      const hitter = { x: tee.x - 14, y: tee.y + 12 };
+      const coach = { x: hitter.x - 18, y: hitter.y + 10 };
+      const ring = { x: COURT.x + COURT.w - 60, y: MID_Y - 30 };
+      const sway = still ? 0 : Math.sin(tt * 3.2) * 3;
+      const students = [
+        hitter,
+        { x: COURT.x + 40, y: COURT.y + 22 + sway },
+        { x: COURT.x + 66, y: COURT.y + 22 - sway },
+        { x: COURT.x + 40, y: COURT.y + COURT.h - 22 + sway },
+      ];
+      const cycle = (tt * 0.45) % 1;
+      const balls =
+        cycle < 0.15
+          ? [{ ball: { x: tee.x, y: tee.y - 10 }, shadow: null }]
+          : [flight(tee, ring, (cycle - 0.15) / 0.85, 40)];
+      return { coach, students, balls, tee, ring };
+    }
+    case "guided": {
+      // Monitor junto al alumno, le lanza bolas cortas y le guía el gesto.
+      const hitter = { x: COURT.x + COURT.w - 60, y: MID_Y + 8 };
+      const coach = { x: hitter.x - 26, y: hitter.y - 18 };
+      const students = Array.from({ length: STUDENTS }, (_, i) =>
+        i === 0
+          ? hitter
+          : { x: COURT.x + COURT.w + 22, y: COURT.y + 30 + i * 30 }
+      );
+      const cycle = (tt * 0.6) % 1;
+      const balls = [
+        flight(
+          { x: coach.x + 6, y: coach.y + 4 },
+          { x: hitter.x - 8, y: hitter.y - 4 },
+          cycle,
+          20
+        ),
+      ];
+      return { coach, students, balls };
+    }
+    case "juggle": {
+      // Cada alumno, repartido por su zona, mantiene la pelota sobre la
+      // raqueta mientras camina despacio.
+      const homes = [
+        { x: COURT.x + 70, y: COURT.y + 45 },
+        { x: COURT.x + 120, y: COURT.y + COURT.h - 40 },
+        { x: COURT.x + COURT.w - 120, y: COURT.y + 42 },
+        { x: COURT.x + COURT.w - 70, y: COURT.y + COURT.h - 45 },
+      ];
+      const students = homes.map((h, i) => ({
+        x: h.x + Math.cos(tt * 0.5 + i * 1.7) * 14,
+        y: h.y + Math.sin(tt * 0.5 + i * 1.7) * 10,
+      }));
+      const balls = students.map((s, i) => {
+        const hop = Math.abs(Math.sin(tt * 3.4 + i * 0.9)) * 12;
+        return {
+          ball: { x: s.x + 9, y: s.y - 10 - hop },
+          shadow: null,
+        };
+      });
+      return { coach: { x: NET_X, y: MID_Y }, students, balls };
     }
     case "rally": {
       // Monitor a la izquierda lanzando; alumno activo a la derecha y el
@@ -509,54 +751,36 @@ function sceneFrame(
           ? hitter
           : { x: COURT.x + COURT.w + 22, y: COURT.y + 30 + i * 30 }
       );
-      const cycle = (tt * 0.85) % 2; // ida (0-1) y vuelta (1-2)
+      const cycle = (tt * 0.6) % 2; // ida (0-1) y vuelta (1-2)
       const forward = cycle < 1;
       const p = forward ? cycle : cycle - 1;
       const from = forward ? coach : hitter;
       const to = forward ? hitter : coach;
-      const ground = lerpPt(
-        { x: from.x + (forward ? 8 : -8), y: from.y },
-        { x: to.x + (forward ? -8 : 8), y: to.y - 6 },
-        p
-      );
-      // Bote al 70 % del trayecto: dos parábolas.
-      const lift =
-        p < 0.7
-          ? 44 * Math.sin((p / 0.7) * Math.PI)
-          : 16 * Math.sin(((p - 0.7) / 0.3) * Math.PI);
-      return {
-        coach,
-        students,
-        ball: { x: ground.x, y: ground.y - lift },
-        ballShadow: ground,
-      };
+      return { coach, students, balls: [flight(from, to, p)] };
     }
     case "rest": {
       // Todos al banco, junto a la red.
       const students = Array.from({ length: STUDENTS }, (_, i) => ({
-        x: NET_X - 45 + i * 30,
+        x: NET_X - 75 + i * 30,
         y: COURT.y + COURT.h + 14,
       }));
       return {
         coach: { x: NET_X + 75, y: COURT.y + COURT.h + 14 },
         students,
-        ball: null,
-        ballShadow: null,
+        balls: [],
       };
     }
     case "cooldown": {
       // Corro en el centro con respiración lenta.
-      const r = 34 + (still ? 0 : Math.sin(tt * 1.6) * 3);
-      const students = Array.from({ length: STUDENTS }, (_, i) => {
+      const r = 34 + (still ? 0 : Math.sin(tt * 1.2) * 3);
+      const pos = (i: number) => {
         const a = (i / (STUDENTS + 1)) * Math.PI * 2 - Math.PI / 2;
         return { x: NET_X + Math.cos(a) * r, y: MID_Y + Math.sin(a) * r };
-      });
-      const a = (STUDENTS / (STUDENTS + 1)) * Math.PI * 2 - Math.PI / 2;
+      };
       return {
-        coach: { x: NET_X + Math.cos(a) * r, y: MID_Y + Math.sin(a) * r },
-        students,
-        ball: null,
-        ballShadow: null,
+        coach: pos(STUDENTS),
+        students: Array.from({ length: STUDENTS }, (_, i) => pos(i)),
+        balls: [],
       };
     }
     default: {
@@ -564,17 +788,12 @@ function sceneFrame(
         x: COURT.x + COURT.w - 40,
         y: COURT.y + 25 + i * 33,
       }));
-      return {
-        coach: { x: COURT.x + 40, y: MID_Y },
-        students,
-        ball: null,
-        ballShadow: null,
-      };
+      return { coach: { x: COURT.x + 40, y: MID_Y }, students, balls: [] };
     }
   }
 }
 
-const BLEND_SECONDS = 0.6;
+const BLEND_SECONDS = 0.8;
 
 function Court({
   timeline,
@@ -600,7 +819,7 @@ function Court({
 
   let frame = sceneFrame(scene, t, reduceMotion);
   // Transición suave entre escenas: los jugadores se desplazan a su nueva
-  // posición en lugar de saltar.
+  // posición en lugar de saltar; bolas y material aparecen al llegar.
   if (step && prevScene !== scene && !reduceMotion) {
     const p = ease((t - step.start) / BLEND_SECONDS);
     if (p < 1) {
@@ -608,8 +827,9 @@ function Court({
       frame = {
         coach: lerpPt(prev.coach, frame.coach, p),
         students: frame.students.map((s, i) => lerpPt(prev.students[i], s, p)),
-        ball: p > 0.8 ? frame.ball : null,
-        ballShadow: p > 0.8 ? frame.ballShadow : null,
+        balls: p > 0.85 ? frame.balls : [],
+        tee: p > 0.5 ? frame.tee : undefined,
+        ring: p > 0.5 ? frame.ring : undefined,
       };
     }
   }
@@ -644,29 +864,23 @@ function Court({
           strokeOpacity={0.9}
           strokeWidth={2}
         />
+        {[0.22, 0.78].map((f) => (
+          <line
+            key={f}
+            x1={COURT.x + COURT.w * f}
+            x2={COURT.x + COURT.w * f}
+            y1={COURT.y}
+            y2={COURT.y + COURT.h}
+            stroke="#fff"
+            strokeOpacity={0.6}
+            strokeWidth={1.5}
+          />
+        ))}
         <line
           x1={COURT.x + COURT.w * 0.22}
           x2={COURT.x + COURT.w * 0.78}
           y1={MID_Y}
           y2={MID_Y}
-          stroke="#fff"
-          strokeOpacity={0.6}
-          strokeWidth={1.5}
-        />
-        <line
-          x1={COURT.x + COURT.w * 0.22}
-          x2={COURT.x + COURT.w * 0.22}
-          y1={COURT.y}
-          y2={COURT.y + COURT.h}
-          stroke="#fff"
-          strokeOpacity={0.6}
-          strokeWidth={1.5}
-        />
-        <line
-          x1={COURT.x + COURT.w * 0.78}
-          x2={COURT.x + COURT.w * 0.78}
-          y1={COURT.y}
-          y2={COURT.y + COURT.h}
           stroke="#fff"
           strokeOpacity={0.6}
           strokeWidth={1.5}
@@ -695,26 +909,51 @@ function Court({
         style={{ transition: "fill 300ms" }}
       />
 
-      {/* Bola */}
-      {frame.ballShadow && (
-        <ellipse
-          cx={frame.ballShadow.x}
-          cy={frame.ballShadow.y + 3}
-          rx={5}
-          ry={2}
-          fill="#000"
-          opacity={0.35}
+      {/* Material: aro (diana) y torre/tee */}
+      {frame.ring && (
+        <circle
+          cx={frame.ring.x}
+          cy={frame.ring.y}
+          r={13}
+          fill="none"
+          stroke="#FACC15"
+          strokeWidth={3}
         />
       )}
-      {frame.ball && (
-        <circle
-          cx={frame.ball.x}
-          cy={frame.ball.y}
-          r={5}
-          fill={ballColor}
-          stroke="#fff"
-          strokeWidth={1}
-        />
+      {frame.tee && (
+        <g>
+          <rect
+            x={frame.tee.x - 2}
+            y={frame.tee.y - 6}
+            width={4}
+            height={12}
+            fill="#F97316"
+          />
+          <rect
+            x={frame.tee.x - 6}
+            y={frame.tee.y + 5}
+            width={12}
+            height={3}
+            rx={1}
+            fill="#F97316"
+          />
+        </g>
+      )}
+
+      {/* Bolas */}
+      {frame.balls.map(
+        (b, i) =>
+          b.shadow && (
+            <ellipse
+              key={`s${i}`}
+              cx={b.shadow.x}
+              cy={b.shadow.y + 3}
+              rx={5}
+              ry={2}
+              fill="#000"
+              opacity={0.35}
+            />
+          )
       )}
 
       {/* Alumnos */}
@@ -761,11 +1000,23 @@ function Court({
         M
       </text>
 
+      {frame.balls.map((b, i) => (
+        <circle
+          key={`b${i}`}
+          cx={b.ball.x}
+          cy={b.ball.y}
+          r={4.5}
+          fill={ballColor}
+          stroke="#fff"
+          strokeWidth={1}
+        />
+      ))}
+
       {/* Descanso: gota de agua */}
       {dim && (
         <g
           transform={`translate(${NET_X} ${MID_Y - 4}) scale(${
-            reduceMotion ? 1 : 1 + Math.sin(t * 5) * 0.08
+            reduceMotion ? 1 : 1 + Math.sin(t * 4) * 0.08
           })`}
         >
           <circle r={26} fill="#050505" opacity={0.55} />
