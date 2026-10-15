@@ -68,7 +68,7 @@ const GOLPES = [
   { id: "globo", label: "Globo" },
 ];
 
-const DURACIONES = [30, 45, 60, 75, 90, 120];
+const DURACIONES = [30, 45, 55, 60, 75, 90, 120];
 
 const BLOCK_TITLES = [
   { idx: 1, label: "Bloque inicial" },

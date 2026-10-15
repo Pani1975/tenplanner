@@ -57,6 +57,7 @@ const DURACION_FILTERS = [
   { id: "", label: "Cualquiera" },
   { id: "30", label: "30 min" },
   { id: "45", label: "45 min" },
+  { id: "55", label: "55 min" },
   { id: "60", label: "60 min" },
   { id: "75", label: "75 min" },
   { id: "90", label: "90 min" },
