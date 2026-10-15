@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { AddClassesToListDialog } from "@/components/app/add-classes-to-list-dialog";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
+import { hasClassAnimation } from "@/lib/classes/animation";
 
 export interface ClassGridItem {
   id: string;
@@ -170,6 +172,7 @@ export function ClassesGrid({
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((cls) => {
           const isSelected = selected.has(cls.id);
+          const animated = hasClassAnimation(cls.id);
           const cardBody = (
             <>
               <div>
@@ -212,7 +215,12 @@ export function ClassesGrid({
                   )}
                 </div>
               </div>
-              <div className="mx-5 mb-5 mt-5 flex flex-wrap gap-1.5 border-t border-border pt-4">
+              <div
+                className={cn(
+                  "mx-5 mb-5 mt-5 flex flex-wrap gap-1.5 border-t border-border pt-4",
+                  animated && "pr-12"
+                )}
+              >
                 <span className="rounded-full border border-border px-2 py-1 text-[10.5px] text-foreground/60">
                   {cls.numAlumnos
                     ? `${cls.numAlumnos} alumnos`
@@ -280,6 +288,12 @@ export function ClassesGrid({
                 >
                   {cardBody}
                 </Link>
+              )}
+              {animated && !selecting && (
+                <ClassAnimationButton
+                  classId={cls.id}
+                  className="absolute bottom-4 right-4 z-10"
+                />
               )}
             </li>
           );

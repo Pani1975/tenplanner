@@ -38,6 +38,8 @@ import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { classListSpaceCondition } from "@/lib/classes/lists";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
+import { hasClassAnimation } from "@/lib/classes/animation";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -305,6 +307,13 @@ export default async function ClassDetailPage({
                   </span>
                 )}
               </div>
+              {hasClassAnimation(cls.id) && (
+                <ClassAnimationButton
+                  classId={cls.id}
+                  variant="hero"
+                  className="mt-5"
+                />
+              )}
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
