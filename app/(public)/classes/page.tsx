@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
+import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { classes, classFavorites, users } from "@/db/schema";
-import { Plus, Search, FileText } from "lucide-react";
+import { Plus, Search, FileText, ArrowLeft, ArrowRight } from "lucide-react";
 import {
   classNavQueryString,
   classOrderBy,
@@ -24,6 +24,10 @@ import { getSpaceLabel, isUserAdmin } from "@/lib/classes/lists";
 import { ClassesGrid } from "./classes-grid";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
+
+// Clases por página. Antes el listado cortaba en 60 sin forma de ver el
+// resto (una biblioteca de ~250 clases quedaba oculta).
+const PAGE_SIZE = 60;
 type Tab = (typeof TABS)[number];
 
 // "Mis clases"/"Mis listas" pasan a "Clases club"/"Listas club" trabajando
@@ -136,6 +140,9 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   const aspectoList = paramList(params.aspecto);
   const golpeList = paramList(params.golpe);
   const activeSort = parseClassSort(params);
+  const parsedPage = Number(typeof params.page === "string" ? params.page : 1);
+  const requestedPage =
+    Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
 
   // For drafts tab we don't query classes
   let rows: Array<{
@@ -156,6 +163,8 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     createdBy: string | null;
     authorName: string | null;
   }> = [];
+  let totalRows = 0;
+  let currentPage = requestedPage;
   let draftCount = 0;
   let draftRows: Array<{
     id: string;
@@ -264,6 +273,17 @@ export default async function ClassesPage({ searchParams }: PageProps) {
       );
     }
 
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(classes)
+      .where(and(...conds));
+    totalRows = Number(total);
+    // Una página fuera de rango (p. ej. tras filtrar) vuelve a la última.
+    currentPage = Math.min(
+      requestedPage,
+      Math.max(1, Math.ceil(totalRows / PAGE_SIZE))
+    );
+
     const rawRows = await db
       .select({
         id: classes.id,
@@ -286,8 +306,9 @@ export default async function ClassesPage({ searchParams }: PageProps) {
       .from(classes)
       .leftJoin(users, eq(users.id, classes.createdBy))
       .where(and(...conds))
-      .orderBy(...classOrderBy(activeSort))
-      .limit(60);
+      .orderBy(...classOrderBy(activeSort), classes.id)
+      .limit(PAGE_SIZE)
+      .offset((currentPage - 1) * PAGE_SIZE);
     rows = rawRows.map((r) => ({
       ...r,
       authorName: user && r.createdBy !== user.id ? r.authorName : null,
@@ -303,6 +324,21 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     : [];
   const favorites = new Set(favRows.map((f) => f.classId));
   const navQs = classNavQueryString(params);
+
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+
+  function buildPageHref(page: number) {
+    const sp = new URLSearchParams();
+    if (tab !== "all") sp.set("tab", tab);
+    if (q) sp.set("q", q);
+    if (nivel) sp.set("nivel", nivel);
+    if (duracion) sp.set("duracion", duracion);
+    aspectoList.forEach((a) => sp.append("aspecto", a));
+    golpeList.forEach((g) => sp.append("golpe", g));
+    if (activeSort !== "alpha") sp.set("sort", activeSort);
+    if (page > 1) sp.set("page", String(page));
+    return sp.toString() ? `/classes?${sp.toString()}` : "/classes";
+  }
 
   function buildSortHref(sort: ClassSort) {
     const sp = new URLSearchParams();
@@ -341,7 +377,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div className="rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2">
                   <p className="font-heading text-2xl leading-none text-[#D6FF38]">
-                    {rows.length}
+                    {totalRows}
                   </p>
                   <p className="mt-1 text-[9px] uppercase tracking-[0.18em] text-white/45">
                     visibles
@@ -671,6 +707,37 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 navQs={navQs}
                 canSelect={!!user}
               />
+            )}
+
+            {totalPages > 1 && (
+              <nav
+                aria-label="Paginación"
+                className="flex items-center justify-between gap-3 rounded-lg border border-[#050505]/10 bg-white/70 px-4 py-3 text-[13px] shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+              >
+                <span className="tabular-nums text-foreground/60">
+                  {(currentPage - 1) * PAGE_SIZE + 1}–
+                  {Math.min(currentPage * PAGE_SIZE, totalRows)} de {totalRows}{" "}
+                  · Página {currentPage} de {totalPages}
+                </span>
+                <span className="flex items-center gap-2">
+                  {currentPage > 1 ? (
+                    <Link
+                      href={buildPageHref(currentPage - 1)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3.5 py-1.5 font-semibold transition hover:border-[#D6FF38] dark:border-white/12"
+                    >
+                      <ArrowLeft className="size-3.5" /> Anterior
+                    </Link>
+                  ) : null}
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={buildPageHref(currentPage + 1)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-3.5 py-1.5 font-semibold text-[#050505] transition hover:bg-[#c8f52e]"
+                    >
+                      Siguiente <ArrowRight className="size-3.5" />
+                    </Link>
+                  ) : null}
+                </span>
+              </nav>
             )}
           </>
         )}

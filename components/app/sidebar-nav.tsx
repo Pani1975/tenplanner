@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BookMarked,
   BookOpen,
@@ -76,7 +76,7 @@ const navItems: NavItem[] = [
     publicAccess: true,
     allLabel: "Ver todos",
     submenu: [
-      { href: "/exercises", label: "Biblioteca", icon: BookOpen },
+      { href: "/exercises?tab=global", label: "Biblioteca", icon: BookOpen },
       { href: "/exercises?tab=mine", label: "Mis ejercicios", icon: Dumbbell },
       { href: "/exercises?tab=favorites", label: "Favoritos", icon: Heart },
       { href: "/exercises?tab=drafts", label: "Borradores", icon: FileText },
@@ -95,7 +95,7 @@ const navItems: NavItem[] = [
     publicAccess: true,
     allLabel: "Ver todas",
     submenu: [
-      { href: "/classes", label: "Biblioteca", icon: BookOpen },
+      { href: "/classes?tab=library", label: "Biblioteca", icon: BookOpen },
       { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
       { href: "/classes?tab=favorites", label: "Mis listas", icon: Heart },
       { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
@@ -164,6 +164,50 @@ function navItemsForSpace(inClub: boolean): NavItem[] {
   );
 }
 
+/**
+ * Qué enlace del submenú está activo: solo uno. Cuenta la ruta y los
+ * parámetros (?tab=…, ?filter=…), no solo la ruta — si no, "Ver todas" y
+ * "Biblioteca" (misma ruta, otra pestaña) se marcaban a la vez. Gana el más
+ * específico; en empate, el elemento del submenú gana a "Ver todas".
+ * Devuelve -1 para "Ver todas", el índice del submenú, o null si ninguno.
+ */
+function activeSubmenuIndex(
+  allHref: string,
+  submenu: SubItem[],
+  pathname: string,
+  params: URLSearchParams
+): number | null {
+  function score(href: string, isAll: boolean): number {
+    const [path, query] = href.split("?");
+    const exact = pathname === path;
+    if (!exact && !pathname.startsWith(path + "/")) return -1;
+    let value = exact ? 2 : 1;
+    if (query) {
+      if (!exact) return -1;
+      for (const [key, expected] of new URLSearchParams(query)) {
+        if (params.get(key) !== expected) return -1;
+        value += 10;
+      }
+    }
+    return isAll ? value - 0.5 : value;
+  }
+  let best: number | null = null;
+  let bestScore = -1;
+  const allScore = score(allHref, true);
+  if (allScore > bestScore) {
+    best = -1;
+    bestScore = allScore;
+  }
+  submenu.forEach((sub, index) => {
+    const value = score(sub.href, false);
+    if (value > bestScore) {
+      best = index;
+      bestScore = value;
+    }
+  });
+  return best;
+}
+
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
@@ -197,6 +241,7 @@ function BrandMark({ className }: { className?: string }) {
 
 function NavContent({
   pathname,
+  search,
   onNavigate,
   user,
   avatarUrl,
@@ -209,6 +254,8 @@ function NavContent({
   activeSport = "tenis",
 }: {
   pathname: string;
+  /** Query string actual (sin "?"), para marcar la pestaña activa. */
+  search: string;
   onNavigate?: () => void;
   user: SidebarNavProps["user"];
   avatarUrl?: string | null;
@@ -287,6 +334,14 @@ function NavContent({
             }) => {
               const isActive =
                 pathname === href || pathname.startsWith(href + "/");
+              const activeIdx = submenu
+                ? activeSubmenuIndex(
+                    href,
+                    submenu,
+                    pathname,
+                    new URLSearchParams(search)
+                  )
+                : null;
               const isOpen = !!submenuOpen[href];
               const isLocked = !user && !publicAccess;
               const featureLocked = feature ? !features[feature] : false;
@@ -374,7 +429,7 @@ function NavContent({
                             onClick={onNavigate}
                             className={cn(
                               "block rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors",
-                              pathname === href
+                              activeIdx === -1
                                 ? "bg-brand text-brand-foreground"
                                 : "text-sidebar-foreground/58 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                             )}
@@ -383,16 +438,17 @@ function NavContent({
                           </Link>
                         </li>
                         {submenu.map(
-                          ({
-                            href: subHref,
-                            label: subLabel,
-                            accent,
-                            feature,
-                            icon: SubIcon,
-                          }) => {
-                            const isSubActive =
-                              pathname === subHref ||
-                              pathname.startsWith(subHref + "/");
+                          (
+                            {
+                              href: subHref,
+                              label: subLabel,
+                              accent,
+                              feature,
+                              icon: SubIcon,
+                            },
+                            subIndex
+                          ) => {
+                            const isSubActive = activeIdx === subIndex;
                             const featureLocked = feature
                               ? !features[feature]
                               : false;
@@ -561,7 +617,25 @@ function NavContent({
   );
 }
 
-export function SidebarNav({
+/**
+ * useSearchParams exige un límite de Suspense en páginas que se
+ * prerenderizan; el fallback pinta el mismo menú sin parámetros, así que no
+ * hay parpadeo ni menú vacío.
+ */
+export function SidebarNav(props: SidebarNavProps) {
+  return (
+    <Suspense fallback={<SidebarNavInner {...props} search="" />}>
+      <SidebarNavWithSearch {...props} />
+    </Suspense>
+  );
+}
+
+function SidebarNavWithSearch(props: SidebarNavProps) {
+  const search = useSearchParams().toString();
+  return <SidebarNavInner {...props} search={search} />;
+}
+
+function SidebarNavInner({
   user,
   avatarUrl,
   isAdmin = false,
@@ -571,7 +645,8 @@ export function SidebarNav({
   workModeClubs = [],
   activeWorkClubId = null,
   activeSport = "tenis",
-}: SidebarNavProps) {
+  search,
+}: SidebarNavProps & { search: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -647,6 +722,7 @@ export function SidebarNav({
       <aside className="sticky top-0 hidden h-dvh w-[18.5rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <NavContent
           pathname={pathname}
+          search={search}
           user={user}
           avatarUrl={avatarUrl}
           isAdmin={isAdmin}
@@ -736,6 +812,7 @@ export function SidebarNav({
             </div>
             <NavContent
               pathname={pathname}
+              search={search}
               onNavigate={() => setMobileOpen(false)}
               user={user}
               avatarUrl={avatarUrl}
