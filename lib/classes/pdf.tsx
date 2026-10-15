@@ -190,3 +190,26 @@ export function ClassPdf({ cls }: { cls: PdfClass }) {
     </Document>
   );
 }
+
+/** PDF con varias clases (p. ej. las de un filtrado o una selección):
+ * cada clase empieza en una página nueva, en el orden recibido. */
+export function MultiClassPdf({
+  classes,
+  title,
+}: {
+  classes: PdfClass[];
+  title: string;
+}) {
+  return (
+    <Document
+      title={title}
+      author={classes[0]?.coachName ?? "TenPlanner"}
+      creator="TenPlanner"
+      producer="TenPlanner"
+    >
+      {classes.map((cls, idx) => (
+        <ClassPdfPage key={`${idx}-${cls.name}`} cls={cls} />
+      ))}
+    </Document>
+  );
+}

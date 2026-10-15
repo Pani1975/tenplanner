@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Heart, Plus } from "lucide-react";
+import { Check, FileDown, Heart, Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { AddClassesToListDialog } from "@/components/app/add-classes-to-list-dialog";
@@ -45,6 +46,7 @@ export function ClassesGrid({
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -63,6 +65,31 @@ export function ClassesGrid({
   const allIds = items.map((i) => i.id);
   const allSelected = allIds.length > 0 && selected.size === allIds.length;
   const count = selected.size;
+
+  // Descarga un único PDF con las clases seleccionadas, en el mismo orden
+  // en que aparecen en el listado filtrado.
+  async function downloadPdf() {
+    const ids = allIds.filter((id) => selected.has(id));
+    if (ids.length === 0 || downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/classes/pdf?ids=${ids.join(",")}`);
+      if (!res.ok) throw new Error("Error generando el PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] ??
+        "clases.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("No se pudo generar el PDF. Inténtalo de nuevo.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -98,6 +125,21 @@ export function ClassesGrid({
                   className="rounded-full px-3 py-1.5 text-[13px] font-semibold text-muted-foreground hover:bg-muted"
                 >
                   Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={count === 0 || downloading}
+                  onClick={downloadPdf}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-4 py-2 text-[13px] font-bold text-foreground transition-colors hover:border-[#D6FF38]/70 disabled:opacity-40 dark:bg-white/[0.035]"
+                >
+                  {downloading ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <FileDown className="size-3.5" />
+                  )}
+                  {downloading
+                    ? "Generando…"
+                    : `PDF${count > 0 ? ` (${count})` : ""}`}
                 </button>
                 <button
                   type="button"
