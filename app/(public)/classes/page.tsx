@@ -497,20 +497,23 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             </ul>
           )
         ) : activeTab === "favorites" && user ? (
-          <ClassListsSection
-            isAdmin={listsMeta?.isAdmin ?? false}
-            spaceLabel={listsMeta?.spaceLabel ?? null}
-            inClub={listsMeta?.inClub ?? false}
-          />
-        ) : (
           <>
-            {activeTab === "library" && (
+            <ClassListsSection
+              isAdmin={listsMeta?.isAdmin ?? false}
+              spaceLabel={listsMeta?.spaceLabel ?? null}
+              inClub={listsMeta?.inClub ?? false}
+            />
+            {/* Listas públicas de la Biblioteca, copiables a las propias */}
+            <div className="pb-8">
               <PublicClassListsSection
                 sport={sport}
-                loggedIn={!!user}
-                inClub={!!activeClubId}
+                loggedIn
+                inClub={listsMeta?.inClub ?? false}
               />
-            )}
+            </div>
+          </>
+        ) : (
+          <>
             {/* Filtros: search + nivel + duración + aspecto + golpe */}
             <form
               className="grid gap-3 rounded-lg border border-[#050505]/10 bg-white/70 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[minmax(220px,1fr)_repeat(4,auto)_auto] md:items-end"

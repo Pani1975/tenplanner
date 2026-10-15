@@ -86,7 +86,12 @@ export default async function ExercisePage({
 
   const isAdmin = !!dbUser?.isAdmin;
   const isOwner = exercise.createdBy === user?.id;
-  const canEdit = !!user && (isAdmin || (!exercise.isGlobal && isOwner));
+  const inClub = user ? !!(await getActiveWorkClubId(user.id)) : false;
+  // La Biblioteca pública no se edita desde el modo particular.
+  const canEdit =
+    !!user &&
+    !(exercise.isGlobal && !inClub) &&
+    (isAdmin || (!exercise.isGlobal && isOwner));
 
   // Copiar a "Mis ejercicios": un ejercicio de la biblioteca se copia al
   // espacio activo (particular o club); uno que el propio monitor creó en
@@ -95,7 +100,6 @@ export default async function ExercisePage({
   const copyTargets: Array<"active" | "particular"> = [];
   if (user && isPublicExercise) copyTargets.push("active");
   if (user && isOwner && exercise.clubId) copyTargets.push("particular");
-  const inClub = user ? !!(await getActiveWorkClubId(user.id)) : false;
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"

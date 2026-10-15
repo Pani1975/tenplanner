@@ -86,8 +86,18 @@ export default async function ClassDetailPage({
   const copyTargets: CopyTarget[] = [];
   if (user && cls.isLibrary && cls.status === "published")
     copyTargets.push("active");
-  if (user && isOwner && cls.clubId && cls.status === "published")
+  // Para una clase de la Biblioteca ya existe "Copiar a Mis clases": el botón
+  // al espacio particular solo aplica a clases propias del club.
+  if (
+    user &&
+    isOwner &&
+    !cls.isLibrary &&
+    cls.clubId &&
+    cls.status === "published"
+  )
     copyTargets.push("particular");
+  // La Biblioteca pública no se edita ni se borra desde el modo particular.
+  const canEditClass = isOwner && !(cls.isLibrary && !activeWorkClubId);
 
   const authorName =
     sharedViaClub && cls.createdBy
@@ -315,7 +325,7 @@ export default async function ClassDetailPage({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {isOwner && (
+              {canEditClass && (
                 <Link
                   href={`/classes/${cls.id}/edit`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
@@ -334,7 +344,7 @@ export default async function ClassDetailPage({
                 classId={cls.id}
                 initialFavorite={isFav}
                 className={cls.name}
-                canDelete={isOwner}
+                canDelete={canEditClass}
                 loggedIn={!!user}
               />
             </div>

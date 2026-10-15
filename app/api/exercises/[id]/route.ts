@@ -1,3 +1,4 @@
+import { getActiveWorkClubId } from "@/lib/clubs";
 import { eq } from "drizzle-orm";
 import { after } from "next/server";
 import { NextResponse } from "next/server";
@@ -173,6 +174,13 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
 
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // La Biblioteca pública no se edita desde el modo particular.
+    if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
+      return NextResponse.json(
+        { error: "La Biblioteca pública no se puede editar en modo particular" },
+        { status: 403 }
+      );
     }
     if (
       !existing.isGlobal &&
@@ -380,6 +388,13 @@ export async function DELETE(_request: Request, context: ExerciseRouteContext) {
 
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // La Biblioteca pública no se edita desde el modo particular.
+    if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
+      return NextResponse.json(
+        { error: "La Biblioteca pública no se puede editar en modo particular" },
+        { status: 403 }
+      );
     }
     if (
       !existing.isGlobal &&

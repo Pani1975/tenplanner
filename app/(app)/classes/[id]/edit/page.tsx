@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import { getActiveWorkClubId } from "@/lib/clubs";
 import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 interface PageProps {
@@ -33,6 +34,8 @@ export default async function EditClassPage({ params }: PageProps) {
     .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
     .limit(1);
   if (!cls) notFound();
+  if (cls.isLibrary && !(await getActiveWorkClubId(user.id)))
+    redirect(`/classes/${id}`);
 
   const [adminRow] = await db
     .select({ isAdmin: users.isAdmin })

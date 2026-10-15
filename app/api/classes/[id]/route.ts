@@ -202,7 +202,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     );
 
   const [existing] = await db
-    .select({ createdBy: classes.createdBy })
+    .select({ createdBy: classes.createdBy, isLibrary: classes.isLibrary })
     .from(classes)
     .where(eq(classes.id, id))
     .limit(1);
@@ -210,6 +210,12 @@ export async function PATCH(request: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.createdBy !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // La Biblioteca pública no se edita desde el modo particular.
+  if (existing.isLibrary && !(await getActiveWorkClubId(user.id)))
+    return NextResponse.json(
+      { error: "La Biblioteca pública no se puede editar en modo particular" },
+      { status: 403 }
+    );
 
   const [dbUser] = await db
     .select({ isAdmin: users.isAdmin })
@@ -360,6 +366,17 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const [target] = await db
+    .select({ isLibrary: classes.isLibrary })
+    .from(classes)
+    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .limit(1);
+  if (target?.isLibrary && !(await getActiveWorkClubId(user.id)))
+    return NextResponse.json(
+      { error: "La Biblioteca pública no se puede borrar en modo particular" },
+      { status: 403 }
+    );
 
   const [deleted] = await db
     .delete(classes)
