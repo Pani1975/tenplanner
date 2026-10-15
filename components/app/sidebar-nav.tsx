@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Heart,
   LayoutDashboard,
+  LifeBuoy,
   Lock,
   LogOut,
   MapPin,
@@ -137,6 +138,7 @@ const navItems: NavItem[] = [
   { href: "/resources", label: "Mis recursos", icon: BookMarked },
   { href: "/club", label: "Mi club", icon: Building2 },
   { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
 ];
 
 interface WorkModeProps {
