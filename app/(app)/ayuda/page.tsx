@@ -30,12 +30,13 @@ export default async function AyudaPage() {
             Ayuda
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Guía rápida
+            Centro de ayuda
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Lo esencial para empezar a usar Ten Planner en pocos minutos, según
-            tu perfil. No sustituye a la ayuda directa del equipo, pero te deja
-            operativo desde ya.
+            Elige entre la guía rápida, para empezar en pocos minutos, o la guía
+            completa, con el detalle de cada función según tu perfil. No
+            sustituye a la ayuda directa del equipo, pero te deja operativo
+            desde ya.
           </p>
         </header>
 
