@@ -49,6 +49,10 @@ import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import {
+  CopyToSpaceButton,
+  type CopyTarget,
+} from "@/components/app/copy-to-space-button";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -190,6 +194,7 @@ const EFECTO_LABELS: Record<string, string> = {
 export function ExerciseDetailClient({
   exercise,
   canEdit = false,
+  copyTargets = [],
   isAdmin = false,
   userId = null,
   initialRating = null,
@@ -204,6 +209,7 @@ export function ExerciseDetailClient({
 }: {
   exercise: ExerciseData;
   canEdit?: boolean;
+  copyTargets?: CopyTarget[];
   isAdmin?: boolean;
   userId?: string | null;
   initialRating?: number | null;
@@ -448,32 +454,44 @@ export function ExerciseDetailClient({
             className="ml-1"
           />
         </div>
-        {canEdit ? (
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
-            <button
-              onClick={() => setMode("edit")}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:flex-none"
-            >
-              <Pencil className="size-3.5" />
-              <span className="hidden sm:inline">Editar</span>
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-white px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.04] sm:flex-none"
-            >
-              <Trash2 className="size-3.5" />
-              <span className="hidden sm:inline">Eliminar</span>
-            </button>
-          </div>
-        ) : userId && exercise.isGlobal && !isAdmin ? (
-          <div className="flex w-full items-center gap-1.5 rounded-full border border-[#050505]/12 bg-white/70 px-3 py-2 text-[11px] text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:w-auto sm:shrink-0">
-            <ShieldAlert className="size-3.5 shrink-0" strokeWidth={1.6} />
-            <span className="hidden sm:inline">
-              Solo administradores pueden modificar ejercicios globales
-            </span>
-            <span className="sm:hidden">Solo admins</span>
-          </div>
-        ) : null}
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
+          {canEdit ? (
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+              <button
+                onClick={() => setMode("edit")}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:flex-none"
+              >
+                <Pencil className="size-3.5" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-white px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.04] sm:flex-none"
+              >
+                <Trash2 className="size-3.5" />
+                <span className="hidden sm:inline">Eliminar</span>
+              </button>
+            </div>
+          ) : userId && exercise.isGlobal && !isAdmin ? (
+            <div className="flex w-full items-center gap-1.5 rounded-full border border-[#050505]/12 bg-white/70 px-3 py-2 text-[11px] text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:w-auto sm:shrink-0">
+              <ShieldAlert className="size-3.5 shrink-0" strokeWidth={1.6} />
+              <span className="hidden sm:inline">
+                Solo administradores pueden modificar ejercicios globales
+              </span>
+              <span className="sm:hidden">Solo admins</span>
+            </div>
+          ) : null}
+          {copyTargets.length > 0 && (
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+              <CopyToSpaceButton
+                kind="exercise"
+                id={exercise.id}
+                targets={copyTargets}
+                className="flex-1 sm:flex-none"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main card */}

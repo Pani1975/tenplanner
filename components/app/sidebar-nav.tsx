@@ -96,7 +96,7 @@ const navItems: NavItem[] = [
     submenu: [
       { href: "/classes", label: "Biblioteca", icon: BookOpen },
       { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
-      { href: "/classes?tab=favorites", label: "Listas", icon: Heart },
+      { href: "/classes?tab=favorites", label: "Mis listas", icon: Heart },
       { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
       { href: "/classes/new", label: "Nueva clase", icon: Plus },
     ],

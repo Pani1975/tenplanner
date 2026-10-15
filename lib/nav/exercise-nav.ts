@@ -24,6 +24,7 @@ import {
   TIPO_PELOTA_VALUES,
   type TipoPelota,
 } from "@/lib/exercise-taxonomy";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -180,13 +181,22 @@ export async function getFilteredExerciseIds(
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
 
+  // "Mis ejercicios" según el espacio activo — mantener igual que en
+  // app/(public)/exercises/page.tsx.
+  const activeWorkClubId = userId ? await getActiveWorkClubId(userId) : null;
+  const mineWhere = userId
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        userId,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+
   const allVisibleWhere = userId
     ? publicExercisesEnabled
-      ? (or(
-          eq(exercisesTable.isGlobal, true),
-          eq(exercisesTable.createdBy, userId)
-        ) ?? eq(exercisesTable.createdBy, userId))
-      : eq(exercisesTable.createdBy, userId)
+      ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+      : mineWhere
     : publicExercisesEnabled
       ? eq(exercisesTable.isGlobal, true)
       : sql`1=0`;
@@ -197,7 +207,7 @@ export async function getFilteredExerciseIds(
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
       : activeTab === "mine" && userId
-        ? eq(exercisesTable.createdBy, userId)
+        ? mineWhere
         : allVisibleWhere;
 
   const conditions: SQL[] = [];

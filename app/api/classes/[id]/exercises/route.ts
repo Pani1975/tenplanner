@@ -9,6 +9,7 @@ import {
   exercises,
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -65,7 +66,7 @@ export async function POST(request: Request, ctx: Ctx) {
     .where(
       and(
         eq(exercises.id, exerciseId),
-        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))
+        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id))
       )
     )
     .limit(1);

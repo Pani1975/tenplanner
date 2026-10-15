@@ -18,6 +18,8 @@ import { getPublicSportCookie } from "@/lib/public-sport";
 import { SportGate } from "@/components/public/sport-gate";
 import { SportChangePill } from "@/components/public/sport-change-pill";
 import { ClassListsSection } from "@/components/app/class-lists-section";
+import { PublicClassListsSection } from "@/components/app/public-class-lists-section";
+import { getSpaceLabel, isUserAdmin } from "@/lib/classes/lists";
 import { ClassesGrid } from "./classes-grid";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
@@ -27,7 +29,7 @@ const TAB_LABELS: Record<Tab, string> = {
   all: "Ver todas",
   library: "Biblioteca",
   mine: "Mis clases",
-  favorites: "Listas",
+  favorites: "Mis listas",
   drafts: "Borradores",
 };
 
@@ -107,6 +109,16 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     : "all";
   const activeTab: Tab =
     !user && (tab === "mine" || tab === "favorites") ? "all" : tab;
+
+  // Cabecera de "Mis listas": en qué espacio se está (particular o club) y
+  // si el usuario es admin (puede publicar listas en la Biblioteca).
+  const listsMeta =
+    activeTab === "favorites" && user
+      ? await Promise.all([
+          isUserAdmin(user.id),
+          getActiveWorkClubId(user.id).then(getSpaceLabel),
+        ]).then(([isAdmin, spaceLabel]) => ({ isAdmin, spaceLabel }))
+      : null;
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const nivel = typeof params.nivel === "string" ? params.nivel : "";
@@ -438,9 +450,15 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             </ul>
           )
         ) : activeTab === "favorites" && user ? (
-          <ClassListsSection />
+          <ClassListsSection
+            isAdmin={listsMeta?.isAdmin ?? false}
+            spaceLabel={listsMeta?.spaceLabel ?? null}
+          />
         ) : (
           <>
+            {activeTab === "library" && (
+              <PublicClassListsSection sport={sport} loggedIn={!!user} />
+            )}
             {/* Filtros: search + nivel + duración + aspecto + golpe */}
             <form
               className="grid gap-3 rounded-lg border border-[#050505]/10 bg-white/70 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[minmax(220px,1fr)_repeat(4,auto)_auto] md:items-end"

@@ -12,7 +12,10 @@ import {
   sessions,
   users,
 } from "@/db/schema";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import {
+  exerciseOwnOrClubCondition,
+  exerciseVisibleToUserCondition,
+} from "@/lib/exercise-access";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
@@ -80,7 +83,7 @@ export default async function EditSessionPage({ params }: PageProps) {
           and(
             publicExercisesEnabled
               ? exerciseVisibleToUserCondition(user.id)
-              : eq(exercises.createdBy, user.id),
+              : exerciseOwnOrClubCondition(user.id),
             eq(exercises.sport, sessionRow.sport)
           )
         )

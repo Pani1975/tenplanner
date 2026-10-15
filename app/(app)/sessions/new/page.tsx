@@ -15,7 +15,10 @@ import {
   users,
 } from "@/db/schema";
 import { and, eq, asc } from "drizzle-orm";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import {
+  exerciseOwnOrClubCondition,
+  exerciseVisibleToUserCondition,
+} from "@/lib/exercise-access";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import type {
   TrainingPhase,
@@ -119,7 +122,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
       and(
         publicExercisesEnabled
           ? exerciseVisibleToUserCondition(user.id)
-          : eq(exercises.createdBy, user.id),
+          : exerciseOwnOrClubCondition(user.id),
         eq(exercises.sport, sport)
       )
     )

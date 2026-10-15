@@ -18,6 +18,7 @@ import {
   type AnyColumn,
   type SQL,
 } from "drizzle-orm";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { FavoriteToggle } from "@/components/app/favorite-toggle";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
@@ -260,16 +261,26 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
 
   const sportWhere = eq(exercisesTable.sport, sport);
 
+  // "Mis ejercicios" depende del espacio activo (modo de trabajo): en
+  // particular, solo los del usuario creados en particular; trabajando como
+  // un club, todos los del club (de cualquier monitor). Ver lib/clubs.ts.
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
+  const mineWhere = user
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        user.id,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+
   // Unauthenticated users only see global exercises
   const allVisibleWhere = and(
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(
-            eq(exercisesTable.isGlobal, true),
-            eq(exercisesTable.createdBy, user.id)
-          ) ?? eq(exercisesTable.createdBy, user.id))
-        : eq(exercisesTable.createdBy, user.id)
+        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        : mineWhere
       : publicExercisesEnabled
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
@@ -282,7 +293,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
         )!
       : activeTab === "mine" && user
-        ? and(sportWhere, eq(exercisesTable.createdBy, user.id))!
+        ? and(sportWhere, mineWhere)!
         : allVisibleWhere;
 
   const listConditions: SQL[] = [];
@@ -481,7 +492,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         ? db
             .select({ total: count() })
             .from(exercisesTable)
-            .where(and(sportWhere, eq(exercisesTable.createdBy, user.id)))
+            .where(and(sportWhere, mineWhere))
         : Promise.resolve([{ total: 0 }]),
       db
         .select({ category: exercisesTable.category, total: count() })

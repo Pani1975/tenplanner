@@ -19,6 +19,7 @@ import {
 import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { CLASS_STATUSES, canSeeClassDraft } from "@/lib/classes/visibility";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -243,7 +244,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
               exerciseIds.map((eid) => sql`${eid}::uuid`),
               sql`, `
             )})`,
-            or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!
+            or(
+              eq(exercises.isGlobal, true),
+              exerciseOwnOrClubCondition(user.id)
+            )!
           )
         );
       if (accessible.length !== exerciseIds.length) {

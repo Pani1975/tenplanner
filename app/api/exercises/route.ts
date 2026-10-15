@@ -17,7 +17,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import {
+  exerciseOwnOrClubCondition,
+  exerciseVisibleToUserCondition,
+} from "@/lib/exercise-access";
+import { getActiveWorkClubId } from "@/lib/clubs";
 import { embedExercise } from "@/lib/ai/semantic-search";
 import { getBooleanSetting } from "@/lib/app-settings";
 import {
@@ -120,7 +124,7 @@ export async function GET(request: NextRequest) {
   const visibilityCondition = publicExercisesEnabled
     ? exerciseVisibleToUserCondition(user?.id)
     : user
-      ? eq(exercises.createdBy, user.id)
+      ? exerciseOwnOrClubCondition(user.id)
       : undefined;
 
   if (!visibilityCondition) {
@@ -376,13 +380,17 @@ export async function POST(request: Request) {
       .where(eq(users.id, user.id))
       .limit(1);
     const isAdmin = !!dbUser?.isAdmin;
-    const sport = await getActiveSport(user.id);
+    const [sport, activeClubId] = await Promise.all([
+      getActiveSport(user.id),
+      getActiveWorkClubId(user.id),
+    ]);
 
     const {
       isGlobal: requestedIsGlobal,
       autoria: requestedAutoria,
       ...rest
     } = parsedBody.data;
+    const isGlobal = isAdmin && requestedIsGlobal === true;
     const niveles = normalizeMultiValue(
       rest.niveles ?? (rest.nivel ? [rest.nivel] : null)
     );
@@ -452,9 +460,12 @@ export async function POST(request: Request) {
         duracionRango: rest.duracionRango ?? null,
         caracter: normalizeMultiValue(rest.caracter),
         situacionJuego: normalizeMultiValue(rest.situacionJuego),
-        isGlobal: isAdmin && requestedIsGlobal === true,
+        isGlobal,
         autoria: isAdmin && requestedAutoria ? requestedAutoria : "libre",
         createdBy: user.id,
+        // Creado trabajando como un club → compartido en "Mis ejercicios"
+        // del espacio de ese club. Los globales (biblioteca) no son de club.
+        clubId: isGlobal ? null : activeClubId,
         sport,
       })
       .returning();

@@ -337,6 +337,13 @@
       "when": 1791916531701,
       "tag": "0047_groups_weekly_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792089590653,
+      "tag": "0048_mis_listas_espacios",
+      "breakpoints": true
     }
   ]
 }

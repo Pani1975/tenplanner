@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ExerciseDetailClient } from "./exercise-detail-client";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { getBooleanSetting } from "@/lib/app-settings";
+import { canAccessExercise } from "@/lib/exercise-access";
 import {
   exerciseNavQueryString,
   getFilteredExerciseIds,
@@ -79,15 +80,20 @@ export default async function ExercisePage({
 
   if (!exercise) notFound();
 
-  const canAccess =
-    exercise.isGlobal ||
-    exercise.createdBy === null ||
-    exercise.createdBy === user?.id;
+  const canAccess = await canAccessExercise(exercise, user?.id);
   if (!canAccess) notFound();
 
   const isAdmin = !!dbUser?.isAdmin;
   const isOwner = exercise.createdBy === user?.id;
   const canEdit = !!user && (isAdmin || (!exercise.isGlobal && isOwner));
+
+  // Copiar a "Mis ejercicios": un ejercicio de la biblioteca se copia al
+  // espacio activo (particular o club); uno que el propio monitor creó en
+  // el espacio de un club se puede copiar a su espacio particular.
+  const isPublicExercise = exercise.isGlobal || exercise.createdBy === null;
+  const copyTargets: Array<"active" | "particular"> = [];
+  if (user && isPublicExercise) copyTargets.push("active");
+  if (user && isOwner && exercise.clubId) copyTargets.push("particular");
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"
@@ -110,6 +116,7 @@ export default async function ExercisePage({
   return (
     <ExerciseDetailClient
       canEdit={canEdit}
+      copyTargets={copyTargets}
       isAdmin={isAdmin}
       userId={user?.id ?? null}
       initialRating={userRating}

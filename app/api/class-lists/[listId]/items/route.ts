@@ -2,9 +2,10 @@ import { and, eq, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { classListItems, classLists, classes } from "@/db/schema";
+import { classListItems, classes } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { sharedWithClubCondition } from "@/lib/clubs";
+import { getListInActiveSpace } from "@/lib/classes/lists";
 import { classDraftVisibility } from "@/lib/classes/visibility";
 
 type RouteContext = { params: Promise<{ listId: string }> };
@@ -16,15 +17,6 @@ const paramsSchema = z.object({
 const itemSchema = z.object({
   classId: z.string().uuid(),
 });
-
-async function ensureOwnedList(listId: string, userId: string) {
-  const [list] = await db
-    .select({ id: classLists.id })
-    .from(classLists)
-    .where(and(eq(classLists.id, listId), eq(classLists.userId, userId)))
-    .limit(1);
-  return list;
-}
 
 export async function POST(request: Request, context: RouteContext) {
   const supabase = await createClient();
@@ -49,11 +41,12 @@ export async function POST(request: Request, context: RouteContext) {
   if (!parsedBody.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
-  const list = await ensureOwnedList(parsedParams.data.listId, user.id);
+  // Cualquier miembro del espacio de la lista puede añadir clases.
+  const list = await getListInActiveSpace(parsedParams.data.listId, user.id);
   if (!list)
     return NextResponse.json({ error: "List not found" }, { status: 404 });
 
-  const classActiveClubId = await getActiveWorkClubId(user.id);
+  const classActiveClubId = list.activeClubId;
   const [cls] = await db
     .select({ id: classes.id })
     .from(classes)
@@ -106,7 +99,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (!parsedBody.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
-  const list = await ensureOwnedList(parsedParams.data.listId, user.id);
+  const list = await getListInActiveSpace(parsedParams.data.listId, user.id);
   if (!list)
     return NextResponse.json({ error: "List not found" }, { status: 404 });
 

@@ -12,6 +12,10 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
+import {
+  CopyToSpaceButton,
+  type CopyTarget,
+} from "@/components/app/copy-to-space-button";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
@@ -33,6 +37,7 @@ import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { classNavQueryString, getFilteredClassIds } from "@/lib/nav/class-nav";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { classListSpaceCondition } from "@/lib/classes/lists";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 
 interface PageProps {
@@ -68,13 +73,21 @@ export default async function ClassDetailPage({
   if (!cls) notFound();
 
   const isOwner = !!user && cls.createdBy === user.id;
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
   let sharedViaClub = false;
   if (!cls.isLibrary && !isOwner && user && cls.clubId) {
-    const activeClubId = await getActiveWorkClubId(user.id);
-    sharedViaClub = cls.clubId === activeClubId;
+    sharedViaClub = cls.clubId === activeWorkClubId;
   }
   if (!cls.isLibrary && !isOwner && !sharedViaClub) notFound();
   if (!canSeeClassDraft(cls, user?.id)) notFound();
+
+  // Copiar a "Mis clases": de la Biblioteca al espacio activo; una clase que
+  // el propio monitor creó en el espacio de un club, a su espacio particular.
+  const copyTargets: CopyTarget[] = [];
+  if (user && cls.isLibrary && cls.status === "published")
+    copyTargets.push("active");
+  if (user && isOwner && cls.clubId && cls.status === "published")
+    copyTargets.push("particular");
 
   const authorName =
     sharedViaClub && cls.createdBy
@@ -126,7 +139,7 @@ export default async function ClassDetailPage({
           .innerJoin(classLists, eq(classLists.id, classListItems.listId))
           .where(
             and(
-              eq(classLists.userId, user.id),
+              classListSpaceCondition(user.id, activeWorkClubId),
               eq(classListItems.classId, id)
             )
           )
@@ -310,6 +323,12 @@ export default async function ClassDetailPage({
                   {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
                 </Link>
               )}
+              <CopyToSpaceButton
+                kind="class"
+                id={cls.id}
+                targets={copyTargets}
+                tone="dark"
+              />
               <ClassActions
                 classId={cls.id}
                 initialFavorite={isFav}

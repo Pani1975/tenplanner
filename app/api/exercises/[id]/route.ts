@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { canAccessExercise } from "@/lib/exercise-access";
 import { embedExercise } from "@/lib/ai/semantic-search";
 import {
   deriveDurationMinutesFromRange,
@@ -58,6 +59,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
         tips: exercises.tips,
         createdBy: exercises.createdBy,
         isGlobal: exercises.isGlobal,
+        clubId: exercises.clubId,
         autoria: exercises.autoria,
         formato: exercises.formato,
         numJugadores: exercises.numJugadores,
@@ -95,10 +97,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
       );
     }
 
-    const canAccess =
-      exercise.isGlobal ||
-      exercise.createdBy === null ||
-      exercise.createdBy === user.id;
+    const canAccess = await canAccessExercise(exercise, user.id);
 
     if (!canAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

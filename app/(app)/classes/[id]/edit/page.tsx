@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -83,7 +84,7 @@ export default async function EditClassPage({ params }: PageProps) {
     .from(exercises)
     .where(
       and(
-        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id)),
+        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id)),
         eq(exercises.sport, cls.sport)
       )
     )

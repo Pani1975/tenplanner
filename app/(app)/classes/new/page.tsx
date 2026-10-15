@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import { getActiveSport } from "@/lib/sports";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 export default async function NewClassPage() {
   const supabase = await createClient();
@@ -40,7 +41,7 @@ export default async function NewClassPage() {
     .from(exercises)
     .where(
       and(
-        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id)),
+        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id)),
         eq(exercises.sport, sport)
       )
     )

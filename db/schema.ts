@@ -204,6 +204,13 @@ export const exercises = pgTable(
     autoria: varchar("autoria", { length: 64 }).default("libre"),
     isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
     isGlobal: boolean("is_global").default(false).notNull(),
+    // null = ejercicio del espacio particular de su autor. Se asigna cuando
+    // el monitor lo crea trabajando como un club (modo de trabajo): queda
+    // compartido con todos los miembros activos de ese club ("Mis
+    // ejercicios" del espacio del club). Mismo criterio que classes.clubId.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
     // Deporte al que pertenece el ejercicio. Default "tenis" para que todo
     // el contenido existente quede migrado sin tocar datos.
     sport: sportEnum("sport").default("tenis").notNull(),
@@ -226,6 +233,7 @@ export const exercises = pgTable(
     index("exercises_name_idx").on(t.name),
     index("exercises_autoria_idx").on(t.autoria),
     index("exercises_sport_idx").on(t.sport),
+    index("exercises_club_id_idx").on(t.clubId),
   ]
 );
 
@@ -925,11 +933,25 @@ export const classLists = pgTable(
     name: varchar("name", { length: 100 }).notNull(),
     emoji: varchar("emoji", { length: 10 }).default("CL"),
     isDefault: boolean("is_default").default(false).notNull(),
+    // Espacio de la lista ("Mis listas"): null = espacio particular (solo la
+    // ve su autor); un club = compartida con los miembros activos de ese
+    // club mientras trabajan en su modo. Ver sharedWithClubCondition.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
+    // Lista pública de la biblioteca (p. ej. "Lista clases bola roja"):
+    // solo un admin puede marcarla. Cualquiera puede verla y copiarla a su
+    // espacio desde la Biblioteca.
+    isPublic: boolean("is_public").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
-  (t) => [index("class_lists_user_id_idx").on(t.userId)]
+  (t) => [
+    index("class_lists_user_id_idx").on(t.userId),
+    index("class_lists_club_id_idx").on(t.clubId),
+    index("class_lists_is_public_idx").on(t.isPublic),
+  ]
 );
 
 export const classListItems = pgTable(

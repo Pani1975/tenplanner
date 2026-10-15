@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ClipboardList,
   FolderPlus,
+  Globe,
   GraduationCap,
   Loader2,
   Pencil,
@@ -30,6 +31,8 @@ interface ClassListWithItems {
   name: string;
   emoji: string | null;
   isDefault: boolean;
+  isPublic?: boolean;
+  canManage?: boolean;
   createdAt: string;
   itemsCount: number;
   items: ListedClass[];
@@ -69,11 +72,15 @@ function ListCard({
   onDelete,
   onRename,
   onRemoveItem,
+  onTogglePublic,
+  isAdmin,
   deletingId,
   removingKey,
 }: {
   list: ClassListWithItems;
   index: number;
+  onTogglePublic: (id: string, isPublic: boolean) => void;
+  isAdmin: boolean;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onRemoveItem: (listId: string, classId: string) => void;
@@ -188,6 +195,11 @@ function ListCard({
                   principal
                 </span>
               )}
+              {list.isPublic && (
+                <span className="font-sans text-[8px] uppercase tracking-[0.18em] text-emerald-600 border border-emerald-500/30 rounded px-1.5 py-0.5 dark:text-emerald-400">
+                  pública
+                </span>
+              )}
             </div>
           )}
           <span className={cn("font-sans text-[10px] tabular-nums", accent.text)}>
@@ -199,6 +211,25 @@ function ListCard({
           className="flex items-center gap-1 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
+          {isAdmin && list.canManage !== false && (
+            <button
+              title={
+                list.isPublic
+                  ? "Quitar de la Biblioteca"
+                  : "Publicar en la Biblioteca"
+              }
+              onClick={() => onTogglePublic(list.id, !list.isPublic)}
+              className={cn(
+                "p-2 rounded-xl transition-colors hover:bg-foreground/8",
+                list.isPublic
+                  ? "text-emerald-500 hover:text-emerald-600"
+                  : "text-foreground/25 hover:text-foreground"
+              )}
+            >
+              <Globe className="size-3.5" />
+            </button>
+          )}
+          {list.canManage !== false && (
           <button
             title="Renombrar"
             onClick={() => {
@@ -209,7 +240,8 @@ function ListCard({
           >
             <Pencil className="size-3.5" />
           </button>
-          {!list.isDefault && (
+          )}
+          {!list.isDefault && list.canManage !== false && (
             <button
               title="Eliminar lista"
               onClick={() => onDelete(list.id)}
@@ -318,7 +350,14 @@ function ListCard({
   );
 }
 
-export function ClassListsSection() {
+export function ClassListsSection({
+  isAdmin = false,
+  spaceLabel = null,
+}: {
+  isAdmin?: boolean;
+  /** "Espacio particular" o el nombre del club del modo de trabajo. */
+  spaceLabel?: string | null;
+} = {}) {
   const [lists, setLists] = useState<ClassListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -411,6 +450,18 @@ export function ClassListsSection() {
     }
   }
 
+  async function togglePublic(listId: string, isPublic: boolean) {
+    const res = await fetch(`/api/class-lists/${listId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublic }),
+    });
+    if (res.ok)
+      setLists((prev) =>
+        prev.map((l) => (l.id === listId ? { ...l, isPublic } : l))
+      );
+  }
+
   function handleRename(listId: string, name: string) {
     setLists((prev) =>
       prev.map((l) => (l.id === listId ? { ...l, name } : l))
@@ -489,7 +540,8 @@ export function ClassListsSection() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[0.28em] text-foreground/35 mb-1 flex items-center gap-1.5">
-            <FolderPlus className="size-3" /> Método · Listas
+            <FolderPlus className="size-3" /> Mis listas
+            {spaceLabel ? ` · ${spaceLabel}` : ""}
           </p>
           <h2 className="font-heading italic text-[20px] leading-tight text-foreground">
             {lists.length === 1
@@ -563,6 +615,8 @@ export function ClassListsSection() {
             onDelete={(id) => setDeleteTarget(id)}
             onRename={handleRename}
             onRemoveItem={removeFromList}
+            onTogglePublic={(id, value) => void togglePublic(id, value)}
+            isAdmin={isAdmin}
             deletingId={deletingId}
             removingKey={removingKey}
           />

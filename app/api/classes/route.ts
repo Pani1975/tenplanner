@@ -20,6 +20,7 @@ import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { CLASS_STATUSES } from "@/lib/classes/visibility";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 const stationItemSchema = z
   .object({
@@ -271,7 +272,7 @@ export async function POST(request: Request) {
             exerciseIds.map((id) => sql`${id}::uuid`),
             sql`, `
           )})`,
-          or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!
+          or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id))!
         )
       );
     if (accessible.length !== exerciseIds.length) {
