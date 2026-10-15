@@ -157,6 +157,8 @@ export async function GET(_req: Request, ctx: Ctx) {
           stations: classBlockExercises.stations,
           exerciseName: exercises.name,
           exerciseCategory: exercises.category,
+          exerciseDescription: exercises.description,
+          exerciseObjectives: exercises.objectives,
         })
         .from(classBlockExercises)
         .leftJoin(exercises, eq(exercises.id, classBlockExercises.exerciseId))

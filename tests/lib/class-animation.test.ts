@@ -4,7 +4,30 @@ import {
   buildAnimationTimeline,
   classMinuteAt,
   hasClassAnimation,
+  splitSentences,
 } from "@/lib/classes/animation";
+
+const ex = (
+  name: string,
+  minutes: number,
+  description: string,
+  objectives: string | null = null
+) => ({
+  kind: "exercise",
+  exerciseId: "e",
+  exerciseName: name,
+  exerciseDescription: description,
+  exerciseObjectives: objectives,
+  durationMinutes: minutes,
+});
+const txt = (title: string, minutes: number, freeText: string) => ({
+  kind: "text",
+  title,
+  freeText,
+  durationMinutes: minutes,
+});
+const rest = (m: number) =>
+  txt("Descanso", m, `DESCANSO (${m} min): agua, recogida de pelotas.`);
 
 // Estructura real de "Clase bola roja 01" (55 min).
 const blocks = [
@@ -12,58 +35,53 @@ const blocks = [
     orderIndex: 1,
     title: "Calentamiento",
     items: [
-      {
-        kind: "exercise",
-        exerciseId: "e1",
-        exerciseName: "Carrera",
-        durationMinutes: 5,
-      },
+      ex(
+        "Carrera y movilidad articular",
+        5,
+        "Los alumnos corren 3 vueltas a la pista mientras el profesor va indicando ejercicios de movilidad."
+      ),
     ],
   },
   {
     orderIndex: 2,
     title: "Parte principal",
     items: [
-      {
-        kind: "text",
-        title: "Torre/Tee",
-        freeText: "Nivel 1",
-        durationMinutes: 10,
-      },
-      { kind: "text", title: "Descanso", freeText: "Agua", durationMinutes: 1 },
-      {
-        kind: "exercise",
-        exerciseId: "e2",
-        exerciseName: "Preparación",
-        durationMinutes: 10,
-      },
-      { kind: "text", title: "Descanso", freeText: "Agua", durationMinutes: 1 },
-      {
-        kind: "exercise",
-        exerciseId: "e3",
-        exerciseName: "Control",
-        durationMinutes: 10,
-      },
-      { kind: "text", title: "Descanso", freeText: "Agua", durationMinutes: 1 },
-      {
-        kind: "exercise",
-        exerciseId: "e4",
-        exerciseName: "Malabares",
-        durationMinutes: 10,
-      },
-      { kind: "text", title: "Descanso", freeText: "Agua", durationMinutes: 2 },
+      txt(
+        "Torre/Tee con monitor (derecha)",
+        10,
+        "NIVEL 1. La bola se coloca sobre la torre/tee a la altura de la cintura del alumno. El monitor acompaña el gesto.\nRETO: 5 golpes de derecha dirigidos a un aro en el suelo.\nOrganización: mientras uno golpea, el resto hace sombras."
+      ),
+      rest(1),
+      ex(
+        "Preparación guiada con el profesor",
+        10,
+        "El profesor coloca su mano sobre las cuerdas de la raqueta del alumno para guiarle la preparación. El alumno realiza 15 golpes."
+      ),
+      rest(1),
+      ex(
+        "Raqueta y pelota: control y coordinación",
+        10,
+        "Recorrido en zig-zag llevando la pelota encima de las cuerdas de la raqueta. Después, 5 toques hacia arriba."
+      ),
+      rest(1),
+      ex(
+        "¡Malabares mágicos!",
+        10,
+        "Cada niño tiene una raqueta y una pelota. La pelota debe mantenerse en la cuerda sin caer.",
+        "Desarrollar el control de la raqueta."
+      ),
+      rest(2),
     ],
   },
   {
     orderIndex: 3,
     title: "Vuelta a la calma",
     items: [
-      {
-        kind: "exercise",
-        exerciseId: "e5",
-        exerciseName: "Estiramientos",
-        durationMinutes: 5,
-      },
+      ex(
+        "Estiramientos de vuelta a la calma",
+        5,
+        "Estiramientos de cuello, antebrazo, tríceps y gemelos para finalizar la sesión."
+      ),
     ],
   },
 ];
@@ -76,29 +94,58 @@ describe("animación de clase", () => {
     expect(hasClassAnimation("otra")).toBe(false);
   });
 
-  it("dura como máximo 30 s y respeta el orden y las escenas", () => {
-    const tl = buildAnimationTimeline(blocks);
+  it("parte el texto en frases, junta trozos cortos y extrae etiquetas", () => {
+    const s = splitSentences(
+      "NIVEL 1. La bola se coloca sobre la torre.\nRETO: 5 golpes al aro."
+    );
+    expect(s).toEqual([
+      { label: null, text: "NIVEL 1. La bola se coloca sobre la torre." },
+      { label: "RETO", text: "5 golpes al aro." },
+    ]);
+    expect(
+      splitSentences("1) Mecanizar la derecha. 2) Jugar con la raqueta.")
+    ).toHaveLength(2);
+  });
+
+  it("explica cada actividad frase a frase y asigna escenas", () => {
+    const tl = buildAnimationTimeline(blocks, {
+      objectives: "1) Mecanizar la derecha. 2) Familiarizarse con la raqueta.",
+    });
     expect(tl.totalSeconds).toBeLessThanOrEqual(ANIMATION_MAX_SECONDS + 1e-9);
-    expect(tl.totalClassMinutes).toBe(55);
-    expect(tl.steps).toHaveLength(10);
+    expect(tl.totalSeconds).toBeGreaterThan(60);
+    expect(tl.intro).toHaveLength(2);
     expect(tl.steps.map((s) => s.scene)).toEqual([
       "warmup",
-      "rally",
+      "tee",
       "rest",
-      "rally",
+      "guided",
       "rest",
-      "rally",
+      "juggle",
       "rest",
-      "rally",
+      "juggle",
       "rest",
       "cooldown",
     ]);
-    for (const s of tl.steps)
-      expect(s.end - s.start).toBeGreaterThanOrEqual(1.6 - 1e-9);
-    // Una actividad de 10 min se ve más que un descanso de 1 min.
-    expect(tl.steps[1].end - tl.steps[1].start).toBeGreaterThan(
-      tl.steps[2].end - tl.steps[2].start
-    );
+    const torre = tl.steps[1];
+    expect(torre.sentences.map((s) => s.label)).toEqual([
+      null,
+      null,
+      "RETO",
+      "Organización",
+    ]);
+    expect(tl.steps[2].sentences[0].text).toBe("Agua, recogida de pelotas.");
+    expect(tl.steps[7].sentences.at(-1)).toMatchObject({ label: "Objetivo" });
+    for (const s of tl.steps) {
+      for (const sen of s.sentences) {
+        expect(sen.at).toBeGreaterThanOrEqual(s.start);
+        expect(sen.at).toBeLessThan(s.end);
+      }
+    }
+  });
+
+  it("se acelera para no pasar del máximo", () => {
+    const tl = buildAnimationTimeline(blocks, { maxSeconds: 40 });
+    expect(tl.totalSeconds).toBeCloseTo(40);
   });
 
   it("el reloj recorre de 0 a la duración de la clase", () => {
