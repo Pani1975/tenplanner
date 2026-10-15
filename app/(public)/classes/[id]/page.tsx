@@ -29,6 +29,7 @@ import {
 import { ClassActions } from "./class-actions";
 import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { classNavQueryString, getFilteredClassIds } from "@/lib/nav/class-nav";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
@@ -216,17 +217,22 @@ export default async function ClassDetailPage({
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/classes/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/classes?${navQs}` : null;
 
   return (
     <div className="relative min-h-full overflow-hidden bg-[#F4F4F1] px-4 py-6 text-[#050505] dark:bg-[#050505] dark:text-[#F4F4F1] sm:px-6 md:px-10 lg:px-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.22),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.16),transparent_34%)]" />
-      <div className="relative flex items-center justify-between gap-3">
-        <Link
-          href="/classes"
-          className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
-        >
-          <ArrowLeft className="size-4" /> Volver a clases
-        </Link>
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/classes"
+            title="Volver a todas las clases"
+            className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <ArrowLeft className="size-4" /> Volver a clases
+          </Link>
+          <BackToSearchLink href={backToSearchHref} />
+        </div>
         <PrevNextNav
           prevHref={prevHref}
           nextHref={nextHref}

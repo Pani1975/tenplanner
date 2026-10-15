@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
 import { Target, MapPin, Hash, Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -149,6 +150,7 @@ interface Props {
   nextHref?: string | null;
   navPosition?: number | null;
   navTotal?: number | null;
+  backToSearchHref?: string | null;
   /** false cuando se ve una sesión compartida por el club de otro
    * monitor: oculta editar/eliminar/cambiar estado/duplicar/repetir. */
   isOwner?: boolean;
@@ -437,6 +439,7 @@ export function SessionDetailClient({
   nextHref = null,
   navPosition = null,
   navTotal = null,
+  backToSearchHref = null,
   isOwner = true,
   authorName = null,
 }: Props) {
@@ -557,10 +560,12 @@ export function SessionDetailClient({
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/sessions"
+            title="Volver a todas las sesiones"
             className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[#F4F4F1] text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
           >
             <ArrowLeft className="size-4" />
           </Link>
+          <BackToSearchLink href={backToSearchHref} className="relative" />
           <p className="relative rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground dark:bg-[#050505]/70">
             Sesiones de Entrenamiento
           </p>

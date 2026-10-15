@@ -360,6 +360,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/sessions/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/sessions?${navQs}` : null;
 
   return (
     <SessionDetailClient
@@ -367,6 +368,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       nextHref={nextHref}
       navPosition={navIdx >= 0 ? navIdx + 1 : null}
       navTotal={navIds.length > 0 ? navIds.length : null}
+      backToSearchHref={backToSearchHref}
       isOwner={isOwner}
       authorName={authorName}
       session={{

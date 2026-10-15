@@ -97,16 +97,15 @@ export default async function ExercisePage({
     publicExercisesEnabled,
   });
   const navIdx = navIds.indexOf(id);
-  const navSuffix = (() => {
-    const qs = exerciseNavQueryString(navParams);
-    return qs ? `?${qs}` : "";
-  })();
+  const navQs = exerciseNavQueryString(navParams);
+  const navSuffix = navQs ? `?${navQs}` : "";
   const prevHref =
     navIdx > 0 ? `/exercises/${navIds[navIdx - 1]}${navSuffix}` : null;
   const nextHref =
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/exercises/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/exercises?${navQs}` : null;
 
   return (
     <ExerciseDetailClient
@@ -120,6 +119,7 @@ export default async function ExercisePage({
       nextHref={nextHref}
       navPosition={navIdx >= 0 ? navIdx + 1 : null}
       navTotal={navIds.length > 0 ? navIds.length : null}
+      backToSearchHref={backToSearchHref}
       diagram={getExerciseDiagram(exercise.id)}
       exercise={{
         id: exercise.id,

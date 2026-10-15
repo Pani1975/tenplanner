@@ -48,6 +48,7 @@ import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -199,6 +200,7 @@ export function ExerciseDetailClient({
   nextHref = null,
   navPosition = null,
   navTotal = null,
+  backToSearchHref = null,
 }: {
   exercise: ExerciseData;
   canEdit?: boolean;
@@ -212,6 +214,7 @@ export function ExerciseDetailClient({
   nextHref?: string | null;
   navPosition?: number | null;
   navTotal?: number | null;
+  backToSearchHref?: string | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -424,10 +427,12 @@ export function ExerciseDetailClient({
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/exercises"
+            title="Volver a todos los ejercicios"
             className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#050505]/12 bg-white text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
             <ArrowLeft className="size-4" />
           </Link>
+          <BackToSearchLink href={backToSearchHref} />
           <p className="text-xs text-muted-foreground font-medium truncate">
             Biblioteca de Ejercicios
           </p>
