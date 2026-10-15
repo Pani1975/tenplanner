@@ -374,7 +374,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               </p>
             </div>
             <div className="flex flex-col items-start gap-3 lg:items-end lg:justify-between">
-              <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="grid gap-2 text-center">
                 {activeTab !== "favorites" && (
                   <div className="rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2">
                     <p className="font-heading text-2xl leading-none text-[#D6FF38]">
@@ -385,14 +385,6 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     </p>
                   </div>
                 )}
-                <div className="rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2">
-                  <p className="font-heading text-2xl leading-none text-white">
-                    {draftCount}
-                  </p>
-                  <p className="mt-1 text-[9px] uppercase tracking-[0.18em] text-white/45">
-                    borradores
-                  </p>
-                </div>
               </div>
               {user && (
                 <Link
