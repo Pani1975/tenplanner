@@ -433,9 +433,13 @@ export function ExerciseDetailClient({
             <ArrowLeft className="size-4" />
           </Link>
           <BackToSearchLink href={backToSearchHref} />
-          <p className="text-xs text-muted-foreground font-medium truncate">
-            Biblioteca de Ejercicios
-          </p>
+          <Link
+            href="/exercises"
+            title="Volver a todos los ejercicios"
+            className="text-xs text-muted-foreground font-medium truncate transition-colors hover:text-foreground hover:underline"
+          >
+            Biblioteca de ejercicios
+          </Link>
           <PrevNextNav
             prevHref={prevHref}
             nextHref={nextHref}
