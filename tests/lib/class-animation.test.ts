@@ -155,3 +155,91 @@ describe("animación de clase", () => {
     expect(classMinuteAt(tl, tl.totalSeconds)).toBe(55);
   });
 });
+
+describe("animación Grupo Naranja/Verde 1", () => {
+  const g = [
+    {
+      orderIndex: 1,
+      title: "Calentamiento",
+      items: [
+        ex(
+          "Carrera y movilidad articular",
+          5,
+          "Los alumnos corren 3 vueltas a la pista."
+        ),
+        ex(
+          "Peloteo en media pista",
+          5,
+          "Peloteo libre con raqueta en media pista para activar el golpeo."
+        ),
+        ex(
+          "Tres en raya",
+          10,
+          "El profesor divide el grupo en dos equipos. Se colocan 9 aros cerca de la red."
+        ),
+      ],
+    },
+    {
+      orderIndex: 2,
+      title: "Parte principal",
+      items: [
+        ex(
+          "Prepara, golpea y termina",
+          20,
+          "Por parejas: un alumno golpea mientras el otro, situado justo detrás, hace de «sombra»."
+        ),
+        {
+          kind: "stations",
+          freeText:
+            "Circuito técnico por estaciones de derecha y de revés: 6 estaciones de 3 minutos cada una.",
+          durationMinutes: 25,
+          stations: [
+            { kind: "exercise", exerciseName: "Saque con progresiones" },
+            { kind: "exercise", exerciseName: "Mini portería" },
+          ],
+        },
+        ex(
+          "Saque: primeros golpes",
+          10,
+          "Dependiendo del nivel, los alumnos sacarán desde media pista o desde el fondo."
+        ),
+      ],
+    },
+    {
+      orderIndex: 3,
+      title: "Vuelta a la calma",
+      items: [
+        ex(
+          "El infierno",
+          10,
+          "Cada alumno tiene tres vidas. El alumno que pierda las dos vidas queda eliminado."
+        ),
+        ex("Estiramientos de vuelta a la calma", 5, "Estiramientos de cuello."),
+      ],
+    },
+  ];
+
+  it("está activa y asigna una escena a cada actividad", () => {
+    expect(hasClassAnimation("03003301-79dd-40cf-ae93-702f563a121e")).toBe(
+      true
+    );
+    const tl = buildAnimationTimeline(g);
+    expect(tl.steps.map((s) => s.scene)).toEqual([
+      "warmup",
+      "pairs",
+      "relay",
+      "shadow",
+      "stations",
+      "serve",
+      "game",
+      "cooldown",
+    ]);
+    const st = tl.steps[4];
+    expect(st.title).toBe("Estaciones (2)");
+    expect(st.sentences.at(-1)).toMatchObject({
+      label: "Estaciones",
+      text: "Saque con progresiones · Mini portería",
+    });
+    expect(tl.totalClassMinutes).toBe(90);
+  });
+});

@@ -16,8 +16,11 @@ import {
   type BlockItemKind,
 } from "@/lib/block-items";
 
-// Piloto: solo "Clase bola roja 01" de la Biblioteca.
-const ANIMATED_CLASS_IDS = new Set(["3dded14b-8003-4cf7-8c99-3f59cc3ddbe4"]);
+// Clases con animación (piloto): se van añadiendo una a una.
+const ANIMATED_CLASS_IDS = new Set([
+  "3dded14b-8003-4cf7-8c99-3f59cc3ddbe4", // Clase bola roja 01
+  "03003301-79dd-40cf-ae93-702f563a121e", // Grupo Naranja/Verde 1
+]);
 
 export function hasClassAnimation(classId: string): boolean {
   return ANIMATED_CLASS_IDS.has(classId);
@@ -45,6 +48,12 @@ export type AnimationScene =
   | "guided"
   | "juggle"
   | "rally"
+  | "pairs"
+  | "relay"
+  | "shadow"
+  | "stations"
+  | "serve"
+  | "game"
   | "rest"
   | "cooldown";
 
@@ -117,16 +126,29 @@ function sceneFor(
   blockPos: number,
   blockCount: number,
   isRest: boolean,
+  kind: BlockItemKind,
   text: string
 ): AnimationScene {
   if (isRest) return "rest";
-  if (blockPos === 0 && blockCount > 1) return "warmup";
-  if (blockPos === blockCount - 1 && blockCount > 1) return "cooldown";
   const t = text.toLowerCase();
+  if (kind === "stations") return "stations";
+  const isGame = /\bvidas\b|eliminad/.test(t);
+  if (blockPos === 0 && blockCount > 1) {
+    if (/peloteo/.test(t)) return "pairs";
+    if (/\baros?\b/.test(t) && /\bequipos?\b|relevo/.test(t)) return "relay";
+    return "warmup";
+  }
+  if (blockPos === blockCount - 1 && blockCount > 1) {
+    if (!/estiramiento/.test(t) && isGame) return "game";
+    return "cooldown";
+  }
   if (/\btorre\b|\btee\b/.test(t)) return "tee";
+  if (/\bsaque\b|\bsacar[aá]n?\b/.test(t)) return "serve";
   // "guiada" antes que "malabares": "la mano sobre las cuerdas" del monitor
   // describe un golpe guiado, no un ejercicio de control de pelota.
   if (/guiad|mano sobre|acompaña/.test(t)) return "guided";
+  if (/\bsombra\b/.test(t)) return "shadow";
+  if (isGame) return "game";
   if (/malabar|toques|(sobre|encima de) las cuerdas|equilibrio/.test(t))
     return "juggle";
   return "rally";
@@ -227,13 +249,28 @@ export function buildAnimationTimeline(
             "Actividad";
       // Texto de la explicación: la descripción del ejercicio de biblioteca
       // o el texto libre del item (si no se ha usado ya como título).
+      const isStations = kind === "stations";
       const body = isRest
         ? restText(item)
         : item.exerciseDescription?.trim() ||
-          (hasName ? item.freeText : null) ||
+          (hasName || isStations ? item.freeText : null) ||
           "";
       let parts = splitSentences(body);
-      if (!hasName && !isRest && parts.length > 1) parts = parts.slice(1);
+      if (!hasName && !isRest && !isStations && parts.length > 1)
+        parts = parts.slice(1);
+      if (isStations) {
+        const names = (Array.isArray(item.stations) ? item.stations : [])
+          .map((st) => {
+            const o = st as {
+              exerciseName?: string | null;
+              title?: string | null;
+            };
+            return (o?.exerciseName || o?.title || "").trim();
+          })
+          .filter(Boolean);
+        if (names.length)
+          parts = [...parts, { label: "Estaciones", text: names.join(" · ") }];
+      }
       const objective = isRest ? null : item.exerciseObjectives?.trim();
       if (objective) parts = [...parts, { label: "Objetivo", text: objective }];
       drafts.push({
@@ -243,7 +280,13 @@ export function buildAnimationTimeline(
         parts,
         kind,
         isRest,
-        scene: sceneFor(blockPos, ordered.length, isRest, `${title} ${body}`),
+        scene: sceneFor(
+          blockPos,
+          ordered.length,
+          isRest,
+          kind,
+          `${title} ${body}`
+        ),
         minutes,
         classStartMin: classMin,
       });

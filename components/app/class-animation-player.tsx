@@ -587,6 +587,12 @@ const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
   guided: "El monitor guía el golpe",
   juggle: "Cada alumno controla su pelota",
   rally: "Golpeo con el monitor",
+  pairs: "Peloteo por parejas en media pista",
+  relay: "Relevos por equipos hasta los aros",
+  shadow: "Golpea uno · su pareja hace de sombra",
+  stations: "Circuito por estaciones",
+  serve: "Saque al cuadro",
+  game: "Juego de vidas con el monitor",
   rest: "Descanso",
   cooldown: "Estiramientos en corro",
 };
@@ -668,6 +674,10 @@ interface SceneFrame {
   balls: { ball: Pt; shadow: Pt | null }[];
   tee?: Pt;
   ring?: Pt;
+  /** Aros en el suelo (relevos). */
+  rings?: Pt[];
+  /** Conos (salidas, estaciones). */
+  cones?: Pt[];
 }
 
 function sceneFrame(
@@ -764,6 +774,186 @@ function sceneFrame(
       const to = forward ? hitter : coach;
       return { coach, students, balls: [flight(from, to, p)] };
     }
+    case "pairs": {
+      // Dos parejas pelotean a media pista, una arriba y otra abajo.
+      const rows = [COURT.y + 38, COURT.y + COURT.h - 38];
+      const students = [
+        { x: NET_X - 48, y: rows[0] },
+        { x: NET_X + 48, y: rows[0] },
+        { x: NET_X - 48, y: rows[1] },
+        { x: NET_X + 48, y: rows[1] },
+      ];
+      const balls = [0, 1].map((pair) => {
+        const a = students[pair * 2];
+        const b = students[pair * 2 + 1];
+        const cycle = (tt * 0.55 + pair * 0.5) % 2;
+        const forward = cycle < 1;
+        const p = forward ? cycle : cycle - 1;
+        return flight(forward ? a : b, forward ? b : a, p, 26);
+      });
+      return {
+        coach: { x: NET_X, y: COURT.y + COURT.h + 14 },
+        students,
+        balls,
+      };
+    }
+    case "relay": {
+      // Dos equipos tras un cono en el fondo; sale uno de cada fila hasta los
+      // aros junto a la red, deja su objeto y vuelve a chocar la mano.
+      const rings: Pt[] = [];
+      for (const dx of [-62, -40, -18])
+        for (const dy of [-22, 0, 22])
+          rings.push({ x: NET_X + dx, y: MID_Y + dy });
+      const lanes = [MID_Y - 40, MID_Y + 40];
+      const cones = lanes.map((y) => ({ x: COURT.x + 14, y }));
+      const students: Pt[] = [];
+      const balls: SceneFrame["balls"] = [];
+      lanes.forEach((y, team) => {
+        const raw = tt * 0.32 + team * 0.45;
+        const cycle = raw % 1;
+        const turn = Math.floor(raw) % 2;
+        const target = rings[(Math.floor(raw) * 4 + team * 5) % rings.length];
+        const start = cones[team];
+        const runner =
+          cycle < 0.5
+            ? lerpPt(start, target, ease(cycle * 2))
+            : lerpPt(target, start, ease((cycle - 0.5) * 2));
+        const waiting = { x: COURT.x - 8, y: y + (team === 0 ? -8 : 8) };
+        const pair = turn === 0 ? [runner, waiting] : [waiting, runner];
+        students.push(...pair);
+        if (cycle < 0.5)
+          balls.push({
+            ball: { x: runner.x + 7, y: runner.y - 8 },
+            shadow: null,
+          });
+      });
+      return {
+        coach: { x: COURT.x + 70, y: MID_Y },
+        students,
+        balls,
+        rings,
+        cones,
+      };
+    }
+    case "shadow": {
+      // El monitor lanza; un alumno golpea y su pareja, justo detrás, imita
+      // el gesto. La otra pareja hace la escalera de coordinación.
+      const coach = { x: COURT.x + 46, y: MID_Y };
+      const hitter = { x: COURT.x + COURT.w - 62, y: MID_Y - 12 };
+      const swing = still ? 0 : Math.sin(tt * 3.8) * 3;
+      const shadow = { x: hitter.x + 18 + swing, y: hitter.y + 8 };
+      const ladderY = COURT.y + COURT.h - 16;
+      const hop = (i: number) => (still ? 0 : ((tt * 0.35 + i * 0.5) % 1) * 70);
+      const students = [
+        hitter,
+        shadow,
+        { x: COURT.x + COURT.w - 110 + hop(0), y: ladderY },
+        { x: COURT.x + COURT.w - 110 + hop(1), y: ladderY },
+      ];
+      const cycle = (tt * 0.55) % 1;
+      return {
+        coach,
+        students,
+        balls: [flight(coach, { x: hitter.x - 8, y: hitter.y }, cycle, 30)],
+      };
+    }
+    case "stations": {
+      // Cinco estaciones; los alumnos rotan a la siguiente cada pocos segundos.
+      const cones = [
+        { x: COURT.x + 50, y: COURT.y + 32 },
+        { x: COURT.x + 50, y: COURT.y + COURT.h - 32 },
+        { x: COURT.x + COURT.w - 100, y: COURT.y + 32 },
+        { x: COURT.x + COURT.w - 100, y: COURT.y + COURT.h - 32 },
+        { x: COURT.x + COURT.w - 34, y: MID_Y },
+      ];
+      const PERIOD = 4;
+      const round = Math.floor(tt / PERIOD);
+      const local = (tt % PERIOD) / PERIOD;
+      const moving = !still && local > 0.8;
+      const students = Array.from({ length: STUDENTS }, (_, i) => {
+        const at = cones[(i + round) % cones.length];
+        const next = cones[(i + round + 1) % cones.length];
+        const base = moving ? lerpPt(at, next, ease((local - 0.8) / 0.2)) : at;
+        return { x: base.x + 10, y: base.y + 6 };
+      });
+      const balls = moving
+        ? []
+        : students.map((s, i) => ({
+            ball: {
+              x: s.x + 9,
+              y: s.y - 10 - Math.abs(Math.sin(tt * 3.4 + i)) * 10,
+            },
+            shadow: null,
+          }));
+      return { coach: { x: NET_X, y: MID_Y }, students, balls, cones };
+    }
+    case "serve": {
+      // Saque desde el fondo: lanzamiento delante, golpe y bola al cuadro.
+      const hitter = { x: COURT.x + COURT.w - 8, y: MID_Y + 22 };
+      const students = Array.from({ length: STUDENTS }, (_, i) =>
+        i === 0
+          ? hitter
+          : { x: COURT.x + COURT.w + 22, y: COURT.y + 30 + i * 30 }
+      );
+      const box = { x: COURT.x + COURT.w * 0.22 + 36, y: MID_Y - 34 };
+      const cycle = (tt * 0.5) % 1;
+      const ball =
+        cycle < 0.3
+          ? {
+              ball: {
+                x: hitter.x - 6,
+                y: hitter.y - 10 - Math.sin((cycle / 0.3) * Math.PI) * 24,
+              },
+              shadow: null,
+            }
+          : flight(
+              { x: hitter.x - 6, y: hitter.y - 10 },
+              box,
+              (cycle - 0.3) / 0.7,
+              30
+            );
+      return {
+        coach: { x: NET_X + 30, y: COURT.y + COURT.h + 14 },
+        students,
+        balls: [ball],
+        ring: box,
+      };
+    }
+    case "game": {
+      // "Vidas": cada alumno golpea desde el cono la bola del monitor; el
+      // eliminado espera al otro lado e intenta cogerla con la mano.
+      const cone = { x: COURT.x + COURT.w - 14, y: MID_Y };
+      const hitter = { x: cone.x - 10, y: cone.y + 4 };
+      const coach = { x: NET_X + 50, y: MID_Y + 34 };
+      const raw = tt * 0.42;
+      const cycle = raw % 1;
+      const target = {
+        x: COURT.x + 60 + ((Math.floor(raw) * 37) % 60),
+        y: MID_Y - 40 + ((Math.floor(raw) * 53) % 80),
+      };
+      const catcherHome = { x: COURT.x + 80, y: MID_Y };
+      const catcher = lerpPt(
+        catcherHome,
+        { x: target.x + 10, y: target.y },
+        ease(Math.max(0, (cycle - 0.4) / 0.6)) * 0.85
+      );
+      const students = [
+        hitter,
+        { x: COURT.x + COURT.w + 16, y: MID_Y - 22 },
+        { x: COURT.x + COURT.w + 16, y: MID_Y + 22 },
+        catcher,
+      ];
+      const ball =
+        cycle < 0.35
+          ? flight(coach, { x: hitter.x - 6, y: hitter.y }, cycle / 0.35, 18)
+          : flight(
+              { x: hitter.x - 6, y: hitter.y },
+              target,
+              (cycle - 0.35) / 0.65,
+              46
+            );
+      return { coach, students, balls: [ball], cones: [cone] };
+    }
     case "rest": {
       // Todos al banco, junto a la red.
       const students = Array.from({ length: STUDENTS }, (_, i) => ({
@@ -836,6 +1026,8 @@ function Court({
         balls: p > 0.85 ? frame.balls : [],
         tee: p > 0.5 ? frame.tee : undefined,
         ring: p > 0.5 ? frame.ring : undefined,
+        rings: p > 0.5 ? frame.rings : undefined,
+        cones: p > 0.5 ? frame.cones : undefined,
       };
     }
   }
@@ -914,6 +1106,28 @@ function Court({
         fill={accent}
         style={{ transition: "fill 300ms" }}
       />
+
+      {/* Material: aros y conos */}
+      {frame.rings?.map((r, i) => (
+        <circle
+          key={`r${i}`}
+          cx={r.x}
+          cy={r.y}
+          r={8}
+          fill="none"
+          stroke="#FACC15"
+          strokeWidth={2}
+        />
+      ))}
+      {frame.cones?.map((c, i) => (
+        <path
+          key={`c${i}`}
+          d={`M ${c.x} ${c.y - 7} L ${c.x + 6} ${c.y + 5} L ${c.x - 6} ${c.y + 5} Z`}
+          fill="#F97316"
+          stroke="#050505"
+          strokeWidth={1}
+        />
+      ))}
 
       {/* Material: aro (diana) y torre/tee */}
       {frame.ring && (
