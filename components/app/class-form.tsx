@@ -884,6 +884,50 @@ export function ClassForm({
               })}
             </div>
           </div>
+          {isAdmin && (
+            <label className="flex items-center gap-2 text-sm pt-2 border-t border-foreground/10">
+              <input
+                type="checkbox"
+                checked={isLibrary}
+                onChange={(e) => setIsLibrary(e.target.checked)}
+                className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
+              />
+              <span className="text-foreground/80">
+                Marcar como Biblioteca Ten Planner (visible para todos)
+              </span>
+            </label>
+          )}
+
+          {isAdmin && (
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-sm font-semibold text-foreground">
+                Autoría
+              </label>
+              <p className="text-xs text-muted-foreground">
+                De quién es esta clase dentro de la biblioteca pública.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {AUTORIAS.map(({ id, label }) => {
+                  const isSelected = (autoria ?? "libre") === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setAutoria(id)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
+                        isSelected
+                          ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
+                          : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Objetivos / Material / Vídeo */}
@@ -1595,50 +1639,6 @@ export function ClassForm({
             className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
           />
 
-          {isAdmin && (
-            <label className="flex items-center gap-2 text-sm pt-2">
-              <input
-                type="checkbox"
-                checked={isLibrary}
-                onChange={(e) => setIsLibrary(e.target.checked)}
-                className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
-              />
-              <span className="text-foreground/80">
-                Marcar como Biblioteca Ten Planner (visible para todos)
-              </span>
-            </label>
-          )}
-
-          {isAdmin && (
-            <div className="space-y-1.5 pt-1">
-              <label className="block text-sm font-semibold text-foreground">
-                Autoría
-              </label>
-              <p className="text-xs text-muted-foreground">
-                De quién es esta clase dentro de la biblioteca pública.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {AUTORIAS.map(({ id, label }) => {
-                  const isSelected = (autoria ?? "libre") === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setAutoria(id)}
-                      className={cn(
-                        "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
-                        isSelected
-                          ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
-                          : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </section>
 
         {error && (
