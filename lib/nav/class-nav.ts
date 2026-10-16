@@ -1,6 +1,17 @@
 import { db } from "@/db";
 import { classes } from "@/db/schema";
-import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 
 export type ClassNavParams = Record<string, string | string[] | undefined>;
@@ -72,6 +83,7 @@ export async function getFilteredClassIds(
   const duracion = typeof params.duracion === "string" ? params.duracion : "";
   const aspectoList = paramList(params.aspecto);
   const golpeList = paramList(params.golpe);
+  const autoriaList = paramList(params.autoria);
 
   const activeClubId = userId ? await getActiveWorkClubId(userId) : null;
   const mineOrClub = userId
@@ -137,6 +149,15 @@ export async function getFilteredClassIds(
     );
   }
 
+  if (autoriaList.length > 0) {
+    conds.push(
+      or(
+        inArray(classes.autoria, autoriaList),
+        ...(autoriaList.includes("libre") ? [isNull(classes.autoria)] : [])
+      )!
+    );
+  }
+
   const rows = await db
     .select({ id: classes.id })
     .from(classes)
@@ -156,6 +177,7 @@ export function classNavQueryString(params: ClassNavParams): string {
   if (params.duracion) p.set("duracion", params.duracion as string);
   for (const v of paramList(params.aspecto)) p.append("aspecto", v);
   for (const v of paramList(params.golpe)) p.append("golpe", v);
+  for (const v of paramList(params.autoria)) p.append("autoria", v);
   const sort = parseClassSort(params);
   if (sort !== "alpha") p.set("sort", sort);
   return p.toString();

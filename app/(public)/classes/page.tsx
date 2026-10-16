@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
+import {
+  eq,
+  or,
+  desc,
+  and,
+  ilike,
+  sql,
+  count,
+  inArray,
+  isNull,
+} from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { classes, classFavorites } from "@/db/schema";
@@ -11,7 +21,7 @@ import {
   parseClassSort,
   type ClassSort,
 } from "@/lib/nav/class-nav";
-import { nivelesForSport } from "@/lib/exercise-taxonomy";
+import { AUTORIAS, nivelesForSport } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { spaceLabels } from "@/lib/space-labels";
 import { getActiveSport } from "@/lib/sports";
@@ -140,6 +150,9 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   const duracion = typeof params.duracion === "string" ? params.duracion : "";
   const aspectoList = paramList(params.aspecto);
   const golpeList = paramList(params.golpe);
+  const autoriaList = paramList(params.autoria).filter((a) =>
+    AUTORIAS.some((x) => x.id === a)
+  );
   const activeSort = parseClassSort(params);
   const parsedPage = Number(typeof params.page === "string" ? params.page : 1);
   const requestedPage =
@@ -256,6 +269,15 @@ export default async function ClassesPage({ searchParams }: PageProps) {
         )!
       );
     }
+    if (autoriaList.length > 0) {
+      // "Libre" incluye también las clases sin autoría asignada.
+      conds.push(
+        or(
+          inArray(classes.autoria, autoriaList),
+          ...(autoriaList.includes("libre") ? [isNull(classes.autoria)] : [])
+        )!
+      );
+    }
     if (duracion === "120") {
       conds.push(sql`${classes.duracionMinutes} > 90`);
     } else if (duracion) {
@@ -330,6 +352,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     if (duracion) sp.set("duracion", duracion);
     aspectoList.forEach((a) => sp.append("aspecto", a));
     golpeList.forEach((g) => sp.append("golpe", g));
+    autoriaList.forEach((a) => sp.append("autoria", a));
     if (activeSort !== "alpha") sp.set("sort", activeSort);
     if (page > 1) sp.set("page", String(page));
     return sp.toString() ? `/classes?${sp.toString()}` : "/classes";
@@ -343,6 +366,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     if (duracion) sp.set("duracion", duracion);
     aspectoList.forEach((a) => sp.append("aspecto", a));
     golpeList.forEach((g) => sp.append("golpe", g));
+    autoriaList.forEach((a) => sp.append("autoria", a));
     if (sort !== "alpha") sp.set("sort", sort);
     return sp.toString() ? `/classes?${sp.toString()}` : "/classes";
   }
@@ -408,6 +432,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             if (duracion) sp.set("duracion", duracion);
             aspectoList.forEach((a) => sp.append("aspecto", a));
             golpeList.forEach((g) => sp.append("golpe", g));
+            autoriaList.forEach((a) => sp.append("autoria", a));
             if (activeSort !== "alpha") sp.set("sort", activeSort);
             return (
               <Link
@@ -503,9 +528,9 @@ export default async function ClassesPage({ searchParams }: PageProps) {
           </>
         ) : (
           <>
-            {/* Filtros: search + nivel + duración + aspecto + golpe */}
+            {/* Filtros: search + nivel + duración + aspecto + golpe + autoría */}
             <form
-              className="grid gap-3 rounded-lg border border-[#050505]/10 bg-white/70 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[minmax(220px,1fr)_repeat(4,auto)_auto] md:items-end"
+              className="grid gap-3 rounded-lg border border-[#050505]/10 bg-white/70 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[minmax(220px,1fr)_repeat(5,auto)_auto] md:items-end"
               action="/classes"
             >
               {tab !== "all" && <input type="hidden" name="tab" value={tab} />}
@@ -632,6 +657,40 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                           name="golpe"
                           value={g.id}
                           defaultChecked={golpeList.includes(g.id)}
+                          className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
+                        />
+                        {g.label}
+                      </label>
+                    ))}
+                  </div>
+                </details>
+              </div>
+              <div>
+                <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Autoría{" "}
+                  <span className="normal-case tracking-normal text-muted-foreground/70">
+                    (varios)
+                  </span>
+                </label>
+                <details className="relative">
+                  <summary className="flex h-11 w-full min-w-[9rem] cursor-pointer list-none items-center justify-between gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 text-sm text-foreground focus:border-[#D6FF38] focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/40 dark:border-white/10 dark:bg-[#050505]">
+                    {autoriaList.length > 0
+                      ? AUTORIAS.filter((g) => autoriaList.includes(g.id))
+                          .map((g) => g.label)
+                          .join(", ")
+                      : "Cualquiera"}
+                  </summary>
+                  <div className="absolute z-10 mt-2 w-64 space-y-1 rounded-lg border border-[#050505]/12 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-[#0a0a0a]">
+                    {AUTORIAS.map((g) => (
+                      <label
+                        key={g.id}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-[#D6FF38]/10"
+                      >
+                        <input
+                          type="checkbox"
+                          name="autoria"
+                          value={g.id}
+                          defaultChecked={autoriaList.includes(g.id)}
                           className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
                         />
                         {g.label}
