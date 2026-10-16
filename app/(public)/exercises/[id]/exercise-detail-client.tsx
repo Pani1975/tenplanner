@@ -46,6 +46,7 @@ import {
 } from "@/lib/exercise-taxonomy";
 import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
+import { AddToOpenEditorButton } from "@/components/app/add-to-open-editor-button";
 import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
@@ -457,6 +458,7 @@ export function ExerciseDetailClient({
           />
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
+          {userId && <AddToOpenEditorButton exerciseId={exercise.id} />}
           {canEdit ? (
             <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
               <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
 import {
@@ -17,6 +17,10 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  pickExerciseHref,
+  useExercisePickListener,
+} from "@/lib/exercise-pick-bridge";
 import {
   EMPTY_PICKER_FILTERS,
   ExercisePickerFilters,
@@ -398,6 +402,58 @@ export function ClassForm({
     setStationPickerTarget(null);
     setSearch("");
   }
+
+  /**
+   * Destino recordado al abrir la ficha de un ejercicio en otra pestaña
+   * (el bloque o la estación desde la que se abrió), para que "Añadir a la
+   * clase que estás creando" lo ponga ahí.
+   */
+  const pickTargetRef = useRef<
+    | { kind: "block"; blockIdx: number }
+    | { kind: "station"; blockIdx: number; itemIdx: number; stationIdx: number }
+    | null
+  >(null);
+
+  const pickerId = useExercisePickListener((exerciseId) => {
+    const ex = libraryExercises.find((e) => e.id === exerciseId);
+    if (!ex) {
+      return {
+        ok: false,
+        message: "Este ejercicio no está disponible para esta clase.",
+      };
+    }
+    const target = pickTargetRef.current;
+    if (!target || !blocks[target.blockIdx]) {
+      return {
+        ok: false,
+        message:
+          "Vuelve a la clase y abre el ejercicio desde el bloque donde lo quieres.",
+      };
+    }
+    const blockName =
+      blocks[target.blockIdx].title || `Bloque ${target.blockIdx + 1}`;
+    if (target.kind === "station") {
+      const item = blocks[target.blockIdx].items[target.itemIdx];
+      if (item?.kind === "stations") {
+        setStationExercise(
+          target.blockIdx,
+          target.itemIdx,
+          target.stationIdx,
+          ex
+        );
+        pickTargetRef.current = null;
+        return {
+          ok: true,
+          message: `Añadido a la estación (${blockName}). Ya puedes cerrar esta pestaña.`,
+        };
+      }
+    }
+    addExerciseToBlock(target.blockIdx, ex);
+    return {
+      ok: true,
+      message: `Añadido a ${blockName}. Ya puedes cerrar esta pestaña.`,
+    };
+  });
 
   function removeItem(blockIdx: number, itemIdx: number) {
     setBlocks((prev) =>
@@ -1379,10 +1435,16 @@ export function ClassForm({
                             )}
                           </button>
                           <NextLink
-                            href={`/exercises/${ex.id}`}
+                            href={pickExerciseHref(ex.id, pickerId, "clase")}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              pickTargetRef.current = {
+                                kind: "station",
+                                ...stationPickerTarget,
+                              };
+                            }}
                             title="Ver ficha completa del ejercicio"
                             className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
                           >
@@ -1507,10 +1569,20 @@ export function ClassForm({
                                 )}
                               </button>
                               <NextLink
-                                href={`/exercises/${ex.id}`}
+                                href={pickExerciseHref(
+                                  ex.id,
+                                  pickerId,
+                                  "clase"
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  pickTargetRef.current = {
+                                    kind: "block",
+                                    blockIdx,
+                                  };
+                                }}
                                 title="Ver ficha completa del ejercicio"
                                 className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
                               >
@@ -1638,7 +1710,6 @@ export function ClassForm({
             placeholder="Información extra valiosa para quien imparta esta clase…"
             className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
           />
-
         </section>
 
         {error && (
