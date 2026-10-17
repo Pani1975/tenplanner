@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { normalizeTags } from "@/lib/tags";
+import { hasSessionAnimation } from "@/lib/classes/animation";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -88,6 +89,8 @@ export async function POST(_request: Request, ctx: Ctx) {
         material: session.material,
         aspectosImportantes: session.observations,
         tags: normalizeTags(session.tags),
+        // Si la sesión tenía animación, la clase también.
+        animationEnabled: hasSessionAnimation(id),
         isLibrary: false,
         autoria: "libre",
         clubId,

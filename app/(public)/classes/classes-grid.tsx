@@ -17,6 +17,7 @@ export interface ClassGridItem {
   alumnosTipo: string | null;
   numAlumnos: number | null;
   objetivos: string | null;
+  animationEnabled?: boolean;
   nivel: string | null;
   niveles: string[] | null;
   aspectoJuego: string | null;
@@ -172,7 +173,7 @@ export function ClassesGrid({
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((cls) => {
           const isSelected = selected.has(cls.id);
-          const animated = hasClassAnimation(cls.id);
+          const animated = hasClassAnimation(cls.id, cls.animationEnabled);
           const cardBody = (
             <>
               <div>

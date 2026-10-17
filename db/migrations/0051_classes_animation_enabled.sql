@@ -1,0 +1,1 @@
+ALTER TABLE "classes" ADD COLUMN IF NOT EXISTS "animation_enabled" boolean DEFAULT false NOT NULL;

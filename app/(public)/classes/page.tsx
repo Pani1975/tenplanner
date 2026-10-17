@@ -166,6 +166,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     alumnosTipo: string | null;
     numAlumnos: number | null;
     objetivos: string | null;
+    animationEnabled: boolean;
     nivel: string | null;
     niveles: string[] | null;
     aspectoJuego: string | null;
@@ -314,6 +315,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
         alumnosTipo: classes.alumnosTipo,
         numAlumnos: classes.numAlumnos,
         objetivos: classes.objetivos,
+        animationEnabled: classes.animationEnabled,
         nivel: classes.nivel,
         niveles: classes.niveles,
         aspectoJuego: classes.aspectoJuego,

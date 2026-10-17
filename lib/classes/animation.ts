@@ -22,8 +22,11 @@ const ANIMATED_CLASS_IDS = new Set([
   "03003301-79dd-40cf-ae93-702f563a121e", // Grupo Naranja/Verde 1
 ]);
 
-export function hasClassAnimation(classId: string): boolean {
-  return ANIMATED_CLASS_IDS.has(classId);
+export function hasClassAnimation(
+  classId: string,
+  animationEnabled?: boolean | null
+): boolean {
+  return !!animationEnabled || ANIMATED_CLASS_IDS.has(classId);
 }
 
 // Sesiones con animación (piloto): se van añadiendo una a una.

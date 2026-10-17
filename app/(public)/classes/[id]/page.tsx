@@ -308,7 +308,7 @@ export default async function ClassDetailPage({
                   </span>
                 )}
               </div>
-              {hasClassAnimation(cls.id) && (
+              {hasClassAnimation(cls.id, cls.animationEnabled) && (
                 <ClassAnimationButton
                   classId={cls.id}
                   variant="hero"
