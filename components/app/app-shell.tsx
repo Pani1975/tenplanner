@@ -21,6 +21,8 @@ interface AppShellProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
   activeSport?: Sport;
+  /** Vista simplificada para familias: solo Mensajes (ver lib/family.ts) */
+  familyOnly?: boolean;
 }
 
 export default function AppShell({
@@ -35,6 +37,7 @@ export default function AppShell({
   workModeClubs = [],
   activeWorkClubId = null,
   activeSport = "tenis",
+  familyOnly = false,
 }: AppShellProps) {
   return (
     <div className="app-shell relative flex h-dvh flex-col overflow-hidden bg-background text-foreground md:flex-row">
@@ -52,6 +55,7 @@ export default function AppShell({
         workModeClubs={workModeClubs}
         activeWorkClubId={activeWorkClubId}
         activeSport={activeSport}
+        familyOnly={familyOnly}
       />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <div

@@ -80,14 +80,31 @@ export default function RegisterPage() {
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
+  // Familia que llega desde una invitación (/familia/<token>): cuenta
+  // sencilla, sin elegir monitor/club, y vuelta a la invitación al terminar.
+  const [isFamily, setIsFamily] = useState(false);
+  const [nextPath, setNextPath] = useState<string | null>(null);
 
   // Un enlace de invitación de club lleva a un monitor directamente a
   // /register?type=monitor: nos saltamos la pantalla de elección porque su
   // tipo de cuenta ya está decidido.
   useEffect(() => {
-    const type = new URLSearchParams(window.location.search).get("type");
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type");
+    const next = params.get("next");
+    if (
+      next &&
+      next.startsWith("/") &&
+      !next.startsWith("//") &&
+      !next.startsWith("/\\")
+    ) {
+      setNextPath(next);
+    }
     if (type === "club" || type === "monitor") {
       selectAccountType(type);
+    } else if (type === "familia") {
+      setIsFamily(true);
+      selectAccountType("monitor");
     }
   }, []);
 
@@ -241,7 +258,7 @@ export default function RegisterPage() {
           });
         }
 
-        router.push(parsed.data.isClub ? "/club" : "/dashboard");
+        router.push(nextPath ?? (parsed.data.isClub ? "/club" : "/dashboard"));
         router.refresh();
         return;
       }
@@ -393,24 +410,34 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full rounded-[32px] border border-[#050505]/10 bg-white p-5 shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
-      <button
-        type="button"
-        onClick={() => setStep("choice")}
-        className="mb-4 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-foreground/50 transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="size-3.5" />
-        Cambiar tipo de cuenta
-      </button>
+      {!isFamily && (
+        <button
+          type="button"
+          onClick={() => setStep("choice")}
+          className="mb-4 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-foreground/50 transition-colors hover:text-foreground"
+        >
+          <ChevronLeft className="size-3.5" />
+          Cambiar tipo de cuenta
+        </button>
+      )}
 
       <div>
-        <p className="tp-kicker">Acceso anticipado</p>
+        <p className="tp-kicker">
+          {isFamily ? "Mensajes del club" : "Acceso anticipado"}
+        </p>
         <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-          {form.isClub ? "Crear cuenta de club" : "Crear cuenta de monitor"}
+          {isFamily
+            ? "Crea tu cuenta"
+            : form.isClub
+              ? "Crear cuenta de club"
+              : "Crear cuenta de monitor"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
-          {form.isClub
-            ? "Registra tu escuela o academia. Después podrás invitar a tus monitores por email."
-            : "Alta mínima para empezar a ordenar sesiones, alumnos y biblioteca."}
+          {isFamily
+            ? "Para recibir los mensajes del club. Si te pedimos confirmar el email, después vuelve a abrir el enlace de la invitación."
+            : form.isClub
+              ? "Registra tu escuela o academia. Después podrás invitar a tus monitores por email."
+              : "Alta mínima para empezar a ordenar sesiones, alumnos y biblioteca."}
         </p>
       </div>
 

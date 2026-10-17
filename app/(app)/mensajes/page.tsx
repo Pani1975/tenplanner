@@ -18,6 +18,7 @@ import {
 } from "@/lib/messages";
 import { SPORT_LABELS } from "@/lib/sport-constants";
 import { MessageComposer } from "./message-composer";
+import { isFamilyOnlyUser } from "@/lib/family";
 
 // Mensajes del club. Quién envía y quién lee lo deciden las funciones de
 // la base de datos (migraciones 0054 y 0055), vía lib/messages.ts.
@@ -55,7 +56,10 @@ export default async function MensajesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const ctx = await getMessagingContext(user.id).catch(() => null);
+  const [ctx, familyOnly] = await Promise.all([
+    getMessagingContext(user.id).catch(() => null),
+    isFamilyOnlyUser(user.id).catch(() => false),
+  ]);
   const canCompose = !!ctx?.clubId && ctx.isClubAdmin;
   const [messages, options] = await Promise.all([
     loadMessages(user.id),
@@ -76,9 +80,9 @@ export default async function MensajesPage() {
             Mensajes
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Mensajes del club a sus monitores, a los grupos y a cada alumno. Con
-            los alumnos menores, la comunicación es siempre con sus padres o
-            tutores.
+            {familyOnly
+              ? "Los avisos del club: cambios de horario, sesiones canceladas e información de tu grupo."
+              : "Mensajes del club a sus monitores, a los grupos y a cada alumno. Con los alumnos menores, la comunicación es siempre con sus padres o tutores."}
           </p>
         </header>
 
@@ -95,7 +99,7 @@ export default async function MensajesPage() {
           </section>
         )}
 
-        {!ctx?.clubId && (
+        {!ctx?.clubId && !familyOnly && (
           <p className="rounded-2xl border border-[#050505]/10 px-4 py-3 text-sm text-foreground/65 dark:border-white/10">
             Para enviar mensajes del club, cambia a modo club desde el selector
             de modo de trabajo.

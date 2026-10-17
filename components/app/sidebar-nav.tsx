@@ -144,6 +144,13 @@ const navItems: NavItem[] = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
+// Vista simplificada para familias (ver lib/family.ts): solo lo que usan.
+const familyNavItems: NavItem[] = [
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
+  { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
 // En modo club, los apartados propios se nombran como del club ("Clases
 // club"…) en vez de "Mis…" — ver lib/space-labels.ts.
 function navItemsForSpace(inClub: boolean): NavItem[] {
@@ -214,6 +221,8 @@ interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
   activeSport?: Sport;
+  /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
+  familyOnly?: boolean;
 }
 
 interface SidebarNavProps extends WorkModeProps {
@@ -254,6 +263,7 @@ function NavContent({
   workModeClubs = [],
   activeWorkClubId = null,
   activeSport = "tenis",
+  familyOnly = false,
 }: {
   pathname: string;
   /** Query string actual (sin "?"), para marcar la pestaña activa. */
@@ -266,7 +276,9 @@ function NavContent({
   onSignOut: () => void;
   appName?: string;
 } & WorkModeProps) {
-  const items = navItemsForSpace(!!activeWorkClubId);
+  const items = familyOnly
+    ? familyNavItems
+    : navItemsForSpace(!!activeWorkClubId);
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName
@@ -297,7 +309,7 @@ function NavContent({
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-4 py-4">
         <Link
-          href="/dashboard"
+          href={familyOnly ? "/mensajes" : "/dashboard"}
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
           onClick={onNavigate}
         >
@@ -310,7 +322,7 @@ function NavContent({
         </Link>
       </div>
 
-      {user && (
+      {user && !familyOnly && (
         <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
           <SportBadge activeSport={activeSport} />
           {workModeClubs.length > 0 && (
@@ -647,6 +659,7 @@ function SidebarNavInner({
   workModeClubs = [],
   activeWorkClubId = null,
   activeSport = "tenis",
+  familyOnly = false,
   search,
 }: SidebarNavProps & { search: string }) {
   const pathname = usePathname();
@@ -734,6 +747,7 @@ function SidebarNavInner({
           workModeClubs={workModeClubs}
           activeWorkClubId={activeWorkClubId}
           activeSport={activeSport}
+          familyOnly={familyOnly}
         />
       </aside>
 
@@ -741,7 +755,7 @@ function SidebarNavInner({
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href="/dashboard"
+              href={familyOnly ? "/mensajes" : "/dashboard"}
               className="flex min-w-0 shrink items-center gap-2.5"
             >
               <BrandMark className="size-9" />
@@ -771,7 +785,7 @@ function SidebarNavInner({
             </button>
           </div>
         </div>
-        {user && (
+        {user && !familyOnly && (
           <div className="px-4 pb-3 space-y-2">
             <SportBadge activeSport={activeSport} />
             {workModeClubs.length > 0 && (
@@ -825,6 +839,7 @@ function SidebarNavInner({
               workModeClubs={workModeClubs}
               activeWorkClubId={activeWorkClubId}
               activeSport={activeSport}
+              familyOnly={familyOnly}
             />
           </aside>
         </div>

@@ -34,6 +34,7 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
+import { isFamilyOnlyUser } from "@/lib/family";
 
 function formatDayMonth(date: Date) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
@@ -517,6 +518,10 @@ export default async function DashboardPage() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  // Las familias no usan el panel del entrenador: van a sus mensajes
+  if (await isFamilyOnlyUser(user.id).catch(() => false)) {
+    redirect("/mensajes");
+  }
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||

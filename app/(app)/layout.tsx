@@ -7,6 +7,7 @@ import AppShell from "@/components/app/app-shell";
 import { getAppSettings, type SettingKey } from "@/lib/app-settings";
 import { getActiveWorkClubId, getClubOptionsForUser } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import { isFamilyOnlyUser } from "@/lib/family";
 
 const APP_LAYOUT_SETTING_KEYS = [
   "feature.dr_planner_enabled",
@@ -46,18 +47,26 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  const [[row], appSettings, workModeClubs, activeWorkClubId, activeSport] =
-    await Promise.all([
-      db
-        .select({ isAdmin: users.isAdmin, image: users.image })
-        .from(users)
-        .where(eq(users.id, user.id))
-        .limit(1),
-      getAppSettings(APP_LAYOUT_SETTING_KEYS),
-      getClubOptionsForUser(user.id),
-      getActiveWorkClubId(user.id),
-      getActiveSport(user.id),
-    ]);
+  const [
+    [row],
+    appSettings,
+    workModeClubs,
+    activeWorkClubId,
+    activeSport,
+    familyOnly,
+  ] = await Promise.all([
+    db
+      .select({ isAdmin: users.isAdmin, image: users.image })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1),
+    getAppSettings(APP_LAYOUT_SETTING_KEYS),
+    getClubOptionsForUser(user.id),
+    getActiveWorkClubId(user.id),
+    getActiveSport(user.id),
+    // Si falla (p. ej. sin tablas de mensajes), se muestra la app completa
+    isFamilyOnlyUser(user.id).catch(() => false),
+  ]);
 
   const isAdmin = row?.isAdmin ?? false;
   const avatarUrl =
@@ -101,6 +110,7 @@ export default async function AppLayout({
       workModeClubs={workModeClubs}
       activeWorkClubId={activeWorkClubId}
       activeSport={activeSport}
+      familyOnly={familyOnly}
     >
       {children}
     </AppShell>
