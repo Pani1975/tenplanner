@@ -16,17 +16,13 @@ import {
   type BlockItemKind,
 } from "@/lib/block-items";
 
-// Clases con animación (piloto): se van añadiendo una a una.
-const ANIMATED_CLASS_IDS = new Set([
-  "3dded14b-8003-4cf7-8c99-3f59cc3ddbe4", // Clase bola roja 01
-  "03003301-79dd-40cf-ae93-702f563a121e", // Grupo Naranja/Verde 1
-]);
-
 export function hasClassAnimation(
-  classId: string,
-  animationEnabled?: boolean | null
+  _classId?: string,
+  _animationEnabled?: boolean | null
 ): boolean {
-  return !!animationEnabled || ANIMATED_CLASS_IDS.has(classId);
+  // Todas las clases tienen animación: se genera de sus bloques y cada
+  // ejercicio puede fijar su escena (exercises.animation_scene).
+  return true;
 }
 
 // Sesiones con animación (piloto): se van añadiendo una a una.
@@ -78,6 +74,12 @@ export type AnimationScene =
   | "alley"
   | "points"
   | "elevator"
+  | "volley"
+  | "tag"
+  | "match"
+  | "circuit"
+  | "minitennis"
+  | "neutral"
   | "rest"
   | "cooldown";
 
@@ -167,6 +169,12 @@ export const ANIMATION_SCENES: readonly AnimationScene[] = [
   "alley",
   "points",
   "elevator",
+  "volley",
+  "tag",
+  "match",
+  "circuit",
+  "minitennis",
+  "neutral",
   "rest",
   "cooldown",
 ];
@@ -217,11 +225,15 @@ function sceneFor(
   if (blockPos === 0 && blockCount > 1) {
     if (/pelote[oa]n?\b|\bpelotear\b/.test(t)) return "pairs";
     if (/\baros?\b/.test(t) && /\bequipos?\b|relevo/.test(t)) return "relay";
-    return "warmup";
+    // Sin una pista clara, mejor no inventar la organización.
+    if (/\bcorr|carrera|movilidad|trote|desplazamiento/.test(t))
+      return "warmup";
+    return "neutral";
   }
   if (blockPos === blockCount - 1 && blockCount > 1) {
     if (!/estiramiento/.test(t) && isGame) return "game";
-    return "cooldown";
+    if (/estira|respira|relaj|calma|\bcorro\b/.test(t)) return "cooldown";
+    return "neutral";
   }
   if (/\btorre\b|\btee\b/.test(t)) return "tee";
   // "zona de servicio" es solo un lugar de la pista, no un saque.
@@ -237,7 +249,12 @@ function sceneFor(
   if (isGame) return "game";
   if (/malabar|toques|(sobre|encima de) las cuerdas|equilibrio/.test(t))
     return "juggle";
-  return "rally";
+  if (
+    /\b(monitor|entrenador|profesor)\b/.test(t) &&
+    /\blanz|aliment|\benv[ií]a/.test(t)
+  )
+    return "rally";
+  return "neutral";
 }
 
 const LABEL_RE = /^([A-ZÁÉÍÓÚÑa-záéíóúñ][\wÁÉÍÓÚÑáéíóúñ ]{1,22}):\s+(.+)$/;

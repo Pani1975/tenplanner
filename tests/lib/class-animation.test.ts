@@ -91,7 +91,7 @@ describe("animación de clase", () => {
     expect(hasClassAnimation("3dded14b-8003-4cf7-8c99-3f59cc3ddbe4")).toBe(
       true
     );
-    expect(hasClassAnimation("otra")).toBe(false);
+    expect(hasClassAnimation("otra")).toBe(true);
   });
 
   it("parte el texto en frases, junta trozos cortos y extrae etiquetas", () => {
@@ -296,7 +296,8 @@ describe("escenas de la sesión 261016_Galácticas", () => {
       "alley",
       "elevator",
       "points",
-      "cooldown",
+      // "Recogida de pelotas" no es una vuelta a la calma: escena neutra.
+      "neutral",
     ]);
   });
 });

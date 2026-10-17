@@ -695,6 +695,11 @@ const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
   alley: "Peloteo desde el fondo en el pasillo de dobles",
   points: "Reina de la pista desde el fondo · primera bola del monitor",
   elevator: "Ascensor: sacan a la vez · quien mete pasa al fondo",
+  volley: "Voleas en la red con el monitor",
+  tag: "Juego de persecución",
+  match: "Puntos desde el fondo · el resto espera turno",
+  circuit: "Circuito de coordinación",
+  minitennis: "Minitenis en los cuadros de saque",
   rest: "Descanso",
   cooldown: "Estiramientos en corro",
 };
@@ -731,7 +736,8 @@ const MID_Y = COURT.y + COURT.h / 2;
 /** Líneas laterales de individuales (el pasillo de dobles queda fuera). */
 const SINGLES_TOP = COURT.y + COURT.h * 0.125;
 const SINGLES_BOTTOM = COURT.y + COURT.h * 0.875;
-/** Línea de saque del campo derecho. */
+/** Líneas de saque de cada campo. */
+const SERVICE_LEFT_X = COURT.x + COURT.w * 0.22;
 const SERVICE_RIGHT = COURT.x + COURT.w * 0.78;
 const STUDENTS = 4;
 
@@ -763,6 +769,28 @@ function perimeter(u: number, inset: number): Pt {
   if (d < w) return { x: x0 + w - d, y: y0 + h };
   d -= w;
   return { x: x0, y: y0 + h - d };
+}
+
+/** Bola sin bote (volea): sube y baja en un solo arco. */
+function airFlight(from: Pt, to: Pt, p: number, height = 18) {
+  const ground = lerpPt(from, to, p);
+  return {
+    ball: { x: ground.x, y: ground.y - height * Math.sin(p * Math.PI) },
+    shadow: ground,
+  };
+}
+
+/** Punto sobre una polilínea cerrada (u en 0..1). */
+function along(path: Pt[], u: number): Pt {
+  const segs = path.map((a, i) => [a, path[(i + 1) % path.length]] as const);
+  const lens = segs.map(([a, b]) => Math.hypot(b.x - a.x, b.y - a.y));
+  const total = lens.reduce((x, y) => x + y, 0);
+  let d = (((u % 1) + 1) % 1) * total;
+  for (let i = 0; i < segs.length; i++) {
+    if (d <= lens[i]) return lerpPt(segs[i][0], segs[i][1], d / lens[i]);
+    d -= lens[i];
+  }
+  return path[0];
 }
 
 /** Bola que va de `from` a `to` con bote al 70 % del recorrido. */
@@ -1429,6 +1457,159 @@ function sceneFrame(
         balls,
         labels,
       };
+    }
+    case "volley": {
+      // Voleas: dos alumnos junto a la red; el monitor lanza desde el otro
+      // campo y vuelven la bola sin dejarla botar. El resto espera en fila.
+      const coach = { x: SERVICE_LEFT_X, y: MID_Y };
+      const volleyers = [
+        { x: NET_X + 26, y: MID_Y - 30 },
+        { x: NET_X + 26, y: MID_Y + 30 },
+      ];
+      const students = [
+        ...volleyers,
+        { x: COURT.x + COURT.w + 24, y: MID_Y - 16 },
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 16 },
+      ];
+      const raw = tt * 0.7;
+      const who = Math.floor(raw) % 2;
+      const p = raw % 1;
+      const hitter = volleyers[who];
+      const balls =
+        p < 0.55
+          ? [airFlight(coach, { x: hitter.x - 6, y: hitter.y }, p / 0.55, 20)]
+          : [
+              airFlight(
+                { x: hitter.x - 6, y: hitter.y },
+                { x: COURT.x + 70, y: MID_Y + (who ? 30 : -30) },
+                (p - 0.55) / 0.45,
+                16
+              ),
+            ];
+      return { coach, students, balls };
+    }
+    case "tag": {
+      // Persecución: los alumnos corren por la pista y uno (1) persigue al
+      // más cercano siguiendo su rastro.
+      const paths = [0, 1, 2].map((i) => ({
+        x: NET_X + Math.sin(tt * 0.9 + i * 2.1) * 120,
+        y: MID_Y + Math.sin(tt * 1.3 + i * 1.4) * 55,
+      }));
+      const target = paths[Math.floor(tt / 4) % 3];
+      const lagged = {
+        x:
+          NET_X +
+          Math.sin((tt - 0.5) * 0.9 + (Math.floor(tt / 4) % 3) * 2.1) * 120,
+        y:
+          MID_Y +
+          Math.sin((tt - 0.5) * 1.3 + (Math.floor(tt / 4) % 3) * 1.4) * 55,
+      };
+      const chaser = still
+        ? { x: NET_X, y: MID_Y }
+        : lerpPt(lagged, target, 0.2);
+      return {
+        coach: { x: NET_X, y: COURT.y + COURT.h + 14 },
+        students: [chaser, ...paths],
+        balls: [],
+        labels: [
+          { at: { x: chaser.x, y: chaser.y - 13 }, text: "Pilla", opacity: 1 },
+        ],
+      };
+    }
+    case "match": {
+      // Puntos desde el fondo: dos alumnos juegan el punto; los demás
+      // esperan su turno en fila junto a la pista.
+      const ys = [MID_Y - 40, MID_Y + 10, MID_Y - 10, MID_Y + 40];
+      const raw = tt * 0.5;
+      const shot = Math.floor(raw);
+      const p = raw % 1;
+      const left = { x: COURT.x + 10, y: ys[shot % 4] };
+      const right = { x: COURT.x + COURT.w - 10, y: ys[(shot + 2) % 4] };
+      const prevLeft = { x: COURT.x + 10, y: ys[(shot + 3) % 4] };
+      const prevRight = { x: COURT.x + COURT.w - 10, y: ys[(shot + 1) % 4] };
+      const a = lerpPt(prevLeft, left, ease(Math.min(1, p * 1.6)));
+      const b = lerpPt(prevRight, right, ease(Math.min(1, p * 1.6)));
+      const forward = shot % 2 === 0;
+      return {
+        coach: { x: NET_X + 24, y: COURT.y + COURT.h + 14 },
+        students: [
+          a,
+          b,
+          { x: COURT.x + COURT.w + 24, y: MID_Y + 20 },
+          { x: COURT.x + COURT.w + 24, y: MID_Y + 48 },
+        ],
+        balls: [flight(forward ? a : b, forward ? b : a, p, 40)],
+      };
+    }
+    case "circuit": {
+      // Circuito: zigzag entre conos y vuelta; los alumnos lo recorren en
+      // fila, uno detrás de otro.
+      const cones = [0, 1, 2, 3, 4].map((i) => ({
+        x: COURT.x + 70 + i * 50,
+        y: MID_Y + (i % 2 ? 28 : -28),
+      }));
+      const path = [
+        { x: COURT.x + 30, y: MID_Y },
+        ...cones.map((c) => ({ x: c.x, y: c.y + (c.y < MID_Y ? 16 : -16) })),
+        { x: COURT.x + COURT.w - 30, y: MID_Y },
+        { x: COURT.x + COURT.w - 30, y: COURT.y + COURT.h - 12 },
+        { x: COURT.x + 30, y: COURT.y + COURT.h - 12 },
+      ];
+      const students = Array.from({ length: STUDENTS }, (_, i) =>
+        along(path, still ? i * 0.12 : tt * 0.07 + i * 0.12)
+      );
+      return {
+        coach: { x: NET_X, y: COURT.y + 10 },
+        students,
+        balls: [],
+        cones,
+      };
+    }
+    case "minitennis": {
+      // Minitenis: puntos suaves dentro de los cuadros de saque, una pareja
+      // en cada mitad de la pista.
+      const pairs = [
+        [
+          { x: NET_X - 44, y: MID_Y - 34 },
+          { x: NET_X + 44, y: MID_Y - 34 },
+        ],
+        [
+          { x: NET_X - 44, y: MID_Y + 34 },
+          { x: NET_X + 44, y: MID_Y + 34 },
+        ],
+      ];
+      const students: Pt[] = [];
+      const balls: SceneFrame["balls"] = [];
+      pairs.forEach(([a0, b0], i) => {
+        const sway = still ? 0 : Math.sin(tt * 2 + i) * 8;
+        const a = { x: a0.x, y: a0.y + sway };
+        const b = { x: b0.x, y: b0.y - sway };
+        students.push(a, b);
+        const cycle = (tt * 0.8 + i * 0.5) % 2;
+        const forward = cycle < 1;
+        balls.push(
+          flight(
+            forward ? a : b,
+            forward ? b : a,
+            forward ? cycle : cycle - 1,
+            14
+          )
+        );
+      });
+      return {
+        coach: { x: NET_X, y: COURT.y + COURT.h + 14 },
+        students,
+        balls,
+      };
+    }
+    case "neutral": {
+      // Sin organización concreta: los alumnos esperan junto al monitor
+      // mientras se explica el ejercicio.
+      const students = Array.from({ length: STUDENTS }, (_, i) => ({
+        x: NET_X + 40 + i * 26,
+        y: MID_Y + (still ? 0 : Math.sin(tt * 1.4 + i) * 2),
+      }));
+      return { coach: { x: NET_X - 10, y: MID_Y }, students, balls: [] };
     }
     case "rest": {
       // Todos al banco, junto a la red.
