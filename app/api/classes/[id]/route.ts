@@ -1,3 +1,4 @@
+import { normalizeTags } from "@/lib/tags";
 import { NextResponse } from "next/server";
 import { and, eq, asc, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -88,6 +89,7 @@ const updateSchema = z.object({
   aspectoJuego: z.string().trim().max(16).nullable().optional(),
   aspectosJuego: z.array(z.string().trim().max(16)).nullable().optional(),
   golpes: z.array(z.string().max(32)).nullable().optional(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).nullable().optional(),
   isLibrary: z.boolean().optional(),
   autoria: z.enum(AUTORIA_VALUES).nullable().optional(),
   blocks: z.array(blockSchema).max(3).optional(),
@@ -309,6 +311,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         updateValues.aspectoJuego = aspectosJuego?.[0] ?? null;
       }
       if (d.golpes !== undefined) updateValues.golpes = d.golpes;
+      if (d.tags !== undefined) updateValues.tags = normalizeTags(d.tags);
       if (d.isLibrary !== undefined)
         updateValues.isLibrary = isAdmin && d.isLibrary === true;
       if (isAdmin && d.autoria !== undefined)

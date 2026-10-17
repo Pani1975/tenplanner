@@ -1,5 +1,6 @@
 "use client";
 
+import { TagInput } from "@/components/app/tag-input";
 import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
@@ -126,6 +127,7 @@ export interface ClassInitialData {
   aspectoJuego: string | null;
   aspectosJuego: string[] | null;
   golpes: string[] | null;
+  tags?: string[] | null;
   objetivos: string | null;
   material: string | null;
   videoUrl: string | null;
@@ -187,6 +189,7 @@ export function ClassForm({
   const [golpes, setGolpes] = useState<string[]>(initialData?.golpes ?? []);
   const [objetivos, setObjetivos] = useState(initialData?.objetivos ?? "");
   const [material, setMaterial] = useState(initialData?.material ?? "");
+  const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl ?? "");
   const [aspectosImportantes, setAspectosImportantes] = useState(
     initialData?.aspectosImportantes ?? ""
@@ -595,6 +598,7 @@ export function ClassForm({
       aspectoJuego: aspectosJuego[0] ?? null,
       aspectosJuego: aspectosJuego.length > 0 ? aspectosJuego : null,
       golpes: golpes.length > 0 ? golpes : null,
+      tags: tags.length > 0 ? tags : null,
       isLibrary: isAdmin ? isLibrary : false,
       autoria: isAdmin ? autoria : undefined,
       status,
@@ -1055,6 +1059,19 @@ export function ClassForm({
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="class-tags"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Etiquetas{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional)
+              </span>
+            </label>
+            <TagInput id="class-tags" value={tags} onChange={setTags} />
           </div>
         </section>
 

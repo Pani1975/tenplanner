@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { normalizeTags } from "@/lib/tags";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -86,6 +87,7 @@ export async function POST(_request: Request, ctx: Ctx) {
         objetivos: session.objective,
         material: session.material,
         aspectosImportantes: session.observations,
+        tags: normalizeTags(session.tags),
         isLibrary: false,
         autoria: "libre",
         clubId,

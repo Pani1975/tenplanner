@@ -351,6 +351,13 @@
       "when": 1792092137160,
       "tag": "0049_favoritos_club",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792222780313,
+      "tag": "0050_classes_tags",
+      "breakpoints": true
     }
   ]
 }

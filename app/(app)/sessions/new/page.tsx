@@ -183,6 +183,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     objetivos: string | null;
     material: string | null;
     observations: string | null;
+    tags: string[] | null;
   } | null = null;
   const fromClassExercises: WizardExercise[] = [];
   let fromClassBlocks: WizardSessionBlock[] = [];
@@ -195,6 +196,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         objetivos: classes.objetivos,
         material: classes.material,
         observations: classes.aspectosImportantes,
+        tags: classes.tags,
         isLibrary: classes.isLibrary,
         createdBy: classes.createdBy,
         clubId: classes.clubId,
@@ -221,6 +223,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         objetivos: cls.objetivos,
         material: cls.material,
         observations: cls.observations,
+        tags: Array.isArray(cls.tags) ? cls.tags : null,
       };
       const items = await db
         .select({
@@ -553,7 +556,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
                 fromClass?.observations ??
                 undefined
               }
-              initialTags={fromSession?.tags}
+              initialTags={fromSession?.tags ?? fromClass?.tags ?? undefined}
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
               initialLocation={fromSession?.location ?? undefined}

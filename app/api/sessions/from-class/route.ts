@@ -180,6 +180,7 @@ export async function POST(request: Request) {
         objetivos: classes.objetivos,
         material: classes.material,
         observations: classes.aspectosImportantes,
+        tags: classes.tags,
         sport: classes.sport,
       })
       .from(classes)
@@ -225,7 +226,10 @@ export async function POST(request: Request) {
         eq(classBlockExercises.blockId, classBlocks.id)
       )
       .where(eq(classBlocks.classId, classId))
-      .orderBy(asc(classBlocks.orderIndex), asc(classBlockExercises.orderIndex));
+      .orderBy(
+        asc(classBlocks.orderIndex),
+        asc(classBlockExercises.orderIndex)
+      );
 
     const blockMap = new Map<number, LoadedBlock>();
     for (const row of rows) {
@@ -284,7 +288,12 @@ export async function POST(request: Request) {
 
     const snapshots = new Map<
       string,
-      { id: string; name: string; description: string | null; durationMinutes: number }
+      {
+        id: string;
+        name: string;
+        description: string | null;
+        durationMinutes: number;
+      }
     >();
     if (exerciseIds.length > 0) {
       const exRows = await db
@@ -337,7 +346,7 @@ export async function POST(request: Request) {
             observations: cls.observations ?? null,
             sourceClassId: cls.id,
             intensity: null,
-            tags: null,
+            tags: cls.tags && cls.tags.length > 0 ? cls.tags : null,
             location: null,
             placeId: null,
             groupId: group.id,
@@ -381,7 +390,7 @@ export async function POST(request: Request) {
                           kind: s.kind,
                           exerciseId: s.exerciseId ?? null,
                           exerciseName: s.exerciseId
-                            ? snapshots.get(s.exerciseId)?.name ?? null
+                            ? (snapshots.get(s.exerciseId)?.name ?? null)
                             : null,
                           freeText: s.freeText ?? null,
                           durationMinutes: s.durationMinutes ?? null,

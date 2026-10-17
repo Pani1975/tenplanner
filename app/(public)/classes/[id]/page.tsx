@@ -9,6 +9,7 @@ import {
   Users,
   Target,
   Package,
+  Hash,
   GraduationCap,
 } from "lucide-react";
 import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
@@ -414,6 +415,21 @@ export default async function ClassDetailPage({
               )}
             </>
           )}
+        </div>
+      )}
+
+      {/* Etiquetas */}
+      {Array.isArray(cls.tags) && cls.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {cls.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 rounded-full border border-brand/20 bg-brand/10 px-2.5 py-1 text-xs text-brand"
+            >
+              <Hash className="size-3" />
+              {tag}
+            </span>
+          ))}
         </div>
       )}
 

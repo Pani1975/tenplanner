@@ -822,6 +822,8 @@ export const classes = pgTable(
     niveles: jsonb("niveles").$type<string[]>(),
     aspectosJuego: jsonb("aspectos_juego").$type<string[]>(),
     golpes: json("golpes").$type<string[]>(),
+    // Etiquetas libres (las mismas que en las sesiones).
+    tags: jsonb("tags").$type<string[]>(),
     isLibrary: boolean("is_library").default(false).notNull(),
     // Autoría de la clase: "ten_planner" | "libre" | el id de un
     // monitor/academia dado de alta (p. ej. "academia_christian_larsen").

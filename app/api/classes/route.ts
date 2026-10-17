@@ -1,3 +1,4 @@
+import { normalizeTags } from "@/lib/tags";
 import { NextResponse } from "next/server";
 import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -87,6 +88,7 @@ const createSchema = z.object({
   aspectoJuego: z.string().trim().max(16).optional().nullable(),
   aspectosJuego: z.array(z.string().trim().max(16)).optional().nullable(),
   golpes: z.array(z.string().max(32)).optional().nullable(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).optional().nullable(),
   isLibrary: z.boolean().optional().default(false),
   autoria: z.enum(AUTORIA_VALUES).optional().nullable(),
   blocks: z.array(blockSchema).max(3).default([]),
@@ -317,6 +319,7 @@ export async function POST(request: Request) {
           aspectoJuego: aspectosJuego?.[0] ?? null,
           aspectosJuego,
           golpes: d.golpes ?? null,
+          tags: normalizeTags(d.tags),
           isLibrary: isAdmin && d.isLibrary === true,
           autoria: isAdmin && d.autoria ? d.autoria : "libre",
           clubId,

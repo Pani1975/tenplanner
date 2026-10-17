@@ -114,6 +114,7 @@ export default async function EditClassPage({ params }: PageProps) {
           ? [cls.aspectoJuego]
           : null,
     golpes: Array.isArray(cls.golpes) ? cls.golpes : null,
+    tags: Array.isArray(cls.tags) ? cls.tags : null,
     objetivos: cls.objetivos,
     material: cls.material,
     videoUrl: cls.videoUrl,
