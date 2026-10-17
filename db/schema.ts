@@ -14,9 +14,11 @@ import {
   vector,
   uniqueIndex,
   jsonb,
+  primaryKey,
+  check,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 
@@ -1682,3 +1684,202 @@ export const clubMembersRelations = relations(clubMembers, ({ one }) => ({
 export const clubInvitesRelations = relations(clubInvites, ({ one }) => ({
   club: one(clubs, { fields: [clubInvites.clubId], references: [clubs.id] }),
 }));
+
+// ─── Avisos club → familias (fase 1 de la comunicación del club) ──────────────
+// Las políticas RLS, funciones y triggers viven en la migración SQL
+// 0054_avisos_familias.sql; aquí solo el esquema de tablas.
+
+// Tutores / familias de un alumno. Hoy los alumnos no tienen cuenta: cada
+// tutor activa la suya con un enlace (inviteToken) y a partir de ahí
+// userId = su usuario. Un alumno adulto puede ser su propio "tutor".
+export const studentGuardians = pgTable(
+  "student_guardians",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    name: varchar("name", { length: 120 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 32 }),
+    // "madre" | "padre" | "tutor_legal" | "alumno"
+    relationship: varchar("relationship", { length: 30 }),
+    inviteToken: varchar("invite_token", { length: 128 }).unique(),
+    inviteExpiresAt: timestamp("invite_expires_at", { withTimezone: true }),
+    // Consentimiento RGPD para recibir avisos del club
+    consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
+    consentVersion: varchar("consent_version", { length: 20 }),
+    // Baja: deja de ver avisos y respuestas
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("student_guardians_student_id_idx").on(t.studentId),
+    index("student_guardians_user_id_idx").on(t.userId),
+  ]
+);
+
+// Avisos. groupId null = aviso a todo el club (solo admin);
+// groupId = aviso a las familias del grupo (admin o monitor del grupo).
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
+    // Opcional: liga el aviso a una sesión de ese grupo
+    sessionId: uuid("session_id").references(() => sessions.id, {
+      onDelete: "set null",
+    }),
+    authorId: uuid("author_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 140 }).notNull(),
+    body: text("body").notNull(),
+    allowReplies: boolean("allow_replies").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+    // Borrado lógico
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("announcements_club_created_idx").on(t.clubId, t.createdAt),
+    index("announcements_group_created_idx").on(t.groupId, t.createdAt),
+    check("announcements_body_len", sql`char_length(${t.body}) <= 4000`),
+  ]
+);
+
+// Respuestas: un hilo privado por familia dentro de cada aviso
+// (threadGuardianId). Las demás familias nunca lo ven.
+export const announcementReplies = pgTable(
+  "announcement_replies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    announcementId: uuid("announcement_id")
+      .references(() => announcements.id, { onDelete: "cascade" })
+      .notNull(),
+    threadGuardianId: uuid("thread_guardian_id")
+      .references(() => studentGuardians.id, { onDelete: "cascade" })
+      .notNull(),
+    authorId: uuid("author_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("announcement_replies_thread_idx").on(
+      t.announcementId,
+      t.threadGuardianId,
+      t.createdAt
+    ),
+    check("announcement_replies_body_len", sql`char_length(${t.body}) <= 2000`),
+  ]
+);
+
+// Confirmaciones de lectura ("leído por 12 de 15")
+export const announcementReads = pgTable(
+  "announcement_reads",
+  {
+    announcementId: uuid("announcement_id")
+      .references(() => announcements.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.announcementId, t.userId] })]
+);
+
+export const studentGuardiansRelations = relations(
+  studentGuardians,
+  ({ one, many }) => ({
+    student: one(students, {
+      fields: [studentGuardians.studentId],
+      references: [students.id],
+    }),
+    user: one(users, {
+      fields: [studentGuardians.userId],
+      references: [users.id],
+    }),
+    replies: many(announcementReplies),
+  })
+);
+
+export const announcementsRelations = relations(
+  announcements,
+  ({ one, many }) => ({
+    club: one(clubs, {
+      fields: [announcements.clubId],
+      references: [clubs.id],
+    }),
+    group: one(groups, {
+      fields: [announcements.groupId],
+      references: [groups.id],
+    }),
+    session: one(sessions, {
+      fields: [announcements.sessionId],
+      references: [sessions.id],
+    }),
+    author: one(users, {
+      fields: [announcements.authorId],
+      references: [users.id],
+    }),
+    replies: many(announcementReplies),
+    reads: many(announcementReads),
+  })
+);
+
+export const announcementRepliesRelations = relations(
+  announcementReplies,
+  ({ one }) => ({
+    announcement: one(announcements, {
+      fields: [announcementReplies.announcementId],
+      references: [announcements.id],
+    }),
+    thread: one(studentGuardians, {
+      fields: [announcementReplies.threadGuardianId],
+      references: [studentGuardians.id],
+    }),
+    author: one(users, {
+      fields: [announcementReplies.authorId],
+      references: [users.id],
+    }),
+  })
+);
+
+export const announcementReadsRelations = relations(
+  announcementReads,
+  ({ one }) => ({
+    announcement: one(announcements, {
+      fields: [announcementReads.announcementId],
+      references: [announcements.id],
+    }),
+    user: one(users, {
+      fields: [announcementReads.userId],
+      references: [users.id],
+    }),
+  })
+);
