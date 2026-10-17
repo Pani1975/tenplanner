@@ -208,6 +208,7 @@ function createInitialState({
       mode: "until",
     },
     groupId: initialGroupId ?? null,
+    selectedGroupIds: initialGroupId ? [initialGroupId] : [],
     groupName: initialGroupName,
     useCodeTitle,
   };
