@@ -91,6 +91,8 @@ export interface AnimationInputItem {
   title?: string | null;
   durationMinutes?: number | null;
   stations?: unknown;
+  /** Notas del monitor sobre el elemento. */
+  notes?: string | null;
 }
 
 export interface AnimationInputBlock {
@@ -335,6 +337,8 @@ export function buildAnimationTimeline(
         if (names.length)
           parts = [...parts, { label: "Estaciones", text: names.join(" · ") }];
       }
+      const notes = isRest ? null : item.notes?.trim();
+      if (notes) parts = [...parts, { label: "Notas", text: notes }];
       const objective = isRest ? null : item.exerciseObjectives?.trim();
       if (objective) parts = [...parts, { label: "Objetivo", text: objective }];
       drafts.push({

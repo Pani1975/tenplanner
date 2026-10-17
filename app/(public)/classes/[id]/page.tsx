@@ -114,6 +114,7 @@ export default async function ClassDetailPage({
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           title: classBlockExercises.title,
+          notes: classBlockExercises.notes,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -579,6 +580,12 @@ export default async function ClassDetailPage({
                                     {item.freeText}
                                   </span>
                                 )}
+                              {item.notes && (
+                                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                                  <span className="font-semibold">Notas:</span>{" "}
+                                  {item.notes}
+                                </span>
+                              )}
                             </span>
                           </li>
                         );

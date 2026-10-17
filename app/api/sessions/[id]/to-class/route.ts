@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { normalizeTags } from "@/lib/tags";
+import { DEFAULT_BLOCK_ITEM_DURATION } from "@/lib/block-items";
 import { hasSessionAnimation } from "@/lib/classes/animation";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -127,8 +128,13 @@ export async function POST(_request: Request, ctx: Ctx) {
             exerciseId: item.exerciseId,
             freeText: item.freeText ?? ownDescription,
             title: item.title,
+            notes: item.notes,
             orderIndex: item.orderIndex,
-            durationMinutes: item.durationMinutes,
+            // Un descanso sin minutos dura lo de por defecto en la sesión; en
+            // la clase la duración del descanso es obligatoria.
+            durationMinutes:
+              item.durationMinutes ??
+              (item.kind === "warmup" ? DEFAULT_BLOCK_ITEM_DURATION : null),
             kind: item.kind,
             stations: item.stations,
             aspectoJuego: item.aspectoJuego,

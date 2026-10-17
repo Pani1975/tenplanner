@@ -65,6 +65,21 @@ function sessionToClassData(s: SessionPayload): ClassData {
   };
 }
 
+/** En una clase, el texto propio de un ejercicio manda sobre el de la biblioteca. */
+function classToAnimationData(c: ClassData): ClassData {
+  return {
+    ...c,
+    blocks: c.blocks.map((b) => ({
+      ...b,
+      items: b.items.map((item) =>
+        item.exerciseId && item.freeText?.trim()
+          ? { ...item, exerciseDescription: item.freeText, freeText: null }
+          : item
+      ),
+    })),
+  };
+}
+
 export function ClassAnimationButton({
   classId,
   sessionId,
@@ -94,7 +109,7 @@ export function ClassAnimationButton({
         setData(
           sessionId
             ? sessionToClassData(json.data as SessionPayload)
-            : (json.data as ClassData)
+            : classToAnimationData(json.data as ClassData)
         )
       )
       .catch(() => setError(true));

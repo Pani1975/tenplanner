@@ -40,6 +40,7 @@ export async function loadSessionAnimationData(
       freeText: sessionBlockItems.freeText,
       durationMinutes: sessionBlockItems.durationMinutes,
       stations: sessionBlockItems.stations,
+      notes: sessionBlockItems.notes,
       libraryDescription: exercises.description,
       exerciseObjectives: exercises.objectives,
     })
@@ -69,6 +70,7 @@ export async function loadSessionAnimationData(
         freeText: row.freeText,
         durationMinutes: row.durationMinutes,
         stations: row.stations,
+        notes: row.notes,
       });
     }
     blocks.set(row.blockId, block);

@@ -12,7 +12,11 @@ import {
   users,
 } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
-import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import {
+  DEFAULT_BLOCK_ITEM_DURATION,
+  resolveItemKind,
+  type StationItemJson,
+} from "@/lib/block-items";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
@@ -56,6 +60,7 @@ export default async function EditClassPage({ params }: PageProps) {
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           title: classBlockExercises.title,
+          notes: classBlockExercises.notes,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -135,7 +140,8 @@ export default async function EditClassPage({ params }: PageProps) {
           if (itemKind === "warmup") {
             return {
               kind: "warmup" as const,
-              durationMinutes: it.durationMinutes,
+              durationMinutes:
+                it.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
             };
           }
           if (itemKind === "stations") {
@@ -159,12 +165,16 @@ export default async function EditClassPage({ params }: PageProps) {
                 exerciseId: it.exerciseId,
                 name: it.exerciseName,
                 durationMinutes: it.durationMinutes,
+                // Texto propio (p. ej. copiado de la sesión) y notas.
+                freeText: it.freeText ?? "",
+                notes: it.notes ?? "",
               }
             : {
                 kind: "text" as const,
                 freeText: it.freeText ?? "",
                 title: it.title ?? "",
                 durationMinutes: it.durationMinutes,
+                notes: it.notes ?? "",
               };
         }),
     })),

@@ -721,6 +721,29 @@ export async function PUT(request: Request, context: RouteContext) {
           );
         }
 
+        // Lo escrito en la sesión se queda tal cual: la descripción propia de
+        // cada ejercicio se conserva en vez de volver a la de la biblioteca.
+        const previousDescriptions = new Map<string, string>();
+        const previousItems = await tx
+          .select({
+            exerciseId: sessionBlockItems.exerciseId,
+            exerciseDescription: sessionBlockItems.exerciseDescription,
+          })
+          .from(sessionBlockItems)
+          .innerJoin(
+            sessionBlocks,
+            eq(sessionBlocks.id, sessionBlockItems.blockId)
+          )
+          .where(eq(sessionBlocks.sessionId, id));
+        for (const row of previousItems) {
+          if (
+            row.exerciseId &&
+            row.exerciseDescription?.trim() &&
+            !previousDescriptions.has(row.exerciseId)
+          )
+            previousDescriptions.set(row.exerciseId, row.exerciseDescription);
+        }
+
         await tx.delete(sessionBlocks).where(eq(sessionBlocks.sessionId, id));
 
         function buildStations(
@@ -758,7 +781,12 @@ export async function PUT(request: Request, context: RouteContext) {
                   blockId: sessionBlock.id,
                   exerciseId: item.exerciseId ?? null,
                   exerciseName: snapshot?.name ?? null,
-                  exerciseDescription: snapshot?.description ?? null,
+                  exerciseDescription:
+                    (item.exerciseId
+                      ? previousDescriptions.get(item.exerciseId)
+                      : undefined) ??
+                    snapshot?.description ??
+                    null,
                   freeText: item.freeText?.trim() || null,
                   title: item.title?.trim() || null,
                   orderIndex: idx,

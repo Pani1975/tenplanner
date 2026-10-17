@@ -67,6 +67,7 @@ type LoadedBlockItem = {
   durationMinutes: number | null;
   stations: StationItemJson[] | null;
   aspecto: string | null;
+  notes: string | null;
 };
 
 type LoadedBlock = {
@@ -219,6 +220,7 @@ export async function POST(request: Request) {
         itemKind: classBlockExercises.kind,
         itemStations: classBlockExercises.stations,
         itemAspecto: classBlockExercises.aspectoJuego,
+        itemNotes: classBlockExercises.notes,
       })
       .from(classBlocks)
       .leftJoin(
@@ -259,6 +261,7 @@ export async function POST(request: Request) {
           durationMinutes: row.itemDuration ?? null,
           stations: (row.itemStations as StationItemJson[] | null) ?? null,
           aspecto: row.itemAspecto ?? null,
+          notes: row.itemNotes ?? null,
         });
       }
       blockMap.set(orderIndex, block);
@@ -376,13 +379,20 @@ export async function POST(request: Request) {
                   blockId: sessionBlock.id,
                   exerciseId: item.exerciseId,
                   exerciseName: snapshot?.name ?? null,
-                  exerciseDescription: snapshot?.description ?? null,
-                  freeText: item.freeText?.trim() || null,
+                  // El texto propio de la clase para un ejercicio pasa a ser su
+                  // descripción en la sesión, tal cual.
+                  exerciseDescription:
+                    (item.exerciseId ? item.freeText?.trim() : null) ||
+                    snapshot?.description ||
+                    null,
+                  freeText: item.exerciseId
+                    ? null
+                    : item.freeText?.trim() || null,
                   title: item.title?.trim() || null,
                   orderIndex: idx,
                   durationMinutes:
                     item.durationMinutes ?? snapshot?.durationMinutes ?? null,
-                  notes: null,
+                  notes: item.notes?.trim() || null,
                   kind: item.kind ?? null,
                   stations:
                     item.kind === "stations"

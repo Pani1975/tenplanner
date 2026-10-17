@@ -898,6 +898,8 @@ export const classBlockExercises = pgTable(
     title: varchar("title", { length: 120 }),
     orderIndex: integer("order_index").notNull(),
     durationMinutes: integer("duration_minutes"),
+    // Notas del monitor sobre este elemento (las mismas que en la sesión).
+    notes: text("notes"),
     // "exercise"|"text"|"warmup"|"stations"; null = legacy (infer from
     // exerciseId/freeText).
     kind: varchar("kind", { length: 16 }),

@@ -94,12 +94,16 @@ type BlockItem =
       exerciseId: string;
       name: string;
       durationMinutes: number | null;
+      /** Descripción propia de la clase (si no, la de la biblioteca). */
+      freeText?: string;
+      notes?: string;
     }
   | {
       kind: "text";
       freeText: string;
       title: string;
       durationMinutes: number | null;
+      notes?: string;
     }
   | { kind: "warmup"; durationMinutes: number | null }
   | {
@@ -613,7 +617,8 @@ export function ClassForm({
               return {
                 kind: "exercise" as const,
                 exerciseId: item.exerciseId,
-                freeText: null,
+                freeText: item.freeText?.trim() || null,
+                notes: item.notes?.trim() || null,
                 durationMinutes: item.durationMinutes,
               };
             }
@@ -653,6 +658,7 @@ export function ClassForm({
               exerciseId: null,
               freeText: item.freeText.trim() || null,
               title: item.title.trim() || null,
+              notes: item.notes?.trim() || null,
               durationMinutes: item.durationMinutes,
             };
           }),
@@ -1152,11 +1158,43 @@ export function ClassForm({
                         </span>
                         <div className="flex-1 min-w-0">
                           {item.kind === "exercise" ? (
-                            <div className="flex items-center gap-2">
-                              <Dumbbell className="size-3.5 text-brand shrink-0" />
-                              <span className="text-sm text-foreground truncate">
-                                {item.name}
-                              </span>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <Dumbbell className="size-3.5 text-brand shrink-0" />
+                                <span className="text-sm text-foreground truncate">
+                                  {item.name}
+                                </span>
+                              </div>
+                              <details
+                                className="group"
+                                open={!!(item.freeText || item.notes)}
+                              >
+                                <summary className="cursor-pointer text-[11px] font-semibold text-muted-foreground hover:text-foreground">
+                                  Descripción y notas de la clase
+                                </summary>
+                                <textarea
+                                  rows={2}
+                                  value={item.freeText ?? ""}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      freeText: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  placeholder="Cómo se hace en esta clase (si se deja vacío, la de la biblioteca)…"
+                                  className="mt-1.5 w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
+                                />
+                                <textarea
+                                  rows={1}
+                                  value={item.notes ?? ""}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      notes: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  placeholder="Notas (opcional)…"
+                                  className="mt-1 w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
+                                />
+                              </details>
                             </div>
                           ) : item.kind === "text" ? (
                             <div className="flex items-start gap-2">
