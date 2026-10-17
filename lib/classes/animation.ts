@@ -46,6 +46,13 @@ const STEP_LEAD_SECONDS = 2;
 /** Margen al final de cada actividad para terminar de leer. */
 const STEP_TAIL_SECONDS = 1.5;
 const MIN_STEP_SECONDS = 4.5;
+/** Escenas que necesitan más tiempo para verse completas. */
+const SCENE_MIN_SECONDS: Partial<Record<AnimationScene, number>> = {
+  // Las dos variantes de la reina de la pista, enteras.
+  points: 2 * 6.7 + 1,
+  // Varias rondas de saque para que se vea subir al fondo y el +1.
+  elevator: 12,
+};
 const REST_SECONDS = 5;
 const REST_LEAD_SECONDS = 0.6;
 const INTRO_LEAD_SECONDS = 2.5;
@@ -337,6 +344,7 @@ export function buildAnimationTimeline(
     const reading = d.parts.reduce((acc, p) => acc + readSeconds(p.text), 0);
     return Math.max(
       MIN_STEP_SECONDS,
+      SCENE_MIN_SECONDS[d.scene] ?? 0,
       STEP_LEAD_SECONDS + reading + STEP_TAIL_SECONDS
     );
   });

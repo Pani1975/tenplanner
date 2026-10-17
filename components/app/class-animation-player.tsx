@@ -776,6 +776,183 @@ interface SceneFrame {
   labels?: { at: Pt; text: string; opacity: number }[];
 }
 
+// --- Reina de la pista: secuencia de golpes por variante ---------------
+
+interface QueenShot {
+  /** Duración del tramo, en segundos de escena. */
+  dur: number;
+  /** Posición de la candidata y de la reina al acabar el tramo. */
+  aspirant: Pt;
+  queen: Pt;
+  /** Bola del tramo: quién la golpea y adónde va. */
+  ball?: { from: "coach" | "aspirant" | "queen"; to: Pt; height: number };
+  caption?: string;
+}
+
+const Q_ASPIRANT_START = { x: COURT.x + COURT.w - 8, y: MID_Y - 18 };
+const Q_QUEEN_START = { x: COURT.x + 8, y: MID_Y + 18 };
+
+// Variante 1: bola al revés (lado +y de la candidata, que mira a la red),
+// se invierte y juega de derecha cruzada; la reina juega libre.
+const QUEEN_INSIDE_OUT: QueenShot[] = [
+  {
+    dur: 0.5,
+    aspirant: Q_ASPIRANT_START,
+    queen: Q_QUEEN_START,
+    caption: "Bola al revés · se invierte de derecha",
+  },
+  {
+    dur: 0.9,
+    aspirant: { x: COURT.x + COURT.w - 12, y: MID_Y + 26 },
+    queen: Q_QUEEN_START,
+    ball: {
+      from: "coach",
+      to: { x: COURT.x + COURT.w - 24, y: MID_Y + 12 },
+      height: 22,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 10, y: MID_Y + 10 },
+    queen: { x: COURT.x + 14, y: MID_Y - 34 },
+    ball: {
+      from: "aspirant",
+      to: { x: COURT.x + 30, y: MID_Y - 40 },
+      height: 42,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 16, y: MID_Y - 34 },
+    queen: { x: COURT.x + 10, y: MID_Y - 8 },
+    ball: {
+      from: "queen",
+      to: { x: COURT.x + COURT.w - 30, y: MID_Y - 42 },
+      height: 42,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 10, y: MID_Y - 6 },
+    queen: { x: COURT.x + 14, y: MID_Y + 36 },
+    ball: {
+      from: "aspirant",
+      to: { x: COURT.x + 30, y: MID_Y + 42 },
+      height: 42,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 40, y: MID_Y + 30 },
+    queen: { x: COURT.x + 10, y: MID_Y + 10 },
+    ball: { from: "queen", to: { x: NET_X + 70, y: MID_Y + 46 }, height: 36 },
+    caption: "Punto",
+  },
+  { dur: 0.9, aspirant: Q_ASPIRANT_START, queen: Q_QUEEN_START },
+];
+
+// Variante 2: bola a la derecha (lado -y) y cruzado corto al cuadro de saque.
+const QUEEN_SHORT_CROSS: QueenShot[] = [
+  {
+    dur: 0.5,
+    aspirant: Q_ASPIRANT_START,
+    queen: Q_QUEEN_START,
+    caption: "Bola a la derecha · cruzado corto",
+  },
+  {
+    dur: 0.9,
+    aspirant: { x: COURT.x + COURT.w - 12, y: MID_Y - 30 },
+    queen: Q_QUEEN_START,
+    ball: {
+      from: "coach",
+      to: { x: COURT.x + COURT.w - 26, y: MID_Y - 40 },
+      height: 22,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 14, y: MID_Y - 12 },
+    queen: { x: NET_X - 58, y: MID_Y + 40 },
+    ball: {
+      from: "aspirant",
+      to: { x: NET_X - 40, y: MID_Y + 32 },
+      height: 24,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 12, y: MID_Y + 30 },
+    queen: { x: COURT.x + 30, y: MID_Y + 20 },
+    ball: {
+      from: "queen",
+      to: { x: COURT.x + COURT.w - 26, y: MID_Y + 38 },
+      height: 36,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 10, y: MID_Y + 4 },
+    queen: { x: COURT.x + 12, y: MID_Y - 30 },
+    ball: {
+      from: "aspirant",
+      to: { x: COURT.x + 28, y: MID_Y - 38 },
+      height: 42,
+    },
+  },
+  {
+    dur: 1.1,
+    aspirant: { x: COURT.x + COURT.w - 40, y: MID_Y - 40 },
+    queen: { x: COURT.x + 10, y: MID_Y - 6 },
+    ball: { from: "queen", to: { x: NET_X + 66, y: MID_Y - 48 }, height: 36 },
+    caption: "Punto",
+  },
+  { dur: 0.9, aspirant: Q_ASPIRANT_START, queen: Q_QUEEN_START },
+];
+
+const QUEEN_CYCLE = QUEEN_INSIDE_OUT.reduce((a, s) => a + s.dur, 0);
+
+function queenRally(shots: QueenShot[], time: number, coach: Pt) {
+  let start = 0;
+  let prevA = shots.at(-1)!.aspirant;
+  let prevQ = shots.at(-1)!.queen;
+  for (const shot of shots) {
+    if (time < start + shot.dur) {
+      const p = (time - start) / shot.dur;
+      const aspirant = lerpPt(prevA, shot.aspirant, ease(p));
+      const queen = lerpPt(prevQ, shot.queen, ease(p));
+      let ball: SceneFrame["balls"][number] | null = null;
+      if (shot.ball) {
+        const from =
+          shot.ball.from === "coach"
+            ? coach
+            : shot.ball.from === "aspirant"
+              ? prevA
+              : prevQ;
+        ball = flight(from, shot.ball.to, p, shot.ball.height);
+      } else if (shot === shots[0]) {
+        ball = { ball: { x: coach.x - 8, y: coach.y - 8 }, shadow: null };
+      }
+      return {
+        aspirant,
+        queen,
+        ball,
+        caption: shot.caption ?? null,
+        captionOpacity: p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2,
+      };
+    }
+    start += shot.dur;
+    prevA = shot.aspirant;
+    prevQ = shot.queen;
+  }
+  return {
+    aspirant: prevA,
+    queen: prevQ,
+    ball: null,
+    caption: null,
+    captionOpacity: 0,
+  };
+}
+
 function sceneFrame(
   scene: AnimationScene | "idle",
   t: number,
@@ -1129,39 +1306,40 @@ function sceneFrame(
       };
     }
     case "points": {
-      // Reina de la pista desde el fondo: el monitor da la primera bola a la
-      // derecha de la aspirante, que la juega cruzada (o de derecha
-      // invertida) y se disputa el punto. La reina espera en el otro fondo
-      // y las aspirantes hacen cola tras su línea de fondo.
-      const coach = { x: NET_X + 22, y: COURT.y + COURT.h + 14 };
-      const aspirant = { x: COURT.x + COURT.w - 8, y: MID_Y - 34 };
-      const queen = { x: COURT.x + 8, y: MID_Y + 34 };
-      const sway = still ? 0 : Math.sin(tt * 2.2) * 5;
-      const a = { x: aspirant.x, y: aspirant.y + sway };
-      const q = { x: queen.x, y: queen.y - sway };
+      // Reina de la pista desde el fondo, alternando las dos variantes:
+      // 1) El monitor lanza al revés de la candidata, que se invierte y
+      //    golpea de derecha; la reina juega donde quiera y se disputa el
+      //    punto.
+      // 2) El monitor lanza a la derecha de la candidata, que cruza corto
+      //    (bota en el cuadro de saque) y se juega el punto.
+      const coach = { x: NET_X + 28, y: COURT.y + COURT.h + 14 };
+      const variant = Math.floor(tt / QUEEN_CYCLE) % 2;
+      const local = still ? 0 : tt % QUEEN_CYCLE;
+      const f = queenRally(
+        variant === 0 ? QUEEN_INSIDE_OUT : QUEEN_SHORT_CROSS,
+        local,
+        coach
+      );
       const students = [
-        a,
-        { x: COURT.x + COURT.w + 24, y: MID_Y + 6 },
-        { x: COURT.x + COURT.w + 24, y: MID_Y + 36 },
-        q,
+        f.aspirant,
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 10 },
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 40 },
+        f.queen,
       ];
-      const cycle = (tt * 0.42) % 3;
-      let balls: SceneFrame["balls"];
-      if (cycle < 0.6) {
-        // Primera bola del monitor a la derecha de la aspirante.
-        balls = [flight(coach, { x: a.x - 4, y: a.y + 12 }, cycle / 0.6, 26)];
-      } else if (cycle < 1.6) {
-        balls = [flight(a, q, cycle - 0.6, 40)];
-      } else if (cycle < 2.6) {
-        balls = [flight(q, a, cycle - 1.6, 40)];
-      } else {
-        balls = [];
-      }
+      const labels: NonNullable<SceneFrame["labels"]> = [
+        { at: { x: f.queen.x, y: f.queen.y - 14 }, text: "Reina", opacity: 1 },
+      ];
+      if (f.caption)
+        labels.push({
+          at: { x: NET_X + 80, y: COURT.y - 4 },
+          text: f.caption,
+          opacity: f.captionOpacity,
+        });
       return {
         coach,
         students,
-        balls,
-        labels: [{ at: { x: q.x, y: q.y - 14 }, text: "Reina", opacity: 1 }],
+        balls: f.ball ? [f.ball] : [],
+        labels,
       };
     }
     case "elevator": {
@@ -1296,13 +1474,20 @@ function Court({
   const prevScene: AnimationScene | "idle" =
     idx > 0 ? steps[idx - 1].scene : "idle";
 
-  let frame = sceneFrame(scene, t, reduceMotion);
+  // Cada escena empieza desde su principio al llegar a la actividad.
+  const localT = step ? Math.max(0, t - step.start) : t;
+  let frame = sceneFrame(scene, localT, reduceMotion);
   // Transición suave entre escenas: los jugadores se desplazan a su nueva
   // posición en lugar de saltar; bolas y material aparecen al llegar.
   if (step && prevScene !== scene && !reduceMotion) {
     const p = ease((t - step.start) / BLEND_SECONDS);
     if (p < 1) {
-      const prev = sceneFrame(prevScene, t, reduceMotion);
+      const prevStep = steps[idx - 1];
+      const prev = sceneFrame(
+        prevScene,
+        prevStep ? t - prevStep.start : t,
+        reduceMotion
+      );
       frame = {
         coach: lerpPt(prev.coach, frame.coach, p),
         students: frame.students.map((s, i) => lerpPt(prev.students[i], s, p)),
