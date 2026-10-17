@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
+import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { Pencil, ClipboardList, Clock, Flame } from "lucide-react";
@@ -119,6 +121,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
           .limit(1)
       )[0]?.name ?? null);
 
+  const trainingStatsPromise = loadStudentTrainingStats(id);
   const [statsRows, past, upcoming] = await Promise.all([
     db
       .select({
@@ -319,6 +322,11 @@ export default async function StudentDetailPage({ params }: PageProps) {
             value={avgRating != null ? `${avgRating.toFixed(1)}/5` : "—"}
           />
         </section>
+
+        <TrainingStatsPanel
+          stats={await trainingStatsPromise}
+          title="Estadística de entrenamiento"
+        />
 
         {/* Perfil + enlace */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">

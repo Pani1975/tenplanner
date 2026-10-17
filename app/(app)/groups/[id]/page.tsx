@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
+import { loadGroupTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -213,6 +215,8 @@ export default async function GroupDetailPage({ params }: PageProps) {
     .filter((s) => s.status !== "completed" && s.scheduledAt >= now)
     .reverse();
 
+  const trainingStats = await loadGroupTrainingStats(id);
+
   const availableStudents = await db
     .select({
       id: students.id,
@@ -334,6 +338,12 @@ export default async function GroupDetailPage({ params }: PageProps) {
             />
           </div>
         </section>
+
+        <TrainingStatsPanel
+          stats={trainingStats.stats}
+          studentHours={trainingStats.studentHours}
+          title={`Estadística de ${group.name}`}
+        />
       </div>
     </div>
   );
