@@ -11,6 +11,7 @@ import {
   students,
   exerciseListItems,
   exerciseLists,
+  places,
   users,
 } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -156,6 +157,13 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
   const session = sessionRow;
   if (!session) notFound();
   const isOwner = session.userId === user.id;
+  const [placeRow] = session.placeId
+    ? await db
+        .select({ name: places.name })
+        .from(places)
+        .where(eq(places.id, session.placeId))
+        .limit(1)
+    : [];
   if (!isOwner) {
     const activeClubId = session.clubId
       ? await getActiveWorkClubId(user.id)
@@ -390,6 +398,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         intensity: session.intensity,
         tags,
         location: session.location,
+        placeName: placeRow?.name ?? null,
         status: session.status,
       }}
       sessionExercises={resolvedExercises}

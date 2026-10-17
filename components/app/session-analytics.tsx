@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Clock, Dumbbell, Layers, Tag, Target, Users } from "lucide-react";
+import { Dumbbell, Layers, Tag, Target, Users } from "lucide-react";
 import type {
   ExerciseAspect,
   SessionAnalytics,
@@ -353,13 +353,8 @@ export function SessionAnalyticsView({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
-          icon={Clock}
-          label="Duración"
-          value={`${analytics.totalMinutes}′`}
-          hint="minutos"
-        />
+      {/* La duración ya figura en la cabecera de la sesión. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           icon={Dumbbell}
           label="Ejercicios"

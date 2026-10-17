@@ -33,7 +33,7 @@ import { SessionAnalyticsView } from "@/components/app/session-analytics";
 import type { SessionAnalytics } from "@/lib/sessions/analytics";
 import { cn } from "@/lib/utils";
 import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
-import { MapPin, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { SessionInfoSummary } from "@/components/app/session-info-summary";
@@ -76,6 +76,8 @@ export interface SessionData {
   intensity: number | null;
   tags: string[];
   location: string | null;
+  /** Nombre del lugar (Mis lugares) donde se imparte. */
+  placeName?: string | null;
   status: "scheduled" | "completed" | "cancelled";
 }
 
@@ -189,19 +191,6 @@ export interface SessionBlockData {
      * ejercicio de biblioteca, elegido al crear el texto libre. */
     aspectoJuego?: string | null;
   }>;
-}
-
-function MetadataChips({ session }: { session: SessionData }) {
-  if (!session.location) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
-        <MapPin className="size-3 text-muted-foreground" />
-        {session.location}
-      </span>
-    </div>
-  );
 }
 
 function getInitials(name: string) {
@@ -799,13 +788,12 @@ export function SessionDetailClient({
             <ClassAnimationButton sessionId={session.id} variant="hero" />
           )}
 
-          <MetadataChips session={session} />
-
           <SessionInfoSummary
             objective={session.objective}
             material={session.material}
             observations={session.observations}
             tags={session.tags}
+            place={session.placeName ?? session.location}
             showEmptyObjective
             className="border-t border-border/50 pt-4"
           />

@@ -9,6 +9,8 @@ interface SessionInfoSummaryProps {
   material?: string | null;
   observations?: string | null;
   tags?: string[] | null;
+  /** Lugar donde se imparte. */
+  place?: string | null;
   /** Versión reducida (tarjetas de borrador): textos recortados. */
   compact?: boolean;
   /** Muestra el apartado Objetivo aunque esté vacío (ficha de sesión). */
@@ -38,6 +40,7 @@ export function SessionInfoSummary({
   material,
   observations,
   tags,
+  place,
   compact = false,
   showEmptyObjective = false,
   className,
@@ -55,6 +58,7 @@ export function SessionInfoSummary({
       value: objective,
       empty: showEmptyObjective && !objective?.trim(),
     },
+    { label: "Lugar", value: place, empty: false },
     { label: "Material", value: material, empty: false },
     { label: "Observaciones", value: observations, empty: false },
   ].filter((f) => f.empty || f.value?.trim());
