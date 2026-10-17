@@ -67,6 +67,7 @@ export type AnimationScene =
   | "reaction"
   | "alley"
   | "points"
+  | "elevator"
   | "rest"
   | "cooldown";
 
@@ -151,7 +152,11 @@ function sceneFor(
   if (/\bespejo\b/.test(t) && !/\btorre\b|\btee\b/.test(t)) return "mirror";
   if (/\breacci[oó]n\b|\breactiv[ao]s?\b/.test(t)) return "reaction";
   if (/pasillo de dobles/.test(t)) return "alley";
-  if (/rey de la pista|\bpuntos? en (el|los) cuadros? de saque/.test(t))
+  if (/\bascensor\b/.test(t) && /\bsaque\b|\bservicio\b|\bsirven\b/.test(t))
+    return "elevator";
+  if (
+    /\b(rey|reina) de la pista|\bpuntos? en (el|los) cuadros? de saque/.test(t)
+  )
     return "points";
   if (blockPos === 0 && blockCount > 1) {
     if (/pelote[oa]n?\b|\bpelotear\b/.test(t)) return "pairs";

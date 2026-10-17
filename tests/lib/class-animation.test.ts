@@ -271,12 +271,12 @@ describe("escenas de la sesión 261016_Galácticas", () => {
         ex(
           "Ascensor con el servicio",
           10,
-          "Se colocan los jugadores en 3/4 de pista y sirven."
+          "Las jugadoras sacan a la vez desde 3/4 de pista."
         ),
         txt(
           "",
           23,
-          "Se juega un rey de la pista pero con una primera bola que los aspirantes tienen que golpear de derecha invertida."
+          "Se juega una reina de la pista pero con una primera bola que los aspirantes tienen que golpear de derecha invertida."
         ),
       ],
     },
@@ -294,7 +294,7 @@ describe("escenas de la sesión 261016_Galácticas", () => {
       "pairs",
       "reaction",
       "alley",
-      "serve",
+      "elevator",
       "points",
       "cooldown",
     ]);

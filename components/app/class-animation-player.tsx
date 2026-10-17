@@ -635,8 +635,9 @@ const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
   game: "Juego de vidas con el monitor",
   mirror: "Espejo por parejas: uno guía y el otro copia",
   reaction: "El monitor lanza a un lado desde la línea de saque",
-  alley: "Peloteo entre jugadores en el pasillo de dobles",
-  points: "Puntos en el cuadro de saque con primera bola del monitor",
+  alley: "Peloteo desde el fondo en el pasillo de dobles",
+  points: "Reina de la pista desde el fondo · primera bola del monitor",
+  elevator: "Ascensor: sacan a la vez · quien mete pasa al fondo",
   rest: "Descanso",
   cooldown: "Estiramientos en corro",
 };
@@ -729,6 +730,8 @@ interface SceneFrame {
   cones?: Pt[];
   /** Resalta los pasillos de dobles. */
   alleys?: boolean;
+  /** Textos sobre la pista (p. ej. "+1", "Reina"). */
+  labels?: { at: Pt; text: string; opacity: number }[];
 }
 
 function sceneFrame(
@@ -1059,8 +1062,8 @@ function sceneFrame(
       return { coach, students, balls };
     }
     case "alley": {
-      // Peloteo entre jugadores dentro del pasillo de dobles: una pareja en
-      // cada pasillo, a ambos lados de la red, a la vez.
+      // Peloteo entre jugadoras desde el fondo, dentro del pasillo de
+      // dobles: una pareja en cada pasillo, a la vez.
       const lanes = [
         (COURT.y + SINGLES_TOP) / 2,
         (SINGLES_BOTTOM + COURT.y + COURT.h) / 2,
@@ -1068,58 +1071,129 @@ function sceneFrame(
       const students: Pt[] = [];
       const balls: SceneFrame["balls"] = [];
       lanes.forEach((y, pair) => {
-        const a = { x: NET_X - 62, y };
-        const b = { x: NET_X + 62, y };
+        const a = { x: COURT.x + 6, y };
+        const b = { x: COURT.x + COURT.w - 6, y };
         students.push(a, b);
-        const cycle = (tt * 0.6 + pair * 0.5) % 2;
+        const cycle = (tt * 0.45 + pair * 0.5) % 2;
         const forward = cycle < 1;
         const p = forward ? cycle : cycle - 1;
-        balls.push(flight(forward ? a : b, forward ? b : a, p, 22));
+        balls.push(flight(forward ? a : b, forward ? b : a, p, 34));
       });
       return {
-        coach: { x: COURT.x + 22, y: MID_Y },
+        coach: { x: NET_X, y: MID_Y },
         students,
         balls,
         alleys: true,
       };
     }
     case "points": {
-      // Rey de la pista en los cuadros de saque: el monitor da la primera
-      // bola a la derecha del aspirante, que la juega cruzada (o de derecha
-      // invertida) y se disputa el punto en diagonal. El rey espera en el
-      // otro campo y los aspirantes hacen cola tras el fondo.
-      const coach = { x: NET_X + 24, y: COURT.y + COURT.h + 14 };
-      const aspirant = { x: NET_X + 48, y: MID_Y - 26 };
-      const king = { x: NET_X - 48, y: MID_Y + 26 };
-      const kingBox = { x: NET_X - 40, y: MID_Y + 30 };
-      const aspirantBox = { x: NET_X + 40, y: MID_Y - 30 };
-      const sway = still ? 0 : Math.sin(tt * 2.2) * 4;
+      // Reina de la pista desde el fondo: el monitor da la primera bola a la
+      // derecha de la aspirante, que la juega cruzada (o de derecha
+      // invertida) y se disputa el punto. La reina espera en el otro fondo
+      // y las aspirantes hacen cola tras su línea de fondo.
+      const coach = { x: NET_X + 22, y: COURT.y + COURT.h + 14 };
+      const aspirant = { x: COURT.x + COURT.w - 8, y: MID_Y - 34 };
+      const queen = { x: COURT.x + 8, y: MID_Y + 34 };
+      const sway = still ? 0 : Math.sin(tt * 2.2) * 5;
+      const a = { x: aspirant.x, y: aspirant.y + sway };
+      const q = { x: queen.x, y: queen.y - sway };
       const students = [
-        { x: aspirant.x + sway, y: aspirant.y },
-        { x: COURT.x + COURT.w + 22, y: MID_Y - 30 },
-        { x: COURT.x + COURT.w + 22, y: MID_Y },
-        { x: king.x - sway, y: king.y },
+        a,
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 6 },
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 36 },
+        q,
       ];
-      const cycle = (tt * 0.5) % 3;
+      const cycle = (tt * 0.42) % 3;
       let balls: SceneFrame["balls"];
       if (cycle < 0.6) {
-        // Primera bola del monitor a la derecha del aspirante.
-        balls = [
-          flight(
-            coach,
-            { x: aspirant.x + 6, y: aspirant.y + 10 },
-            cycle / 0.6,
-            22
-          ),
-        ];
+        // Primera bola del monitor a la derecha de la aspirante.
+        balls = [flight(coach, { x: a.x - 4, y: a.y + 12 }, cycle / 0.6, 26)];
       } else if (cycle < 1.6) {
-        balls = [flight(aspirant, kingBox, cycle - 0.6, 28)];
+        balls = [flight(a, q, cycle - 0.6, 40)];
       } else if (cycle < 2.6) {
-        balls = [flight(king, aspirantBox, cycle - 1.6, 28)];
+        balls = [flight(q, a, cycle - 1.6, 40)];
       } else {
         balls = [];
       }
-      return { coach, students, balls };
+      return {
+        coach,
+        students,
+        balls,
+        labels: [{ at: { x: q.x, y: q.y - 14 }, text: "Reina", opacity: 1 }],
+      };
+    }
+    case "elevator": {
+      // Ascensor con el servicio: todas sacan a la vez desde 3/4 (entre la
+      // línea de servicio y la de fondo). La que mete pasa a la línea de
+      // fondo; la que falla se queda. Si desde el fondo vuelve a meter,
+      // suma 1 punto y vuelve a empezar desde 3/4.
+      const rows = [
+        SINGLES_TOP + 16,
+        MID_Y - 22,
+        MID_Y + 22,
+        SINGLES_BOTTOM - 16,
+      ];
+      const midX = (SERVICE_RIGHT + COURT.x + COURT.w) / 2;
+      const baseX = COURT.x + COURT.w + 6;
+      const RATE = 0.4;
+      const raw = tt * RATE;
+      const round = Math.floor(raw);
+      const local = raw % 1;
+      // Resultado fijo por jugadora y ronda (≈ 60 % de aciertos).
+      const makes = (i: number, r: number) => (i * 7 + r * 13 + 3) % 5 < 3;
+      // Posición (0 = 3/4, 1 = fondo) al empezar cada ronda.
+      const levelAt = (i: number, r: number) => {
+        let level = 0;
+        for (let k = 0; k < r; k++) {
+          if (!makes(i, k)) level = 0;
+          else level = level === 0 ? 1 : 0;
+        }
+        return level;
+      };
+      const students: Pt[] = [];
+      const balls: SceneFrame["balls"] = [];
+      const labels: NonNullable<SceneFrame["labels"]> = [];
+      rows.forEach((y, i) => {
+        const now = levelAt(i, round);
+        const before = round > 0 ? levelAt(i, round - 1) : now;
+        const xNow = now ? baseX : midX;
+        const xBefore = before ? baseX : midX;
+        const x = local < 0.2 ? lerp(xBefore, xNow, ease(local / 0.2)) : xNow;
+        const pos = { x, y };
+        students.push(pos);
+        if (local < 0.2) return;
+        const hand = { x: x - 6, y: y - 10 };
+        const inBall = makes(i, round);
+        const target = inBall
+          ? {
+              x: NET_X - 46 + (i % 2) * 10,
+              y: y < MID_Y ? MID_Y + 26 : MID_Y - 26,
+            }
+          : { x: NET_X + 3, y: y < MID_Y ? MID_Y - 8 : MID_Y + 8 };
+        if (local < 0.35) {
+          const up = Math.sin(((local - 0.2) / 0.15) * Math.PI) * 22;
+          balls.push({ ball: { x: hand.x, y: hand.y - up }, shadow: null });
+        } else if (local < 0.8) {
+          balls.push(
+            flight(hand, target, (local - 0.35) / 0.45, inBall ? 30 : 16)
+          );
+        }
+        // Mete desde el fondo: +1 que sube desde la jugadora.
+        if (inBall && now === 1 && local >= 0.6) {
+          const p = (local - 0.6) / 0.4;
+          labels.push({
+            at: { x: pos.x, y: pos.y - 14 - p * 22 },
+            text: "+1",
+            opacity: p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3,
+          });
+        }
+      });
+      return {
+        coach: { x: NET_X + 30, y: COURT.y + COURT.h + 14 },
+        students,
+        balls,
+        labels,
+      };
     }
     case "rest": {
       // Todos al banco, junto a la red.
@@ -1195,6 +1269,7 @@ function Court({
         ring: p > 0.5 ? frame.ring : undefined,
         rings: p > 0.5 ? frame.rings : undefined,
         cones: p > 0.5 ? frame.cones : undefined,
+        labels: p > 0.85 ? frame.labels : undefined,
       };
     }
   }
@@ -1422,6 +1497,23 @@ function Court({
           stroke="#fff"
           strokeWidth={1}
         />
+      ))}
+
+      {frame.labels?.map((l, i) => (
+        <text
+          key={`l${i}`}
+          x={l.at.x}
+          y={l.at.y}
+          textAnchor="middle"
+          fontSize={l.text.length > 2 ? 8.5 : 12}
+          fontWeight={800}
+          fill="#D6FF38"
+          stroke="#050505"
+          strokeWidth={0.6}
+          opacity={l.opacity}
+        >
+          {l.text}
+        </text>
       ))}
 
       {/* Descanso: gota de agua */}
