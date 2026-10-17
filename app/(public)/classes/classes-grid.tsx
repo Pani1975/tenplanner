@@ -9,6 +9,7 @@ import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { AddClassesToListDialog } from "@/components/app/add-classes-to-list-dialog";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
 import { hasClassAnimation } from "@/lib/classes/animation";
+import { LevelBalls } from "@/components/app/level-balls";
 
 export interface ClassGridItem {
   id: string;
@@ -178,9 +179,15 @@ export function ClassesGrid({
             <>
               <div>
                 <div className="mb-4 flex items-start justify-between gap-3 bg-[#050505] px-5 py-3 text-white">
-                  <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11.5px] font-bold tabular-nums text-[#050505]">
-                    {cls.duracionMinutes} min
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11.5px] font-bold tabular-nums text-[#050505]">
+                      {cls.duracionMinutes} min
+                    </span>
+                    <LevelBalls
+                      size="sm"
+                      niveles={classValues(cls.niveles, cls.nivel)}
+                    />
+                  </div>
                   <div className="flex items-center gap-1.5">
                     {cls.status === "draft" && (
                       <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">

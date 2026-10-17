@@ -8,10 +8,13 @@ import { cn } from "@/lib/utils";
 export function LevelBalls({
   niveles,
   sport,
+  size = "md",
   className,
 }: {
   niveles: string[];
   sport?: string | null;
+  /** "sm" para las tarjetas de los listados. */
+  size?: "sm" | "md";
   className?: string;
 }) {
   if (sport === "padel") return null;
@@ -26,17 +29,33 @@ export function LevelBalls({
   return (
     <div className={cn("flex items-center -space-x-1.5", className)}>
       {Array.from(balls, ([color, labels]) => (
-        <TennisBall key={color} color={color} title={labels.join(", ")} />
+        <TennisBall
+          key={color}
+          color={color}
+          title={labels.join(", ")}
+          small={size === "sm"}
+        />
       ))}
     </div>
   );
 }
 
-function TennisBall({ color, title }: { color: string; title: string }) {
+function TennisBall({
+  color,
+  title,
+  small,
+}: {
+  color: string;
+  title: string;
+  small?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 32 32"
-      className="size-8 shrink-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+      className={cn(
+        "shrink-0 drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]",
+        small ? "size-6" : "size-8"
+      )}
       role="img"
       aria-label={`Pelota de ${title}`}
     >

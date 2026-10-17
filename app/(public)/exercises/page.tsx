@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LevelBalls } from "@/components/app/level-balls";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
@@ -461,69 +462,78 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     : [{ total: 0 }];
   const draftCount = Number(draftCountRows[0]?.total ?? 0);
 
-  const [rowPage, allRows, globalRows, mineRows, categoryRows, fisicoAspectoRows] =
-    await Promise.all([
-      db
-        .select({
-          id: exercisesTable.id,
-          name: exercisesTable.name,
-          description: exercisesTable.description,
-          category: exercisesTable.category,
-          difficulty: exercisesTable.difficulty,
-          durationMinutes: exercisesTable.durationMinutes,
-          imageUrl: exercisesTable.imageUrl,
-          videoUrl: exercisesTable.videoUrl,
-          isAiGenerated: exercisesTable.isAiGenerated,
-          isGlobal: exercisesTable.isGlobal,
-          autoria: exercisesTable.autoria,
-          createdBy: exercisesTable.createdBy,
-          formato: exercisesTable.formato,
-          numJugadores: exercisesTable.numJugadores,
-          tipoActividad: exercisesTable.tipoActividad,
-          tiposActividad: exercisesTable.tiposActividad,
-          stepsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.steps}), 0)`,
-          materialsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.materials}), 0)`,
-        })
-        .from(exercisesTable)
-        .where(listWhere)
-        .orderBy(...exerciseOrderBy(activeSort))
-        .limit(PAGE_SIZE + 1)
-        .offset(offset),
-      db.select({ total: count() }).from(exercisesTable).where(allVisibleWhere),
-      publicExercisesEnabled
-        ? db
-            .select({ total: count() })
-            .from(exercisesTable)
-            .where(and(sportWhere, eq(exercisesTable.isGlobal, true)))
-        : Promise.resolve([{ total: 0 }]),
-      user
-        ? db
-            .select({ total: count() })
-            .from(exercisesTable)
-            .where(and(sportWhere, mineWhere))
-        : Promise.resolve([{ total: 0 }]),
-      db
-        .select({ category: exercisesTable.category, total: count() })
-        .from(exercisesTable)
-        .where(visibilityWhere)
-        .groupBy(exercisesTable.category),
-      // "Aspectos del juego" es una etiqueta multivalor (jsonb), no la
-      // categoría exclusiva de arriba: un ejercicio puede tener varios
-      // aspectos a la vez, así que este conteo no tiene por qué cuadrar
-      // con el total de ejercicios.
-      db
-        .select({ total: count() })
-        .from(exercisesTable)
-        .where(
-          and(
-            visibilityWhere,
-            or(
-              jsonbArrayHasAny(exercisesTable.aspectosJuego, ["fisico"])!,
-              inArray(exercisesTable.aspectoJuego, ["fisico"])
-            )
+  const [
+    rowPage,
+    allRows,
+    globalRows,
+    mineRows,
+    categoryRows,
+    fisicoAspectoRows,
+  ] = await Promise.all([
+    db
+      .select({
+        id: exercisesTable.id,
+        name: exercisesTable.name,
+        description: exercisesTable.description,
+        category: exercisesTable.category,
+        difficulty: exercisesTable.difficulty,
+        durationMinutes: exercisesTable.durationMinutes,
+        imageUrl: exercisesTable.imageUrl,
+        videoUrl: exercisesTable.videoUrl,
+        isAiGenerated: exercisesTable.isAiGenerated,
+        isGlobal: exercisesTable.isGlobal,
+        autoria: exercisesTable.autoria,
+        createdBy: exercisesTable.createdBy,
+        formato: exercisesTable.formato,
+        numJugadores: exercisesTable.numJugadores,
+        tipoActividad: exercisesTable.tipoActividad,
+        tiposActividad: exercisesTable.tiposActividad,
+        nivel: exercisesTable.nivel,
+        niveles: exercisesTable.niveles,
+        sport: exercisesTable.sport,
+        stepsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.steps}), 0)`,
+        materialsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.materials}), 0)`,
+      })
+      .from(exercisesTable)
+      .where(listWhere)
+      .orderBy(...exerciseOrderBy(activeSort))
+      .limit(PAGE_SIZE + 1)
+      .offset(offset),
+    db.select({ total: count() }).from(exercisesTable).where(allVisibleWhere),
+    publicExercisesEnabled
+      ? db
+          .select({ total: count() })
+          .from(exercisesTable)
+          .where(and(sportWhere, eq(exercisesTable.isGlobal, true)))
+      : Promise.resolve([{ total: 0 }]),
+    user
+      ? db
+          .select({ total: count() })
+          .from(exercisesTable)
+          .where(and(sportWhere, mineWhere))
+      : Promise.resolve([{ total: 0 }]),
+    db
+      .select({ category: exercisesTable.category, total: count() })
+      .from(exercisesTable)
+      .where(visibilityWhere)
+      .groupBy(exercisesTable.category),
+    // "Aspectos del juego" es una etiqueta multivalor (jsonb), no la
+    // categoría exclusiva de arriba: un ejercicio puede tener varios
+    // aspectos a la vez, así que este conteo no tiene por qué cuadrar
+    // con el total de ejercicios.
+    db
+      .select({ total: count() })
+      .from(exercisesTable)
+      .where(
+        and(
+          visibilityWhere,
+          or(
+            jsonbArrayHasAny(exercisesTable.aspectosJuego, ["fisico"])!,
+            inArray(exercisesTable.aspectoJuego, ["fisico"])
           )
-        ),
-    ]);
+        )
+      ),
+  ]);
 
   const hasNextPage = rowPage.length > PAGE_SIZE;
   const filtered = hasNextPage ? rowPage.slice(0, PAGE_SIZE) : rowPage;
@@ -831,36 +841,38 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 {/* ─── Category strip ─── */}
                 {tabCounts[activeTab] > 0 && (
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    {statStrip.map(({ key, code, label, count, isActive, href }) => {
-                      return (
-                        <Link
-                          key={key}
-                          href={href}
-                          className={`group rounded-lg border px-5 py-5 transition-all ${
-                            isActive
-                              ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505] shadow-[0_18px_40px_rgba(214,255,56,0.24)]"
-                              : "border-[#050505]/10 bg-white/70 hover:border-[#050505]/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#D6FF38]/40"
-                          }`}
-                        >
-                          <div className="flex items-baseline justify-between">
-                            <p
-                              className={`font-sans text-[10px] uppercase tracking-[0.2em] ${isActive ? "text-[#050505]/70" : "text-foreground/45"}`}
-                            >
-                              {code} · {label}
+                    {statStrip.map(
+                      ({ key, code, label, count, isActive, href }) => {
+                        return (
+                          <Link
+                            key={key}
+                            href={href}
+                            className={`group rounded-lg border px-5 py-5 transition-all ${
+                              isActive
+                                ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505] shadow-[0_18px_40px_rgba(214,255,56,0.24)]"
+                                : "border-[#050505]/10 bg-white/70 hover:border-[#050505]/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#D6FF38]/40"
+                            }`}
+                          >
+                            <div className="flex items-baseline justify-between">
+                              <p
+                                className={`font-sans text-[10px] uppercase tracking-[0.2em] ${isActive ? "text-[#050505]/70" : "text-foreground/45"}`}
+                              >
+                                {code} · {label}
+                              </p>
+                              {isActive && (
+                                <span className="size-1.5 rounded-full bg-[#050505]" />
+                              )}
+                            </div>
+                            <p className="mt-2 font-heading text-3xl tabular-nums leading-none">
+                              {count}
                             </p>
-                            {isActive && (
-                              <span className="size-1.5 rounded-full bg-[#050505]" />
-                            )}
-                          </div>
-                          <p className="mt-2 font-heading text-3xl tabular-nums leading-none">
-                            {count}
-                          </p>
-                          <p className="mt-1.5 font-sans text-[10px] italic opacity-60">
-                            ejercicios
-                          </p>
-                        </Link>
-                      );
-                    })}
+                            <p className="mt-1.5 font-sans text-[10px] italic opacity-60">
+                              ejercicios
+                            </p>
+                          </Link>
+                        );
+                      }
+                    )}
                   </div>
                 )}
 
@@ -1360,9 +1372,23 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                           className="flex flex-col overflow-hidden rounded-lg border border-[#050505]/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#D6FF38] hover:shadow-[0_24px_50px_rgba(5,5,5,0.12)] dark:border-white/10 dark:bg-white/[0.04]"
                         >
                           <div className="flex items-center justify-between bg-[#050505] px-4 py-3 text-white sm:px-5">
-                            <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11px] font-bold tabular-nums text-[#050505]">
-                              {exercise.durationMinutes} min
-                            </span>
+                            <div className="flex items-center gap-2.5">
+                              <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11px] font-bold tabular-nums text-[#050505]">
+                                {exercise.durationMinutes} min
+                              </span>
+                              <LevelBalls
+                                size="sm"
+                                sport={exercise.sport}
+                                niveles={
+                                  Array.isArray(exercise.niveles) &&
+                                  exercise.niveles.length > 0
+                                    ? (exercise.niveles as string[])
+                                    : exercise.nivel
+                                      ? [exercise.nivel]
+                                      : []
+                                }
+                              />
+                            </div>
                             <div className="flex items-center gap-2.5">
                               {owner && (
                                 <span
