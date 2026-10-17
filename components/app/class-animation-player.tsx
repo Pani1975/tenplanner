@@ -633,6 +633,10 @@ const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
   stations: "Circuito por estaciones",
   serve: "Saque al cuadro",
   game: "Juego de vidas con el monitor",
+  mirror: "Espejo por parejas: uno guía y el otro copia",
+  reaction: "El monitor lanza a un lado desde la línea de saque",
+  alley: "Peloteo entre jugadores en el pasillo de dobles",
+  points: "Puntos en el cuadro de saque con primera bola del monitor",
   rest: "Descanso",
   cooldown: "Estiramientos en corro",
 };
@@ -666,6 +670,11 @@ const H = 210;
 const COURT = { x: 40, y: 30, w: 320, h: 150 };
 const NET_X = COURT.x + COURT.w / 2;
 const MID_Y = COURT.y + COURT.h / 2;
+/** Líneas laterales de individuales (el pasillo de dobles queda fuera). */
+const SINGLES_TOP = COURT.y + COURT.h * 0.125;
+const SINGLES_BOTTOM = COURT.y + COURT.h * 0.875;
+/** Línea de saque del campo derecho. */
+const SERVICE_RIGHT = COURT.x + COURT.w * 0.78;
 const STUDENTS = 4;
 
 type Pt = { x: number; y: number };
@@ -718,6 +727,8 @@ interface SceneFrame {
   rings?: Pt[];
   /** Conos (salidas, estaciones). */
   cones?: Pt[];
+  /** Resalta los pasillos de dobles. */
+  alleys?: boolean;
 }
 
 function sceneFrame(
@@ -994,6 +1005,122 @@ function sceneFrame(
             );
       return { coach, students, balls: [ball], cones: [cone] };
     }
+    case "mirror": {
+      // Espejo por parejas, en paralelo: cada pareja frente a frente a los
+      // lados de la red; el guía se desplaza y su compañero le copia.
+      const rows = [MID_Y - 36, MID_Y + 36];
+      const students: Pt[] = [];
+      rows.forEach((y, pair) => {
+        const lead = still ? 0 : Math.sin(tt * 1.7 + pair * 1.3) * 20;
+        const copy = still ? 0 : Math.sin((tt - 0.3) * 1.7 + pair * 1.3) * 20;
+        students.push(
+          { x: NET_X - 34, y: y + lead },
+          { x: NET_X + 34, y: y + copy }
+        );
+      });
+      return {
+        coach: { x: NET_X, y: COURT.y + COURT.h + 14 },
+        students,
+        balls: [],
+      };
+    }
+    case "reaction": {
+      // El monitor, en la línea de saque y en el mismo campo que el jugador,
+      // lanza la pelota a un lado; el jugador sale rápido a por ella y vuelve
+      // al centro. Los demás esperan su turno detrás del fondo.
+      const coach = { x: SERVICE_RIGHT, y: MID_Y };
+      const ready = { x: COURT.x + COURT.w - 30, y: MID_Y };
+      const raw = tt * 0.45;
+      const cycle = raw % 1;
+      const side = Math.floor(raw) % 2 === 0 ? -1 : 1;
+      const target = { x: ready.x - 8, y: MID_Y + side * 46 };
+      const player =
+        cycle < 0.2
+          ? ready
+          : cycle < 0.5
+            ? lerpPt(ready, target, ease((cycle - 0.2) / 0.3))
+            : cycle < 0.62
+              ? target
+              : lerpPt(target, ready, ease((cycle - 0.62) / 0.38));
+      const students = [
+        player,
+        { x: COURT.x + COURT.w + 24, y: MID_Y - 34 },
+        { x: COURT.x + COURT.w + 24, y: MID_Y },
+        { x: COURT.x + COURT.w + 24, y: MID_Y + 34 },
+      ];
+      const balls =
+        cycle < 0.2
+          ? [{ ball: { x: coach.x + 7, y: coach.y - 8 }, shadow: null }]
+          : cycle < 0.5
+            ? [flight(coach, target, (cycle - 0.2) / 0.3, 20)]
+            : cycle < 0.62
+              ? [{ ball: { x: target.x + 7, y: target.y - 8 }, shadow: null }]
+              : [];
+      return { coach, students, balls };
+    }
+    case "alley": {
+      // Peloteo entre jugadores dentro del pasillo de dobles: una pareja en
+      // cada pasillo, a ambos lados de la red, a la vez.
+      const lanes = [
+        (COURT.y + SINGLES_TOP) / 2,
+        (SINGLES_BOTTOM + COURT.y + COURT.h) / 2,
+      ];
+      const students: Pt[] = [];
+      const balls: SceneFrame["balls"] = [];
+      lanes.forEach((y, pair) => {
+        const a = { x: NET_X - 62, y };
+        const b = { x: NET_X + 62, y };
+        students.push(a, b);
+        const cycle = (tt * 0.6 + pair * 0.5) % 2;
+        const forward = cycle < 1;
+        const p = forward ? cycle : cycle - 1;
+        balls.push(flight(forward ? a : b, forward ? b : a, p, 22));
+      });
+      return {
+        coach: { x: COURT.x + 22, y: MID_Y },
+        students,
+        balls,
+        alleys: true,
+      };
+    }
+    case "points": {
+      // Rey de la pista en los cuadros de saque: el monitor da la primera
+      // bola a la derecha del aspirante, que la juega cruzada (o de derecha
+      // invertida) y se disputa el punto en diagonal. El rey espera en el
+      // otro campo y los aspirantes hacen cola tras el fondo.
+      const coach = { x: NET_X + 24, y: COURT.y + COURT.h + 14 };
+      const aspirant = { x: NET_X + 48, y: MID_Y - 26 };
+      const king = { x: NET_X - 48, y: MID_Y + 26 };
+      const kingBox = { x: NET_X - 40, y: MID_Y + 30 };
+      const aspirantBox = { x: NET_X + 40, y: MID_Y - 30 };
+      const sway = still ? 0 : Math.sin(tt * 2.2) * 4;
+      const students = [
+        { x: aspirant.x + sway, y: aspirant.y },
+        { x: COURT.x + COURT.w + 22, y: MID_Y - 30 },
+        { x: COURT.x + COURT.w + 22, y: MID_Y },
+        { x: king.x - sway, y: king.y },
+      ];
+      const cycle = (tt * 0.5) % 3;
+      let balls: SceneFrame["balls"];
+      if (cycle < 0.6) {
+        // Primera bola del monitor a la derecha del aspirante.
+        balls = [
+          flight(
+            coach,
+            { x: aspirant.x + 6, y: aspirant.y + 10 },
+            cycle / 0.6,
+            22
+          ),
+        ];
+      } else if (cycle < 1.6) {
+        balls = [flight(aspirant, kingBox, cycle - 0.6, 28)];
+      } else if (cycle < 2.6) {
+        balls = [flight(king, aspirantBox, cycle - 1.6, 28)];
+      } else {
+        balls = [];
+      }
+      return { coach, students, balls };
+    }
     case "rest": {
       // Todos al banco, junto a la red.
       const students = Array.from({ length: STUDENTS }, (_, i) => ({
@@ -1107,8 +1234,8 @@ function Court({
             key={f}
             x1={COURT.x + COURT.w * f}
             x2={COURT.x + COURT.w * f}
-            y1={COURT.y}
-            y2={COURT.y + COURT.h}
+            y1={SINGLES_TOP}
+            y2={SINGLES_BOTTOM}
             stroke="#fff"
             strokeOpacity={0.6}
             strokeWidth={1.5}
@@ -1123,6 +1250,31 @@ function Court({
           strokeOpacity={0.6}
           strokeWidth={1.5}
         />
+        {/* Líneas de individuales: delimitan los pasillos de dobles */}
+        {[SINGLES_TOP, SINGLES_BOTTOM].map((y) => (
+          <line
+            key={y}
+            x1={COURT.x}
+            x2={COURT.x + COURT.w}
+            y1={y}
+            y2={y}
+            stroke="#fff"
+            strokeOpacity={0.6}
+            strokeWidth={1.5}
+          />
+        ))}
+        {frame.alleys &&
+          [COURT.y, SINGLES_BOTTOM].map((y) => (
+            <rect
+              key={`a${y}`}
+              x={COURT.x}
+              y={y}
+              width={COURT.w}
+              height={SINGLES_TOP - COURT.y}
+              fill="#D6FF38"
+              opacity={0.16}
+            />
+          ))}
         {/* Red */}
         <line
           x1={NET_X}

@@ -63,6 +63,10 @@ export type AnimationScene =
   | "stations"
   | "serve"
   | "game"
+  | "mirror"
+  | "reaction"
+  | "alley"
+  | "points"
   | "rest"
   | "cooldown";
 
@@ -142,8 +146,15 @@ function sceneFor(
   const t = text.toLowerCase();
   if (kind === "stations") return "stations";
   const isGame = /\bvidas\b|eliminad/.test(t);
+  // Ejercicios con organización propia, en cualquier bloque.
+  // (En la torre/tee "espejo" describe las sombras, no el ejercicio.)
+  if (/\bespejo\b/.test(t) && !/\btorre\b|\btee\b/.test(t)) return "mirror";
+  if (/\breacci[oó]n\b|\breactiv[ao]s?\b/.test(t)) return "reaction";
+  if (/pasillo de dobles/.test(t)) return "alley";
+  if (/rey de la pista|\bpuntos? en (el|los) cuadros? de saque/.test(t))
+    return "points";
   if (blockPos === 0 && blockCount > 1) {
-    if (/peloteo/.test(t)) return "pairs";
+    if (/pelote[oa]n?\b|\bpelotear\b/.test(t)) return "pairs";
     if (/\baros?\b/.test(t) && /\bequipos?\b|relevo/.test(t)) return "relay";
     return "warmup";
   }
@@ -152,7 +163,12 @@ function sceneFor(
     return "cooldown";
   }
   if (/\btorre\b|\btee\b/.test(t)) return "tee";
-  if (/\bsaque\b|\bsacar[aá]n?\b/.test(t)) return "serve";
+  // "zona de servicio" es solo un lugar de la pista, no un saque.
+  if (
+    /\bsaque\b|\bsacar[aá]n?\b|\bsirven\b/.test(t) ||
+    /(?<!zona de )\bservicio\b/.test(t)
+  )
+    return "serve";
   // "guiada" antes que "malabares": "la mano sobre las cuerdas" del monitor
   // describe un golpe guiado, no un ejercicio de control de pelota.
   if (/guiad|mano sobre|acompaña/.test(t)) return "guided";

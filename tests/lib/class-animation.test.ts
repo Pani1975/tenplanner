@@ -243,3 +243,60 @@ describe("animación Grupo Naranja/Verde 1", () => {
     expect(tl.totalClassMinutes).toBe(90);
   });
 });
+
+describe("escenas de la sesión 261016_Galácticas", () => {
+  const blocks = [
+    {
+      orderIndex: 1,
+      title: "Bloque inicial",
+      items: [
+        ex("El espejo en movimiento", 5, ""),
+        ex(
+          "Calentamiento con bola roja",
+          5,
+          "Los jugadores pelotean suavemente con pelota roja por parejas en al cuadro de saque."
+        ),
+      ],
+    },
+    {
+      orderIndex: 2,
+      title: "Bloque principal",
+      items: [
+        ex("Agilidad reactiva con estímulo visual", 15, ""),
+        ex(
+          "Control en pasillo de dobles",
+          15,
+          "Los jugadores pelotean en paralelo en el pasillo de dobles."
+        ),
+        ex(
+          "Ascensor con el servicio",
+          10,
+          "Se colocan los jugadores en 3/4 de pista y sirven."
+        ),
+        txt(
+          "",
+          23,
+          "Se juega un rey de la pista pero con una primera bola que los aspirantes tienen que golpear de derecha invertida."
+        ),
+      ],
+    },
+    {
+      orderIndex: 3,
+      title: "Bloque final",
+      items: [txt("", 2, "Recogida de pelotas")],
+    },
+  ];
+
+  it("asigna la organización de cada ejercicio", () => {
+    const { steps } = buildAnimationTimeline(blocks, { objectives: null });
+    expect(steps.map((s) => s.scene)).toEqual([
+      "mirror",
+      "pairs",
+      "reaction",
+      "alley",
+      "serve",
+      "points",
+      "cooldown",
+    ]);
+  });
+});
