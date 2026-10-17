@@ -37,6 +37,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { WorkModeBadge } from "./work-mode-badge";
 import { spaceLabels } from "@/lib/space-labels";
 import { SportBadge } from "./sport-badge";
+import { formatUnread, useUnreadMessages } from "./use-unread-messages";
 import type { ClubOption } from "./club-context-select";
 import type { Sport } from "@/lib/sport-constants";
 
@@ -223,6 +224,8 @@ interface WorkModeProps {
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
   familyOnly?: boolean;
+  /** Mensajes recibidos sin leer (contador junto a "Mensajes") */
+  unreadMessages?: number;
 }
 
 interface SidebarNavProps extends WorkModeProps {
@@ -264,6 +267,7 @@ function NavContent({
   activeWorkClubId = null,
   activeSport = "tenis",
   familyOnly = false,
+  unreadMessages = 0,
 }: {
   pathname: string;
   /** Query string actual (sin "?"), para marcar la pestaña activa. */
@@ -539,6 +543,14 @@ function NavContent({
                     >
                       {label}
                     </span>
+                    {href === "/mensajes" && unreadMessages > 0 && (
+                      <span
+                        className="grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums leading-none text-white"
+                        aria-label={`${unreadMessages} mensajes nuevos`}
+                      >
+                        {formatUnread(unreadMessages)}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
@@ -660,8 +672,10 @@ function SidebarNavInner({
   activeWorkClubId = null,
   activeSport = "tenis",
   familyOnly = false,
+  unreadMessages: initialUnread = 0,
   search,
 }: SidebarNavProps & { search: string }) {
+  const unreadMessages = useUnreadMessages(initialUnread, !!user);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -748,6 +762,7 @@ function SidebarNavInner({
           activeWorkClubId={activeWorkClubId}
           activeSport={activeSport}
           familyOnly={familyOnly}
+          unreadMessages={unreadMessages}
         />
       </aside>
 
@@ -776,12 +791,20 @@ function SidebarNavInner({
               ref={triggerRef}
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
               aria-label="Abrir menú"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav-drawer"
             >
               <Menu className="size-5" strokeWidth={1.8} />
+              {unreadMessages > 0 && (
+                <span
+                  className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-black tabular-nums leading-none text-white"
+                  aria-label={`${unreadMessages} mensajes nuevos`}
+                >
+                  {formatUnread(unreadMessages)}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -840,6 +863,7 @@ function SidebarNavInner({
               activeWorkClubId={activeWorkClubId}
               activeSport={activeSport}
               familyOnly={familyOnly}
+              unreadMessages={unreadMessages}
             />
           </aside>
         </div>

@@ -203,6 +203,58 @@ export async function sendMessage(
   });
 }
 
+/**
+ * Mensajes "recibidos" por el usuario (los que cuentan como nuevos): no los
+ * ha escrito él y van dirigidos a él — como familia, como monitor concreto o
+ * como parte de "todos los monitores". Los avisos que el admin ve solo por
+ * supervisar el club no cuentan.
+ */
+function receivedBy(userId: string) {
+  return sql`(${announcements.authorId} <> ${userId}::uuid and (
+    public.guardian_sees_announcement(${announcements.id})
+    or (${announcements.audience} = 'coach' and ${announcements.recipientUserId} = ${userId}::uuid)
+    or (${announcements.audience} = 'coaches' and public.staff_sees_announcement(${announcements.id}))
+  ))`;
+}
+
+function notReadBy(userId: string) {
+  return sql`not exists (select 1 from announcement_reads r
+    where r.announcement_id = ${announcements.id} and r.user_id = ${userId}::uuid)`;
+}
+
+/** Número de mensajes recibidos sin leer (para el contador del menú). */
+export async function countUnreadMessages(userId: string): Promise<number> {
+  const [row] = await dbForUser(userId, (tx) =>
+    tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(announcements)
+      .where(
+        and(
+          isNull(announcements.deletedAt),
+          receivedBy(userId),
+          notReadBy(userId)
+        )
+      )
+  );
+  return Number(row?.n ?? 0);
+}
+
+/** Marca como leídos los mensajes indicados que el usuario puede ver. */
+export async function markMessagesRead(userId: string, ids: string[]) {
+  if (ids.length === 0) return;
+  await dbForUser(userId, (tx) =>
+    tx.execute(sql`
+      insert into announcement_reads (announcement_id, user_id)
+      select a.id, ${userId}::uuid from announcements a
+      where a.id in (${sql.join(
+        ids.map((id) => sql`${id}::uuid`),
+        sql`, `
+      )})
+        and (public.staff_sees_announcement(a.id) or public.guardian_sees_announcement(a.id))
+      on conflict do nothing`)
+  );
+}
+
 export interface MessageListItem {
   id: string;
   audience: Audience;
@@ -213,6 +265,8 @@ export interface MessageListItem {
   authorName: string | null;
   targetLabel: string;
   sentByMe: boolean;
+  /** Recibido y todavía sin leer */
+  unread: boolean;
 }
 
 /** Mensajes que el usuario puede ver (enviados o recibidos), más recientes primero. */
@@ -233,6 +287,7 @@ export async function listVisibleMessages(
         groupId: announcements.groupId,
         studentId: announcements.studentId,
         recipientUserId: announcements.recipientUserId,
+        unread: sql<boolean>`(${receivedBy(userId)} and ${notReadBy(userId)})`,
       })
       .from(announcements)
       .where(
@@ -311,6 +366,7 @@ export async function listVisibleMessages(
       authorName: userMap.get(r.authorId) ?? null,
       targetLabel,
       sentByMe: r.authorId === userId,
+      unread: !!r.unread,
     };
   });
 }

@@ -18,6 +18,7 @@ import {
 } from "@/lib/messages";
 import { SPORT_LABELS } from "@/lib/sport-constants";
 import { MessageComposer } from "./message-composer";
+import { MarkMessagesRead } from "./mark-read";
 import { isFamilyOnlyUser } from "@/lib/family";
 
 // Mensajes del club. Quién envía y quién lee lo deciden las funciones de
@@ -106,6 +107,9 @@ export default async function MensajesPage() {
           </p>
         )}
 
+        <MarkMessagesRead
+          ids={messages.filter((m) => m.unread).map((m) => m.id)}
+        />
         <section className="tp-panel p-5 sm:p-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -127,9 +131,18 @@ export default async function MensajesPage() {
                 return (
                   <li
                     key={m.id}
-                    className="rounded-2xl border border-[#050505]/10 p-4 dark:border-white/10"
+                    className={
+                      m.unread
+                        ? "rounded-2xl border border-brand/60 bg-brand/5 p-4"
+                        : "rounded-2xl border border-[#050505]/10 p-4 dark:border-white/10"
+                    }
                   >
                     <div className="flex flex-wrap items-center gap-2">
+                      {m.unread && (
+                        <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+                          Nuevo
+                        </span>
+                      )}
                       <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
                         <Icon className="size-3" />
                         {m.sentByMe ? `Para: ${m.targetLabel}` : m.targetLabel}

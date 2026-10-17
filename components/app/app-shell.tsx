@@ -29,6 +29,8 @@ interface AppShellProps {
   familyOnly?: boolean;
   /** Invitaciones de club pendientes para el email del usuario */
   pendingInvites?: PendingClubInvite[];
+  /** Mensajes recibidos sin leer */
+  unreadMessages?: number;
 }
 
 export default function AppShell({
@@ -45,6 +47,7 @@ export default function AppShell({
   activeSport = "tenis",
   familyOnly = false,
   pendingInvites = [],
+  unreadMessages = 0,
 }: AppShellProps) {
   return (
     <div className="app-shell relative flex h-dvh flex-col overflow-hidden bg-background text-foreground md:flex-row">
@@ -63,6 +66,7 @@ export default function AppShell({
         activeWorkClubId={activeWorkClubId}
         activeSport={activeSport}
         familyOnly={familyOnly}
+        unreadMessages={unreadMessages}
       />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <div

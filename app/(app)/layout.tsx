@@ -12,6 +12,7 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
+import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
   "feature.dr_planner_enabled",
@@ -59,6 +60,7 @@ export default async function AppLayout({
     activeSport,
     familyOnly,
     pendingInvites,
+    unreadMessages,
   ] = await Promise.all([
     db
       .select({ isAdmin: users.isAdmin, image: users.image })
@@ -73,6 +75,8 @@ export default async function AppLayout({
     isFamilyOnlyUser(user.id).catch(() => false),
     // Invitaciones de club a su email: se avisan dentro de la app
     getPendingInvitesForEmail(user.id, user.email).catch(() => []),
+    // Contador de mensajes nuevos junto a "Mensajes"
+    countUnreadMessages(user.id).catch(() => 0),
   ]);
 
   const isAdmin = row?.isAdmin ?? false;
@@ -119,6 +123,7 @@ export default async function AppLayout({
       activeSport={activeSport}
       familyOnly={familyOnly}
       pendingInvites={pendingInvites}
+      unreadMessages={unreadMessages}
     >
       {children}
     </AppShell>
