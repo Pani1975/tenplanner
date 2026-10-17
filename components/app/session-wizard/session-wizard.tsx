@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -335,14 +335,15 @@ export function SessionWizard({
   edit,
 }: SessionWizardProps) {
   const isEdit = !!edit;
-  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawStep = parseInt(searchParams.get("step") ?? "1", 10);
-  const step =
-    Number.isFinite(rawStep) && rawStep >= 1 && rawStep <= TOTAL_STEPS
-      ? rawStep
-      : 1;
+  // El paso vive en el estado del asistente (y se refleja en la URL sin
+  // navegar): cambiar de paso con el router podía volver a montar el
+  // asistente y perder lo escrito en el paso 1 (objetivo, lugar, duración…).
+  const [step, setStep] = useState(() => {
+    const raw = parseInt(searchParams.get("step") ?? "1", 10);
+    return Number.isFinite(raw) && raw >= 1 && raw <= TOTAL_STEPS ? raw : 1;
+  });
   const [baselineState] = useState<WizardState>(() => {
     const base = createInitialState({
       initialExercises,
@@ -544,7 +545,12 @@ export function SessionWizard({
     // Read from window.location.search so the draft param set via history.replaceState is preserved
     const params = new URLSearchParams(window.location.search);
     params.set("step", String(clamped));
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}?${params.toString()}`
+    );
+    setStep(clamped);
     setShowErrors(false);
   }
 
@@ -839,20 +845,39 @@ export function SessionWizard({
         )}
 
         {step < TOTAL_STEPS ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2.5 text-sm font-bold text-brand-foreground transition-colors",
-              "rounded-full bg-[#D6FF38] text-[#050505]",
-              canProceed
-                ? "hover:bg-[#c8ef2f]"
-                : "opacity-55 cursor-not-allowed"
+          <div className="flex items-center gap-2">
+            {isEdit && (
+              <button
+                type="button"
+                onClick={onSubmit}
+                disabled={
+                  submitting ||
+                  (!hasPlanContent(state) && !state.recurrence.enabled)
+                }
+                className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-foreground/30 disabled:opacity-55"
+              >
+                {submitting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                <span className="sm:hidden">Guardar</span>
+                <span className="hidden sm:inline">Guardar cambios</span>
+              </button>
             )}
-          >
-            Siguiente
-            <ChevronRight className="size-4" />
-          </button>
+            <button
+              type="button"
+              onClick={onNext}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2.5 text-sm font-bold text-brand-foreground transition-colors",
+                "rounded-full bg-[#D6FF38] text-[#050505]",
+                canProceed
+                  ? "hover:bg-[#c8ef2f]"
+                  : "opacity-55 cursor-not-allowed"
+              )}
+            >
+              Siguiente
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             {state.exercises.length > 0 && (

@@ -11,6 +11,8 @@ interface SessionInfoSummaryProps {
   tags?: string[] | null;
   /** Versión reducida (tarjetas de borrador): textos recortados. */
   compact?: boolean;
+  /** Muestra el apartado Objetivo aunque esté vacío (ficha de sesión). */
+  showEmptyObjective?: boolean;
   className?: string;
 }
 
@@ -37,31 +39,38 @@ export function SessionInfoSummary({
   observations,
   tags,
   compact = false,
+  showEmptyObjective = false,
   className,
 }: SessionInfoSummaryProps) {
-  if (!hasSessionInfo({ objective, material, observations, tags })) {
+  if (
+    !showEmptyObjective &&
+    !hasSessionInfo({ objective, material, observations, tags })
+  ) {
     return null;
   }
 
   const fields = [
-    { label: "Objetivo", value: objective },
-    { label: "Material", value: material },
-    { label: "Observaciones", value: observations },
-  ].filter((f) => f.value?.trim());
+    {
+      label: "Objetivo",
+      value: objective,
+      empty: showEmptyObjective && !objective?.trim(),
+    },
+    { label: "Material", value: material, empty: false },
+    { label: "Observaciones", value: observations, empty: false },
+  ].filter((f) => f.empty || f.value?.trim());
 
   return (
     <div className={cn(compact ? "space-y-1.5" : "space-y-4", className)}>
       {fields.length > 0 && (
         <div
-          className={cn(
-            "grid",
-            compact ? "gap-1.5" : "gap-4 sm:grid-cols-2"
-          )}
+          className={cn("grid", compact ? "gap-1.5" : "gap-4 sm:grid-cols-2")}
         >
           {fields.map((f) => (
             <div
               key={f.label}
-              className={cn(!compact && f.label === "Objetivo" && "sm:col-span-2")}
+              className={cn(
+                !compact && f.label === "Objetivo" && "sm:col-span-2"
+              )}
             >
               <p
                 className={cn(
@@ -79,7 +88,13 @@ export function SessionInfoSummary({
                     : "whitespace-pre-wrap text-sm"
                 )}
               >
-                {f.value}
+                {f.empty ? (
+                  <span className="italic text-muted-foreground">
+                    Sin objetivo indicado
+                  </span>
+                ) : (
+                  f.value
+                )}
               </p>
             </div>
           ))}

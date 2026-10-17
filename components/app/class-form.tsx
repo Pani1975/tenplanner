@@ -1735,7 +1735,14 @@ export function ClassForm({
           </div>
         )}
 
-        <div className="flex items-center gap-3 border-t border-foreground/10 pt-4">
+        {/* En edición la barra de guardar queda siempre a mano. */}
+        <div
+          className={cn(
+            "flex items-center gap-3 border-t border-foreground/10 pt-4",
+            mode === "edit" &&
+              "sticky bottom-0 z-30 -mx-4 bg-background/95 px-4 pb-4 backdrop-blur sm:mx-0 sm:px-0"
+          )}
+        >
           {/* El primer botón es el que usa Enter: en clases nuevas o en
             borrador, guarda como borrador para no publicar por accidente. */}
           {(mode === "create" || isDraft) && (

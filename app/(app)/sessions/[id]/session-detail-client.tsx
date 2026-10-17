@@ -806,6 +806,7 @@ export function SessionDetailClient({
             material={session.material}
             observations={session.observations}
             tags={session.tags}
+            showEmptyObjective
             className="border-t border-border/50 pt-4"
           />
 
