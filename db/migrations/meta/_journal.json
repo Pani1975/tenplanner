@@ -393,6 +393,13 @@
       "when": 1792246370877,
       "tag": "0055_mensajes_club",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1792273506396,
+      "tag": "0056_mensajes_hardening",
+      "breakpoints": true
     }
   ]
 }
