@@ -43,6 +43,7 @@ export async function loadSessionAnimationData(
       notes: sessionBlockItems.notes,
       libraryDescription: exercises.description,
       exerciseObjectives: exercises.objectives,
+      animationScene: exercises.animationScene,
     })
     .from(sessionBlocks)
     .leftJoin(
@@ -71,6 +72,7 @@ export async function loadSessionAnimationData(
         durationMinutes: row.durationMinutes,
         stations: row.stations,
         notes: row.notes,
+        animationScene: row.animationScene,
       });
     }
     blocks.set(row.blockId, block);

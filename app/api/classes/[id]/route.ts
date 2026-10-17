@@ -163,6 +163,7 @@ export async function GET(_req: Request, ctx: Ctx) {
           exerciseCategory: exercises.category,
           exerciseDescription: exercises.description,
           exerciseObjectives: exercises.objectives,
+          animationScene: exercises.animationScene,
         })
         .from(classBlockExercises)
         .leftJoin(exercises, eq(exercises.id, classBlockExercises.exerciseId))

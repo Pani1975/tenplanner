@@ -324,6 +324,7 @@ export async function GET(_request: Request, context: RouteContext) {
         // descripción propia).
         itemLibraryDescription: exercises.description,
         itemExerciseObjectives: exercises.objectives,
+        itemAnimationScene: exercises.animationScene,
       })
       .from(sessionBlocks)
       .leftJoin(
@@ -357,6 +358,7 @@ export async function GET(_request: Request, context: RouteContext) {
           stations: StationItemJson[] | null;
           libraryDescription: string | null;
           exerciseObjectives: string | null;
+          animationScene: string | null;
         }>;
       }
     >();
@@ -388,6 +390,7 @@ export async function GET(_request: Request, context: RouteContext) {
             stations: StationItemJson[] | null;
             libraryDescription: string | null;
             exerciseObjectives: string | null;
+            animationScene: string | null;
           }>;
         });
       if (row.itemId) {
@@ -404,6 +407,7 @@ export async function GET(_request: Request, context: RouteContext) {
           stations: row.itemStations as StationItemJson[] | null,
           libraryDescription: row.itemLibraryDescription ?? null,
           exerciseObjectives: row.itemExerciseObjectives ?? null,
+          animationScene: row.itemAnimationScene ?? null,
         });
       }
       blockMap.set(row.blockId, block);

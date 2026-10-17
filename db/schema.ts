@@ -169,6 +169,10 @@ export const exercises = pgTable(
     difficulty: difficultyEnum("difficulty").notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
     objectives: text("objectives"),
+    // Organización que muestra la animación de clase para este ejercicio
+    // (una AnimationScene de lib/classes/animation.ts). Null = se deduce
+    // del texto.
+    animationScene: varchar("animation_scene", { length: 24 }),
     steps: json("steps").$type<Array<{ title: string; description: string }>>(),
     materials: json("materials").$type<string[]>(),
     imageUrl: text("image_url"),

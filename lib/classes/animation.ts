@@ -93,6 +93,8 @@ export interface AnimationInputItem {
   stations?: unknown;
   /** Notas del monitor sobre el elemento. */
   notes?: string | null;
+  /** Escena fijada en la ficha del ejercicio (manda sobre la deducida). */
+  animationScene?: string | null;
 }
 
 export interface AnimationInputBlock {
@@ -146,6 +148,33 @@ function isRestItem(item: AnimationInputItem, kind: BlockItemKind) {
   if (kind === "warmup") return true;
   const name = (item.title ?? item.exerciseName ?? "").trim().toLowerCase();
   return name === "descanso" || name.startsWith("descanso ");
+}
+
+export const ANIMATION_SCENES: readonly AnimationScene[] = [
+  "warmup",
+  "tee",
+  "guided",
+  "juggle",
+  "rally",
+  "pairs",
+  "relay",
+  "shadow",
+  "stations",
+  "serve",
+  "game",
+  "mirror",
+  "reaction",
+  "alley",
+  "points",
+  "elevator",
+  "rest",
+  "cooldown",
+];
+
+export function isAnimationScene(v: unknown): v is AnimationScene {
+  return (
+    typeof v === "string" && (ANIMATION_SCENES as readonly string[]).includes(v)
+  );
 }
 
 /** Título corto para un texto libre largo sin nombre. */
@@ -348,13 +377,16 @@ export function buildAnimationTimeline(
         parts,
         kind,
         isRest,
-        scene: sceneFor(
-          blockPos,
-          ordered.length,
-          isRest,
-          kind,
-          `${title} ${body}`
-        ),
+        scene:
+          !isRest && isAnimationScene(item.animationScene)
+            ? item.animationScene
+            : sceneFor(
+                blockPos,
+                ordered.length,
+                isRest,
+                kind,
+                `${title} ${body}`
+              ),
         minutes,
         classStartMin: classMin,
       });
