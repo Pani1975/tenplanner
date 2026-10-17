@@ -1728,8 +1728,22 @@ export const studentGuardians = pgTable(
   ]
 );
 
-// Avisos. groupId null = aviso a todo el club (solo admin);
-// groupId = aviso a las familias del grupo (admin o monitor del grupo).
+// A quién va un mensaje del club:
+// - "club": familias de todos los alumnos del club
+// - "group": familias de un grupo (groupId)
+// - "student": tutores de un alumno, o el propio alumno si es mayor (studentId)
+// - "coaches": todos los monitores del club (del deporte `sport` si se indica)
+// - "coach": un monitor concreto (recipientUserId)
+export const announcementAudienceEnum = pgEnum("announcement_audience", [
+  "club",
+  "group",
+  "student",
+  "coaches",
+  "coach",
+]);
+
+// Mensajes del club. Quién puede enviar y quién puede leer cada tipo lo
+// deciden las políticas RLS de las migraciones 0054 y 0055.
 export const announcements = pgTable(
   "announcements",
   {
@@ -1737,9 +1751,18 @@ export const announcements = pgTable(
     clubId: uuid("club_id")
       .references(() => clubs.id, { onDelete: "cascade" })
       .notNull(),
+    audience: announcementAudienceEnum("audience").default("group").notNull(),
     groupId: uuid("group_id").references(() => groups.id, {
       onDelete: "cascade",
     }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
+    recipientUserId: uuid("recipient_user_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    // Solo para audience "coaches": limita a los monitores de ese deporte
+    sport: sportEnum("sport"),
     // Opcional: liga el aviso a una sesión de ese grupo
     sessionId: uuid("session_id").references(() => sessions.id, {
       onDelete: "set null",
@@ -1763,7 +1786,20 @@ export const announcements = pgTable(
   (t) => [
     index("announcements_club_created_idx").on(t.clubId, t.createdAt),
     index("announcements_group_created_idx").on(t.groupId, t.createdAt),
+    index("announcements_student_created_idx").on(t.studentId, t.createdAt),
+    index("announcements_recipient_created_idx").on(
+      t.recipientUserId,
+      t.createdAt
+    ),
     check("announcements_body_len", sql`char_length(${t.body}) <= 4000`),
+    check(
+      "announcements_audience_target",
+      sql`(${t.audience} = 'club' and ${t.groupId} is null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'group' and ${t.groupId} is not null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'student' and ${t.studentId} is not null and ${t.groupId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'coaches' and ${t.groupId} is null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'coach' and ${t.recipientUserId} is not null and ${t.groupId} is null and ${t.studentId} is null)`
+    ),
   ]
 );
 

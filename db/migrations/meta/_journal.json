@@ -386,6 +386,13 @@
       "when": 1792243216032,
       "tag": "0054_avisos_familias",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1792246370877,
+      "tag": "0055_mensajes_club",
+      "breakpoints": true
     }
   ]
 }
