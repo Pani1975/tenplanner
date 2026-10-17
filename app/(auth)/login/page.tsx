@@ -84,7 +84,7 @@ function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(safeNext(searchParams.get("next")));
   }
 
   async function resendConfirmation() {
@@ -362,6 +362,13 @@ function LoginForm() {
       </div>
     </div>
   );
+}
+
+/** Destino tras iniciar sesión: solo rutas internas ("/…", no "//…"). */
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return "/dashboard";
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return "/dashboard";
+  return raw;
 }
 
 export default function LoginPage() {

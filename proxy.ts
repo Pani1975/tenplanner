@@ -18,6 +18,7 @@ const PUBLIC_PREFIXES = [
   "/cookies",
   "/terminos",
   "/landing/",
+  "/familia/",
   "/api/cron/",
   "/api/public/sport",
 ];

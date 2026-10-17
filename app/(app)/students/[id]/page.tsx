@@ -3,15 +3,18 @@ import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
 import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { Pencil, ClipboardList, Clock, Flame } from "lucide-react";
+import { Pencil, ClipboardList, Clock, Flame, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { students, sessionStudents, sessions, users } from "@/db/schema";
+import { clubs, students, sessionStudents, sessions, users } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { DeleteStudentButton } from "./delete-student-button";
 import { SessionFeedback } from "./session-feedback";
 import { UpcomingList } from "./upcoming-list";
 import { GenerateProfileLinkButton } from "./generate-profile-link";
+import { GuardiansPanel } from "./guardians-panel";
+import { listGuardians } from "@/lib/guardians";
+import { isAdult } from "@/lib/age";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 
 type Gender = "male" | "female" | "other";
@@ -120,6 +123,24 @@ export default async function StudentDetailPage({ params }: PageProps) {
           .where(eq(users.id, student.coachId))
           .limit(1)
       )[0]?.name ?? null);
+
+  // Contactos para los mensajes del club (solo alumnos de un club). Si las
+  // tablas de mensajes no existieran, la ficha se muestra igual sin la sección.
+  const guardiansData = student.clubId
+    ? await Promise.all([
+        listGuardians(student.id),
+        db
+          .select({ name: clubs.name })
+          .from(clubs)
+          .where(eq(clubs.id, student.clubId))
+          .limit(1),
+      ])
+        .then(([list, [club]]) => ({ list, clubName: club?.name ?? "El club" }))
+        .catch((error) => {
+          console.error("[student] guardians failed", error);
+          return null;
+        })
+    : null;
 
   const trainingStatsPromise = loadStudentTrainingStats(id);
   const [statsRows, past, upcoming] = await Promise.all([
@@ -417,6 +438,24 @@ export default async function StudentDetailPage({ params }: PageProps) {
             )}
           </aside>
         </section>
+
+        {guardiansData && (
+          <section className="tp-panel p-5 sm:p-6">
+            <div className="mb-4 grid grid-cols-[auto_1fr] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+              <Mail className="size-3 text-brand" />
+              <p className="text-[10px] font-black uppercase text-foreground/50">
+                Contactos para mensajes
+              </p>
+            </div>
+            <GuardiansPanel
+              studentId={student.id}
+              studentName={student.name}
+              clubName={guardiansData.clubName}
+              adult={isAdult(student.birthDate)}
+              initialGuardians={guardiansData.list}
+            />
+          </section>
+        )}
 
         {/* Fiabilidad + Proyección */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
