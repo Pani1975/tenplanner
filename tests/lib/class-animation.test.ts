@@ -300,3 +300,35 @@ describe("escenas de la sesión 261016_Galácticas", () => {
     ]);
   });
 });
+
+describe("texto libre largo sin nombre", () => {
+  it("usa un título corto y explica el texto entero", () => {
+    const text =
+      "Se juega una reina de la pista pero con una primera bola que las aspirantes tienen que golpear de derecha invertida. La reina juega libre.";
+    const { steps } = buildAnimationTimeline(
+      [{ orderIndex: 1, title: "B", items: [txt("", 20, text)] }],
+      {}
+    );
+    expect(steps[0].title).toBe("Reina de la pista");
+    expect(steps[0].sentences.map((s) => s.text).join(" ")).toBe(text);
+  });
+
+  it("una primera frase corta sigue siendo el título", () => {
+    const { steps } = buildAnimationTimeline(
+      [
+        {
+          orderIndex: 1,
+          title: "B",
+          items: [
+            txt("", 5, "Partido libre por parejas. Se juega en media pista."),
+          ],
+        },
+      ],
+      {}
+    );
+    expect(steps[0].title).toBe("Partido libre por parejas.");
+    expect(steps[0].sentences.map((s) => s.text)).toEqual([
+      "Se juega en media pista.",
+    ]);
+  });
+});

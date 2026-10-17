@@ -143,6 +143,21 @@ function isRestItem(item: AnimationInputItem, kind: BlockItemKind) {
   return name === "descanso" || name.startsWith("descanso ");
 }
 
+/** Título corto para un texto libre largo sin nombre. */
+function titleFromText(text: string | null | undefined): string {
+  if (!text) return "";
+  const named = text.match(/\b(rey|reina) de la pista\b/i);
+  if (named)
+    return `${named[1][0].toUpperCase()}${named[1].slice(1).toLowerCase()} de la pista`;
+  const words = text.trim().split(/\s+/);
+  let out = "";
+  for (const w of words) {
+    if ((out + " " + w).trim().length > 48) break;
+    out = (out + " " + w).trim();
+  }
+  return out.length < text.trim().length ? `${out}…` : out;
+}
+
 function sceneFor(
   blockPos: number,
   blockCount: number,
@@ -276,24 +291,33 @@ export function buildAnimationTimeline(
         ? item.stations.length
         : 0;
       const hasName = !!(item.exerciseName || item.title);
+      const isStations = kind === "stations";
+      // Texto libre sin nombre: si su primera frase es corta hace de título;
+      // si no, se busca un título y el texto se explica entero.
+      const freeSentences = splitSentences(item.freeText);
+      const firstFree = freeSentences[0]?.text ?? "";
+      const firstIsTitle =
+        !hasName && !isRest && !isStations && firstFree.length <= 60;
       const title = isRest
         ? "Descanso"
-        : kind === "stations"
+        : isStations
           ? `Estaciones (${stationCount})`
           : item.exerciseName ||
             item.title ||
-            splitSentences(item.freeText)[0]?.text.slice(0, 60) ||
+            (firstIsTitle ? firstFree : titleFromText(item.freeText)) ||
             "Actividad";
       // Texto de la explicación: la descripción del ejercicio de biblioteca
-      // o el texto libre del item (si no se ha usado ya como título).
-      const isStations = kind === "stations";
+      // o el texto libre del item (salvo la frase usada como título).
       const body = isRest
         ? restText(item)
-        : item.exerciseDescription?.trim() ||
-          (hasName || isStations ? item.freeText : null) ||
-          "";
+        : item.exerciseDescription?.trim() || item.freeText || "";
       let parts = splitSentences(body);
-      if (!hasName && !isRest && !isStations && parts.length > 1)
+      if (
+        firstIsTitle &&
+        !item.exerciseDescription?.trim() &&
+        parts.length > 0 &&
+        parts[0].text === firstFree
+      )
         parts = parts.slice(1);
       if (isStations) {
         const names = (Array.isArray(item.stations) ? item.stations : [])
