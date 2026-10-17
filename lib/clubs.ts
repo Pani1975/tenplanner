@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { and, desc, eq, inArray, isNull, type SQL } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import type { AnyColumn } from "drizzle-orm";
 import { db } from "@/db";
 import { clubInvites, clubMembers, clubs, users } from "@/db/schema";
@@ -50,7 +50,10 @@ export async function getCoachMemberships(userId: string) {
     );
   const byClubId = new Map<
     string,
-    { club: (typeof rows)[number]["club"]; sports: (typeof rows)[number]["membership"]["sport"][] }
+    {
+      club: (typeof rows)[number]["club"];
+      sports: (typeof rows)[number]["membership"]["sport"][];
+    }
   >();
   for (const { club, membership } of rows) {
     const entry = byClubId.get(club.id) ?? { club, sports: [] };
@@ -239,4 +242,47 @@ export async function listClubRoster(clubId: string) {
       .orderBy(desc(clubInvites.createdAt)),
   ]);
   return { members, invites };
+}
+
+/**
+ * Invitaciones de club pendientes (y vigentes) dirigidas al email del
+ * usuario, para avisarle dentro de la app sin depender del enlace. Excluye
+ * las de un club y deporte en los que ya es miembro activo.
+ */
+export async function getPendingInvitesForEmail(
+  userId: string,
+  email: string | null | undefined
+) {
+  if (!email) return [];
+  const rows = await db
+    .select({
+      id: clubInvites.id,
+      token: clubInvites.token,
+      sport: clubInvites.sport,
+      expiresAt: clubInvites.expiresAt,
+      clubId: clubs.id,
+      clubName: clubs.name,
+    })
+    .from(clubInvites)
+    .innerJoin(clubs, eq(clubs.id, clubInvites.clubId))
+    .where(
+      and(
+        sql`lower(${clubInvites.email}) = ${email.toLowerCase()}`,
+        eq(clubInvites.status, "pending"),
+        gt(clubInvites.expiresAt, new Date()),
+        sql`not exists (
+          select 1 from club_members cm
+          where cm.club_id = ${clubInvites.clubId} and cm.user_id = ${userId}
+            and cm.sport = ${clubInvites.sport} and cm.status = 'active')`
+      )
+    )
+    .orderBy(desc(clubInvites.createdAt));
+  // Una por club y deporte (si el club invitó dos veces, vale la más reciente)
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    const key = `${r.clubId}:${r.sport}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

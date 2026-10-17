@@ -41,6 +41,27 @@ export default async function ClubPage() {
           initialInvites={invites}
           defaultSport={activeSport}
         />
+        {coachOf.length > 0 && (
+          <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
+            <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
+              <Users2 className="size-4" />
+              También eres monitor en
+            </h2>
+            <ul className="mt-3 space-y-2">
+              {coachOf.map(({ club, sports }) => (
+                <li
+                  key={club.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-[#050505]/10 px-4 py-3 text-sm font-semibold text-foreground dark:border-white/10"
+                >
+                  <span className="truncate">{club.name}</span>
+                  <span className="shrink-0 text-[10px] font-black uppercase tracking-wide text-foreground/60">
+                    {sports.map((sport) => SPORT_LABELS[sport]).join(" · ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   }

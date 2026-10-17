@@ -5,7 +5,11 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import AppShell from "@/components/app/app-shell";
 import { getAppSettings, type SettingKey } from "@/lib/app-settings";
-import { getActiveWorkClubId, getClubOptionsForUser } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getClubOptionsForUser,
+  getPendingInvitesForEmail,
+} from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
 
@@ -54,6 +58,7 @@ export default async function AppLayout({
     activeWorkClubId,
     activeSport,
     familyOnly,
+    pendingInvites,
   ] = await Promise.all([
     db
       .select({ isAdmin: users.isAdmin, image: users.image })
@@ -66,6 +71,8 @@ export default async function AppLayout({
     getActiveSport(user.id),
     // Si falla (p. ej. sin tablas de mensajes), se muestra la app completa
     isFamilyOnlyUser(user.id).catch(() => false),
+    // Invitaciones de club a su email: se avisan dentro de la app
+    getPendingInvitesForEmail(user.id, user.email).catch(() => []),
   ]);
 
   const isAdmin = row?.isAdmin ?? false;
@@ -111,6 +118,7 @@ export default async function AppLayout({
       activeWorkClubId={activeWorkClubId}
       activeSport={activeSport}
       familyOnly={familyOnly}
+      pendingInvites={pendingInvites}
     >
       {children}
     </AppShell>
