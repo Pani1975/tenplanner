@@ -23,6 +23,7 @@ import {
   Star,
   Play,
   CalendarClock,
+  BookmarkPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { SessionDateDialog } from "@/components/app/session-date-dialog";
@@ -189,7 +190,6 @@ export interface SessionBlockData {
     aspectoJuego?: string | null;
   }>;
 }
-
 
 function MetadataChips({ session }: { session: SessionData }) {
   if (!session.location) return null;
@@ -506,6 +506,33 @@ export function SessionDetailClient({
     setSavingRating(null);
   }
 
+  const [savingAsClass, setSavingAsClass] = useState(false);
+  async function handleSaveAsClass() {
+    if (
+      !window.confirm(
+        "Se creará una clase en Mis clases con el plan, objetivo, material y observaciones de esta sesión. ¿Continuar?"
+      )
+    )
+      return;
+    setSavingAsClass(true);
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/to-class`, {
+        method: "POST",
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { classId?: string };
+        error?: string;
+      };
+      if (!res.ok || !json.data?.classId) {
+        window.alert(json.error ?? "No se pudo guardar como clase.");
+        return;
+      }
+      router.push(`/classes/${json.data.classId}`);
+    } finally {
+      setSavingAsClass(false);
+    }
+  }
+
   async function handleDelete() {
     setDeleting(true);
     setDeleteError(null);
@@ -613,6 +640,23 @@ export function SessionDetailClient({
             )}
             <span className="hidden sm:inline">PDF</span>
           </button>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleSaveAsClass}
+              disabled={savingAsClass}
+              title="Guardar esta sesión como clase en Mis clases"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/[0.035]"
+            >
+              {savingAsClass ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <BookmarkPlus className="size-3.5" />
+              )}
+              <span className="sm:hidden">Clase</span>
+              <span className="hidden sm:inline">Guardar como clase</span>
+            </button>
+          )}
           {isOwner && (
             <Link
               href={`/sessions/${session.id}/edit`}
@@ -1094,29 +1138,29 @@ export function SessionDetailClient({
                         {ex.durationMinutes} min
                       </span>
                       {status === "completed" && (
-                      <div
-                        className="flex items-center gap-0.5"
-                        title="Valorar ejercicio"
-                      >
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() =>
-                              handleRateExercise(ex.exerciseId, star)
-                            }
-                            disabled={isSaving}
-                            aria-label={`Valorar con ${star} estrellas`}
-                            className={cn(
-                              "p-0.5 transition-colors disabled:opacity-50 touch-manipulation",
-                              star <= currentRating
-                                ? "text-amber-400"
-                                : "text-muted-foreground/25 hover:text-amber-400/60"
-                            )}
-                          >
-                            <Star className="size-4 fill-current" />
-                          </button>
-                        ))}
-                      </div>
+                        <div
+                          className="flex items-center gap-0.5"
+                          title="Valorar ejercicio"
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() =>
+                                handleRateExercise(ex.exerciseId, star)
+                              }
+                              disabled={isSaving}
+                              aria-label={`Valorar con ${star} estrellas`}
+                              className={cn(
+                                "p-0.5 transition-colors disabled:opacity-50 touch-manipulation",
+                                star <= currentRating
+                                  ? "text-amber-400"
+                                  : "text-muted-foreground/25 hover:text-amber-400/60"
+                              )}
+                            >
+                              <Star className="size-4 fill-current" />
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>

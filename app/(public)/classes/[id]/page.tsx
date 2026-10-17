@@ -551,9 +551,9 @@ export default async function ClassDetailPage({
                                 </span>
                               )}
                               {itemKind === "exercise" &&
-                                item.exerciseDescription && (
+                                (item.freeText || item.exerciseDescription) && (
                                   <span className="mt-1 block text-xs leading-5 text-muted-foreground line-clamp-2">
-                                    {item.exerciseDescription}
+                                    {item.freeText || item.exerciseDescription}
                                   </span>
                                 )}
                               {itemKind === "text" &&

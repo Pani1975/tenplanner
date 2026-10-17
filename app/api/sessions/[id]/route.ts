@@ -503,6 +503,7 @@ export async function PUT(request: Request, context: RouteContext) {
       blocks,
       studentIds,
       tags,
+      durationManual,
       ...sessionFields
     } = parsedBody.data;
 
@@ -638,7 +639,10 @@ export async function PUT(request: Request, context: RouteContext) {
     // se recalcula a partir de su contenido en vez de fiarse de un número
     // que puede haber quedado desactualizado. Un valor enviado explícito
     // solo se respeta cuando no hay contenido del que calcularla.
-    if (replacesPlan) {
+    if (durationManual && sessionFields.durationMinutes !== undefined) {
+      // Duración fijada a mano por el monitor: se respeta tal cual.
+      updateValues.durationMinutes = sessionFields.durationMinutes;
+    } else if (replacesPlan) {
       const exerciseDurationById = new Map(
         Array.from(snapshots.values()).map((row) => [
           row.id,
@@ -766,9 +770,7 @@ export async function PUT(request: Request, context: RouteContext) {
                     item.kind === "stations"
                       ? buildStations(item.stations)
                       : null,
-                  aspectoJuego: item.exerciseId
-                    ? null
-                    : (item.aspecto ?? null),
+                  aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
                 };
               })
             );

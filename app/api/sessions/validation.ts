@@ -149,6 +149,8 @@ export const createSessionSchema = z.object({
     .min(1, "Mínimo 1 minuto")
     .max(600, "Máximo 600 minutos")
     .optional(),
+  /** La duración la fijó el monitor: no se recalcula a partir del plan. */
+  durationManual: z.boolean().optional(),
   objective: z
     .string()
     .trim()
@@ -192,6 +194,7 @@ export const updateSessionSchema = z
       .min(1, "Mínimo 1 minuto")
       .max(600, "Máximo 600 minutos")
       .optional(),
+    durationManual: z.boolean().optional(),
     objective: z
       .string()
       .trim()

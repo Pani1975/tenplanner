@@ -452,6 +452,7 @@ export async function POST(request: Request) {
     description,
     scheduledAt,
     durationMinutes: providedDuration,
+    durationManual,
     objective,
     material,
     observations,
@@ -604,8 +605,13 @@ export async function POST(request: Request) {
       normalizedBlocks,
       exerciseDurationById
     );
+    // Si el monitor fijó la duración a mano, se respeta.
     const durationMinutes =
-      computedDuration > 0 ? computedDuration : (providedDuration ?? 60);
+      durationManual && providedDuration
+        ? providedDuration
+        : computedDuration > 0
+          ? computedDuration
+          : (providedDuration ?? 60);
 
     const normalizedTags =
       tags && tags.length > 0

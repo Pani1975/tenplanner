@@ -186,7 +186,7 @@ function createInitialState({
   return {
     title: useCodeTitle
       ? sessionCode(new Date(scheduledAt), initialGroupName ?? "")
-      : initialTitle ?? "",
+      : (initialTitle ?? ""),
     scheduledAt,
     durationMinutes: 60,
     location: initialLocation ?? "",
@@ -360,7 +360,16 @@ export function SessionWizard({
       initialStudentIds,
       initialScheduledAt,
     });
-    return edit ? { ...base, ...edit.initialState } : base;
+    if (!edit) return base;
+    const merged = { ...base, ...edit.initialState };
+    // Una duración guardada distinta de la del plan se fijó a mano.
+    const planMinutes = hasPlanContent(merged)
+      ? computeTimelineDuration(merged)
+      : 0;
+    return {
+      ...merged,
+      durationManual: planMinutes > 0 && planMinutes !== merged.durationMinutes,
+    };
   });
 
   const [state, setState] = useState<WizardState>(baselineState);
@@ -372,7 +381,7 @@ export function SessionWizard({
   // ej. antes de llegar al paso 2, o una sesión por recurrencia sin plan
   // propio) se deja el valor manual tal cual.
   useEffect(() => {
-    if (!hasPlanContent(state)) return;
+    if (state.durationManual || !hasPlanContent(state)) return;
     const computed = computeTimelineDuration(state);
     if (computed > 0 && computed !== state.durationMinutes) {
       setState((prev) => ({ ...prev, durationMinutes: computed }));
@@ -581,9 +590,11 @@ export function SessionWizard({
       // Por si el efecto de sincronización aún no ha corrido (p. ej. se
       // envía justo tras el último cambio): recalcula aquí también, para
       // que lo guardado siempre sea el contenido real del plan.
-      const durationMinutes = hasPlanContent(state)
-        ? computeTimelineDuration(state)
-        : state.durationMinutes;
+      // La duración marcada a mano se respeta; si no, la del plan.
+      const durationMinutes =
+        !state.durationManual && hasPlanContent(state)
+          ? computeTimelineDuration(state)
+          : state.durationMinutes;
 
       if (edit) {
         const res = await fetch(`/api/sessions/${edit.sessionId}`, {
@@ -593,6 +604,7 @@ export function SessionWizard({
             title: state.title.trim(),
             scheduledAt: scheduledIso,
             durationMinutes,
+            durationManual: !!state.durationManual,
             objective: state.objective.trim() || null,
             material: state.material.trim() || null,
             observations: state.observations.trim() || null,
@@ -638,6 +650,7 @@ export function SessionWizard({
             description: null,
             scheduledAt: date.toISOString(),
             durationMinutes,
+            durationManual: !!state.durationManual,
             objective: state.objective.trim() || null,
             material: state.material.trim() || null,
             observations: state.observations.trim() || null,
