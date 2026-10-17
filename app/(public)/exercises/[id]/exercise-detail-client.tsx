@@ -49,6 +49,7 @@ import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToOpenEditorButton } from "@/components/app/add-to-open-editor-button";
 import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { LevelBalls } from "@/components/app/level-balls";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import {
   CopyToSpaceButton,
@@ -504,6 +505,11 @@ export function ExerciseDetailClient({
         {/* Category stripe */}
         <div className="border-b border-white/10 bg-[#050505] px-4 py-5 text-white sm:px-6">
           <div className="flex items-center gap-3">
+            <LevelBalls
+              niveles={niveles}
+              sport={exercise.sport}
+              className="order-last ml-auto"
+            />
             <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-[#D6FF38]/40 bg-[#D6FF38]">
               <CategoryIcon className="size-5 text-[#050505]" />
             </div>

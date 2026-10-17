@@ -40,6 +40,7 @@ import { getActiveWorkClubId } from "@/lib/clubs";
 import { classListSpaceCondition } from "@/lib/classes/lists";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { hasClassAnimation } from "@/lib/classes/animation";
+import { LevelBalls } from "@/components/app/level-balls";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
 
 interface PageProps {
@@ -259,6 +260,11 @@ export default async function ClassDetailPage({
       <div className="relative mt-6 overflow-hidden rounded-lg bg-[#050505] text-white shadow-[0_24px_80px_rgba(5,5,5,0.18)]">
         <div className="p-5 sm:p-7 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <LevelBalls
+              niveles={classNiveles}
+              sport={cls.sport}
+              className="sm:order-last"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {cls.status === "draft" && (

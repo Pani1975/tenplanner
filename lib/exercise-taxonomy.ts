@@ -101,6 +101,8 @@ export function legacyTipologiaFrom(values: string[] | null | undefined) {
 }
 
 // Niveles (etapas) con edad y color para que se identifiquen de un vistazo.
+// El color es el de la pelota de cada etapa: roja, naranja, verde y, de 10
+// a 18 años, amarilla.
 export const NIVELES = [
   {
     id: "descubrimiento",
@@ -125,19 +127,19 @@ export const NIVELES = [
     id: "precompeticion",
     label: "Precompetición",
     edad: "12-14 años",
-    color: "#FFC400",
+    color: "#FFE600",
   },
   {
     id: "competicion",
     label: "Competición",
     edad: "14-16 años",
-    color: "#FFA000",
+    color: "#FFE600",
   },
   {
     id: "rendimiento",
     label: "Rendimiento",
     edad: "14-18 años",
-    color: "#E68A00",
+    color: "#FFE600",
   },
 ] as const;
 
@@ -189,6 +191,11 @@ export const NIVEL_IDS = [
 // sigue usando la escala por edades existente.
 export function nivelesForSport(sport?: string | null) {
   return sport === "padel" ? PADEL_NIVELES : NIVELES;
+}
+
+/** Color de pelota de un nivel de tenis (null si el nivel no tiene). */
+export function nivelBallColor(id: string): string | null {
+  return NIVELES.find((n) => n.id === id)?.color ?? null;
 }
 
 export function nivelLabel(id: string) {
