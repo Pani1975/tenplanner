@@ -26,6 +26,15 @@ export function hasClassAnimation(classId: string): boolean {
   return ANIMATED_CLASS_IDS.has(classId);
 }
 
+// Sesiones con animación (piloto): se van añadiendo una a una.
+const ANIMATED_SESSION_IDS = new Set([
+  "9113f402-0ed1-4537-9e79-17e4775b4504", // 261016_Galácticas
+]);
+
+export function hasSessionAnimation(sessionId: string): boolean {
+  return ANIMATED_SESSION_IDS.has(sessionId);
+}
+
 /** Duración máxima de la animación completa, en segundos. */
 export const ANIMATION_MAX_SECONDS = 240;
 /** Velocidad de lectura cómoda (caracteres por segundo). */

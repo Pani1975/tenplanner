@@ -320,12 +320,17 @@ export async function GET(_request: Request, context: RouteContext) {
         itemNotes: sessionBlockItems.notes,
         itemKind: sessionBlockItems.kind,
         itemStations: sessionBlockItems.stations,
+        // Datos de la biblioteca (para la animación cuando el ítem no tiene
+        // descripción propia).
+        itemLibraryDescription: exercises.description,
+        itemExerciseObjectives: exercises.objectives,
       })
       .from(sessionBlocks)
       .leftJoin(
         sessionBlockItems,
         eq(sessionBlockItems.blockId, sessionBlocks.id)
       )
+      .leftJoin(exercises, eq(exercises.id, sessionBlockItems.exerciseId))
       .where(eq(sessionBlocks.sessionId, id))
       .orderBy(
         asc(sessionBlocks.orderIndex),
@@ -350,6 +355,8 @@ export async function GET(_request: Request, context: RouteContext) {
           notes: string | null;
           kind: string | null;
           stations: StationItemJson[] | null;
+          libraryDescription: string | null;
+          exerciseObjectives: string | null;
         }>;
       }
     >();
@@ -379,6 +386,8 @@ export async function GET(_request: Request, context: RouteContext) {
             notes: string | null;
             kind: string | null;
             stations: StationItemJson[] | null;
+            libraryDescription: string | null;
+            exerciseObjectives: string | null;
           }>;
         });
       if (row.itemId) {
@@ -393,6 +402,8 @@ export async function GET(_request: Request, context: RouteContext) {
           notes: row.itemNotes,
           kind: row.itemKind,
           stations: row.itemStations as StationItemJson[] | null,
+          libraryDescription: row.itemLibraryDescription ?? null,
+          exerciseObjectives: row.itemExerciseObjectives ?? null,
         });
       }
       blockMap.set(row.blockId, block);

@@ -19,6 +19,7 @@ import {
   buildAnimationTimeline,
   classMinuteAt,
   type AnimationInputBlock,
+  type AnimationInputItem,
   type AnimationScene,
   type AnimationSentence,
   type AnimationStep,
@@ -36,12 +37,42 @@ interface ClassData {
   blocks: AnimationInputBlock[];
 }
 
+interface SessionPayload {
+  title: string;
+  objective: string | null;
+  blocks: Array<{
+    orderIndex: number;
+    title: string | null;
+    items: Array<AnimationInputItem & { libraryDescription?: string | null }>;
+  }>;
+}
+
+/** Adapta una sesión al formato que usa el reproductor. */
+function sessionToClassData(s: SessionPayload): ClassData {
+  return {
+    name: s.title,
+    duracionMinutes: 0,
+    objetivos: s.objective,
+    blocks: s.blocks.map((b) => ({
+      orderIndex: b.orderIndex,
+      title: b.title,
+      items: b.items.map(({ libraryDescription, ...item }) => ({
+        ...item,
+        exerciseDescription: item.exerciseDescription ?? libraryDescription,
+      })),
+    })),
+  };
+}
+
 export function ClassAnimationButton({
   classId,
+  sessionId,
   variant = "icon",
   className,
 }: {
-  classId: string;
+  /** Se indica uno de los dos: la clase o la sesión a animar. */
+  classId?: string;
+  sessionId?: string;
   variant?: "icon" | "hero";
   className?: string;
 }) {
@@ -57,12 +88,21 @@ export function ClassAnimationButton({
       setOpen(true);
       if (data) return;
       setError(false);
-      fetch(`/api/classes/${classId}`)
+      const url = sessionId
+        ? `/api/sessions/${sessionId}`
+        : `/api/classes/${classId}`;
+      fetch(url)
         .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-        .then((json) => setData(json.data as ClassData))
+        .then((json) =>
+          setData(
+            sessionId
+              ? sessionToClassData(json.data as SessionPayload)
+              : (json.data as ClassData)
+          )
+        )
         .catch(() => setError(true));
     },
-    [classId, data]
+    [classId, sessionId, data]
   );
 
   return (

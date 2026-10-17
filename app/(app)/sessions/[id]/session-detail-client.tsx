@@ -35,6 +35,8 @@ import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
 import { Target, MapPin, Hash, Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
+import { hasSessionAnimation } from "@/lib/classes/animation";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -766,6 +768,10 @@ export function SessionDetailClient({
               {sessionExercises.length !== 1 ? "ejercicios" : "ejercicio"}
             </span>
           </div>
+
+          {hasSessionAnimation(session.id) && (
+            <ClassAnimationButton sessionId={session.id} variant="hero" />
+          )}
 
           <MetadataChips session={session} />
 
