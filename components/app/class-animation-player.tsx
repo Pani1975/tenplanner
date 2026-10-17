@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ShareButton } from "@/components/app/share-button";
 import { cn } from "@/lib/utils";
 import {
   buildAnimationTimeline,
@@ -80,30 +81,49 @@ export function ClassAnimationButton({
   const [data, setData] = useState<ClassData | null>(null);
   const [error, setError] = useState(false);
 
+  const load = useCallback(() => {
+    setOpen(true);
+    if (data) return;
+    setError(false);
+    const url = sessionId
+      ? `/api/sessions/${sessionId}`
+      : `/api/classes/${classId}`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((json) =>
+        setData(
+          sessionId
+            ? sessionToClassData(json.data as SessionPayload)
+            : (json.data as ClassData)
+        )
+      )
+      .catch(() => setError(true));
+  }, [classId, sessionId, data]);
+
   const openPlayer = useCallback(
     (e: React.MouseEvent) => {
       // En la ficha de presentación el botón está sobre un enlace.
       e.preventDefault();
       e.stopPropagation();
-      setOpen(true);
-      if (data) return;
-      setError(false);
-      const url = sessionId
-        ? `/api/sessions/${sessionId}`
-        : `/api/classes/${classId}`;
-      fetch(url)
-        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-        .then((json) =>
-          setData(
-            sessionId
-              ? sessionToClassData(json.data as SessionPayload)
-              : (json.data as ClassData)
-          )
-        )
-        .catch(() => setError(true));
+      load();
     },
-    [classId, sessionId, data]
+    [load]
   );
+
+  // Enlace compartido de una clase (?animacion=<id>): abre la animación.
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (autoOpened.current || !classId) return;
+    const wanted = new URLSearchParams(window.location.search).get("animacion");
+    if (wanted === classId) {
+      // Tras el primer render, para no encadenar renders en el efecto.
+      const timer = setTimeout(() => {
+        autoOpened.current = true;
+        load();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [classId, load]);
 
   return (
     <>
@@ -150,6 +170,14 @@ export function ClassAnimationButton({
               objectives={data.objetivos}
               blocks={data.blocks}
               onClose={() => setOpen(false)}
+              sharePath={
+                sessionId
+                  ? `/animacion/sesion/${sessionId}`
+                  : `/classes/${classId}?animacion=${classId}`
+              }
+              kindLabel={
+                sessionId ? "Animación de la sesión" : "Animación de la clase"
+              }
             />
           ) : (
             <div className="flex h-72 flex-col items-center justify-center gap-3 text-sm text-white/60">
@@ -205,11 +233,16 @@ export function ClassAnimationPlayer({
   objectives,
   blocks,
   onClose,
+  sharePath,
+  kindLabel = "Animación de la clase",
 }: {
   name: string;
   objectives?: string | null;
   blocks: AnimationInputBlock[];
   onClose?: () => void;
+  /** Enlace que se comparte con el botón de compartir. */
+  sharePath?: string;
+  kindLabel?: string;
 }) {
   const timeline = useMemo(
     () => buildAnimationTimeline(blocks, { objectives }),
@@ -287,7 +320,7 @@ export function ClassAnimationPlayer({
       <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#D6FF38]">
-            Animación de la clase
+            {kindLabel}
           </p>
           <p className="truncate font-heading text-lg font-semibold leading-tight">
             {name}
@@ -310,6 +343,15 @@ export function ClassAnimationPlayer({
               / {formatClock(timeline.totalSeconds / 60)}
             </span>
           </span>
+          {sharePath && (
+            <ShareButton
+              title={`${kindLabel}: ${name}`}
+              text={`Mira la animación de «${name}» en TenPlanner`}
+              path={sharePath}
+              iconOnly
+              className="flex size-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+            />
+          )}
           {onClose && (
             <button
               type="button"

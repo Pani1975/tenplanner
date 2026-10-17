@@ -11,6 +11,7 @@ const PUBLIC_PREFIXES = [
   "/classes",
   "/exercises",
   "/s/",
+  "/animacion/",
   "/privacy",
   "/privacidad",
   "/aviso-legal",
