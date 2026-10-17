@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Clock3, FilePenLine, Trash2, FileX } from "lucide-react";
+import { SessionInfoSummary } from "@/components/app/session-info-summary";
 import {
   listSessionDrafts,
   removeSessionDraft,
@@ -93,7 +94,7 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
         {drafts.map((draft, i) => (
           <div
             key={draft.id}
-            className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
+            className="flex items-start gap-3 rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
           >
             <span className="font-sans text-[9px] tabular-nums text-foreground/30 shrink-0">
               {(i + 1).toString().padStart(2, "0")}
@@ -106,6 +107,16 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
                 <Clock3 className="size-3" />
                 {formatUpdatedAt(draft.updatedAt)}
               </p>
+              <SessionInfoSummary
+                compact
+                objective={draft.payload?.objective}
+                material={draft.payload?.material}
+                observations={draft.payload?.observations}
+                tags={
+                  Array.isArray(draft.payload?.tags) ? draft.payload.tags : []
+                }
+                className="pt-1.5"
+              />
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Link

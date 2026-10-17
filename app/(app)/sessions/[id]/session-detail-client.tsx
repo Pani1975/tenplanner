@@ -32,9 +32,10 @@ import { SessionAnalyticsView } from "@/components/app/session-analytics";
 import type { SessionAnalytics } from "@/lib/sessions/analytics";
 import { cn } from "@/lib/utils";
 import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
-import { Target, MapPin, Hash, Package } from "lucide-react";
+import { MapPin, Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import { SessionInfoSummary } from "@/components/app/session-info-summary";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
 import { hasSessionAnimation } from "@/lib/classes/animation";
 
@@ -191,33 +192,14 @@ export interface SessionBlockData {
 
 
 function MetadataChips({ session }: { session: SessionData }) {
-  const hasAny =
-    !!session.objective || !!session.location || session.tags.length > 0;
-  if (!hasAny) return null;
+  if (!session.location) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {session.objective && (
-        <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
-          <Target className="size-3 text-muted-foreground" />
-          <span className="truncate max-w-[24ch]">{session.objective}</span>
-        </span>
-      )}
-      {session.location && (
-        <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
-          <MapPin className="size-3 text-muted-foreground" />
-          {session.location}
-        </span>
-      )}
-      {session.tags.map((tag) => (
-        <span
-          key={tag}
-          className="inline-flex items-center gap-1 text-xs text-brand bg-brand/10 border border-brand/20 px-2.5 py-1 rounded-full"
-        >
-          <Hash className="size-3" />
-          {tag}
-        </span>
-      ))}
+      <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
+        <MapPin className="size-3 text-muted-foreground" />
+        {session.location}
+      </span>
     </div>
   );
 }
@@ -775,30 +757,13 @@ export function SessionDetailClient({
 
           <MetadataChips session={session} />
 
-          {(session.material || session.observations) && (
-            <div className="grid gap-4 border-t border-border/50 pt-4 sm:grid-cols-2">
-              {session.material && (
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                    Material
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {session.material}
-                  </p>
-                </div>
-              )}
-              {session.observations && (
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                    Observaciones
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {session.observations}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <SessionInfoSummary
+            objective={session.objective}
+            material={session.material}
+            observations={session.observations}
+            tags={session.tags}
+            className="border-t border-border/50 pt-4"
+          />
 
           {session.description && (
             <div>

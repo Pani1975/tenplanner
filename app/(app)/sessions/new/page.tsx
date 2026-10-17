@@ -367,6 +367,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   let fromSession: {
     title: string;
     objective: string | null;
+    material: string | null;
+    observations: string | null;
+    tags: string[];
     location: string | null;
   } | null = null;
   let fromExercises: WizardExercise[] = [];
@@ -377,6 +380,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         id: sessions.id,
         title: sessions.title,
         objective: sessions.objective,
+        material: sessions.material,
+        observations: sessions.observations,
+        tags: sessions.tags,
         location: sessions.location,
         userId: sessions.userId,
       })
@@ -388,6 +394,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
       fromSession = {
         title: sourceSession.title,
         objective: sourceSession.objective,
+        material: sourceSession.material,
+        observations: sourceSession.observations,
+        tags: Array.isArray(sourceSession.tags) ? sourceSession.tags : [],
         location: sourceSession.location,
       };
 
@@ -536,8 +545,15 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialObjective={
                 fromSession?.objective ?? fromClass?.objetivos ?? undefined
               }
-              initialMaterial={fromClass?.material ?? undefined}
-              initialObservations={fromClass?.observations ?? undefined}
+              initialMaterial={
+                fromSession?.material ?? fromClass?.material ?? undefined
+              }
+              initialObservations={
+                fromSession?.observations ??
+                fromClass?.observations ??
+                undefined
+              }
+              initialTags={fromSession?.tags}
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
               initialLocation={fromSession?.location ?? undefined}

@@ -45,6 +45,7 @@ interface SessionWizardProps {
   initialObjective?: string;
   initialMaterial?: string;
   initialObservations?: string;
+  initialTags?: string[];
   initialSourceClassId?: string | null;
   initialBlocks?: WizardSessionBlock[];
   initialLocation?: string;
@@ -151,6 +152,7 @@ function createInitialState({
   initialObjective,
   initialMaterial,
   initialObservations,
+  initialTags,
   initialSourceClassId,
   initialBlocks,
   initialLocation,
@@ -166,6 +168,7 @@ function createInitialState({
   | "initialObjective"
   | "initialMaterial"
   | "initialObservations"
+  | "initialTags"
   | "initialSourceClassId"
   | "initialBlocks"
   | "initialLocation"
@@ -193,7 +196,7 @@ function createInitialState({
     observations: initialObservations ?? "",
     sourceClassId: initialSourceClassId ?? null,
     intensity: null,
-    tags: [],
+    tags: initialTags ?? [],
     studentIds: initialStudentIds ?? [],
     exercises: [
       ...(initialExercises ?? []),
@@ -317,6 +320,7 @@ export function SessionWizard({
   initialObjective,
   initialMaterial,
   initialObservations,
+  initialTags,
   initialSourceClassId,
   initialBlocks,
   initialLocation,
@@ -346,6 +350,7 @@ export function SessionWizard({
       initialObjective,
       initialMaterial,
       initialObservations,
+      initialTags,
       initialSourceClassId,
       initialBlocks,
       initialLocation,

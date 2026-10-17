@@ -64,6 +64,8 @@ export async function POST(request: Request, ctx: Ctx) {
           durationMinutes: original.durationMinutes,
           userId: user.id,
           objective: original.objective,
+          material: original.material,
+          observations: original.observations,
           intensity: original.intensity,
           tags: original.tags,
           location: original.location,
