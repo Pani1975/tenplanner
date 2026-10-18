@@ -1049,6 +1049,43 @@ export const calendarEvents = pgTable(
   ]
 );
 
+// Festivos del calendario (rango de fechas sin hora). Los crea el club o un
+// monitor. groupId null = todo el espacio (club o particular); con groupId,
+// solo ese grupo. Una sesión que cae en festivo se marca "no se imparte" en
+// la vista, sin borrarla.
+export const calendarHolidays = pgTable(
+  "calendar_holidays",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    startDate: date("start_date", { mode: "string" }).notNull(),
+    endDate: date("end_date", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("calendar_holidays_user_id_idx").on(t.userId),
+    index("calendar_holidays_club_dates_idx").on(t.clubId, t.startDate),
+    index("calendar_holidays_group_id_idx").on(t.groupId),
+    check("calendar_holidays_range_chk", sql`${t.endDate} >= ${t.startDate}`),
+  ]
+);
+
 // Resources ("Mis recursos") — enlaces, documentos e imágenes de utilidad
 // para el monitor, organizados en Todos / Favoritos.
 export const resources = pgTable(
