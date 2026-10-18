@@ -518,9 +518,9 @@ export default async function DashboardPage() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
-  // Las familias no usan el panel del entrenador: van a sus mensajes
+  // Las familias no usan el panel del entrenador: van a su panel
   if (await isFamilyOnlyUser(user.id).catch(() => false)) {
-    redirect("/mensajes");
+    redirect("/mi-familia/calendario");
   }
 
   const displayName =

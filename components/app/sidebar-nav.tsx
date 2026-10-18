@@ -26,6 +26,7 @@ import {
   Plus,
   ShieldCheck,
   UserCircle,
+  UserRound,
   Users,
   Users2,
   X,
@@ -147,8 +148,11 @@ const navItems: NavItem[] = [
 
 // Vista simplificada para familias (ver lib/family.ts): solo lo que usan.
 const familyNavItems: NavItem[] = [
+  { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
+  { href: "/mi-familia/jugador", label: "Jugador", icon: UserRound },
   { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/mi-familia/informes", label: "Informes", icon: FileText },
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
@@ -313,7 +317,7 @@ function NavContent({
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-4 py-4">
         <Link
-          href={familyOnly ? "/mensajes" : "/dashboard"}
+          href={familyOnly ? "/mi-familia/calendario" : "/dashboard"}
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
           onClick={onNavigate}
         >
@@ -770,7 +774,7 @@ function SidebarNavInner({
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href={familyOnly ? "/mensajes" : "/dashboard"}
+              href={familyOnly ? "/mi-familia/calendario" : "/dashboard"}
               className="flex min-w-0 shrink items-center gap-2.5"
             >
               <BrandMark className="size-9" />
