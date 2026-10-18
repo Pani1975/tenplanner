@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { clubMembers, clubs, users } from "@/db/schema";
 import { getOwnedClub } from "@/lib/clubs";
+import { isFamilyAccountType } from "@/lib/family-account";
 
 function safeNext(raw: string | null): string {
   const fallback = "/dashboard";
@@ -17,6 +18,8 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = safeNext(searchParams.get("next"));
+  // Alta con Google como familia o jugador (viene de /register).
+  const requestedAccountType = searchParams.get("account_type");
 
   if (code) {
     const supabase = await createClient();
@@ -32,7 +35,7 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/login?error=missing_email`);
         }
         try {
-          await db
+          const inserted = await db
             .insert(users)
             .values({
               id: user.id,
@@ -40,7 +43,19 @@ export async function GET(request: Request) {
               email: user.email,
               image: user.user_metadata.avatar_url ?? null,
             })
-            .onConflictDoNothing();
+            .onConflictDoNothing()
+            .returning({ id: users.id });
+
+          // Solo en un alta nueva: una cuenta que ya existía (p. ej. un
+          // monitor que entra con Google) no cambia de tipo por este enlace.
+          if (
+            inserted.length > 0 &&
+            isFamilyAccountType({ account_type: requestedAccountType })
+          ) {
+            await supabase.auth.updateUser({
+              data: { account_type: requestedAccountType },
+            });
+          }
         } catch (error) {
           // DB error shouldn't trap the user — session is already set
           console.error("Error syncing user profile during auth callback", {

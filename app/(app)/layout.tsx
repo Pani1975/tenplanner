@@ -12,6 +12,7 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
+import { isFamilyAccountType } from "@/lib/family-account";
 import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
@@ -72,7 +73,9 @@ export default async function AppLayout({
     getActiveWorkClubId(user.id),
     getActiveSport(user.id),
     // Si falla (p. ej. sin tablas de mensajes), se muestra la app completa
-    isFamilyOnlyUser(user.id).catch(() => false),
+    isFamilyOnlyUser(user.id, isFamilyAccountType(user.user_metadata)).catch(
+      () => false
+    ),
     // Invitaciones de club a su email: se avisan dentro de la app
     getPendingInvitesForEmail(user.id, user.email).catch(() => []),
     // Contador de mensajes nuevos junto a "Mensajes"

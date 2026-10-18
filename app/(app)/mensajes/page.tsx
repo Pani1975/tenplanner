@@ -20,6 +20,7 @@ import { SPORT_LABELS } from "@/lib/sport-constants";
 import { MessageComposer } from "./message-composer";
 import { MarkMessagesRead } from "./mark-read";
 import { isFamilyOnlyUser } from "@/lib/family";
+import { isFamilyAccountType } from "@/lib/family-account";
 
 // Mensajes del club. Quién envía y quién lee lo deciden las funciones de
 // la base de datos (migraciones 0054 y 0055), vía lib/messages.ts.
@@ -59,7 +60,9 @@ export default async function MensajesPage() {
 
   const [ctx, familyOnly] = await Promise.all([
     getMessagingContext(user.id).catch(() => null),
-    isFamilyOnlyUser(user.id).catch(() => false),
+    isFamilyOnlyUser(user.id, isFamilyAccountType(user.user_metadata)).catch(
+      () => false
+    ),
   ]);
   const canCompose = !!ctx?.clubId && ctx.isClubAdmin;
   const [messages, options] = await Promise.all([
