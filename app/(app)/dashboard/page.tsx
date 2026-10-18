@@ -35,6 +35,7 @@ import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { isFamilyOnlyUser } from "@/lib/family";
+import { isFamilyAccountType } from "@/lib/family-account";
 
 function formatDayMonth(date: Date) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
@@ -519,7 +520,12 @@ export default async function DashboardPage() {
   const user = session?.user ?? null;
   if (!user) redirect("/login");
   // Las familias no usan el panel del entrenador: van a su panel
-  if (await isFamilyOnlyUser(user.id).catch(() => false)) {
+  if (
+    await isFamilyOnlyUser(
+      user.id,
+      isFamilyAccountType(user.user_metadata)
+    ).catch(() => false)
+  ) {
     redirect("/mi-familia/calendario");
   }
 

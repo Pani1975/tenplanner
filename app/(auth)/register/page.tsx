@@ -13,6 +13,8 @@ import {
   Loader2,
   Mail,
   User,
+  UserRound,
+  Users,
 } from "lucide-react";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
@@ -21,7 +23,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-type AccountType = "club" | "monitor";
+type AccountType = "club" | "monitor" | "familia" | "jugador";
+/** Cuentas que no trabajan en Ten Planner: ven el panel de familias. */
+type FamilyKind = "familia" | "jugador";
 type Step = "choice" | "form";
 
 const registerSchema = z
@@ -31,6 +35,8 @@ const registerSchema = z
     password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmPassword: z.string(),
     isClub: z.boolean(),
+    isPlayer: z.boolean(),
+    confirmAdult: z.boolean(),
     clubName: z.string().trim().optional(),
     clubSeats: z.string().optional(),
     accepted: z
@@ -44,6 +50,11 @@ const registerSchema = z
   .refine((data) => !data.isClub || (data.clubName?.length ?? 0) >= 2, {
     path: ["clubName"],
     message: "Escribe el nombre del club",
+  })
+  .refine((data) => !data.isPlayer || data.confirmAdult, {
+    path: ["confirmAdult"],
+    message:
+      "Si eres menor de edad, la cuenta la crea tu madre, padre o tutor como familia",
   });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -54,6 +65,8 @@ const initialForm: RegisterForm = {
   password: "",
   confirmPassword: "",
   isClub: false,
+  isPlayer: false,
+  confirmAdult: false,
   clubName: "",
   clubSeats: "",
   accepted: false,
@@ -80,9 +93,12 @@ export default function RegisterPage() {
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
-  // Familia que llega desde una invitación (/familia/<token>): cuenta
-  // sencilla, sin elegir monitor/club, y vuelta a la invitación al terminar.
-  const [isFamily, setIsFamily] = useState(false);
+  // Familia o jugador: cuenta sencilla, sin elegir monitor/club. Llega desde
+  // una invitación (/familia/<token>) o la elige el propio usuario aquí.
+  const [familyKind, setFamilyKind] = useState<FamilyKind | null>(null);
+  const isFamily = familyKind !== null;
+  // El tipo viene ya decidido en el enlace: no se ofrece cambiarlo.
+  const [typeLocked, setTypeLocked] = useState(false);
   const [nextPath, setNextPath] = useState<string | null>(null);
 
   // Un enlace de invitación de club lleva a un monitor directamente a
@@ -100,16 +116,28 @@ export default function RegisterPage() {
     ) {
       setNextPath(next);
     }
-    if (type === "club" || type === "monitor") {
+    if (
+      type === "club" ||
+      type === "monitor" ||
+      type === "familia" ||
+      type === "jugador"
+    ) {
+      if (type === "familia" || type === "jugador") setTypeLocked(true);
       selectAccountType(type);
-    } else if (type === "familia") {
-      setIsFamily(true);
-      selectAccountType("monitor");
     }
   }, []);
 
   function selectAccountType(type: AccountType) {
-    setForm((prev) => ({ ...prev, isClub: type === "club" }));
+    const kind: FamilyKind | null =
+      type === "familia" || type === "jugador" ? type : null;
+    setFamilyKind(kind);
+    setForm((prev) => ({
+      ...prev,
+      isClub: type === "club",
+      isPlayer: type === "jugador",
+      confirmAdult: false,
+    }));
+    setError(null);
     setStep("form");
   }
 
@@ -162,9 +190,17 @@ export default function RegisterPage() {
 
   async function signInWithGoogle() {
     const supabase = createClient();
+    // Una cuenta de familia/jugador lleva su tipo y su destino al callback.
+    const callback = new URL(`${window.location.origin}/auth/callback`);
+    if (familyKind) {
+      callback.searchParams.set("account_type", familyKind);
+      callback.searchParams.set("next", nextPath ?? "/mi-familia/calendario");
+    } else if (nextPath) {
+      callback.searchParams.set("next", nextPath);
+    }
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callback.toString() },
     });
   }
 
@@ -202,6 +238,7 @@ export default function RegisterPage() {
           data: {
             full_name: parsed.data.name,
             role: "coach",
+            ...(familyKind ? { account_type: familyKind } : {}),
             ...(parsed.data.isClub && parsed.data.clubName
               ? {
                   club_name: parsed.data.clubName,
@@ -258,7 +295,14 @@ export default function RegisterPage() {
           });
         }
 
-        router.push(nextPath ?? (parsed.data.isClub ? "/club" : "/dashboard"));
+        router.push(
+          nextPath ??
+            (familyKind
+              ? "/mi-familia/calendario"
+              : parsed.data.isClub
+                ? "/club"
+                : "/dashboard")
+        );
         router.refresh();
         return;
       }
@@ -396,6 +440,44 @@ export default function RegisterPage() {
               </span>
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => selectAccountType("familia")}
+            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+              <Users className="size-5" />
+            </span>
+            <span>
+              <span className="block text-base font-black text-foreground">
+                Como Familia
+              </span>
+              <span className="mt-1 block text-sm leading-5 text-foreground/62">
+                Eres madre, padre o tutor de un jugador y quieres ver su
+                calendario, sus clases y los mensajes del club.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => selectAccountType("jugador")}
+            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+              <UserRound className="size-5" />
+            </span>
+            <span>
+              <span className="block text-base font-black text-foreground">
+                Como Jugador
+              </span>
+              <span className="mt-1 block text-sm leading-5 text-foreground/62">
+                Eres mayor de edad y juegas en un club: consulta tus clases, tu
+                asistencia y los mensajes.
+              </span>
+            </span>
+          </button>
         </div>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
@@ -410,7 +492,7 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full rounded-[32px] border border-[#050505]/10 bg-white p-5 shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
-      {!isFamily && (
+      {!typeLocked && (
         <button
           type="button"
           onClick={() => setStep("choice")}
@@ -426,15 +508,23 @@ export default function RegisterPage() {
           {isFamily ? "Mensajes del club" : "Acceso anticipado"}
         </p>
         <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-          {isFamily
-            ? "Crea tu cuenta"
-            : form.isClub
-              ? "Crear cuenta de club"
-              : "Crear cuenta de monitor"}
+          {familyKind === "familia"
+            ? "Crear cuenta de familia"
+            : familyKind === "jugador"
+              ? "Crear cuenta de jugador"
+              : form.isClub
+                ? "Crear cuenta de club"
+                : "Crear cuenta de monitor"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
           {isFamily
-            ? "Para recibir los mensajes del club. Si te pedimos confirmar el email, después vuelve a abrir el enlace de la invitación."
+            ? `${
+                familyKind === "jugador"
+                  ? "Para consultar tus clases, tu asistencia y los mensajes del club."
+                  : "Para seguir el calendario, las clases y los mensajes del club."
+              } El club te enviará un enlace de invitación para vincular ${
+                familyKind === "jugador" ? "tu ficha" : "a tu jugador"
+              }; si te pedimos confirmar el email, después vuelve a abrir ese enlace.`
             : form.isClub
               ? "Registra tu escuela o academia. Después podrás invitar a tus monitores por email."
               : "Alta mínima para empezar a ordenar sesiones, alumnos y biblioteca."}
@@ -590,6 +680,28 @@ export default function RegisterPage() {
             </p>
           )}
         </div>
+
+        {form.isPlayer && (
+          <>
+            <label className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-3 text-sm text-foreground/62 dark:border-white/10 dark:bg-white/[0.04]">
+              <input
+                type="checkbox"
+                checked={form.confirmAdult}
+                onChange={(e) => update("confirmAdult", e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Confirmo que tengo 18 años o más. Si eres menor, la cuenta la
+                crea tu madre, padre o tutor como familia.
+              </span>
+            </label>
+            {fieldErrors.confirmAdult && (
+              <p className="text-xs text-destructive">
+                {fieldErrors.confirmAdult}
+              </p>
+            )}
+          </>
+        )}
 
         <label className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-3 text-sm text-foreground/62 dark:border-white/10 dark:bg-white/[0.04]">
           <input
