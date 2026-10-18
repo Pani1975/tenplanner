@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
+  CalendarOff,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -26,7 +27,12 @@ import {
   EventDialog,
   type CalendarEventData,
 } from "@/components/app/event-dialog";
+import { HolidayDialog } from "@/components/app/holiday-dialog";
 import { DayAgenda } from "@/components/app/day-agenda";
+import {
+  holidayAppliesTo,
+  type CalendarHolidayData,
+} from "@/lib/calendar/holidays";
 import { retitleForDate } from "@/lib/sessions/retitle";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +42,7 @@ interface SessionData {
   scheduledAt: string;
   durationMinutes: number;
   userId?: string;
+  groupId?: string | null;
   /** Nombre de quien la creó, solo cuando no es del usuario actual
    * (compartida vía club). */
   authorName?: string | null;
@@ -44,6 +51,9 @@ interface SessionData {
 interface CalendarClientProps {
   sessions: SessionData[];
   events?: CalendarEventData[];
+  holidays?: CalendarHolidayData[];
+  /** Grupos del espacio actual, para limitar un festivo a un grupo. */
+  groups?: { id: string; name: string }[];
   /** Id del usuario actual — una sesión/evento de otro monitor (compartido
    * vía club) no se puede arrastrar ni editar desde aquí, solo abrir. */
   currentUserId?: string;
@@ -130,6 +140,8 @@ function formatDayTitle(d: Date) {
 export function CalendarClient({
   sessions: initialSessions,
   events: initialEvents = [],
+  holidays: initialHolidays = [],
+  groups = [],
   currentUserId,
 }: CalendarClientProps) {
   const router = useRouter();
@@ -141,6 +153,7 @@ export function CalendarClient({
   );
   const [sessions, setSessions] = useState(initialSessions);
   const [events, setEvents] = useState(initialEvents);
+  const [holidays, setHolidays] = useState(initialHolidays);
   const [toDelete, setToDelete] = useState<SessionData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -166,6 +179,17 @@ export function CalendarClient({
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
 
+  // Festivos (zona rosa del calendario): rango de fechas, sin hora.
+  const [holidayDialog, setHolidayDialog] = useState<{
+    holiday: CalendarHolidayData | null;
+  } | null>(null);
+  const [holidayToDelete, setHolidayToDelete] =
+    useState<CalendarHolidayData | null>(null);
+  const [deletingHolidayId, setDeletingHolidayId] = useState<string | null>(
+    null
+  );
+  const [holidayError, setHolidayError] = useState<string | null>(null);
+
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
@@ -184,6 +208,42 @@ export function CalendarClient({
     const k = dateKey(new Date(e.startAt));
     if (!eventsByDateKey.has(k)) eventsByDateKey.set(k, []);
     eventsByDateKey.get(k)!.push(e);
+  }
+
+  // Cada festivo se expande a sus días (con tope por si el rango es absurdo).
+  const holidaysByDateKey = new Map<string, CalendarHolidayData[]>();
+  for (const h of holidays) {
+    const cursor = new Date(`${h.startDate}T00:00:00`);
+    const last = new Date(`${h.endDate}T00:00:00`);
+    for (let i = 0; i < 400 && cursor <= last; i++) {
+      const k = dateKey(cursor);
+      if (!holidaysByDateKey.has(k)) holidaysByDateKey.set(k, []);
+      holidaysByDateKey.get(k)!.push(h);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+  const groupNameById = new Map(groups.map((g) => [g.id, g.name]));
+
+  function holidaysForDate(d: Date): CalendarHolidayData[] {
+    return holidaysByDateKey.get(dateKey(d)) ?? [];
+  }
+
+  /** La sesión cae en un festivo que le afecta: no se imparte (no se borra). */
+  function isNotTaught(session: SessionData) {
+    const k = dateKey(new Date(session.scheduledAt));
+    return (holidaysByDateKey.get(k) ?? []).some((h) =>
+      holidayAppliesTo(h, k, session.groupId)
+    );
+  }
+
+  function sessionIdNotTaught(id: string) {
+    const session = sessions.find((x) => x.id === id);
+    return session ? isNotTaught(session) : false;
+  }
+
+  function holidayLabel(h: CalendarHolidayData) {
+    const group = h.groupId ? groupNameById.get(h.groupId) : null;
+    return group ? `${h.title} · ${group}` : h.title;
   }
 
   function itemsForDate(d: Date): DayItem[] {
@@ -325,6 +385,42 @@ export function CalendarClient({
       setEventError("Error de red. Inténtalo de nuevo.");
     } finally {
       setDeletingEventId(null);
+    }
+  }
+
+  function handleHolidaySaved(saved: CalendarHolidayData) {
+    setHolidays((prev) => {
+      const exists = prev.some((h) => h.id === saved.id);
+      return exists
+        ? prev.map((h) => (h.id === saved.id ? saved : h))
+        : [...prev, saved];
+    });
+    const d = new Date(`${saved.startDate}T00:00:00`);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+    setSelectedDay(d.getDate());
+    setFocusDate(d);
+    setHolidayError(null);
+    router.refresh();
+  }
+
+  async function deleteHoliday(holiday: CalendarHolidayData) {
+    setDeletingHolidayId(holiday.id);
+    setHolidayError(null);
+    try {
+      const res = await fetch(`/api/calendar-holidays/${holiday.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        setHolidayError("No se pudo eliminar el festivo. Inténtalo de nuevo.");
+        return;
+      }
+      setHolidays((prev) => prev.filter((h) => h.id !== holiday.id));
+      router.refresh();
+    } catch {
+      setHolidayError("Error de red. Inténtalo de nuevo.");
+    } finally {
+      setDeletingHolidayId(null);
     }
   }
 
@@ -488,6 +584,7 @@ export function CalendarClient({
             const key = dateKey(d);
             const hasItems =
               sessionsByDateKey.has(key) || eventsByDateKey.has(key);
+            const isHoliday = holidaysByDateKey.has(key);
             const isToday = isSameDate(d, todayMidnight);
             return (
               <button
@@ -504,7 +601,9 @@ export function CalendarClient({
                     "flex size-6 items-center justify-center rounded-full text-[10px] font-bold",
                     isToday
                       ? "bg-brand text-brand-foreground"
-                      : "text-foreground/70 hover:bg-muted"
+                      : isHoliday
+                        ? "bg-[#e11d48]/15 text-[#be123c] dark:text-[#fda4af]"
+                        : "text-foreground/70 hover:bg-muted"
                   )}
                 >
                   {dayNum}
@@ -592,6 +691,12 @@ export function CalendarClient({
                 <CalendarDays className="size-4 text-[#2563eb]" />
                 Nuevo evento
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setHolidayDialog({ holiday: null })}
+              >
+                <CalendarOff className="size-4 text-[#e11d48]" />
+                Nuevo festivo
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -635,6 +740,8 @@ export function CalendarClient({
                     : [];
                   const hasSessions = daySessions.length > 0;
                   const hasItems = dayItems.length > 0;
+                  const dayHolidays = cellDate ? holidaysForDate(cellDate) : [];
+                  const hasHoliday = dayHolidays.length > 0;
 
                   return (
                     <div
@@ -669,6 +776,10 @@ export function CalendarClient({
                         "min-h-[78px] border-b border-r border-[#050505]/10 p-2 transition-colors last-of-type:border-r-0 dark:border-white/10 sm:min-h-[108px]",
                         isValid ? "cursor-pointer" : "cursor-default",
                         !isValid && "bg-[#F4F4F1]/70 dark:bg-white/[0.025]",
+                        isValid &&
+                          hasHoliday &&
+                          !isSelected &&
+                          "bg-[#e11d48]/[0.06]",
                         isValid && isPast && !isSelected && "opacity-50",
                         isSelected && "bg-brand/15",
                         isValid &&
@@ -698,8 +809,23 @@ export function CalendarClient({
                               />
                             )}
                           </div>
-                          {hasItems && (
+                          {(hasItems || hasHoliday) && (
                             <div className="mt-1 space-y-0.5">
+                              {dayHolidays.slice(0, 1).map((h) => (
+                                <div
+                                  key={`h-${h.id}`}
+                                  title={holidayLabel(h)}
+                                  className="truncate rounded-full bg-[#e11d48]/15 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-[#be123c] dark:text-[#fda4af]"
+                                >
+                                  {holidayLabel(h)}
+                                </div>
+                              ))}
+                              {dayHolidays.length > 1 && (
+                                <div className="px-1.5 text-[10px] text-[#be123c] dark:text-[#fda4af]">
+                                  +{dayHolidays.length - 1} festivo
+                                  {dayHolidays.length - 1 !== 1 ? "s" : ""}
+                                </div>
+                              )}
                               {dayItems.slice(0, 2).map((item) =>
                                 item.kind === "session" ? (
                                   <Link
@@ -730,7 +856,11 @@ export function CalendarClient({
                                         ? `${item.session.title} · ${item.session.authorName}`
                                         : item.session.title
                                     }
-                                    className="block truncate rounded-full bg-brand/20 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground"
+                                    className={cn(
+                                      "block truncate rounded-full bg-brand/20 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
+                                      isNotTaught(item.session) &&
+                                        "line-through opacity-60"
+                                    )}
                                   >
                                     {item.session.title}
                                     {item.session.authorName && (
@@ -806,6 +936,16 @@ export function CalendarClient({
               deletingEventId={deletingEventId}
               deleteError={deleteError}
               eventError={eventError}
+              holidays={holidaysForDate(
+                new Date(viewYear, viewMonth, selectedDay)
+              )}
+              holidayLabel={holidayLabel}
+              isSessionNotTaught={sessionIdNotTaught}
+              onAddHoliday={() => setHolidayDialog({ holiday: null })}
+              onEditHoliday={(h) => setHolidayDialog({ holiday: h })}
+              onDeleteHoliday={(h) => setHolidayToDelete(h)}
+              deletingHolidayId={deletingHolidayId}
+              holidayError={holidayError}
             />
           )}
         </>
@@ -830,6 +970,14 @@ export function CalendarClient({
           deletingEventId={deletingEventId}
           deleteError={deleteError}
           eventError={eventError}
+          holidays={holidaysForDate(focusDate)}
+          holidayLabel={holidayLabel}
+          isSessionNotTaught={sessionIdNotTaught}
+          onAddHoliday={() => setHolidayDialog({ holiday: null })}
+          onEditHoliday={(h) => setHolidayDialog({ holiday: h })}
+          onDeleteHoliday={(h) => setHolidayToDelete(h)}
+          deletingHolidayId={deletingHolidayId}
+          holidayError={holidayError}
         />
       )}
 
@@ -887,6 +1035,15 @@ export function CalendarClient({
                     </span>
                   </button>
                   <div className="space-y-1">
+                    {holidaysForDate(d).map((h) => (
+                      <div
+                        key={`h-${h.id}`}
+                        title={holidayLabel(h)}
+                        className="truncate rounded-full bg-[#e11d48]/15 px-2 py-1 text-[11px] font-bold leading-tight text-[#be123c] dark:text-[#fda4af]"
+                      >
+                        {holidayLabel(h)}
+                      </div>
+                    ))}
                     {items.map((item) =>
                       item.kind === "session" ? (
                         <Link
@@ -916,7 +1073,11 @@ export function CalendarClient({
                               ? `${item.session.title} · ${item.session.authorName}`
                               : item.session.title
                           }
-                          className="block truncate rounded-full bg-brand/20 px-2 py-1 text-[11px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground"
+                          className={cn(
+                            "block truncate rounded-full bg-brand/20 px-2 py-1 text-[11px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
+                            isNotTaught(item.session) &&
+                              "line-through opacity-60"
+                          )}
                         >
                           {item.session.title}
                           {item.session.authorName && (
@@ -955,7 +1116,7 @@ export function CalendarClient({
                         </button>
                       )
                     )}
-                    {items.length === 0 && (
+                    {items.length === 0 && holidaysForDate(d).length === 0 && (
                       <p className="px-1 text-[11px] text-muted-foreground">
                         —
                       </p>
@@ -1004,6 +1165,38 @@ export function CalendarClient({
           onSaved={handleEventSaved}
         />
       )}
+
+      {holidayDialog && (
+        <HolidayDialog
+          key={holidayDialog.holiday?.id ?? "new"}
+          holiday={holidayDialog.holiday}
+          defaultDate={defaultDateForNewEvent()}
+          groups={groups}
+          open
+          onOpenChange={(open) => {
+            if (!open) setHolidayDialog(null);
+          }}
+          onSaved={handleHolidaySaved}
+        />
+      )}
+
+      <ConfirmDialog
+        open={holidayToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setHolidayToDelete(null);
+        }}
+        title="¿Eliminar este festivo?"
+        description={
+          holidayToDelete
+            ? `“${holidayToDelete.title}” dejará de aparecer en el calendario y las sesiones que marcaba como «no se imparte» volverán a la normalidad.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={() => {
+          if (holidayToDelete) void deleteHoliday(holidayToDelete);
+        }}
+      />
 
       <ConfirmDialog
         open={toDelete !== null}

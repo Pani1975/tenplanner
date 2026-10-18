@@ -400,6 +400,13 @@
       "when": 1792273506396,
       "tag": "0056_mensajes_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1792277106396,
+      "tag": "0057_calendar_holidays",
+      "breakpoints": true
     }
   ]
 }
