@@ -18,6 +18,7 @@ import { isAdult } from "@/lib/age";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
 import { ObjectivesChecklist } from "./objectives-checklist";
+import { ReportDialogButton } from "./report-dialog";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -158,12 +159,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
         pastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now())`,
         upcomingCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= now())`,
         pastMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now()), 0)`,
-        avgRating: sql<
-          number | null
-        >`AVG(${sessionStudents.rating}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.rating} IS NOT NULL)`,
-        avgIntensity: sql<
-          number | null
-        >`AVG(${sessions.intensity}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.intensity} IS NOT NULL)`,
         pastWithAttendanceCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} IS NOT NULL)`,
         attendedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} = true)`,
         last30PastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= (now() - INTERVAL '30 days') AND ${sessions.scheduledAt} < now())`,
@@ -220,9 +215,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
   const pastCount = Number(stats?.pastCount ?? 0);
   const upcomingCount = Number(stats?.upcomingCount ?? 0);
   const pastMinutes = Number(stats?.pastMinutes ?? 0);
-  const avgRating = stats?.avgRating == null ? null : Number(stats.avgRating);
-  const avgIntensity =
-    stats?.avgIntensity == null ? null : Number(stats.avgIntensity);
   const pastWithAttendanceCount = Number(stats?.pastWithAttendanceCount ?? 0);
   const attendedCount = Number(stats?.attendedCount ?? 0);
   const attendanceRate =
@@ -233,8 +225,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
     attendanceRate != null &&
     attendanceRate >= 0.8 &&
     pastWithAttendanceCount >= 3;
-
-  const recentEvolution = past.slice(0, 8).reverse();
 
   const sessionsPerWeek =
     Number(stats?.last30PastCount ?? 0) > 0
@@ -265,21 +255,27 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 Ficha individual
               </p>
             </div>
-            {isOwner && (
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/students/${student.id}/edit`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
-                >
-                  <Pencil className="size-3" strokeWidth={1.6} />
-                  Editar
-                </Link>
-                <DeleteStudentButton
-                  studentId={student.id}
-                  studentName={student.name}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <ReportDialogButton
+                studentId={student.id}
+                studentName={student.name}
+              />
+              {isOwner && (
+                <>
+                  <Link
+                    href={`/students/${student.id}/edit`}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                  >
+                    <Pencil className="size-3" strokeWidth={1.6} />
+                    Editar
+                  </Link>
+                  <DeleteStudentButton
+                    studentId={student.id}
+                    studentName={student.name}
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-[auto_1fr] items-end gap-4 sm:gap-6">
@@ -333,21 +329,13 @@ export default async function StudentDetailPage({ params }: PageProps) {
         </header>
 
         {/* Stats strip */}
-        <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4 lg:grid-cols-6">
+        <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4">
           <StatCell label="Sesiones totales" value={totalSessions.toString()} />
           <StatCell label="Completadas" value={pastCount.toString()} />
           <StatCell label="Próximas" value={upcomingCount.toString()} accent />
           <StatCell
             label="Horas totales"
             value={`${Math.round(totalMinutes / 60)}h`}
-          />
-          <StatCell
-            label="Intensidad media"
-            value={avgIntensity != null ? `${avgIntensity.toFixed(1)}/5` : "—"}
-          />
-          <StatCell
-            label="Valoración media"
-            value={avgRating != null ? `${avgRating.toFixed(1)}/5` : "—"}
           />
         </section>
 
@@ -574,39 +562,12 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Evolución */}
-        {recentEvolution.length > 0 && (
-          <section className="tp-panel p-5 sm:p-6">
-            <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-              <p className="text-[10px] font-black tabular-nums text-brand">
-                05
-              </p>
-              <p className="text-[10px] font-black uppercase text-foreground/50">
-                Evolución reciente
-              </p>
-              <p className="text-[10px] font-black tabular-nums text-foreground/40">
-                últimas {recentEvolution.length}
-              </p>
-            </div>
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <EvolutionChart
-                label="Intensidad"
-                items={recentEvolution.map((s) => s.intensity)}
-              />
-              <EvolutionChart
-                label="Valoración"
-                items={recentEvolution.map((s) => s.rating)}
-              />
-            </div>
-          </section>
-        )}
-
         {/* Objetivos por etapa */}
         {objectives && (
           <section className="tp-panel p-5 sm:p-6">
             <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
               <p className="text-[10px] font-black tabular-nums text-brand">
-                06
+                05
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
                 Objetivos por etapa
@@ -630,7 +591,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
         {/* Próximas */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">06</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Próximas sesiones
             </p>
@@ -654,7 +615,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
         {/* Historial */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">08</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Historial y feedback
             </p>
@@ -782,53 +743,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="text-[14px] text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function EvolutionChart({
-  label,
-  items,
-}: {
-  label: string;
-  items: Array<number | null>;
-}) {
-  const max = 5;
-  return (
-    <div>
-      <p className="mb-3 text-[10px] font-black uppercase text-foreground/55">
-        {label}
-      </p>
-      <div className="flex items-end gap-1.5 h-20 border-b border-foreground/15">
-        {items.map((v, i) => {
-          const h = v == null ? 0 : (v / max) * 100;
-          return (
-            <div
-              key={i}
-              className="flex-1 flex flex-col items-center justify-end gap-1.5"
-            >
-              <div
-                className={cn(
-                  "w-full transition-all",
-                  v == null ? "bg-foreground/10" : "bg-brand"
-                )}
-                style={{ height: v == null ? "2px" : `${Math.max(h, 8)}%` }}
-                title={v == null ? "Sin datos" : `${v}/5`}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-start gap-1.5 mt-1.5">
-        {items.map((v, i) => (
-          <span
-            key={i}
-            className="flex-1 text-center font-sans text-[9px] tabular-nums text-foreground/40"
-          >
-            {v ?? "—"}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }

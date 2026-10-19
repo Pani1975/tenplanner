@@ -1,4 +1,15 @@
-import { and, asc, eq, inArray, isNull, lt, ne, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  ne,
+  or,
+} from "drizzle-orm";
 import { db } from "@/db";
 import {
   exercises,
@@ -203,6 +214,31 @@ export async function loadStudentTrainingStats(
       and(
         eq(sessionStudents.studentId, studentId),
         pastNotCancelled(),
+        or(isNull(sessionStudents.attended), eq(sessionStudents.attended, true))
+      )
+    );
+  return statsForSessionIds(rows.map((r) => r.id));
+}
+
+/**
+ * Estadística de un alumno limitada a un periodo (sesiones pasadas, no
+ * canceladas y a las que no faltó, dentro de [from, to]).
+ */
+export async function loadStudentTrainingStatsInRange(
+  studentId: string,
+  from: Date,
+  to: Date
+): Promise<TrainingStats> {
+  const rows = await db
+    .select({ id: sessions.id })
+    .from(sessionStudents)
+    .innerJoin(sessions, eq(sessions.id, sessionStudents.sessionId))
+    .where(
+      and(
+        eq(sessionStudents.studentId, studentId),
+        pastNotCancelled(),
+        gte(sessions.scheduledAt, from),
+        lte(sessions.scheduledAt, to),
         or(isNull(sessionStudents.attended), eq(sessionStudents.attended, true))
       )
     );

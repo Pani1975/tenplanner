@@ -83,3 +83,76 @@ export function defaultBallForStudent(
   }
   return "roja";
 }
+
+export type LevelSummary = {
+  ball: BallId;
+  stage: string;
+  total: number;
+  /** "complete": todos conseguidos; "partial": quedan objetivos pendientes. */
+  status: "complete" | "partial";
+  achieved: ObjectiveItem[];
+  pending: ObjectiveItem[];
+  /** Objetivos marcados como conseguidos dentro del periodo indicado. */
+  newInPeriod: number;
+};
+
+/**
+ * Resumen por nivel para el informe del alumno.
+ * - Nivel con todos los objetivos conseguidos → "complete" (solo se menciona).
+ * - Nivel con pendientes → "partial", con conseguidos y pendientes; se incluye
+ *   si el alumno ya tiene alguno conseguido o si es el primer nivel sin
+ *   completar (el nivel en el que está trabajando).
+ * - El resto de niveles (sin ningún objetivo conseguido y posteriores al nivel
+ *   actual) no aparecen.
+ */
+export function summarizeObjectivesByLevel(
+  items: ObjectiveItem[],
+  period?: { from: Date; to: Date }
+): LevelSummary[] {
+  const out: LevelSummary[] = [];
+  let firstIncompleteSeen = false;
+
+  for (const b of BALLS) {
+    const list = items
+      .filter((i) => i.ball === b.id)
+      .sort((a, c) => a.sortOrder - c.sortOrder);
+    if (list.length === 0) continue;
+
+    const achieved = list.filter((i) => i.achieved);
+    const pending = list.filter((i) => !i.achieved);
+    const newInPeriod = period
+      ? achieved.filter((i) => {
+          if (!i.achievedAt) return false;
+          const t = new Date(i.achievedAt).getTime();
+          return t >= period.from.getTime() && t <= period.to.getTime();
+        }).length
+      : 0;
+
+    if (pending.length === 0) {
+      out.push({
+        ball: b.id,
+        stage: b.stage,
+        total: list.length,
+        status: "complete",
+        achieved,
+        pending,
+        newInPeriod,
+      });
+      continue;
+    }
+
+    const isCurrent = !firstIncompleteSeen;
+    firstIncompleteSeen = true;
+    if (achieved.length === 0 && !isCurrent) continue;
+    out.push({
+      ball: b.id,
+      stage: b.stage,
+      total: list.length,
+      status: "partial",
+      achieved,
+      pending,
+      newInPeriod,
+    });
+  }
+  return out;
+}
