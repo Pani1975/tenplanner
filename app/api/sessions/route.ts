@@ -16,6 +16,7 @@ import {
   classes,
   exercises,
   groups,
+  groupStudents,
   sessionBlockItems,
   sessionBlocks,
   sessionExercises,
@@ -709,9 +710,20 @@ export async function POST(request: Request) {
         }
       }
 
-      if (uniqueStudentIds.length > 0) {
+      // Las alumnas del grupo asisten a la sesión del grupo aunque no se hayan
+      // marcado una a una: así la sesión aparece en la ficha de cada una.
+      const linkedStudentIds = new Set(uniqueStudentIds);
+      if (groupId) {
+        const members = await tx
+          .select({ studentId: groupStudents.studentId })
+          .from(groupStudents)
+          .where(eq(groupStudents.groupId, groupId));
+        for (const m of members) linkedStudentIds.add(m.studentId);
+      }
+
+      if (linkedStudentIds.size > 0) {
         await tx.insert(sessionStudents).values(
-          uniqueStudentIds.map((studentId) => ({
+          Array.from(linkedStudentIds).map((studentId) => ({
             sessionId: session.id,
             studentId,
           }))

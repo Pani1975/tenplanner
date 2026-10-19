@@ -1,8 +1,14 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { groups, groupStudents, students } from "@/db/schema";
+import {
+  groups,
+  groupStudents,
+  sessions,
+  sessionStudents,
+  students,
+} from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
@@ -22,7 +28,9 @@ type Ctx = { params: Promise<{ id: string }> };
 const scheduleEntrySchema = z
   .object({
     weekday: z.number().int().min(0).max(6),
-    time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida (HH:MM)"),
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida (HH:MM)"),
   })
   .refine((v) => isValidScheduleEntry(v), { message: "Entrada inválida" });
 
@@ -154,11 +162,38 @@ export async function PATCH(request: Request, ctx: Ctx) {
           throw new Error("invalid_student");
         }
       }
+      const previous = await tx
+        .select({ studentId: groupStudents.studentId })
+        .from(groupStudents)
+        .where(eq(groupStudents.groupId, id));
+      const previousIds = new Set(previous.map((p) => p.studentId));
       await tx.delete(groupStudents).where(eq(groupStudents.groupId, id));
       if (studentIds.length > 0) {
         await tx
           .insert(groupStudents)
           .values(studentIds.map((studentId) => ({ groupId: id, studentId })));
+      }
+
+      // Las alumnas nuevas del grupo se apuntan a sus próximas sesiones, para
+      // que las vean en su ficha.
+      const added = studentIds.filter((sid) => !previousIds.has(sid));
+      if (added.length > 0) {
+        const upcoming = await tx
+          .select({ id: sessions.id })
+          .from(sessions)
+          .where(
+            and(eq(sessions.groupId, id), gte(sessions.scheduledAt, new Date()))
+          );
+        if (upcoming.length > 0) {
+          await tx
+            .insert(sessionStudents)
+            .values(
+              upcoming.flatMap((s) =>
+                added.map((studentId) => ({ sessionId: s.id, studentId }))
+              )
+            )
+            .onConflictDoNothing();
+        }
       }
     }
   });
