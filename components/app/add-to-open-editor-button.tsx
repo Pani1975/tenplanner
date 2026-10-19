@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requestExercisePick, usePickParams } from "@/lib/exercise-pick-bridge";
 
@@ -30,8 +30,34 @@ export function AddToOpenEditorButton({ exerciseId }: { exerciseId: string }) {
     setMessage(result.message);
   }
 
+  function continueEditing() {
+    // En el móvil la ficha suele abrirse en la misma ventana: volver atrás
+    // recupera el editor (la sesión se restaura desde el borrador).
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    // Ficha abierta en una pestaña nueva: se intenta cerrarla y, si el
+    // navegador no deja, se vuelve al editor correspondiente.
+    window.close();
+    window.setTimeout(() => {
+      window.location.href =
+        kind === "clase" ? "/classes/new" : "/sessions/new";
+    }, 200);
+  }
+
   return (
     <div className="flex w-full flex-col gap-1 sm:items-end">
+      <button
+        type="button"
+        onClick={continueEditing}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-brand/40 bg-background px-5 py-2.5 text-sm font-semibold text-brand shadow-sm transition-colors hover:bg-brand/10 sm:w-auto"
+      >
+        <ArrowLeft className="size-4" />
+        {kind === "clase"
+          ? "Seguir editando la clase"
+          : "Seguir editando la sesión"}
+      </button>
       <button
         type="button"
         onClick={handleClick}

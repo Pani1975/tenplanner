@@ -18,6 +18,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import {
   pickExerciseHref,
   useExercisePickListener,
@@ -1466,7 +1467,7 @@ export function ClassForm({
                       .map((ex) => (
                         <li
                           key={ex.id}
-                          className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                          className="flex flex-wrap items-start gap-1 rounded-lg hover:bg-brand/10"
                         >
                           <button
                             type="button"
@@ -1480,14 +1481,9 @@ export function ClassForm({
                             }
                             className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
                           >
-                            <span className="block truncate font-medium">
+                            <span className="block break-words font-medium">
                               {ex.name}
                             </span>
-                            {ex.description && (
-                              <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                                {ex.description}
-                              </span>
-                            )}
                           </button>
                           <NextLink
                             href={pickExerciseHref(ex.id, pickerId, "clase")}
@@ -1505,6 +1501,10 @@ export function ClassForm({
                           >
                             <ExternalLink className="size-3.5" />
                           </NextLink>
+                          <ExerciseQuickDescription
+                            text={ex.description}
+                            className="basis-full px-3 pb-2"
+                          />
                         </li>
                       ))}
                     {filteredExercises(search).length === 0 && (
@@ -1607,21 +1607,16 @@ export function ClassForm({
                           .map((ex) => (
                             <li
                               key={ex.id}
-                              className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                              className="flex flex-wrap items-start gap-1 rounded-lg hover:bg-brand/10"
                             >
                               <button
                                 type="button"
                                 onClick={() => addExerciseToBlock(blockIdx, ex)}
                                 className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
                               >
-                                <span className="block truncate font-medium">
+                                <span className="block break-words font-medium">
                                   {ex.name}
                                 </span>
-                                {ex.description && (
-                                  <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                                    {ex.description}
-                                  </span>
-                                )}
                               </button>
                               <NextLink
                                 href={pickExerciseHref(
@@ -1643,6 +1638,10 @@ export function ClassForm({
                               >
                                 <ExternalLink className="size-3.5" />
                               </NextLink>
+                              <ExerciseQuickDescription
+                                text={ex.description}
+                                className="basis-full px-3 pb-2"
+                              />
                             </li>
                           ))}
                         {filteredExercises(search).length === 0 && (

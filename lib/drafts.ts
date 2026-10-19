@@ -170,6 +170,8 @@ export async function getSessionDraft(
 export async function upsertSessionDraft(draft: SessionDraft): Promise<void> {
   await fetch("/api/session-drafts", {
     method: "POST",
+    // keepalive: que el guardado termine aunque la página se cierre o navegue.
+    keepalive: true,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: draft.id, payload: draft.payload }),
   });
