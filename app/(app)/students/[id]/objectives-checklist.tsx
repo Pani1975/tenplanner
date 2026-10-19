@@ -26,7 +26,7 @@ import {
   ObjectiveEditor,
   type EditorState,
 } from "@/components/objectives/objective-editor";
-import { setStudentObjective } from "./actions";
+import { setStudentObjective, setStudentObjectivesBulk } from "./actions";
 import {
   createObjective,
   moveObjective,
@@ -135,6 +135,38 @@ export function ObjectivesChecklist({
   function countFor(b: BallFilter) {
     const list = active.filter((i) => b === "todas" || i.ball === b);
     return `${list.filter((i) => state[i.id]).length}/${list.length}`;
+  }
+
+  // Todo el nivel seleccionado (todas sus bolas de aspecto), sin ocultos.
+  const levelItems =
+    ball === "todas" ? [] : active.filter((i) => i.ball === ball);
+  const levelDone =
+    levelItems.length > 0 && levelItems.every((i) => state[i.id]);
+  const levelName = ball === "todas" ? "" : BALL_LABEL[ball];
+
+  function toggleLevel() {
+    if (levelItems.length === 0) return;
+    const next = !levelDone;
+    const ids = levelItems.map((i) => i.id);
+    const previous = Object.fromEntries(ids.map((id) => [id, !!state[id]]));
+    setError(null);
+    setState((s) => ({
+      ...s,
+      ...Object.fromEntries(ids.map((id) => [id, next])),
+    }));
+    startTransition(async () => {
+      try {
+        const res = await setStudentObjectivesBulk({
+          studentId,
+          objectiveIds: ids,
+          achieved: next,
+        });
+        if (!res.ok) throw new Error(res.error);
+      } catch {
+        setState((s) => ({ ...s, ...previous }));
+        setError("No se pudo guardar el cambio. Inténtalo de nuevo.");
+      }
+    });
   }
 
   function toggle(item: ObjectiveItem) {
@@ -481,6 +513,20 @@ export function ObjectivesChecklist({
       </div>
 
       <div className="space-y-1.5">
+        {levelItems.length > 0 && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={toggleLevel}
+              className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 px-3 py-1.5 text-[11px] font-black uppercase text-brand transition-colors hover:bg-brand/10"
+            >
+              <Check className="size-3.5" />
+              {levelDone
+                ? `Desmarcar todo el nivel ${levelName}`
+                : `Marcar todo el nivel ${levelName}`}
+            </button>
+          </div>
+        )}
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-black uppercase text-foreground/55">
             Conseguidos
