@@ -48,7 +48,16 @@ export type ObjectiveItem = {
   sortOrder: number;
   achieved: boolean;
   achievedAt: string | null;
+  /** De quién es el objetivo: catálogo base o creado por un club, monitor o alumno. */
+  scope: ObjectiveScope;
+  /** Oculto para este alumno (solo llega al cliente en modo personalizar). */
+  hidden: boolean;
+  /** Ámbitos en los que hay un ajuste (título, criterio u ocultar) sobre este objetivo. */
+  overriddenAt: ObjectiveScope[];
 };
+
+/** "base" = catálogo de Ten Planner; el resto, ámbito de quien lo crea o ajusta. */
+export type ObjectiveScope = "base" | "club" | "coach" | "student";
 
 const LEVEL_TO_BALL: Record<string, BallId> = {
   descubrimiento: "roja",

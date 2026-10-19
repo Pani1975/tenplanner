@@ -485,6 +485,18 @@ export const tennisObjectives = pgTable(
     source: text("source").default("desglose").notNull(),
     sortOrder: integer("sort_order").default(0).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    // Ámbito: los tres a null = catálogo base de Ten Planner. Un objetivo propio
+    // pertenece a UN solo ámbito: un club (todos sus alumnos), un monitor (sus
+    // alumnos particulares, sin club) o un alumno concreto.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "cascade",
+    }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
     createdBy: uuid("created_by").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -497,6 +509,61 @@ export const tennisObjectives = pgTable(
       t.ball,
       t.aspect,
       t.sortOrder
+    ),
+    index("tennis_objectives_club_id_idx").on(t.clubId),
+    index("tennis_objectives_coach_id_idx").on(t.coachId),
+    index("tennis_objectives_student_id_idx").on(t.studentId),
+    check(
+      "tennis_objectives_single_scope_chk",
+      sql`num_nonnulls(${t.clubId}, ${t.coachId}, ${t.studentId}) <= 1`
+    ),
+  ]
+);
+
+// Ajustes sobre un objetivo (base o propio) para un club, un monitor o un
+// alumno. Cada campo a null = "sin cambio": gana el ajuste más específico
+// (alumno > club/monitor > original). Borrar la fila restaura el original.
+export const objectiveOverrides = pgTable(
+  "objective_overrides",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    objectiveId: uuid("objective_id")
+      .references(() => tennisObjectives.id, { onDelete: "cascade" })
+      .notNull(),
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "cascade",
+    }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
+    hidden: boolean("hidden"),
+    title: text("title"),
+    criterion: text("criterion"),
+    updatedBy: uuid("updated_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("objective_overrides_club_uniq")
+      .on(t.objectiveId, t.clubId)
+      .where(sql`${t.clubId} is not null`),
+    uniqueIndex("objective_overrides_coach_uniq")
+      .on(t.objectiveId, t.coachId)
+      .where(sql`${t.coachId} is not null`),
+    uniqueIndex("objective_overrides_student_uniq")
+      .on(t.objectiveId, t.studentId)
+      .where(sql`${t.studentId} is not null`),
+    index("objective_overrides_student_idx").on(t.studentId),
+    check(
+      "objective_overrides_single_scope_chk",
+      sql`num_nonnulls(${t.clubId}, ${t.coachId}, ${t.studentId}) = 1`
     ),
   ]
 );

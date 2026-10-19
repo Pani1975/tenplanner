@@ -17,7 +17,7 @@ import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
-import { ObjectivesChecklist } from "./objectives-checklist";
+import { ObjectivesChecklist, type ScopeOption } from "./objectives-checklist";
 import { ReportDialogButton } from "./report-dialog";
 
 type Gender = "male" | "female" | "other";
@@ -147,10 +147,34 @@ export default async function StudentDetailPage({ params }: PageProps) {
 
   const trainingStatsPromise = loadStudentTrainingStats(id);
   // Si las tablas de objetivos no existieran, la ficha se muestra igual sin la sección.
-  const objectives = await loadStudentObjectives(student.id).catch((error) => {
+  const objectives = await loadStudentObjectives(student.id, {
+    includeHidden: true,
+  }).catch((error) => {
     console.error("[student] objectives failed", error);
     return null;
   });
+  // Dónde puede aplicar cambios en los objetivos: solo este alumno; todo el
+  // club (alumnos de club); o todos sus alumnos particulares (monitor propietario).
+  const objectiveScopes: ScopeOption[] = [
+    {
+      id: "student",
+      label: "Solo este alumno",
+      hint: `Los cambios solo afectan a ${student.name}.`,
+    },
+  ];
+  if (student.clubId) {
+    objectiveScopes.push({
+      id: "club",
+      label: "Todo el club",
+      hint: "Los cambios afectan a todos los alumnos del club, para todos sus monitores.",
+    });
+  } else if (isOwner) {
+    objectiveScopes.push({
+      id: "coach",
+      label: "Todos mis alumnos",
+      hint: "Los cambios afectan a todos tus alumnos particulares.",
+    });
+  }
   const [statsRows, past, upcoming] = await Promise.all([
     db
       .select({
@@ -573,13 +597,14 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 Objetivos por etapa
               </p>
               <p className="text-[10px] font-black tabular-nums text-foreground/40">
-                {objectives.filter((o) => o.achieved).length}/
-                {objectives.length}
+                {objectives.filter((o) => !o.hidden && o.achieved).length}/
+                {objectives.filter((o) => !o.hidden).length}
               </p>
             </div>
             <ObjectivesChecklist
               studentId={student.id}
               items={objectives}
+              scopes={objectiveScopes}
               defaultBall={defaultBallForStudent(
                 student.playerLevel,
                 student.birthDate

@@ -414,6 +414,27 @@
       "when": 1792400000000,
       "tag": "0058_objetivos_tenis",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792500000000,
+      "tag": "0059_objetivos_ampliacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1792600000000,
+      "tag": "0060_objetivos_empunaduras_integradas",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1792700000000,
+      "tag": "0061_objetivos_personalizables",
+      "breakpoints": true
     }
   ]
 }
