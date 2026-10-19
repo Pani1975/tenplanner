@@ -153,8 +153,9 @@ export default async function StudentDetailPage({ params }: PageProps) {
     console.error("[student] objectives failed", error);
     return null;
   });
-  // Dónde puede aplicar cambios en los objetivos: solo este alumno; todo el
-  // club (alumnos de club); o todos sus alumnos particulares (monitor propietario).
+  // Desde la ficha solo se personaliza para este alumno o, si es particular y
+  // el monitor es el propietario, para todos sus alumnos particulares. Los
+  // cambios para todo el club se hacen en /club/[clubId]/objetivos.
   const objectiveScopes: ScopeOption[] = [
     {
       id: "student",
@@ -162,13 +163,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
       hint: `Los cambios solo afectan a ${student.name}.`,
     },
   ];
-  if (student.clubId) {
-    objectiveScopes.push({
-      id: "club",
-      label: "Todo el club",
-      hint: "Los cambios afectan a todos los alumnos del club, para todos sus monitores.",
-    });
-  } else if (isOwner) {
+  if (!student.clubId && isOwner) {
     objectiveScopes.push({
       id: "coach",
       label: "Todos mis alumnos",

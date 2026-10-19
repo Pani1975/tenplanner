@@ -5,7 +5,20 @@ import { SPORT_LABELS } from "@/lib/sport-constants";
 import { redirect } from "next/navigation";
 import { ClubOwnerPanel } from "./club-owner-panel";
 import { NewClubForm } from "./new-club-form";
-import { Users2 } from "lucide-react";
+import { BookOpen, Users2 } from "lucide-react";
+import Link from "next/link";
+
+function ObjectivesLink({ clubId }: { clubId: string }) {
+  return (
+    <Link
+      href={`/club/${clubId}/objetivos`}
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#050505]/15 px-3 py-1.5 text-[11px] font-black uppercase text-foreground/70 transition-colors hover:border-brand hover:text-brand dark:border-white/15"
+    >
+      <BookOpen className="size-3.5" />
+      Objetivos
+    </Link>
+  );
+}
 
 export default async function ClubPage() {
   const supabase = await createClient();
@@ -35,6 +48,18 @@ export default async function ClubPage() {
             deporte — cada uno conserva su propio panel.
           </p>
         </div>
+        <div className="flex items-center justify-between gap-3 rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
+              Objetivos del club
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-foreground/62">
+              Adapta los objetivos de tenis a la metodología del club. Lo ven
+              todos los alumnos del club.
+            </p>
+          </div>
+          <ObjectivesLink clubId={ownedClub.id} />
+        </div>
         <ClubOwnerPanel
           club={ownedClub}
           initialMembers={members}
@@ -54,8 +79,11 @@ export default async function ClubPage() {
                   className="flex items-center justify-between gap-3 rounded-2xl border border-[#050505]/10 px-4 py-3 text-sm font-semibold text-foreground dark:border-white/10"
                 >
                   <span className="truncate">{club.name}</span>
-                  <span className="shrink-0 text-[10px] font-black uppercase tracking-wide text-foreground/60">
-                    {sports.map((sport) => SPORT_LABELS[sport]).join(" · ")}
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="text-[10px] font-black uppercase tracking-wide text-foreground/60">
+                      {sports.map((sport) => SPORT_LABELS[sport]).join(" · ")}
+                    </span>
+                    <ObjectivesLink clubId={club.id} />
                   </span>
                 </li>
               ))}
@@ -88,7 +116,8 @@ export default async function ClubPage() {
                 className="flex items-center justify-between gap-3 rounded-2xl border border-[#050505]/10 px-4 py-3 text-sm font-semibold text-foreground dark:border-white/10"
               >
                 <span className="truncate">{club.name}</span>
-                <span className="flex shrink-0 flex-wrap justify-end gap-1">
+                <span className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                  <ObjectivesLink clubId={club.id} />
                   {sports.map((sport) => (
                     <span
                       key={sport}

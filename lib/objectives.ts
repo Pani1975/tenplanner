@@ -9,6 +9,7 @@ import {
 import type { ObjectiveItem } from "./objectives-taxonomy";
 import {
   resolveObjectives,
+  type ScopeContext,
   type StudentScopeContext,
 } from "./objectives-resolve";
 
@@ -16,15 +17,15 @@ export * from "./objectives-taxonomy";
 export * from "./objectives-resolve";
 
 /** Condición SQL de los objetivos que pueden aplicarse a un alumno (base + propios). */
-function objectiveScopeCondition(ctx: StudentScopeContext): SQL {
+function objectiveScopeCondition(ctx: ScopeContext): SQL {
   const parts: SQL[] = [
     and(
       isNull(tennisObjectives.clubId),
       isNull(tennisObjectives.coachId),
       isNull(tennisObjectives.studentId)
     )!,
-    eq(tennisObjectives.studentId, ctx.studentId),
   ];
+  if (ctx.studentId) parts.push(eq(tennisObjectives.studentId, ctx.studentId));
   if (ctx.clubId) parts.push(eq(tennisObjectives.clubId, ctx.clubId));
   else parts.push(eq(tennisObjectives.coachId, ctx.coachId));
   return or(...parts)!;
@@ -105,4 +106,41 @@ export async function loadStudentObjectives(
     ctx
   );
   return opts.includeHidden ? items : items.filter((i) => !i.hidden);
+}
+
+/**
+ * Catálogo de un club: objetivos base + propios del club, con sus ajustes.
+ * Incluye los ocultos (el club necesita verlos para restaurarlos).
+ */
+export async function loadClubObjectives(
+  clubId: string,
+  userId: string
+): Promise<ObjectiveItem[]> {
+  const ctx: ScopeContext = { studentId: null, clubId, coachId: userId };
+  const catalog = await db
+    .select()
+    .from(tennisObjectives)
+    .where(
+      and(
+        eq(tennisObjectives.sport, "tenis"),
+        eq(tennisObjectives.isActive, true),
+        objectiveScopeCondition(ctx)
+      )
+    )
+    .orderBy(asc(tennisObjectives.ball), asc(tennisObjectives.sortOrder));
+
+  const ids = catalog.map((o) => o.id);
+  const overrides = ids.length
+    ? await db
+        .select()
+        .from(objectiveOverrides)
+        .where(
+          and(
+            inArray(objectiveOverrides.objectiveId, ids),
+            eq(objectiveOverrides.clubId, clubId)
+          )
+        )
+    : [];
+
+  return resolveObjectives(catalog, overrides, new Map(), ctx);
 }

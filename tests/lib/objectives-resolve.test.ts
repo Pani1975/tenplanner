@@ -196,3 +196,33 @@ describe("resolveObjectives", () => {
     expect(items[1].achieved).toBe(false);
   });
 });
+
+describe("contexto de club (sin alumno)", () => {
+  const clubOnly = { studentId: null, clubId: CLUB, coachId: COACH };
+
+  it("muestra base y del club, y no los de alumno ni de otro club", () => {
+    const items = resolveObjectives(
+      [
+        obj("base"),
+        obj("club", { clubId: CLUB }),
+        obj("alumno", { studentId: STUDENT }),
+        obj("otro", { clubId: OTHER_CLUB }),
+      ],
+      [ov("base", { clubId: CLUB, hidden: true })],
+      noMarks,
+      clubOnly
+    );
+    expect(items.map((i) => i.id)).toEqual(["base", "club"]);
+    expect(items[0].hidden).toBe(true);
+  });
+
+  it("un ajuste de alumno no cambia el catálogo del club", () => {
+    const items = resolveObjectives(
+      [obj("a")],
+      [ov("a", { studentId: STUDENT, title: "Solo alumno" })],
+      noMarks,
+      clubOnly
+    );
+    expect(items[0].title).toBe("Título a");
+  });
+});
