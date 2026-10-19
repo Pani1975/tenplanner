@@ -13,6 +13,7 @@ import {
   tennisObjectives,
 } from "@/db/schema";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { loadStudentScopeContext, objectiveScopeFor } from "@/lib/objectives";
 
 export type SaveFeedbackInput = {
   sessionStudentId: string;
@@ -143,7 +144,12 @@ export async function setStudentObjective(input: {
   if (!student) return { ok: false as const, error: "Forbidden" };
 
   const [objective] = await db
-    .select({ id: tennisObjectives.id })
+    .select({
+      id: tennisObjectives.id,
+      clubId: tennisObjectives.clubId,
+      coachId: tennisObjectives.coachId,
+      studentId: tennisObjectives.studentId,
+    })
     .from(tennisObjectives)
     .where(
       and(
@@ -152,7 +158,11 @@ export async function setStudentObjective(input: {
       )
     )
     .limit(1);
-  if (!objective) return { ok: false as const, error: "Not found" };
+  // Solo se pueden marcar objetivos del catálogo base o propios de este alumno,
+  // su club o su monitor.
+  const ctx = await loadStudentScopeContext(input.studentId);
+  if (!objective || !ctx || !objectiveScopeFor(objective, ctx))
+    return { ok: false as const, error: "Not found" };
 
   const now = new Date();
   await db

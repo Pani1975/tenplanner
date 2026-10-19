@@ -26,6 +26,9 @@ function item(
     sortOrder: n,
     achieved,
     achievedAt: achieved ? (achievedAt ?? "2026-08-01T10:00:00Z") : null,
+    scope: "base",
+    hidden: false,
+    overriddenAt: [],
   };
 }
 
