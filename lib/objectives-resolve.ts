@@ -33,19 +33,21 @@ export type RawOverride = {
   criterion: string | null;
 };
 
-/** Contexto del alumno para el que se resuelve el catálogo. */
-export type StudentScopeContext = {
-  studentId: string;
-  /** Club del alumno; null = alumno particular. */
+/**
+ * Desde dónde se mira el catálogo. Ficha de alumno: studentId + su club (o
+ * null) + su monitor. Espacio del club: studentId null, clubId del club.
+ */
+export type ScopeContext = {
+  studentId: string | null;
   clubId: string | null;
-  /** Monitor propietario del alumno. */
   coachId: string;
 };
+export type StudentScopeContext = ScopeContext;
 
 /** Ámbito de un objetivo respecto al alumno, o null si no le corresponde. */
 export function objectiveScopeFor(
   o: Pick<RawObjective, "clubId" | "coachId" | "studentId">,
-  ctx: StudentScopeContext
+  ctx: ScopeContext
 ): ObjectiveScope | null {
   if (o.studentId) return o.studentId === ctx.studentId ? "student" : null;
   if (o.clubId) return o.clubId === ctx.clubId ? "club" : null;
@@ -57,7 +59,7 @@ export function objectiveScopeFor(
 /** Nivel de un ajuste respecto al alumno (alumno > club/monitor), o null. */
 export function overrideLevelFor(
   o: Pick<RawOverride, "clubId" | "coachId" | "studentId">,
-  ctx: StudentScopeContext
+  ctx: ScopeContext
 ): "student" | "group" | null {
   if (o.studentId) return o.studentId === ctx.studentId ? "student" : null;
   if (o.clubId) return o.clubId === ctx.clubId ? "group" : null;
@@ -76,7 +78,7 @@ export function resolveObjectives(
   objectives: RawObjective[],
   overrides: RawOverride[],
   marks: Map<string, string | Date | null>,
-  ctx: StudentScopeContext
+  ctx: ScopeContext
 ): ObjectiveItem[] {
   const byObjective = new Map<string, RawOverride[]>();
   for (const ov of overrides) {
