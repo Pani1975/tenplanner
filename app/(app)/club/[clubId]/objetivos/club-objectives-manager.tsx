@@ -2,7 +2,15 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ASPECTS,
@@ -18,6 +26,7 @@ import {
 } from "@/components/objectives/objective-editor";
 import {
   createClubObjective,
+  moveClubObjective,
   removeClubObjective,
   restoreClubObjective,
   updateClubObjective,
@@ -112,7 +121,11 @@ export function ClubObjectivesManager({
     });
   }
 
-  function renderRow(item: ObjectiveItem, isHidden: boolean) {
+  function renderRow(
+    item: ObjectiveItem,
+    isHidden: boolean,
+    pos = { first: true, last: true }
+  ) {
     const tag = TAG[item.scope];
     const edited = item.overriddenAt.length > 0 && item.scope === "base";
     const busy = busyId === item.id;
@@ -162,6 +175,42 @@ export function ClubObjectivesManager({
             </button>
           ) : (
             <>
+              <button
+                type="button"
+                title="Subir"
+                aria-label="Subir objetivo"
+                className={iconBtn}
+                disabled={pos.first}
+                onClick={() =>
+                  run(item.id, () =>
+                    moveClubObjective({
+                      clubId,
+                      objectiveId: item.id,
+                      direction: "up",
+                    })
+                  )
+                }
+              >
+                <ChevronUp className="size-4" />
+              </button>
+              <button
+                type="button"
+                title="Bajar"
+                aria-label="Bajar objetivo"
+                className={iconBtn}
+                disabled={pos.last}
+                onClick={() =>
+                  run(item.id, () =>
+                    moveClubObjective({
+                      clubId,
+                      objectiveId: item.id,
+                      direction: "down",
+                    })
+                  )
+                }
+              >
+                <ChevronDown className="size-4" />
+              </button>
               <button
                 type="button"
                 title="Editar"
@@ -298,7 +347,12 @@ export function ClubObjectivesManager({
                   </span>
                 </h3>
                 <ul className="divide-y divide-[#050505]/10 rounded-2xl border border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
-                  {list.map((item) => renderRow(item, false))}
+                  {list.map((item, idx) =>
+                    renderRow(item, false, {
+                      first: idx === 0,
+                      last: idx === list.length - 1,
+                    })
+                  )}
                 </ul>
               </section>
             );

@@ -2,8 +2,17 @@ import { randomBytes } from "crypto";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { objectiveOverrides, tennisObjectives } from "@/db/schema";
-import { BALLS, type AspectId, type BallId } from "./objectives-taxonomy";
-import { objectiveScopeFor, type ScopeContext } from "./objectives-resolve";
+import {
+  BALLS,
+  type AspectId,
+  type BallId,
+  type ObjectiveItem,
+} from "./objectives-taxonomy";
+import {
+  objectiveScopeFor,
+  planMove,
+  type ScopeContext,
+} from "./objectives-resolve";
 
 // Escritura de objetivos propios y ajustes, compartida por la ficha del alumno
 // y el espacio del club. Las comprobaciones de acceso se hacen fuera.
@@ -62,6 +71,7 @@ type OverridePatch = {
   hidden?: boolean | null;
   title?: string | null;
   criterion?: string | null;
+  sortOrder?: number | null;
 };
 
 async function upsertOverride(
@@ -246,4 +256,39 @@ async function isHiddenForStudent(objectiveId: string, ctx: ScopeContext) {
     )
     .limit(1);
   return row?.hidden === true;
+}
+
+/**
+ * Sube o baja un objetivo dentro de su grupo. `items` es el catálogo efectivo
+ * del mismo contexto (con ocultos). Lo propio del ámbito se reordena en la
+ * propia fila; lo demás, con un ajuste de orden para este ámbito.
+ */
+export async function moveObjectiveFor(
+  ctx: ScopeContext,
+  scope: WriteScope,
+  userId: string,
+  items: ObjectiveItem[],
+  objectiveId: string,
+  direction: "up" | "down"
+): Promise<WriteOk | WriteFailure> {
+  const changes = planMove(items, objectiveId, direction);
+  if (!changes) return { ok: true }; // ya está en el extremo: nada que hacer
+  const byId = new Map(items.map((i) => [i.id, i]));
+
+  for (const change of changes) {
+    const item = byId.get(change.id);
+    if (!item || !allowedFor(item.scope, scope))
+      return { ok: false, error: "Not found" };
+    if (item.scope === scope) {
+      await db
+        .update(tennisObjectives)
+        .set({ sortOrder: change.sortOrder })
+        .where(eq(tennisObjectives.id, change.id));
+    } else {
+      await upsertOverride(change.id, scope, ctx, userId, {
+        sortOrder: change.sortOrder,
+      });
+    }
+  }
+  return { ok: true };
 }

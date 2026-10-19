@@ -4,6 +4,8 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   Pencil,
   Plus,
@@ -27,6 +29,7 @@ import {
 import { setStudentObjective } from "./actions";
 import {
   createObjective,
+  moveObjective,
   removeObjective,
   restoreObjective,
   updateObjective,
@@ -186,7 +189,11 @@ export function ObjectivesChecklist({
     return item.scope !== "student" || scope === "student";
   }
 
-  function renderRow(item: ObjectiveItem, hidden = false) {
+  function renderRow(
+    item: ObjectiveItem,
+    hidden = false,
+    pos = { first: true, last: true }
+  ) {
     const checked = !!state[item.id];
     const tag = SCOPE_TAG[item.scope];
     const edited = item.overriddenAt.length > 0 && item.scope === "base";
@@ -274,6 +281,44 @@ export function ObjectivesChecklist({
               </button>
             ) : (
               <>
+                <button
+                  type="button"
+                  title="Subir"
+                  aria-label="Subir objetivo"
+                  className={iconBtn}
+                  disabled={pos.first || !editable(item)}
+                  onClick={() =>
+                    runEdit(item.id, () =>
+                      moveObjective({
+                        studentId,
+                        scope,
+                        objectiveId: item.id,
+                        direction: "up",
+                      })
+                    )
+                  }
+                >
+                  <ChevronUp className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Bajar"
+                  aria-label="Bajar objetivo"
+                  className={iconBtn}
+                  disabled={pos.last || !editable(item)}
+                  onClick={() =>
+                    runEdit(item.id, () =>
+                      moveObjective({
+                        studentId,
+                        scope,
+                        objectiveId: item.id,
+                        direction: "down",
+                      })
+                    )
+                  }
+                >
+                  <ChevronDown className="size-4" />
+                </button>
                 <button
                   type="button"
                   title="Editar"
@@ -490,7 +535,12 @@ export function ObjectivesChecklist({
                   </span>
                 </h3>
                 <ul className="divide-y divide-[#050505]/10 rounded-2xl border border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
-                  {list.map((item) => renderRow(item))}
+                  {list.map((item, idx) =>
+                    renderRow(item, false, {
+                      first: idx === 0,
+                      last: idx === list.length - 1,
+                    })
+                  )}
                 </ul>
               </section>
             );

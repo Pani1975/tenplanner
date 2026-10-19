@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { canTagWithClub } from "@/lib/clubs";
 import { createClient } from "@/lib/supabase/server";
-import { BALLS, type ScopeContext } from "@/lib/objectives";
+import { BALLS, loadClubObjectives, type ScopeContext } from "@/lib/objectives";
 import {
   createOwnObjective,
+  moveObjectiveFor,
   removeObjectiveFor,
   restoreObjectiveFor,
   updateObjectiveText,
@@ -152,6 +153,38 @@ export async function restoreClubObjective(input: {
     "club",
     auth.userId,
     v.objectiveId
+  );
+  refresh(v.clubId);
+  return res.ok
+    ? { ok: true as const }
+    : { ok: false as const, error: res.error };
+}
+
+export async function moveClubObjective(input: {
+  clubId: string;
+  objectiveId: string;
+  direction: "up" | "down";
+}) {
+  const parsed = z
+    .object({
+      clubId: uuid,
+      objectiveId: uuid,
+      direction: z.enum(["up", "down"]),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+  const v = parsed.data;
+
+  const auth = await authorize(v.clubId);
+  if (!auth.ok) return auth;
+  const items = await loadClubObjectives(v.clubId, auth.userId);
+  const res = await moveObjectiveFor(
+    auth.ctx,
+    "club",
+    auth.userId,
+    items,
+    v.objectiveId,
+    v.direction
   );
   refresh(v.clubId);
   return res.ok

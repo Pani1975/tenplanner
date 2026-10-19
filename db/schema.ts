@@ -542,6 +542,8 @@ export const objectiveOverrides = pgTable(
     hidden: boolean("hidden"),
     title: text("title"),
     criterion: text("criterion"),
+    // Posición de este objetivo dentro de su grupo para este ámbito.
+    sortOrder: integer("sort_order"),
     updatedBy: uuid("updated_by").references(() => users.id, {
       onDelete: "set null",
     }),
