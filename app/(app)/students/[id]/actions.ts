@@ -13,7 +13,11 @@ import {
   tennisObjectives,
 } from "@/db/schema";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
-import { loadStudentScopeContext, objectiveScopeFor } from "@/lib/objectives";
+import {
+  loadStudentObjectives,
+  loadStudentScopeContext,
+  objectiveScopeFor,
+} from "@/lib/objectives";
 
 export type SaveFeedbackInput = {
   sessionStudentId: string;
@@ -186,4 +190,81 @@ export async function setStudentObjective(input: {
 
   revalidatePath(`/students/${input.studentId}`);
   return { ok: true as const, achievedAt: now.toISOString() };
+}
+
+/**
+ * Marca o desmarca varios objetivos a la vez (p. ej. todo un nivel). Solo se
+ * aplican los que son visibles para el alumno; el resto se ignora.
+ */
+export async function setStudentObjectivesBulk(input: {
+  studentId: string;
+  objectiveIds: string[];
+  achieved: boolean;
+}) {
+  if (
+    !UUID_RE.test(input.studentId) ||
+    !Array.isArray(input.objectiveIds) ||
+    input.objectiveIds.length === 0 ||
+    input.objectiveIds.length > 500 ||
+    !input.objectiveIds.every((id) => UUID_RE.test(id))
+  ) {
+    return { ok: false as const, error: "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+  if (!user) return { ok: false as const, error: "Unauthorized" };
+
+  const activeClubId = await getActiveWorkClubId(user.id);
+  const [student] = await db
+    .select({ id: students.id })
+    .from(students)
+    .where(
+      and(
+        eq(students.id, input.studentId),
+        sharedWithClubCondition(
+          students.coachId,
+          students.clubId,
+          user.id,
+          activeClubId
+        )
+      )
+    )
+    .limit(1);
+  if (!student) return { ok: false as const, error: "Forbidden" };
+
+  // Solo objetivos visibles para este alumno (base, de su club/monitor, o suyos).
+  const visible = new Set(
+    (await loadStudentObjectives(input.studentId)).map((o) => o.id)
+  );
+  const ids = [...new Set(input.objectiveIds)].filter((id) => visible.has(id));
+  if (ids.length === 0) return { ok: false as const, error: "Not found" };
+
+  const now = new Date();
+  await db
+    .insert(studentObjectives)
+    .values(
+      ids.map((objectiveId) => ({
+        studentId: input.studentId,
+        objectiveId,
+        achieved: input.achieved,
+        achievedAt: now,
+        markedBy: user.id,
+      }))
+    )
+    .onConflictDoUpdate({
+      target: [studentObjectives.studentId, studentObjectives.objectiveId],
+      set: {
+        achieved: input.achieved,
+        achievedAt: now,
+        markedBy: user.id,
+        updatedAt: now,
+      },
+    });
+
+  revalidatePath(`/students/${input.studentId}`);
+  return { ok: true as const, count: ids.length };
 }
