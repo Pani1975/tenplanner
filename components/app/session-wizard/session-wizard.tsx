@@ -416,6 +416,8 @@ export function SessionWizard({
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const draftReadyRef = useRef(false);
   const draftIdRef = useRef<string | null>(null);
+  // Tras crear la sesión no se debe volver a guardar el borrador.
+  const submittedRef = useRef(false);
   const baselinePayloadRef = useRef<SessionDraftPayload>(
     toDraftPayload(baselineState)
   );
@@ -486,7 +488,7 @@ export function SessionWizard({
   }
 
   async function handleSaveDraft() {
-    if (!draftReadyRef.current) return;
+    if (!draftReadyRef.current || submittedRef.current) return;
 
     if (!hasMeaningfulSessionDraft(draftPayload, baselinePayloadRef.current)) {
       if (draftIdRef.current) {
@@ -539,6 +541,35 @@ export function SessionWizard({
       setSaveStatus("idle");
     }
   }
+
+  // Autoguardado del borrador: así, si el móvil recarga la página o se sale a
+  // ver un ejercicio y se vuelve atrás, la sesión que se estaba creando sigue ahí.
+  const saveDraftRef = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
+    saveDraftRef.current = handleSaveDraft;
+  });
+
+  useEffect(() => {
+    if (isEdit || !draftReadyRef.current) return;
+    const timer = window.setTimeout(() => void saveDraftRef.current(), 1200);
+    return () => window.clearTimeout(timer);
+  }, [draftPayload, isEdit]);
+
+  useEffect(() => {
+    if (isEdit) return;
+    function flush() {
+      if (document.visibilityState === "hidden") void saveDraftRef.current();
+    }
+    function flushOnHide() {
+      void saveDraftRef.current();
+    }
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flushOnHide);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flushOnHide);
+    };
+  }, [isEdit]);
 
   function goToStep(next: number) {
     const clamped = Math.max(1, Math.min(TOTAL_STEPS, next));
@@ -721,6 +752,7 @@ export function SessionWizard({
         return;
       }
 
+      submittedRef.current = true;
       if (draftIdRef.current) {
         void removeSessionDraft(draftIdRef.current);
         draftIdRef.current = null;
@@ -800,6 +832,7 @@ export function SessionWizard({
             state={state}
             update={update}
             availableExercises={availableExercises}
+            onBeforeLeave={() => void saveDraftRef.current()}
           />
         )}
       </div>

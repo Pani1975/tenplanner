@@ -25,6 +25,7 @@ import {
   type ExerciseFormResult,
 } from "@/components/app/exercise-form";
 import { SessionExerciseLists } from "@/components/app/session-exercise-lists";
+import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import {
   Dialog,
   DialogContent,
@@ -107,6 +108,8 @@ interface StepExercisesProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
   availableExercises: AvailableExercise[];
+  /** Se llama justo antes de abrir la ficha de un ejercicio (guardar borrador). */
+  onBeforeLeave?: () => void;
 }
 
 function formatMinutes(minutes: number) {
@@ -143,6 +146,7 @@ export function StepExercises({
   state,
   update,
   availableExercises,
+  onBeforeLeave,
 }: StepExercisesProps) {
   const [libraryExercises, setLibraryExercises] = useState(availableExercises);
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
@@ -436,6 +440,9 @@ export function StepExercises({
       phase: activeAddPhase,
       station: pickingStation,
     };
+    // Guarda el borrador antes de abrir la ficha: en el móvil la ficha puede
+    // abrirse en la misma ventana y, al volver, hay que recuperar la sesión.
+    onBeforeLeave?.();
   }
 
   const pickerId = useExercisePickListener((exerciseId) => {
@@ -913,7 +920,7 @@ export function StepExercises({
                   />
                   <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
                   <div className="flex-1 min-w-0">
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
+                    <p className="flex items-start gap-1.5 text-sm font-medium text-foreground leading-snug">
                       <NextLink
                         href={pickExerciseHref(ex.id, pickerId, "sesion")}
                         target="_blank"
@@ -921,17 +928,13 @@ export function StepExercises({
                         onClick={rememberPickTarget}
                         draggable={false}
                         title="Ver la ficha del ejercicio"
-                        className="min-w-0 truncate hover:text-brand hover:underline"
+                        className="min-w-0 break-words hover:text-brand hover:underline"
                       >
                         {ex.name}
                       </NextLink>
-                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+                      <ExternalLink className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
                     </p>
-                    {ex.description && (
-                      <p className="truncate text-[11px] text-muted-foreground leading-snug">
-                        {ex.description}
-                      </p>
-                    )}
+                    <ExerciseQuickDescription text={ex.description} />
                     <span
                       className={cn(
                         "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
