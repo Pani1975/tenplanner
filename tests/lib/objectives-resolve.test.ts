@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { ObjectiveItem } from "@/lib/objectives-taxonomy";
 import {
   objectiveScopeFor,
+  planMove,
   resolveObjectives,
   type RawObjective,
   type RawOverride,
@@ -51,6 +53,7 @@ function ov(objectiveId: string, extra: Partial<RawOverride>): RawOverride {
     hidden: null,
     title: null,
     criterion: null,
+    sortOrder: null,
     ...extra,
   };
 }
@@ -224,5 +227,50 @@ describe("contexto de club (sin alumno)", () => {
       clubOnly
     );
     expect(items[0].title).toBe("Título a");
+  });
+});
+
+describe("planMove", () => {
+  const base = (
+    id: string,
+    sortOrder: number,
+    block = "Derecha"
+  ): ObjectiveItem => ({
+    id,
+    code: id,
+    ball: "roja",
+    aspect: "tecnico",
+    block,
+    title: `Título ${id}`,
+    criterion: null,
+    source: "desglose",
+    sortOrder,
+    achieved: false,
+    achievedAt: null,
+    scope: "base",
+    hidden: false,
+    overriddenAt: [],
+  });
+
+  it("intercambia con el vecino de arriba", () => {
+    const items = [base("a", 1), base("b", 2), base("c", 3)];
+    expect(planMove(items, "b", "up")).toEqual([
+      { id: "b", sortOrder: 1 },
+      { id: "a", sortOrder: 2 },
+    ]);
+  });
+
+  it("no hace nada en los extremos", () => {
+    const items = [base("a", 1), base("b", 2)];
+    expect(planMove(items, "a", "up")).toBeNull();
+    expect(planMove(items, "b", "down")).toBeNull();
+  });
+
+  it("no mueve objetivos de otro bloque", () => {
+    const items = [base("a", 1), base("b", 2, "Revés"), base("c", 3)];
+    expect(planMove(items, "a", "down")).toEqual([
+      { id: "c", sortOrder: 1 },
+      { id: "a", sortOrder: 3 },
+    ]);
   });
 });

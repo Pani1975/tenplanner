@@ -11,9 +11,14 @@ import {
   sharedWithClubCondition,
 } from "@/lib/clubs";
 import { createClient } from "@/lib/supabase/server";
-import { BALLS, type ScopeContext } from "@/lib/objectives";
+import {
+  BALLS,
+  loadStudentObjectives,
+  type ScopeContext,
+} from "@/lib/objectives";
 import {
   createOwnObjective,
+  moveObjectiveFor,
   removeObjectiveFor,
   restoreObjectiveFor,
   updateObjectiveText,
@@ -204,5 +209,41 @@ export async function restoreObjective(input: {
   refresh(v.studentId);
   return res.ok
     ? { ok: true as const, stillHidden: res.stillHidden }
+    : { ok: false as const, error: res.error };
+}
+
+export async function moveObjective(input: {
+  studentId: string;
+  scope: StudentEditScope;
+  objectiveId: string;
+  direction: "up" | "down";
+}) {
+  const parsed = z
+    .object({
+      studentId: uuid,
+      scope: scopeSchema,
+      objectiveId: uuid,
+      direction: z.enum(["up", "down"]),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+  const v = parsed.data;
+
+  const auth = await authorize(v.studentId, v.scope);
+  if (!auth.ok) return auth;
+  const items = await loadStudentObjectives(v.studentId, {
+    includeHidden: true,
+  });
+  const res = await moveObjectiveFor(
+    auth.ctx,
+    v.scope,
+    auth.userId,
+    items,
+    v.objectiveId,
+    v.direction
+  );
+  refresh(v.studentId);
+  return res.ok
+    ? { ok: true as const }
     : { ok: false as const, error: res.error };
 }
