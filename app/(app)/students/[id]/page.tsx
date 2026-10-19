@@ -16,6 +16,8 @@ import { GuardiansPanel } from "./guardians-panel";
 import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
+import { ObjectivesChecklist } from "./objectives-checklist";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -143,6 +145,11 @@ export default async function StudentDetailPage({ params }: PageProps) {
     : null;
 
   const trainingStatsPromise = loadStudentTrainingStats(id);
+  // Si las tablas de objetivos no existieran, la ficha se muestra igual sin la sección.
+  const objectives = await loadStudentObjectives(student.id).catch((error) => {
+    console.error("[student] objectives failed", error);
+    return null;
+  });
   const [statsRows, past, upcoming] = await Promise.all([
     db
       .select({
@@ -594,10 +601,36 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </section>
         )}
 
+        {/* Objetivos por etapa */}
+        {objectives && (
+          <section className="tp-panel p-5 sm:p-6">
+            <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+              <p className="text-[10px] font-black tabular-nums text-brand">
+                06
+              </p>
+              <p className="text-[10px] font-black uppercase text-foreground/50">
+                Objetivos por etapa
+              </p>
+              <p className="text-[10px] font-black tabular-nums text-foreground/40">
+                {objectives.filter((o) => o.achieved).length}/
+                {objectives.length}
+              </p>
+            </div>
+            <ObjectivesChecklist
+              studentId={student.id}
+              items={objectives}
+              defaultBall={defaultBallForStudent(
+                student.playerLevel,
+                student.birthDate
+              )}
+            />
+          </section>
+        )}
+
         {/* Próximas */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">06</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Próximas sesiones
             </p>
@@ -621,7 +654,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
         {/* Historial */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">08</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Historial y feedback
             </p>

@@ -16,6 +16,7 @@ import {
   jsonb,
   primaryKey,
   check,
+  unique,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
@@ -461,6 +462,76 @@ export const students = pgTable(
     index("students_coach_id_idx").on(t.coachId),
     index("students_coach_name_idx").on(t.coachId, t.name),
     index("students_club_id_idx").on(t.clubId),
+  ]
+);
+
+// Catálogo de objetivos por etapa (bola roja / naranja / verde) y aspecto del
+// juego. Basado en tenisXetapas (RFET): `source` indica si el objetivo recoge
+// un punto de la RFET ("rfet"), es un desglose propuesto ("desglose") o lo ha
+// creado un monitor ("propio").
+export const tennisObjectives = pgTable(
+  "tennis_objectives",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: text("code").notNull().unique(),
+    sport: text("sport").default("tenis").notNull(),
+    ball: text("ball").notNull(), // "roja" | "naranja" | "verde"
+    stage: text("stage").notNull(),
+    ageRange: text("age_range").notNull(),
+    aspect: text("aspect").notNull(), // "tecnico" | "tactico" | "mental" | "fisico"
+    block: text("block").notNull(),
+    title: text("title").notNull(),
+    criterion: text("criterion"),
+    source: text("source").default("desglose").notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("tennis_objectives_ball_aspect_idx").on(
+      t.ball,
+      t.aspect,
+      t.sortOrder
+    ),
+  ]
+);
+
+// Objetivos marcados como conseguidos por alumno. Cualquier alumno puede tener
+// marcado cualquier objetivo, sea de su bola o de otra.
+export const studentObjectives = pgTable(
+  "student_objectives",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    objectiveId: uuid("objective_id")
+      .references(() => tennisObjectives.id, { onDelete: "cascade" })
+      .notNull(),
+    achieved: boolean("achieved").default(true).notNull(),
+    achievedAt: timestamp("achieved_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    markedBy: uuid("marked_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    unique("student_objectives_student_id_objective_id_key").on(
+      t.studentId,
+      t.objectiveId
+    ),
+    index("student_objectives_student_idx").on(t.studentId),
   ]
 );
 

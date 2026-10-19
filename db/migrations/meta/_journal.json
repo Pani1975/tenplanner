@@ -407,6 +407,13 @@
       "when": 1792277106396,
       "tag": "0057_calendar_holidays",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1792400000000,
+      "tag": "0058_objetivos_tenis",
+      "breakpoints": true
     }
   ]
 }
