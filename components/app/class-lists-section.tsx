@@ -330,7 +330,7 @@ function ListCard({
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/classes/${item.id}`}
-                        className="block font-sans text-[13px] font-medium text-foreground hover:text-brand transition-colors truncate"
+                        className="block break-words font-sans text-[13px] font-medium text-foreground hover:text-brand transition-colors"
                       >
                         {item.name}
                       </Link>
