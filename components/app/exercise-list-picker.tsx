@@ -204,7 +204,7 @@ export function ExerciseListPicker({
               <button
                 type="button"
                 onClick={() => setShowNew(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand text-background px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand text-brand-foreground px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors"
               >
                 <Plus className="size-3.5" />
                 Crear lista
@@ -251,7 +251,7 @@ export function ExerciseListPicker({
                           className={cn(
                             "size-6 rounded-full flex items-center justify-center transition-all duration-300",
                             isIn
-                              ? "bg-brand text-background scale-100"
+                              ? "bg-brand text-brand-foreground scale-100"
                               : "bg-foreground/20 text-foreground/60 scale-90",
                             isJust && "scale-125"
                           )}
@@ -327,7 +327,7 @@ export function ExerciseListPicker({
               <button
                 onClick={() => void createList()}
                 disabled={!newName.trim() || creating}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand text-background px-4 text-[13px] font-semibold hover:bg-brand/90 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand text-brand-foreground px-4 text-[13px] font-semibold hover:bg-brand/90 disabled:opacity-50 transition-colors"
               >
                 {creating ? (
                   <Loader2 className="size-3.5 animate-spin" />

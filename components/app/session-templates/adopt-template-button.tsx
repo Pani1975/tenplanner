@@ -44,7 +44,7 @@ export function AdoptTemplateButton({ templateId }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-[13px] font-semibold text-background transition-colors hover:bg-brand/90 sm:w-auto"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-[13px] font-semibold text-brand-foreground transition-colors hover:bg-brand/90 sm:w-auto"
       >
         <Download className="size-4" /> Adoptar plantilla
       </button>
@@ -95,7 +95,7 @@ export function AdoptTemplateButton({ templateId }: Props) {
               <button
                 onClick={handleAdopt}
                 disabled={loading}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand text-background px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 disabled:opacity-60 transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand text-brand-foreground px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 disabled:opacity-60 transition-colors"
               >
                 {loading ? (
                   <Loader2 className="size-4 animate-spin" />
