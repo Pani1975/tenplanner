@@ -27,6 +27,7 @@ import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
 import { ExerciseFilters } from "@/components/app/exercise-filters";
 import { ExerciseListsSection } from "@/components/app/exercise-lists-section";
+import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { ExerciseDraftsPanel } from "@/components/app/exercise-drafts-panel";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -1308,15 +1309,24 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       {resultCount} resultado
                       {resultCount !== 1 ? "s" : ""}
                     </p>
-                    <a
-                      href={`/api/exercises/pdf${navQs ? `?${navQs}` : ""}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#050505]/15 bg-white px-4 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/15 dark:bg-white/[0.04]"
-                    >
-                      <FileDown className="size-3.5" strokeWidth={1.8} />
-                      Generar PDF de los resultados
-                    </a>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {user && activeTab !== "drafts" ? (
+                        <SaveSearchToListButton
+                          kind="exercise"
+                          query={navQs}
+                          total={resultCount}
+                        />
+                      ) : null}
+                      <a
+                        href={`/api/exercises/pdf${navQs ? `?${navQs}` : ""}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#050505]/15 bg-white px-4 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/15 dark:bg-white/[0.04]"
+                      >
+                        <FileDown className="size-3.5" strokeWidth={1.8} />
+                        Generar PDF de los resultados
+                      </a>
+                    </div>
                   </div>
                 )}
 

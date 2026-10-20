@@ -94,6 +94,7 @@ function CollectionCard({
   onRemoveItem,
   onItemAdded,
   onItemRemoved,
+  onReload,
   deletingId,
   removingKey,
   sport,
@@ -105,6 +106,7 @@ function CollectionCard({
   onRemoveItem: (listId: string, exerciseId: string) => void;
   onItemAdded: (listId: string, exercise: ListableExercise) => void;
   onItemRemoved: (listId: string, exerciseId: string) => void;
+  onReload: () => void;
   deletingId: string | null;
   removingKey: string | null;
   sport?: string | null;
@@ -496,6 +498,7 @@ function CollectionCard({
         listName={list.name}
         currentIds={list.items.map((i) => i.id)}
         sport={sport}
+        onBulkAdded={onReload}
         onAdded={(ex) => onItemAdded(list.id, ex)}
         onRemoved={(exerciseId) => onItemRemoved(list.id, exerciseId)}
       />
@@ -527,8 +530,8 @@ export function ExerciseListsSection({
     [lists]
   );
 
-  async function loadLists() {
-    setLoading(true);
+  async function loadLists(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/exercise-lists?includeExercises=true", {
         cache: "no-store",
@@ -545,7 +548,7 @@ export function ExerciseListsSection({
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void loadLists(), 0);
     const refresh = () => {
-      if (document.visibilityState !== "hidden") void loadLists();
+      if (document.visibilityState !== "hidden") void loadLists(true);
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
@@ -805,6 +808,7 @@ export function ExerciseListsSection({
             onRemoveItem={removeFromList}
             onItemAdded={applyItemAdded}
             onItemRemoved={applyItemRemoved}
+            onReload={() => void loadLists(true)}
             deletingId={deletingId}
             removingKey={removingKey}
             sport={sport}

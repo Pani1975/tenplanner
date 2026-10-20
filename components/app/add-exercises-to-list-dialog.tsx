@@ -15,6 +15,10 @@ import {
   hasPickerFilters,
   type PickerFilters,
 } from "@/components/app/exercise-picker-filters";
+import {
+  resultMessage,
+  saveSearchToList,
+} from "@/components/app/save-search-to-list";
 import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +55,7 @@ export function AddExercisesToListDialog({
   sport,
   onAdded,
   onRemoved,
+  onBulkAdded,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -62,6 +67,8 @@ export function AddExercisesToListDialog({
   sport?: string | null;
   onAdded: (exercise: ListableExercise) => void;
   onRemoved: (exerciseId: string) => void;
+  /** Tras añadir todos los resultados de golpe: recargar la colección. */
+  onBulkAdded?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ListableExercise[]>([]);
@@ -72,6 +79,8 @@ export function AddExercisesToListDialog({
   const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState<string | null>(null);
   const requestRef = useRef(0);
   const inList = new Set(currentIds);
 
@@ -120,6 +129,29 @@ export function AddExercisesToListDialog({
     return () => window.clearTimeout(timer);
   }, [open, query, filters, page]);
 
+  const hasCriteria = !!query.trim() || hasPickerFilters(filters);
+
+  async function addAllResults() {
+    if (bulkBusy || total === 0) return;
+    setBulkBusy(true);
+    setActionError(null);
+    setBulkMessage(null);
+    const q = new URLSearchParams();
+    if (query.trim()) q.set("q", query.trim());
+    if (filters.nivel) q.append("nivel", filters.nivel);
+    if (filters.fase) q.set("fase", filters.fase);
+    if (filters.aspecto) q.append("aspectoJuego", filters.aspecto);
+    if (filters.golpe) q.append("golpe", filters.golpe);
+    const res = await saveSearchToList("exercise", listId, q.toString());
+    setBulkBusy(false);
+    if (!res.ok) {
+      setActionError(res.error);
+      return;
+    }
+    setBulkMessage(resultMessage("exercise", res.total, res.added));
+    onBulkAdded?.();
+  }
+
   async function toggle(exercise: ListableExercise) {
     if (busyId) return;
     const adding = !inList.has(exercise.id);
@@ -153,6 +185,7 @@ export function AddExercisesToListDialog({
         if (!next) {
           setQuery("");
           setFilters(EMPTY_PICKER_FILTERS);
+          setBulkMessage(null);
           setActionError(null);
         }
         onOpenChange(next);
@@ -269,12 +302,33 @@ export function AddExercisesToListDialog({
             </div>
           ) : null}
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          {total} ejercicio{total === 1 ? "" : "s"}
-          {query.trim() || hasPickerFilters(filters)
-            ? " con esos criterios"
-            : ""}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            {total} ejercicio{total === 1 ? "" : "s"}
+            {hasCriteria ? " con esos criterios" : ""}
+          </p>
+          {hasCriteria && total > 0 ? (
+            <button
+              type="button"
+              onClick={() => void addAllResults()}
+              disabled={bulkBusy}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-brand/40 px-3 text-xs font-semibold text-brand transition-colors hover:bg-brand/10 disabled:opacity-60"
+            >
+              {bulkBusy ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Plus className="size-3.5" />
+              )}
+              Añadir los {total} resultados
+            </button>
+          ) : null}
+        </div>
+        {bulkMessage ? (
+          <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+            <Check className="size-3.5" />
+            {bulkMessage}
+          </p>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
