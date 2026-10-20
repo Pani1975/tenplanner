@@ -103,9 +103,12 @@ function CollectionCard({
   deletingId,
   removingKey,
   sport,
+  autoOpen = false,
 }: {
   list: ExerciseListWithItems;
   index: number;
+  /** Abrir desplegada y hacer scroll hasta ella (llegada desde un enlace). */
+  autoOpen?: boolean;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onRemoveItem: (listId: string, exerciseId: string) => void;
@@ -116,7 +119,21 @@ function CollectionCard({
   removingKey: string | null;
   sport?: string | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoOpen);
+  const articleRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!autoOpen) return;
+    const t = window.setTimeout(
+      () =>
+        articleRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      150
+    );
+    return () => window.clearTimeout(t);
+  }, [autoOpen]);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
   const [addExercisesOpen, setAddExercisesOpen] = useState(false);
   const [quickView, setQuickView] = useState<ListedExercise | null>(null);
@@ -160,8 +177,9 @@ function CollectionCard({
 
   return (
     <article
+      ref={articleRef}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
+        "group relative scroll-mt-24 overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
         expanded
           ? "shadow-lg shadow-foreground/5"
           : "hover:border-foreground/20"
@@ -561,7 +579,10 @@ function CollectionCard({
 export function ExerciseListsSection({
   inClub = false,
   sport,
+  openListId,
 }: {
+  /** Colección a mostrar desplegada al entrar (parámetro `lista`). */
+  openListId?: string | null;
   /** Trabajando como un club: listas comunes de "Favoritos club". */
   inClub?: boolean;
   /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
@@ -867,6 +888,7 @@ export function ExerciseListsSection({
             deletingId={deletingId}
             removingKey={removingKey}
             sport={sport}
+            autoOpen={!!openListId && openListId === list.id}
           />
         ))}
       </div>

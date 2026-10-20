@@ -653,21 +653,22 @@ export function ExerciseDetailClient({
                 <>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {savedInLists.map((list) => (
-                      <span
+                      <Link
                         key={list.id}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#050505]/10 bg-white px-3 py-2 text-sm text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+                        href={`/exercises?tab=favorites&lista=${list.id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#050505]/10 bg-white px-3 py-2 text-sm text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-[#D6FF38]/10"
                       >
                         <span>{list.emoji ?? "📋"}</span>
                         <span>{list.name}</span>
                         <span className="text-xs text-muted-foreground">
                           {list.itemsCount ?? 0}
                         </span>
-                      </span>
+                      </Link>
                     ))}
                   </div>
                   <div className="mt-4">
                     <Link
-                      href="/exercises?view=lists"
+                      href="/exercises?tab=favorites"
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5E6F00] transition-colors hover:text-[#050505] dark:text-[#D6FF38] dark:hover:text-white"
                     >
                       Ver todas tus listas
