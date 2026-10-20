@@ -83,6 +83,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
         caracter: exercises.caracter,
         situacionJuego: exercises.situacionJuego,
         phase: exercises.phase,
+        fases: exercises.fases,
         intensity: exercises.intensity,
         createdAt: exercises.createdAt,
         updatedAt: exercises.updatedAt,
@@ -178,7 +179,9 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
     // La Biblioteca pública no se edita desde el modo particular.
     if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
       return NextResponse.json(
-        { error: "La Biblioteca pública no se puede editar en modo particular" },
+        {
+          error: "La Biblioteca pública no se puede editar en modo particular",
+        },
         { status: 403 }
       );
     }
@@ -221,7 +224,6 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
       "videoUrl",
       "steps",
       "materials",
-      "phase",
       "intensity",
       "formato",
       "numJugadores",
@@ -258,6 +260,14 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
         );
       }
       updateValues.durationMinutes = derivedDuration;
+    }
+
+    if (d.fases !== undefined || d.phase !== undefined) {
+      const fases = normalizeMultiValue(
+        d.fases ?? (d.phase ? [d.phase] : null)
+      );
+      updateValues.fases = fases;
+      updateValues.phase = fases?.[0] ?? null;
     }
 
     if (d.niveles !== undefined || d.nivel !== undefined) {
@@ -392,7 +402,9 @@ export async function DELETE(_request: Request, context: ExerciseRouteContext) {
     // La Biblioteca pública no se edita desde el modo particular.
     if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
       return NextResponse.json(
-        { error: "La Biblioteca pública no se puede editar en modo particular" },
+        {
+          error: "La Biblioteca pública no se puede editar en modo particular",
+        },
         { status: 403 }
       );
     }

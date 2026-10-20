@@ -190,7 +190,13 @@ export async function GET(request: NextRequest) {
   }
   if (location?.length)
     whereConditions.push(inArray(exercises.location, location));
-  if (phase) whereConditions.push(eq(exercises.phase, phase));
+  if (phase) {
+    const phaseWhere = or(
+      eq(exercises.phase, phase),
+      jsonbArrayHasAny(exercises.fases, [phase])!
+    );
+    if (phaseWhere) whereConditions.push(phaseWhere);
+  }
   if (intensity != null)
     whereConditions.push(eq(exercises.intensity, intensity));
   if (nivel?.length) {
@@ -260,6 +266,7 @@ export async function GET(request: NextRequest) {
         imageUrls: exercises.imageUrls,
         nivel: exercises.nivel,
         niveles: exercises.niveles,
+        fases: exercises.fases,
         aspectoJuego: exercises.aspectoJuego,
         aspectosJuego: exercises.aspectosJuego,
         parametro: exercises.parametro,
@@ -394,6 +401,9 @@ export async function POST(request: Request) {
     const niveles = normalizeMultiValue(
       rest.niveles ?? (rest.nivel ? [rest.nivel] : null)
     );
+    const fases = normalizeMultiValue(
+      rest.fases ?? (rest.phase ? [rest.phase] : null)
+    );
     const aspectosJuego = normalizeMultiValue(
       rest.aspectosJuego ?? (rest.aspectoJuego ? [rest.aspectoJuego] : null)
     );
@@ -436,7 +446,8 @@ export async function POST(request: Request) {
         tips: rest.tips ?? null,
         location: rest.location ?? null,
         videoUrl: rest.videoUrl ?? null,
-        phase: rest.phase ?? null,
+        phase: fases?.[0] ?? null,
+        fases,
         intensity: rest.intensity ?? null,
         formato: rest.formato ?? null,
         numJugadores: rest.numJugadores ?? null,

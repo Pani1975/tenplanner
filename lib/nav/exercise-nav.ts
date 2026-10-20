@@ -264,7 +264,11 @@ export async function getFilteredExerciseIds(
     conditions.push(inArray(exercisesTable.duracionRango, activeDuracionRango));
   }
   if (activeFase.length > 0) {
-    conditions.push(inArray(exercisesTable.phase, activeFase));
+    const faseWhere = or(
+      inArray(exercisesTable.phase, activeFase),
+      jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+    );
+    if (faseWhere) conditions.push(faseWhere);
   }
   if (activeCaracter.length > 0) {
     const caracterWhere = jsonbArrayHasAny(

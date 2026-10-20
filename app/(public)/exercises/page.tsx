@@ -380,7 +380,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       );
     }
     if (activeFase.length > 0) {
-      listConditions.push(inArray(exercisesTable.phase, activeFase));
+      const faseWhere = or(
+        inArray(exercisesTable.phase, activeFase),
+        jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+      );
+      if (faseWhere) listConditions.push(faseWhere);
     }
     if (activeCaracter.length > 0) {
       const caracterWhere = jsonbArrayHasAny(

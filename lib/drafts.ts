@@ -16,6 +16,7 @@ export interface ExerciseDraftPayload {
   location?: string | null;
   videoUrl?: string;
   phase?: string | null;
+  fases?: string[];
   intensity?: number | null;
   formato?: string | null;
   numJugadores?: number | null;
@@ -270,6 +271,7 @@ export function hasMeaningfulExerciseDraft(payload: ExerciseDraftPayload) {
     payload.location ||
     payload.videoUrl?.trim() ||
     payload.phase ||
+    (payload.fases?.length ?? 0) > 0 ||
     payload.intensity != null ||
     payload.formato ||
     payload.numJugadores != null ||

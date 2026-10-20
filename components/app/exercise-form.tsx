@@ -76,6 +76,7 @@ type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
 type Location = "pista" | "pared" | "playa" | "casa";
 type Phase = "activation" | "main" | "cooldown";
+const PHASE_ORDER: Phase[] = ["activation", "main", "cooldown"];
 type ExerciseFormMode = "quick" | "full";
 type AccordionSectionId = "essential" | "pedagogical" | "params" | "media";
 type Formato = "individual" | "parejas" | "grupal" | "multigrupo";
@@ -340,6 +341,7 @@ export interface ExerciseFormProps {
     materials?: string[] | null;
     imageUrl?: string | null;
     phase?: Phase | null;
+    fases?: Phase[] | null;
     intensity?: number | null;
     formato?: Formato | null;
     numJugadores?: number | null;
@@ -568,6 +570,15 @@ export function ExerciseForm({
     initialData?.materials ?? []
   );
   const [materialInput, setMaterialInput] = useState("");
+  const [fases, setFases] = useState<Set<Phase>>(
+    new Set(
+      initialData?.fases && initialData.fases.length > 0
+        ? initialData.fases
+        : initialData?.phase
+          ? [initialData.phase]
+          : []
+    )
+  );
   const [niveles, setNiveles] = useState<Set<NivelPmv>>(
     new Set(
       initialData?.niveles ?? (initialData?.nivel ? [initialData.nivel] : [])
@@ -711,6 +722,12 @@ export function ExerciseForm({
       setFormMode(draft.payload.formMode);
       setSteps(draft.payload.steps);
       setMaterials(draft.payload.materials);
+      setFases(
+        new Set(
+          (draft.payload.fases ??
+            (draft.payload.phase ? [draft.payload.phase] : [])) as Phase[]
+        )
+      );
       setNiveles(
         new Set(
           (draft.payload.niveles ??
@@ -859,7 +876,8 @@ export function ExerciseForm({
     durationMinutes: watchedValues.durationMinutes ?? undefined,
     location: watchedValues.location ?? null,
     videoUrl: watchedValues.videoUrl ?? "",
-    phase: watchedValues.phase ?? null,
+    phase: PHASE_ORDER.find((p) => fases.has(p)) ?? null,
+    fases: PHASE_ORDER.filter((p) => fases.has(p)),
     intensity: watchedValues.intensity ?? null,
     formato: watchedValues.formato ?? null,
     numJugadores: watchedValues.numJugadores ?? null,
@@ -978,6 +996,7 @@ export function ExerciseForm({
       mode === "create" ? "/api/exercises" : `/api/exercises/${exerciseId}`;
     const method = mode === "create" ? "POST" : "PUT";
 
+    const selectedFases = PHASE_ORDER.filter((p) => fases.has(p));
     const selectedNiveles = Array.from(niveles);
     const selectedAspectosJuego = Array.from(aspectosJuego);
     const selectedParametros = Array.from(parametros);
@@ -1001,7 +1020,8 @@ export function ExerciseForm({
       objectives: values.objectives?.trim() || null,
       tips: values.tips?.trim() || null,
       videoUrl: values.videoUrl?.trim() || null,
-      phase: values.phase ?? null,
+      phase: selectedFases[0] ?? null,
+      fases: selectedFases.length > 0 ? selectedFases : null,
       intensity: values.intensity ?? null,
       isGlobal: isAdmin ? (values.isGlobal ?? false) : undefined,
       autoria: isAdmin ? (values.autoria ?? "libre") : undefined,
@@ -1321,40 +1341,37 @@ export function ExerciseForm({
                   (opcional)
                 </span>
               </label>
-              <Controller
-                name="phase"
-                control={control}
-                render={({ field }) => {
-                  const PHASES: { id: Phase | null; label: string }[] = [
-                    { id: null, label: "Sin asignar" },
+              <p className="text-xs text-muted-foreground">
+                Puedes marcar varias: un ejercicio puede servir, por ejemplo,
+                como calentamiento y como vuelta a la calma.
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {(
+                  [
                     { id: "activation", label: "Calentamiento" },
                     { id: "main", label: "Parte principal" },
                     { id: "cooldown", label: "Vuelta a la calma" },
-                  ];
+                  ] as { id: Phase; label: string }[]
+                ).map(({ id, label }) => {
+                  const isSelected = fases.has(id);
                   return (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {PHASES.map(({ id, label }) => {
-                        const isSelected = (field.value ?? null) === id;
-                        return (
-                          <button
-                            key={label}
-                            type="button"
-                            onClick={() => field.onChange(id)}
-                            className={cn(
-                              "rounded-xl border px-3 py-2.5 text-xs font-medium transition-all duration-150",
-                              isSelected
-                                ? "bg-brand/10 border-brand text-brand"
-                                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleSetValue(setFases, fases, id)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2.5 text-xs font-medium transition-all duration-150",
+                        isSelected
+                          ? "bg-brand/10 border-brand text-brand"
+                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
                   );
-                }}
-              />
+                })}
+              </div>
             </div>
 
             {/* Intensidad eliminada del UI según PMV 260506 — se mantiene en BD */}

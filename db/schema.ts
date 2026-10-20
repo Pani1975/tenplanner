@@ -183,6 +183,9 @@ export const exercises = pgTable(
     videoUrl: text("video_url"),
     tips: text("tips"),
     phase: trainingPhaseEnum("phase"),
+    // Un ejercicio puede servir en varias fases (p. ej. calentamiento y vuelta
+    // a la calma). `phase` guarda la primera para compatibilidad.
+    fases: jsonb("fases").$type<string[]>(),
     intensity: integer("intensity"), // 1-5, app-validated
     formato: ejercicioFormatoEnum("formato"),
     numJugadores: integer("num_jugadores"),

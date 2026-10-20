@@ -74,6 +74,7 @@ export default async function EditSessionPage({ params }: PageProps) {
           nivel: exercises.nivel,
           niveles: exercises.niveles,
           phase: exercises.phase,
+          fases: exercises.fases,
           aspectoJuego: exercises.aspectoJuego,
           aspectosJuego: exercises.aspectosJuego,
           golpes: exercises.golpes,

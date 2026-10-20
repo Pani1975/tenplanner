@@ -34,6 +34,7 @@ export default async function NewClassPage() {
       nivel: exercises.nivel,
       niveles: exercises.niveles,
       phase: exercises.phase,
+      fases: exercises.fases,
       aspectoJuego: exercises.aspectoJuego,
       aspectosJuego: exercises.aspectosJuego,
       golpes: exercises.golpes,

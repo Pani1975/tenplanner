@@ -190,6 +190,7 @@ export default async function ExercisePage({
         tipologia: exercise.tipologia ?? null,
         duracionRango: exercise.duracionRango ?? null,
         phase: exercise.phase ?? null,
+        fases: (exercise.fases as string[] | null) ?? null,
         intensity: exercise.intensity ?? null,
         isGlobal: exercise.isGlobal,
         autoria: exercise.autoria ?? null,
