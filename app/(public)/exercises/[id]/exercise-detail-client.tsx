@@ -434,28 +434,20 @@ export function ExerciseDetailClient({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.22),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.16),transparent_34%)]" />
       {/* Header */}
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Link
             href="/exercises"
             title="Volver a todos los ejercicios"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#050505]/12 bg-white text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4" /> Volver a ejercicios
           </Link>
           <BackToSearchLink href={backToSearchHref} />
-          <Link
-            href="/exercises"
-            title="Volver a todos los ejercicios"
-            className="text-xs text-muted-foreground font-medium truncate transition-colors hover:text-foreground hover:underline"
-          >
-            Biblioteca de ejercicios
-          </Link>
           <PrevNextNav
             prevHref={prevHref}
             nextHref={nextHref}
             position={navPosition}
             total={navTotal}
-            className="ml-1"
           />
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
