@@ -32,6 +32,8 @@ export interface ListableExercise {
   durationMinutes: number;
   imageUrl: string | null;
   description?: string | null;
+  objectives?: string | null;
+  videoUrl?: string | null;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
