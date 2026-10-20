@@ -839,7 +839,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             {activeTab === "drafts" && user ? (
               <ExerciseDraftsPanel showEmptyState />
             ) : activeTab === "favorites" && user ? (
-              <ExerciseListsSection inClub={!!activeWorkClubId} />
+              <ExerciseListsSection inClub={!!activeWorkClubId} sport={sport} />
             ) : (
               <>
                 {/* ─── Category strip ─── */}

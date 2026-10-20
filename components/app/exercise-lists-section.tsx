@@ -96,6 +96,7 @@ function CollectionCard({
   onItemRemoved,
   deletingId,
   removingKey,
+  sport,
 }: {
   list: ExerciseListWithItems;
   index: number;
@@ -106,6 +107,7 @@ function CollectionCard({
   onItemRemoved: (listId: string, exerciseId: string) => void;
   deletingId: string | null;
   removingKey: string | null;
+  sport?: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
@@ -493,6 +495,7 @@ function CollectionCard({
         listId={list.id}
         listName={list.name}
         currentIds={list.items.map((i) => i.id)}
+        sport={sport}
         onAdded={(ex) => onItemAdded(list.id, ex)}
         onRemoved={(exerciseId) => onItemRemoved(list.id, exerciseId)}
       />
@@ -502,9 +505,12 @@ function CollectionCard({
 
 export function ExerciseListsSection({
   inClub = false,
+  sport,
 }: {
   /** Trabajando como un club: listas comunes de "Favoritos club". */
   inClub?: boolean;
+  /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
+  sport?: string | null;
 } = {}) {
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
@@ -801,6 +807,7 @@ export function ExerciseListsSection({
             onItemRemoved={applyItemRemoved}
             deletingId={deletingId}
             removingKey={removingKey}
+            sport={sport}
           />
         ))}
       </div>
