@@ -1,6 +1,6 @@
 import { normalizeTags } from "@/lib/tags";
 import { NextResponse } from "next/server";
-import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
+import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -122,6 +122,17 @@ export async function GET(request: Request) {
   const q = searchParams.get("q")?.trim();
   const nivel = searchParams.get("nivel")?.trim();
   const aspecto = searchParams.get("aspecto")?.trim();
+  const duracion = searchParams.get("duracion")?.trim();
+  const golpe = searchParams.get("golpe")?.trim();
+  // Paginación opcional (selectores con "Mostrar más"). Sin `page` se
+  // mantiene el comportamiento anterior: las 60 primeras.
+  const pageParam = Number(searchParams.get("page"));
+  const paginated = Number.isInteger(pageParam) && pageParam >= 1;
+  const limitParam = Number(searchParams.get("limit"));
+  const pageSize =
+    Number.isInteger(limitParam) && limitParam >= 1
+      ? Math.min(limitParam, 100)
+      : 60;
 
   const [activeClubId, activeSport] = user
     ? await Promise.all([getActiveWorkClubId(user.id), getActiveSport(user.id)])
@@ -180,10 +191,34 @@ export async function GET(request: Request) {
     );
   }
 
+  if (duracion === "120") {
+    conds.push(sql`${classes.duracionMinutes} > 90`);
+  } else if (duracion) {
+    const d = Number(duracion);
+    if (Number.isFinite(d)) conds.push(eq(classes.duracionMinutes, d));
+  }
+  if (golpe) {
+    conds.push(
+      sql`${classes.golpes}::jsonb @> ${JSON.stringify([golpe])}::jsonb`
+    );
+  }
+
+  const total = paginated
+    ? Number(
+        (
+          await db
+            .select({ total: count() })
+            .from(classes)
+            .where(and(...conds))
+        )[0]?.total ?? 0
+      )
+    : 0;
+
   const rows = await db
     .select({
       id: classes.id,
       name: classes.name,
+      objetivos: classes.objetivos,
       duracionMinutes: classes.duracionMinutes,
       alumnosTipo: classes.alumnosTipo,
       numAlumnos: classes.numAlumnos,
@@ -202,13 +237,17 @@ export async function GET(request: Request) {
     .leftJoin(users, eq(users.id, classes.createdBy))
     .where(and(...conds))
     .orderBy(desc(classes.createdAt))
-    .limit(60);
+    .limit(paginated ? pageSize : 60)
+    .offset(paginated ? (pageParam - 1) * pageSize : 0);
 
   return NextResponse.json({
     data: rows.map((r) => ({
       ...r,
       authorName: user && r.createdBy !== user.id ? r.authorName : null,
     })),
+    ...(paginated
+      ? { pagination: { page: pageParam, limit: pageSize, total } }
+      : {}),
   });
 }
 

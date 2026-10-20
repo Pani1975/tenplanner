@@ -1,3 +1,4 @@
+import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import Link from "next/link";
 import {
   eq,
@@ -518,6 +519,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               isAdmin={listsMeta?.isAdmin ?? false}
               spaceLabel={listsMeta?.spaceLabel ?? null}
               inClub={listsMeta?.inClub ?? false}
+              sport={sport}
             />
             {/* Listas públicas de la Biblioteca, copiables a las propias */}
             <div className="pb-8">
@@ -731,6 +733,19 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 );
               })}
             </div>
+
+            {user && rows.length > 0 && activeTab !== "drafts" ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                  {totalRows} clase{totalRows !== 1 ? "s" : ""}
+                </p>
+                <SaveSearchToListButton
+                  kind="class"
+                  query={navQs}
+                  total={totalRows}
+                />
+              </div>
+            ) : null}
 
             {/* Listado */}
             {rows.length === 0 ? (

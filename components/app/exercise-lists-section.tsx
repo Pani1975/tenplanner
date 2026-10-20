@@ -94,8 +94,10 @@ function CollectionCard({
   onRemoveItem,
   onItemAdded,
   onItemRemoved,
+  onReload,
   deletingId,
   removingKey,
+  sport,
 }: {
   list: ExerciseListWithItems;
   index: number;
@@ -104,8 +106,10 @@ function CollectionCard({
   onRemoveItem: (listId: string, exerciseId: string) => void;
   onItemAdded: (listId: string, exercise: ListableExercise) => void;
   onItemRemoved: (listId: string, exerciseId: string) => void;
+  onReload: () => void;
   deletingId: string | null;
   removingKey: string | null;
+  sport?: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
@@ -493,6 +497,8 @@ function CollectionCard({
         listId={list.id}
         listName={list.name}
         currentIds={list.items.map((i) => i.id)}
+        sport={sport}
+        onBulkAdded={onReload}
         onAdded={(ex) => onItemAdded(list.id, ex)}
         onRemoved={(exerciseId) => onItemRemoved(list.id, exerciseId)}
       />
@@ -502,9 +508,12 @@ function CollectionCard({
 
 export function ExerciseListsSection({
   inClub = false,
+  sport,
 }: {
   /** Trabajando como un club: listas comunes de "Favoritos club". */
   inClub?: boolean;
+  /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
+  sport?: string | null;
 } = {}) {
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
@@ -521,8 +530,8 @@ export function ExerciseListsSection({
     [lists]
   );
 
-  async function loadLists() {
-    setLoading(true);
+  async function loadLists(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/exercise-lists?includeExercises=true", {
         cache: "no-store",
@@ -539,7 +548,7 @@ export function ExerciseListsSection({
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void loadLists(), 0);
     const refresh = () => {
-      if (document.visibilityState !== "hidden") void loadLists();
+      if (document.visibilityState !== "hidden") void loadLists(true);
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
@@ -799,8 +808,10 @@ export function ExerciseListsSection({
             onRemoveItem={removeFromList}
             onItemAdded={applyItemAdded}
             onItemRemoved={applyItemRemoved}
+            onReload={() => void loadLists(true)}
             deletingId={deletingId}
             removingKey={removingKey}
+            sport={sport}
           />
         ))}
       </div>

@@ -143,7 +143,7 @@ export function PublicClassListsSection({
                         href={`/classes/${item.id}`}
                         className="flex items-center gap-2 px-4 py-2 text-[13px] text-foreground transition-colors hover:bg-foreground/[0.03] hover:text-brand"
                       >
-                        <span className="min-w-0 flex-1 truncate">
+                        <span className="min-w-0 flex-1 break-words">
                           {item.name}
                         </span>
                         {item.nivel && (

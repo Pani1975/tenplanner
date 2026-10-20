@@ -266,6 +266,7 @@ export async function GET(request: NextRequest) {
         imageUrls: exercises.imageUrls,
         nivel: exercises.nivel,
         niveles: exercises.niveles,
+        phase: exercises.phase,
         fases: exercises.fases,
         aspectoJuego: exercises.aspectoJuego,
         aspectosJuego: exercises.aspectosJuego,

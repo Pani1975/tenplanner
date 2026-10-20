@@ -1,7 +1,7 @@
 "use client";
 
 import { TagInput } from "@/components/app/tag-input";
-import { useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
 import {
@@ -122,6 +122,29 @@ interface BlockState {
   items: BlockItem[];
 }
 
+const CLASS_AUTOSAVE_KEY = "tp-class-form-new-v1";
+const CLASS_AUTOSAVE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+interface ClassAutosave {
+  v: 1;
+  savedAt: number;
+  name: string;
+  duracionMinutes: number;
+  alumnosTipo: "individual" | "grupal" | "";
+  numAlumnos: number | "";
+  niveles: string[];
+  aspectosJuego: string[];
+  golpes: string[];
+  objetivos: string;
+  material: string;
+  tags: string[];
+  videoUrl: string;
+  aspectosImportantes: string;
+  isLibrary: boolean;
+  autoria: string;
+  blocks: BlockState[];
+}
+
 export interface ClassInitialData {
   name: string;
   duracionMinutes: number;
@@ -228,6 +251,122 @@ export function ClassForm({
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // ── Autoguardado de la clase que se está creando ──────────────────────
+  // Se guarda en la sesión del navegador (esta pestaña): si se sale a ver la
+  // ficha de un ejercicio y se vuelve atrás (o el móvil recarga la página),
+  // la clase en curso se recupera tal cual.
+  const autosaveEnabled = mode === "create" && !initialData;
+  const autosaveReadyRef = useRef(false);
+  const autosaveDoneRef = useRef(false);
+  const [recoveredDraft, setRecoveredDraft] = useState(false);
+
+  useEffect(() => {
+    if (!autosaveEnabled) return;
+    try {
+      const raw = window.sessionStorage.getItem(CLASS_AUTOSAVE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Partial<ClassAutosave> | null;
+        if (
+          saved &&
+          saved.v === 1 &&
+          typeof saved.savedAt === "number" &&
+          Date.now() - saved.savedAt < CLASS_AUTOSAVE_MAX_AGE_MS
+        ) {
+          if (typeof saved.name === "string") setName(saved.name);
+          if (typeof saved.duracionMinutes === "number")
+            setDuracionMinutes(saved.duracionMinutes);
+          if (
+            saved.alumnosTipo === "individual" ||
+            saved.alumnosTipo === "grupal"
+          )
+            setAlumnosTipo(saved.alumnosTipo);
+          if (typeof saved.numAlumnos === "number" || saved.numAlumnos === "")
+            setNumAlumnos(saved.numAlumnos);
+          if (Array.isArray(saved.niveles)) setNiveles(saved.niveles);
+          if (Array.isArray(saved.aspectosJuego))
+            setAspectosJuego(saved.aspectosJuego);
+          if (Array.isArray(saved.golpes)) setGolpes(saved.golpes);
+          if (typeof saved.objetivos === "string")
+            setObjetivos(saved.objetivos);
+          if (typeof saved.material === "string") setMaterial(saved.material);
+          if (Array.isArray(saved.tags)) setTags(saved.tags);
+          if (typeof saved.videoUrl === "string") setVideoUrl(saved.videoUrl);
+          if (typeof saved.aspectosImportantes === "string")
+            setAspectosImportantes(saved.aspectosImportantes);
+          if (typeof saved.isLibrary === "boolean")
+            setIsLibrary(saved.isLibrary);
+          if (typeof saved.autoria === "string") setAutoria(saved.autoria);
+          if (Array.isArray(saved.blocks) && saved.blocks.length > 0)
+            setBlocks(saved.blocks);
+          setRecoveredDraft(true);
+        }
+      }
+    } catch {
+      // sessionStorage no disponible o contenido dañado: se empieza en blanco.
+    }
+    // Hasta que se restaure no se guarda, para no pisar lo recuperado.
+    const t = window.setTimeout(() => {
+      autosaveReadyRef.current = true;
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!autosaveEnabled || !autosaveReadyRef.current) return;
+    if (autosaveDoneRef.current) return;
+    const meaningful =
+      name.trim() ||
+      objetivos.trim() ||
+      material.trim() ||
+      aspectosImportantes.trim() ||
+      tags.length > 0 ||
+      niveles.length > 0 ||
+      aspectosJuego.length > 0 ||
+      golpes.length > 0 ||
+      blocks.some((b) => b.items.length > 0 || b.notes.trim());
+    try {
+      if (!meaningful) {
+        window.sessionStorage.removeItem(CLASS_AUTOSAVE_KEY);
+        return;
+      }
+      const snapshot: ClassAutosave = {
+        v: 1,
+        savedAt: Date.now(),
+        name,
+        duracionMinutes,
+        alumnosTipo,
+        numAlumnos,
+        niveles,
+        aspectosJuego,
+        golpes,
+        objetivos,
+        material,
+        tags,
+        videoUrl,
+        aspectosImportantes,
+        isLibrary,
+        autoria,
+        blocks,
+      };
+      window.sessionStorage.setItem(
+        CLASS_AUTOSAVE_KEY,
+        JSON.stringify(snapshot)
+      );
+    } catch {
+      // Sin almacenamiento: no pasa nada, solo no hay autoguardado.
+    }
+  });
+
+  function clearAutosave() {
+    autosaveDoneRef.current = true;
+    try {
+      window.sessionStorage.removeItem(CLASS_AUTOSAVE_KEY);
+    } catch {
+      // ignorar
+    }
+  }
   const [pickerOpen, setPickerOpen] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [pickerFilters, setPickerFilters] =
@@ -689,6 +828,7 @@ export function ClassForm({
       return;
     }
 
+    clearAutosave();
     if (mode === "edit") {
       router.push(`/classes/${classId}`);
     } else {
@@ -773,6 +913,21 @@ export function ClassForm({
       </Dialog>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {recoveredDraft ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/30 bg-brand/10 px-4 py-2.5 text-sm text-foreground">
+            <span>Hemos recuperado la clase que estabas creando.</span>
+            <button
+              type="button"
+              onClick={() => {
+                clearAutosave();
+                window.location.reload();
+              }}
+              className="text-xs font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              Empezar de nuevo
+            </button>
+          </div>
+        ) : null}
         {/* Identidad */}
         <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
           <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">

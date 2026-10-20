@@ -14,6 +14,10 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  PickClassesForListDialog,
+  type ListableClass,
+} from "@/components/app/pick-classes-for-list-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
 import { spaceLabels } from "@/lib/space-labels";
@@ -77,6 +81,10 @@ function ListCard({
   isAdmin,
   deletingId,
   removingKey,
+  sport,
+  onItemAdded,
+  onItemRemoved,
+  onReload,
 }: {
   list: ClassListWithItems;
   index: number;
@@ -87,8 +95,13 @@ function ListCard({
   onRemoveItem: (listId: string, classId: string) => void;
   deletingId: string | null;
   removingKey: string | null;
+  sport?: string | null;
+  onItemAdded: (listId: string, cls: ListableClass) => void;
+  onItemRemoved: (listId: string, classId: string) => void;
+  onReload: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [pickOpen, setPickOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -126,7 +139,9 @@ function ListCard({
     <article
       className={cn(
         "overflow-hidden rounded-2xl border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all",
-        expanded ? "shadow-lg shadow-foreground/5" : "hover:border-foreground/20"
+        expanded
+          ? "shadow-lg shadow-foreground/5"
+          : "hover:border-foreground/20"
       )}
     >
       <div
@@ -203,7 +218,9 @@ function ListCard({
               )}
             </div>
           )}
-          <span className={cn("font-sans text-[10px] tabular-nums", accent.text)}>
+          <span
+            className={cn("font-sans text-[10px] tabular-nums", accent.text)}
+          >
             {list.itemsCount} clase{list.itemsCount !== 1 ? "s" : ""}
           </span>
         </div>
@@ -212,6 +229,22 @@ function ListCard({
           className="flex items-center gap-1 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
+          {list.canManage !== false && (
+            <button
+              type="button"
+              title="Añadir clases a la lista"
+              onClick={() => setPickOpen(true)}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors hover:opacity-80",
+                accent.border,
+                accent.text,
+                accent.bg
+              )}
+            >
+              <Plus className="size-3" />
+              <span className="hidden sm:inline">Clases</span>
+            </button>
+          )}
           {isAdmin && list.canManage !== false && (
             <button
               title={
@@ -231,16 +264,16 @@ function ListCard({
             </button>
           )}
           {list.canManage !== false && (
-          <button
-            title="Renombrar"
-            onClick={() => {
-              setRenaming(true);
-              setRenameVal(list.name);
-            }}
-            className="p-2 rounded-xl text-foreground/25 hover:text-foreground hover:bg-foreground/8 transition-colors"
-          >
-            <Pencil className="size-3.5" />
-          </button>
+            <button
+              title="Renombrar"
+              onClick={() => {
+                setRenaming(true);
+                setRenameVal(list.name);
+              }}
+              className="p-2 rounded-xl text-foreground/25 hover:text-foreground hover:bg-foreground/8 transition-colors"
+            >
+              <Pencil className="size-3.5" />
+            </button>
           )}
           {!list.isDefault && list.canManage !== false && (
             <button
@@ -267,8 +300,23 @@ function ListCard({
                 Lista vacía
               </p>
               <p className="mt-1 text-[13px] text-foreground/40">
-                Guarda clases desde su ficha con el botón de lista
+                Añade clases aquí mismo o guárdalas desde su ficha con el botón
+                de lista
               </p>
+              {list.canManage !== false && (
+                <button
+                  type="button"
+                  onClick={() => setPickOpen(true)}
+                  className={cn(
+                    "mt-4 inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors hover:opacity-80",
+                    accent.border,
+                    accent.text,
+                    accent.bg
+                  )}
+                >
+                  <Plus className="size-3.5" /> Añadir clases
+                </button>
+              )}
             </div>
           ) : (
             <ul className="divide-y divide-foreground/8">
@@ -282,7 +330,7 @@ function ListCard({
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/classes/${item.id}`}
-                        className="block font-sans text-[13px] font-medium text-foreground hover:text-brand transition-colors truncate"
+                        className="block break-words font-sans text-[13px] font-medium text-foreground hover:text-brand transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -347,6 +395,17 @@ function ListCard({
           )}
         </div>
       )}
+      <PickClassesForListDialog
+        open={pickOpen}
+        onOpenChange={setPickOpen}
+        listId={list.id}
+        listName={list.name}
+        currentIds={list.items.map((i) => i.id)}
+        sport={sport}
+        onAdded={(cls) => onItemAdded(list.id, cls)}
+        onRemoved={(classId) => onItemRemoved(list.id, classId)}
+        onBulkAdded={onReload}
+      />
     </article>
   );
 }
@@ -355,12 +414,15 @@ export function ClassListsSection({
   isAdmin = false,
   spaceLabel = null,
   inClub = false,
+  sport,
 }: {
   isAdmin?: boolean;
   /** Trabajando como un club: "Listas club" en vez de "Mis listas". */
   inClub?: boolean;
   /** "Espacio particular" o el nombre del club del modo de trabajo. */
   spaceLabel?: string | null;
+  /** Deporte activo (para los niveles del filtro al añadir clases). */
+  sport?: string | null;
 } = {}) {
   const [lists, setLists] = useState<ClassListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
@@ -377,8 +439,8 @@ export function ClassListsSection({
     [lists]
   );
 
-  async function loadLists() {
-    setLoading(true);
+  async function loadLists(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/class-lists?includeClasses=true", {
         cache: "no-store",
@@ -395,7 +457,7 @@ export function ClassListsSection({
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void loadLists(), 0);
     const refresh = () => {
-      if (document.visibilityState !== "hidden") void loadLists();
+      if (document.visibilityState !== "hidden") void loadLists(true);
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
@@ -467,8 +529,44 @@ export function ClassListsSection({
   }
 
   function handleRename(listId: string, name: string) {
+    setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, name } : l)));
+  }
+
+  function applyItemAdded(listId: string, cls: ListableClass) {
     setLists((prev) =>
-      prev.map((l) => (l.id === listId ? { ...l, name } : l))
+      prev.map((l) =>
+        l.id === listId && !l.items.some((i) => i.id === cls.id)
+          ? {
+              ...l,
+              itemsCount: l.itemsCount + 1,
+              items: [
+                ...l.items,
+                {
+                  id: cls.id,
+                  name: cls.name,
+                  duracionMinutes: cls.duracionMinutes,
+                  alumnosTipo: cls.alumnosTipo,
+                  nivel: cls.nivel,
+                  isLibrary: cls.isLibrary,
+                },
+              ],
+            }
+          : l
+      )
+    );
+  }
+
+  function applyItemRemoved(listId: string, classId: string) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId
+          ? {
+              ...l,
+              itemsCount: Math.max(l.itemsCount - 1, 0),
+              items: l.items.filter((i) => i.id !== classId),
+            }
+          : l
+      )
     );
   }
 
@@ -524,8 +622,8 @@ export function ClassListsSection({
               Aún no tienes listas de clases.
             </h3>
             <p className="mt-2 text-[14px] text-foreground/40 max-w-xs mx-auto leading-relaxed">
-              Crea tu primera lista y guarda clases desde su ficha con el
-              botón de lista.
+              Crea tu primera lista y guarda clases desde su ficha con el botón
+              de lista.
             </p>
             <button
               onClick={() => setShowCreate(true)}
@@ -623,6 +721,10 @@ export function ClassListsSection({
             isAdmin={isAdmin}
             deletingId={deletingId}
             removingKey={removingKey}
+            sport={sport}
+            onItemAdded={applyItemAdded}
+            onItemRemoved={applyItemRemoved}
+            onReload={() => void loadLists(true)}
           />
         ))}
       </div>

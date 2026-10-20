@@ -9,8 +9,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  EMPTY_PICKER_FILTERS,
+  ExercisePickerFilters,
+  hasPickerFilters,
+  type PickerFilters,
+} from "@/components/app/exercise-picker-filters";
+import {
+  resultMessage,
+  saveSearchToList,
+} from "@/components/app/save-search-to-list";
 import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 40;
 
 export interface ListableExercise {
   id: string;
@@ -40,8 +52,10 @@ export function AddExercisesToListDialog({
   listId,
   listName,
   currentIds,
+  sport,
   onAdded,
   onRemoved,
+  onBulkAdded,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,17 +63,31 @@ export function AddExercisesToListDialog({
   listName: string;
   /** Ids de los ejercicios que ya están en la colección. */
   currentIds: string[];
+  /** Deporte activo, para ofrecer sus niveles en el filtro. */
+  sport?: string | null;
   onAdded: (exercise: ListableExercise) => void;
   onRemoved: (exerciseId: string) => void;
+  /** Tras añadir todos los resultados de golpe: recargar la colección. */
+  onBulkAdded?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ListableExercise[]>([]);
+  const [filters, setFilters] = useState<PickerFilters>(EMPTY_PICKER_FILTERS);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState<string | null>(null);
   const requestRef = useRef(0);
   const inList = new Set(currentIds);
+
+  // Al cambiar la búsqueda o los filtros se vuelve a la primera página.
+  useEffect(() => {
+    setPage(1);
+  }, [query, filters]);
 
   useEffect(() => {
     if (!open) return;
@@ -69,14 +97,26 @@ export function AddExercisesToListDialog({
         setLoading(true);
         setLoadError(false);
         try {
-          const params = new URLSearchParams({ limit: "40" });
+          const params = new URLSearchParams({
+            limit: String(PAGE_SIZE),
+            page: String(page),
+          });
           const q = query.trim();
           if (q) params.set("search", q);
+          if (filters.nivel) params.append("nivel", filters.nivel);
+          if (filters.fase) params.set("phase", filters.fase);
+          if (filters.aspecto) params.append("aspectoJuego", filters.aspecto);
+          if (filters.golpe) params.append("golpe", filters.golpe);
           const res = await fetch(`/api/exercises?${params.toString()}`);
           if (!res.ok) throw new Error("load");
-          const json = (await res.json()) as { data?: ListableExercise[] };
+          const json = (await res.json()) as {
+            data?: ListableExercise[];
+            pagination?: { total?: number };
+          };
           if (requestId === requestRef.current) {
-            setResults(Array.isArray(json.data) ? json.data : []);
+            const rows = Array.isArray(json.data) ? json.data : [];
+            setResults((prev) => (page === 1 ? rows : [...prev, ...rows]));
+            setTotal(json.pagination?.total ?? rows.length);
           }
         } catch {
           if (requestId === requestRef.current) setLoadError(true);
@@ -84,10 +124,33 @@ export function AddExercisesToListDialog({
           if (requestId === requestRef.current) setLoading(false);
         }
       },
-      query.trim() ? 300 : 0
+      query.trim() && page === 1 ? 300 : 0
     );
     return () => window.clearTimeout(timer);
-  }, [open, query]);
+  }, [open, query, filters, page]);
+
+  const hasCriteria = !!query.trim() || hasPickerFilters(filters);
+
+  async function addAllResults() {
+    if (bulkBusy || total === 0) return;
+    setBulkBusy(true);
+    setActionError(null);
+    setBulkMessage(null);
+    const q = new URLSearchParams();
+    if (query.trim()) q.set("q", query.trim());
+    if (filters.nivel) q.append("nivel", filters.nivel);
+    if (filters.fase) q.set("fase", filters.fase);
+    if (filters.aspecto) q.append("aspectoJuego", filters.aspecto);
+    if (filters.golpe) q.append("golpe", filters.golpe);
+    const res = await saveSearchToList("exercise", listId, q.toString());
+    setBulkBusy(false);
+    if (!res.ok) {
+      setActionError(res.error);
+      return;
+    }
+    setBulkMessage(resultMessage("exercise", res.total, res.added));
+    onBulkAdded?.();
+  }
 
   async function toggle(exercise: ListableExercise) {
     if (busyId) return;
@@ -121,6 +184,8 @@ export function AddExercisesToListDialog({
       onOpenChange={(next) => {
         if (!next) {
           setQuery("");
+          setFilters(EMPTY_PICKER_FILTERS);
+          setBulkMessage(null);
           setActionError(null);
         }
         onOpenChange(next);
@@ -143,6 +208,14 @@ export function AddExercisesToListDialog({
             className="h-10 w-full rounded-lg border border-foreground/15 bg-background pl-9 pr-3 text-sm text-foreground focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
         </div>
+
+        <ExercisePickerFilters
+          exercises={[]}
+          showAllOptions
+          sport={sport}
+          value={filters}
+          onChange={setFilters}
+        />
 
         {actionError ? (
           <p className="text-xs text-destructive">{actionError}</p>
@@ -215,7 +288,47 @@ export function AddExercisesToListDialog({
               })}
             </ul>
           )}
+          {results.length > 0 && results.length < total ? (
+            <div className="border-t border-foreground/8 p-2 text-center">
+              <button
+                type="button"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={loading}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-brand hover:bg-brand/10 disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Mostrar más
+              </button>
+            </div>
+          ) : null}
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-muted-foreground">
+            {total} ejercicio{total === 1 ? "" : "s"}
+            {hasCriteria ? " con esos criterios" : ""}
+          </p>
+          {hasCriteria && total > 0 ? (
+            <button
+              type="button"
+              onClick={() => void addAllResults()}
+              disabled={bulkBusy}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-brand/40 px-3 text-xs font-semibold text-brand transition-colors hover:bg-brand/10 disabled:opacity-60"
+            >
+              {bulkBusy ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Plus className="size-3.5" />
+              )}
+              Añadir los {total} resultados
+            </button>
+          ) : null}
+        </div>
+        {bulkMessage ? (
+          <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+            <Check className="size-3.5" />
+            {bulkMessage}
+          </p>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
