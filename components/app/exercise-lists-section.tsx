@@ -144,6 +144,8 @@ function CollectionCard({
     id: string;
     name: string;
   } | null>(null);
+  /** Ejercicio que se añade a sesión o clase desde la tarjeta en la colección. */
+  const [singleExAdd, setSingleExAdd] = useState<{ kind: "session" | "class"; item: ListedExercise } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -497,24 +499,54 @@ function CollectionCard({
                             {item.description}
                           </p>
                         ) : null}
-                        <div className="mt-2 flex items-center gap-3 text-[11px] font-semibold">
-                          <button
-                            type="button"
-                            onClick={() => setQuickView(item)}
-                            className="text-foreground/50 hover:text-foreground"
-                          >
-                            Vista rápida
-                          </button>
-                          <Link
-                            href={`/exercises/${item.id}?desdeLista=${list.id}`}
-                            className={cn(
-                              "inline-flex items-center gap-1",
-                              accent.text,
-                              "hover:opacity-70"
-                            )}
-                          >
-                            Ficha <ArrowRight className="size-3" />
-                          </Link>
+                        <div className="mt-2 flex flex-col gap-2">
+                          <div className="flex items-center gap-3 text-[11px] font-semibold">
+                            <button
+                              type="button"
+                              onClick={() => setQuickView(item)}
+                              className="text-foreground/50 hover:text-foreground"
+                            >
+                              Vista rápida
+                            </button>
+                            <Link
+                              href={`/exercises/${item.id}?desdeLista=${list.id}`}
+                              className={cn(
+                                "inline-flex items-center gap-1",
+                                accent.text,
+                                "hover:opacity-70"
+                              )}
+                            >
+                              Ficha <ArrowRight className="size-3" />
+                            </Link>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSingleExAdd({
+                                  kind: "session",
+                                  item,
+                                  
+                                })
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
+                            >
+                              <Plus className="size-3" /> Sesión
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSingleExAdd({
+                                  kind: "class",
+                                  item,
+                                  
+                                })
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
+                            >
+                              <Plus className="size-3" /> Clase
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -576,6 +608,23 @@ function CollectionCard({
           )}
         </div>
       )}
+      <AddToSessionDialog
+        open={singleExAdd?.kind === "session"}
+        onOpenChange={(open) => {
+          if (!open) setSingleExAdd(null);
+        }}
+        exerciseIds={singleExAdd?.kind === "session" ? [singleExAdd.item.id] : []}
+        label={singleExAdd?.item.name ?? ""}
+      />
+      <AddToClassDialog
+        open={singleExAdd?.kind === "class"}
+        onOpenChange={(open) => {
+          if (!open) setSingleExAdd(null);
+        }}
+        exerciseId={singleExAdd?.kind === "class" ? singleExAdd.item.id : ""}
+        label={singleExAdd?.item.name ?? ""}
+      />
+
       <ExerciseQuickViewDialog
         fromListId={list.id}
         exercise={quickView}
