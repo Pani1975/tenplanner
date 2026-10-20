@@ -315,6 +315,7 @@ export const AUTORIAS = [
   { id: "rfet", label: "RFET" },
   { id: "itf", label: "ITF" },
   { id: "usta", label: "USTA" },
+  { id: "tennis_canada", label: "Tennis Canada" },
   { id: "begreatattennis", label: "Be Gr8 at Tennis (Rob Cherry)" },
   { id: "libre", label: "Libre" },
 ] as const;
