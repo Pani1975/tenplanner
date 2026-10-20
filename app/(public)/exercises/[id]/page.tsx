@@ -118,6 +118,11 @@ export default async function ExercisePage({
       ? `/exercises/${navIds[navIdx + 1]}${navSuffix}`
       : null;
   const backToSearchHref = navQs ? `/exercises?${navQs}` : null;
+  const fromListRaw = navParams.desdeLista;
+  const fromListId = typeof fromListRaw === "string" ? fromListRaw : "";
+  const backToListHref = /^[0-9a-f-]{36}$/i.test(fromListId)
+    ? `/exercises?tab=favorites&lista=${fromListId}`
+    : null;
 
   return (
     <ExerciseDetailClient
@@ -134,6 +139,7 @@ export default async function ExercisePage({
       navPosition={navIdx >= 0 ? navIdx + 1 : null}
       navTotal={navIds.length > 0 ? navIds.length : null}
       backToSearchHref={backToSearchHref}
+      backToListHref={backToListHref}
       diagram={getExerciseDiagram(exercise.id)}
       exercise={{
         id: exercise.id,

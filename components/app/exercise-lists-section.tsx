@@ -484,7 +484,7 @@ function CollectionCard({
                             Vista rápida
                           </button>
                           <Link
-                            href={`/exercises/${item.id}`}
+                            href={`/exercises/${item.id}?desdeLista=${list.id}`}
                             className={cn(
                               "inline-flex items-center gap-1",
                               accent.text,
@@ -555,6 +555,7 @@ function CollectionCard({
         </div>
       )}
       <ExerciseQuickViewDialog
+        fromListId={list.id}
         exercise={quickView}
         open={quickView !== null}
         onOpenChange={(open) => {

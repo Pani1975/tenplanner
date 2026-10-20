@@ -210,6 +210,7 @@ export function ExerciseDetailClient({
   navPosition = null,
   navTotal = null,
   backToSearchHref = null,
+  backToListHref = null,
 }: {
   exercise: ExerciseData;
   canEdit?: boolean;
@@ -226,6 +227,8 @@ export function ExerciseDetailClient({
   navPosition?: number | null;
   navTotal?: number | null;
   backToSearchHref?: string | null;
+  /** Colección desde la que se llegó a la ficha. */
+  backToListHref?: string | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -444,6 +447,16 @@ export function ExerciseDetailClient({
           >
             <ArrowLeft className="size-4" /> Volver a ejercicios
           </Link>
+          {backToListHref ? (
+            <Link
+              href={backToListHref}
+              title="Volver a la colección"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#D6FF38] bg-[#D6FF38]/20 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-[#D6FF38]/40"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Volver a la colección</span>
+            </Link>
+          ) : null}
           <BackToSearchLink href={backToSearchHref} />
           <PrevNextNav
             prevHref={prevHref}
