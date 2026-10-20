@@ -9,13 +9,13 @@ import {
   Heart,
   Loader2,
   Pencil,
-  Play,
   Plus,
   Trash2,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { ExerciseQuickViewDialog } from "@/components/app/exercise-quick-view-dialog";
 import { AddToSessionDialog } from "@/components/app/add-to-session-dialog";
 import {
@@ -103,9 +103,12 @@ function CollectionCard({
   deletingId,
   removingKey,
   sport,
+  autoOpen = false,
 }: {
   list: ExerciseListWithItems;
   index: number;
+  /** Abrir desplegada y hacer scroll hasta ella (llegada desde un enlace). */
+  autoOpen?: boolean;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onRemoveItem: (listId: string, exerciseId: string) => void;
@@ -116,7 +119,21 @@ function CollectionCard({
   removingKey: string | null;
   sport?: string | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoOpen);
+  const articleRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!autoOpen) return;
+    const t = window.setTimeout(
+      () =>
+        articleRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      150
+    );
+    return () => window.clearTimeout(t);
+  }, [autoOpen]);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
   const [addExercisesOpen, setAddExercisesOpen] = useState(false);
   const [quickView, setQuickView] = useState<ListedExercise | null>(null);
@@ -160,8 +177,9 @@ function CollectionCard({
 
   return (
     <article
+      ref={articleRef}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
+        "group relative scroll-mt-24 overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
         expanded
           ? "shadow-lg shadow-foreground/5"
           : "hover:border-foreground/20"
@@ -385,49 +403,64 @@ function CollectionCard({
                       key={item.id}
                       className="group/item relative overflow-hidden bg-background hover:bg-foreground/[0.02] transition-colors"
                     >
-                      {/* Thumbnail */}
-                      <div className="relative h-24 w-full bg-foreground/5 overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover/item:scale-105"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="font-heading italic text-2xl text-foreground/10">
-                              {CATEGORY_LABELS[item.category]?.[0] ?? "·"}
-                            </span>
+                      {/* Cabecera: vídeo embebido si lo hay; si no, imagen; si no, nada */}
+                      {(() => {
+                        const embedUrl = getYouTubeEmbedUrl(item.videoUrl);
+                        const hasMedia = !!embedUrl || !!item.imageUrl;
+                        return (
+                          <div
+                            className={cn(
+                              "relative w-full overflow-hidden",
+                              embedUrl
+                                ? "aspect-video bg-black"
+                                : hasMedia
+                                  ? "h-24 bg-foreground/5"
+                                  : "h-0"
+                            )}
+                          >
+                            {embedUrl ? (
+                              <iframe
+                                src={embedUrl}
+                                title={`Vídeo: ${item.name}`}
+                                className="absolute inset-0 size-full"
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                              />
+                            ) : item.imageUrl ? (
+                              <>
+                                <Image
+                                  src={item.imageUrl}
+                                  alt={item.name}
+                                  fill
+                                  className="object-cover transition-transform duration-500 group-hover/item:scale-105"
+                                />
+                                {/* Abrir vista rápida */}
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickView(item)}
+                                  aria-label={`Ver ${item.name}`}
+                                  className="absolute inset-0 z-[1] cursor-pointer"
+                                />
+                              </>
+                            ) : null}
                           </div>
+                        );
+                      })()}
+                      {/* Quitar de la colección */}
+                      <button
+                        onClick={() => onRemoveItem(list.id, item.id)}
+                        disabled={removingKey === removeKey}
+                        title="Quitar de la colección"
+                        className="absolute top-1.5 right-1.5 z-[2] size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 sm:opacity-0 sm:group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
+                      >
+                        {removingKey === removeKey ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <X className="size-3" />
                         )}
-                        {/* Abrir vista rápida */}
-                        <button
-                          type="button"
-                          onClick={() => setQuickView(item)}
-                          aria-label={`Ver ${item.name}`}
-                          className="absolute inset-0 z-[1] cursor-pointer"
-                        />
-                        {item.videoUrl ? (
-                          <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[2] inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-                            <Play className="size-2.5 fill-current" />
-                            Vídeo
-                          </span>
-                        ) : null}
-                        {/* Remove overlay */}
-                        <button
-                          onClick={() => onRemoveItem(list.id, item.id)}
-                          disabled={removingKey === removeKey}
-                          title="Quitar de la colección"
-                          className="absolute top-1.5 right-1.5 z-[2] size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 sm:opacity-0 sm:group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
-                        >
-                          {removingKey === removeKey ? (
-                            <Loader2 className="size-3 animate-spin" />
-                          ) : (
-                            <X className="size-3" />
-                          )}
-                        </button>
-                      </div>
+                      </button>
 
                       {/* Exercise info */}
                       <div className="px-3 py-2.5">
@@ -466,7 +499,7 @@ function CollectionCard({
                             Vista rápida
                           </button>
                           <Link
-                            href={`/exercises/${item.id}`}
+                            href={`/exercises/${item.id}?desdeLista=${list.id}`}
                             className={cn(
                               "inline-flex items-center gap-1",
                               accent.text,
@@ -537,6 +570,7 @@ function CollectionCard({
         </div>
       )}
       <ExerciseQuickViewDialog
+        fromListId={list.id}
         exercise={quickView}
         open={quickView !== null}
         onOpenChange={(open) => {
@@ -561,7 +595,10 @@ function CollectionCard({
 export function ExerciseListsSection({
   inClub = false,
   sport,
+  openListId,
 }: {
+  /** Colección a mostrar desplegada al entrar (parámetro `lista`). */
+  openListId?: string | null;
   /** Trabajando como un club: listas comunes de "Favoritos club". */
   inClub?: boolean;
   /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
@@ -867,6 +904,7 @@ export function ExerciseListsSection({
             deletingId={deletingId}
             removingKey={removingKey}
             sport={sport}
+            autoOpen={!!openListId && openListId === list.id}
           />
         ))}
       </div>

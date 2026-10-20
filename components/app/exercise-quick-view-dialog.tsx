@@ -37,7 +37,10 @@ export function ExerciseQuickViewDialog({
   exercise,
   open,
   onOpenChange,
+  fromListId,
 }: {
+  /** Colección desde la que se abre: la ficha ofrecerá volver a ella. */
+  fromListId?: string;
   exercise: QuickViewExercise | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -124,7 +127,9 @@ export function ExerciseQuickViewDialog({
             ) : null}
 
             <Link
-              href={`/exercises/${exercise.id}`}
+              href={`/exercises/${exercise.id}${
+                fromListId ? `?desdeLista=${fromListId}` : ""
+              }`}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
             >
               Ver ficha completa
