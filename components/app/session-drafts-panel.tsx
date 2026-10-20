@@ -75,7 +75,7 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
         </div>
         <Link
           href="/sessions/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-brand text-background px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors mt-1"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand text-brand-foreground px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors mt-1"
         >
           Crear sesión
         </Link>
@@ -121,7 +121,7 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
             <div className="flex items-center gap-1.5 shrink-0">
               <Link
                 href={`/sessions/new?draft=${draft.id}`}
-                className="inline-flex items-center gap-1 rounded-lg bg-brand text-background px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/90 transition-colors"
+                className="inline-flex items-center gap-1 rounded-lg bg-brand text-brand-foreground px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/90 transition-colors"
               >
                 <FilePenLine className="size-3" />
                 Continuar
