@@ -63,6 +63,9 @@ export async function GET(request: NextRequest) {
             difficulty: exercises.difficulty,
             durationMinutes: exercises.durationMinutes,
             imageUrl: exercises.imageUrl,
+            description: exercises.description,
+            objectives: exercises.objectives,
+            videoUrl: exercises.videoUrl,
           })
           .from(exerciseListItems)
           .innerJoin(
@@ -80,6 +83,9 @@ export async function GET(request: NextRequest) {
             difficulty: string;
             durationMinutes: number;
             imageUrl: string | null;
+            description: string | null;
+            objectives: string | null;
+            videoUrl: string | null;
           }>
         ),
   ]);
@@ -97,6 +103,9 @@ export async function GET(request: NextRequest) {
       difficulty: string;
       durationMinutes: number;
       imageUrl: string | null;
+      description: string | null;
+      objectives: string | null;
+      videoUrl: string | null;
     }>
   >();
 
@@ -109,6 +118,9 @@ export async function GET(request: NextRequest) {
       difficulty: item.difficulty,
       durationMinutes: item.durationMinutes,
       imageUrl: item.imageUrl,
+      description: item.description,
+      objectives: item.objectives,
+      videoUrl: item.videoUrl,
     });
     itemsMap.set(item.listId, current);
   }

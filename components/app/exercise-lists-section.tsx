@@ -9,12 +9,14 @@ import {
   Heart,
   Loader2,
   Pencil,
+  Play,
   Plus,
   Trash2,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ExerciseQuickViewDialog } from "@/components/app/exercise-quick-view-dialog";
 import { AddToSessionDialog } from "@/components/app/add-to-session-dialog";
 import {
   AddExercisesToListDialog,
@@ -28,6 +30,9 @@ interface ListedExercise {
   difficulty: string;
   durationMinutes: number;
   imageUrl: string | null;
+  description?: string | null;
+  objectives?: string | null;
+  videoUrl?: string | null;
 }
 
 interface ExerciseListWithItems {
@@ -114,6 +119,7 @@ function CollectionCard({
   const [expanded, setExpanded] = useState(false);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
   const [addExercisesOpen, setAddExercisesOpen] = useState(false);
+  const [quickView, setQuickView] = useState<ListedExercise | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -395,11 +401,25 @@ function CollectionCard({
                             </span>
                           </div>
                         )}
+                        {/* Abrir vista rápida */}
+                        <button
+                          type="button"
+                          onClick={() => setQuickView(item)}
+                          aria-label={`Ver ${item.name}`}
+                          className="absolute inset-0 z-[1] cursor-pointer"
+                        />
+                        {item.videoUrl ? (
+                          <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[2] inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                            <Play className="size-2.5 fill-current" />
+                            Vídeo
+                          </span>
+                        ) : null}
                         {/* Remove overlay */}
                         <button
                           onClick={() => onRemoveItem(list.id, item.id)}
                           disabled={removingKey === removeKey}
-                          className="absolute top-1.5 right-1.5 size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 opacity-0 group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
+                          title="Quitar de la colección"
+                          className="absolute top-1.5 right-1.5 z-[2] size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 sm:opacity-0 sm:group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
                         >
                           {removingKey === removeKey ? (
                             <Loader2 className="size-3 animate-spin" />
@@ -411,12 +431,13 @@ function CollectionCard({
 
                       {/* Exercise info */}
                       <div className="px-3 py-2.5">
-                        <Link
-                          href={`/exercises/${item.id}`}
-                          className="block font-sans text-[12px] font-medium text-foreground hover:text-brand transition-colors leading-tight line-clamp-1"
+                        <button
+                          type="button"
+                          onClick={() => setQuickView(item)}
+                          className="block w-full break-words text-left font-sans text-[12px] font-medium text-foreground hover:text-brand transition-colors leading-tight"
                         >
                           {item.name}
-                        </Link>
+                        </button>
                         <div className="mt-1 flex items-center gap-1.5">
                           <span
                             className={cn(
@@ -430,6 +451,30 @@ function CollectionCard({
                           <span className="font-sans text-[9px] text-foreground/30 tabular-nums">
                             {item.durationMinutes}′
                           </span>
+                        </div>
+                        {item.description?.trim() ? (
+                          <p className="mt-1.5 line-clamp-2 break-words text-[11px] leading-snug text-foreground/55">
+                            {item.description}
+                          </p>
+                        ) : null}
+                        <div className="mt-2 flex items-center gap-3 text-[11px] font-semibold">
+                          <button
+                            type="button"
+                            onClick={() => setQuickView(item)}
+                            className="text-foreground/50 hover:text-foreground"
+                          >
+                            Vista rápida
+                          </button>
+                          <Link
+                            href={`/exercises/${item.id}`}
+                            className={cn(
+                              "inline-flex items-center gap-1",
+                              accent.text,
+                              "hover:opacity-70"
+                            )}
+                          >
+                            Ficha <ArrowRight className="size-3" />
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -491,6 +536,13 @@ function CollectionCard({
           )}
         </div>
       )}
+      <ExerciseQuickViewDialog
+        exercise={quickView}
+        open={quickView !== null}
+        onOpenChange={(open) => {
+          if (!open) setQuickView(null);
+        }}
+      />
       <AddExercisesToListDialog
         open={addExercisesOpen}
         onOpenChange={setAddExercisesOpen}
@@ -627,6 +679,9 @@ export function ExerciseListsSection({
                   difficulty: exercise.difficulty,
                   durationMinutes: exercise.durationMinutes,
                   imageUrl: exercise.imageUrl,
+                  description: exercise.description,
+                  objectives: exercise.objectives,
+                  videoUrl: exercise.videoUrl,
                 },
               ],
             }
