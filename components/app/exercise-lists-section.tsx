@@ -16,6 +16,10 @@ import {
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AddToSessionDialog } from "@/components/app/add-to-session-dialog";
+import {
+  AddExercisesToListDialog,
+  type ListableExercise,
+} from "@/components/app/add-exercises-to-list-dialog";
 
 interface ListedExercise {
   id: string;
@@ -88,6 +92,8 @@ function CollectionCard({
   onDelete,
   onRename,
   onRemoveItem,
+  onItemAdded,
+  onItemRemoved,
   deletingId,
   removingKey,
 }: {
@@ -96,11 +102,14 @@ function CollectionCard({
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onRemoveItem: (listId: string, exerciseId: string) => void;
+  onItemAdded: (listId: string, exercise: ListableExercise) => void;
+  onItemRemoved: (listId: string, exerciseId: string) => void;
   deletingId: string | null;
   removingKey: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
+  const [addExercisesOpen, setAddExercisesOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -268,6 +277,21 @@ function CollectionCard({
           className="flex items-center gap-1 px-4 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
+          <button
+            type="button"
+            title="Añadir ejercicios a la colección"
+            onClick={() => setAddExercisesOpen(true)}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors hover:opacity-80",
+              accent.border,
+              accent.text,
+              accent.bg
+            )}
+          >
+            <Plus className="size-3" />
+            <span className="hidden sm:inline">Ejercicios</span>
+          </button>
+
           <Link
             href={sessionHref}
             title="Crear sesión"
@@ -325,9 +349,21 @@ function CollectionCard({
                 Colección vacía
               </p>
               <p className="mt-1 text-[13px] text-foreground/40">
-                Guarda ejercicios desde su ficha pulsando{" "}
+                Añade ejercicios aquí mismo o guárdalos desde su ficha pulsando{" "}
                 <Heart className="inline size-3 fill-current text-red-400/60" />
               </p>
+              <button
+                type="button"
+                onClick={() => setAddExercisesOpen(true)}
+                className={cn(
+                  "mt-4 inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors hover:opacity-80",
+                  accent.border,
+                  accent.text,
+                  accent.bg
+                )}
+              >
+                <Plus className="size-3.5" /> Añadir ejercicios
+              </button>
             </div>
           ) : (
             <>
@@ -404,6 +440,17 @@ function CollectionCard({
                   en esta colección
                 </span>
                 <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setAddExercisesOpen(true)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-[11px] font-semibold transition-colors",
+                      accent.text,
+                      "hover:opacity-70"
+                    )}
+                  >
+                    Añadir ejercicios <Plus className="size-3" />
+                  </button>
                   {list.items.length > 0 && (
                     <button
                       type="button"
@@ -440,6 +487,15 @@ function CollectionCard({
           )}
         </div>
       )}
+      <AddExercisesToListDialog
+        open={addExercisesOpen}
+        onOpenChange={setAddExercisesOpen}
+        listId={list.id}
+        listName={list.name}
+        currentIds={list.items.map((i) => i.id)}
+        onAdded={(ex) => onItemAdded(list.id, ex)}
+        onRemoved={(exerciseId) => onItemRemoved(list.id, exerciseId)}
+      />
     </article>
   );
 }
@@ -544,6 +600,44 @@ export function ExerciseListsSection({
 
   function handleRename(listId: string, name: string) {
     setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, name } : l)));
+  }
+
+  function applyItemAdded(listId: string, exercise: ListableExercise) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId && !l.items.some((i) => i.id === exercise.id)
+          ? {
+              ...l,
+              itemsCount: l.itemsCount + 1,
+              items: [
+                ...l.items,
+                {
+                  id: exercise.id,
+                  name: exercise.name,
+                  category: exercise.category,
+                  difficulty: exercise.difficulty,
+                  durationMinutes: exercise.durationMinutes,
+                  imageUrl: exercise.imageUrl,
+                },
+              ],
+            }
+          : l
+      )
+    );
+  }
+
+  function applyItemRemoved(listId: string, exerciseId: string) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId
+          ? {
+              ...l,
+              itemsCount: Math.max(l.itemsCount - 1, 0),
+              items: l.items.filter((i) => i.id !== exerciseId),
+            }
+          : l
+      )
+    );
   }
 
   async function removeFromList(listId: string, exerciseId: string) {
@@ -703,6 +797,8 @@ export function ExerciseListsSection({
             onDelete={(id) => setDeleteTarget(id)}
             onRename={handleRename}
             onRemoveItem={removeFromList}
+            onItemAdded={applyItemAdded}
+            onItemRemoved={applyItemRemoved}
             deletingId={deletingId}
             removingKey={removingKey}
           />
