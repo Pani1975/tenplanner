@@ -104,6 +104,7 @@ export interface ExerciseData {
   tipologia: string | null;
   duracionRango: string | null;
   phase: Phase | null;
+  fases?: string[] | null;
   intensity: number | null;
   isGlobal: boolean;
   autoria: string | null;
@@ -375,6 +376,7 @@ export function ExerciseDetailClient({
               tipologia: exercise.tipologia as never,
               duracionRango: exercise.duracionRango as never,
               phase: exercise.phase,
+              fases: exercise.fases as Phase[] | null | undefined,
               intensity: exercise.intensity,
               isGlobal: exercise.isGlobal,
               autoria: exercise.autoria,

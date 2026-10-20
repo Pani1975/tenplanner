@@ -214,6 +214,15 @@ export const FASES = [
   { id: "cooldown", label: "Vuelta a la calma" },
 ] as const;
 
+/** Fases en las que sirve un ejercicio (multi-selección; cae a `phase`). */
+export function resolveFases(ex: {
+  fases?: string[] | null;
+  phase?: string | null;
+}): string[] {
+  if (ex.fases && ex.fases.length > 0) return ex.fases;
+  return ex.phase ? [ex.phase] : [];
+}
+
 // Pelota: se ofrecen las de color; las antiguas se siguen aceptando.
 export const PELOTAS = [
   { id: "gomaespuma", label: "Gomaespuma", color: "#F5E6C8" },

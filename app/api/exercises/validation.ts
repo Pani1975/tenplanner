@@ -233,6 +233,7 @@ export const createExerciseSchema = z.object({
   location: locationSchema.optional().nullable(),
   videoUrl: optionalPublicUrlSchema.optional().nullable(),
   phase: trainingPhaseSchema.optional().nullable(),
+  fases: z.array(trainingPhaseSchema).max(3).optional().nullable(),
   intensity: z
     .number()
     .int()

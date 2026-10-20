@@ -51,7 +51,13 @@ import { EXERCISE_SORTS, type ExerciseSort } from "@/lib/nav/exercise-nav";
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
 
-const CATEGORIES = ["all", "technique", "tactics", "fitness", "warm-up"] as const;
+const CATEGORIES = [
+  "all",
+  "technique",
+  "tactics",
+  "fitness",
+  "warm-up",
+] as const;
 const DIFFICULTIES = ["all", "beginner", "intermediate", "advanced"] as const;
 const TABS = ["all", "global", "mine", "favorites"] as const;
 
@@ -234,10 +240,11 @@ export async function GET(request: Request) {
     ? await db
         .select({ exerciseId: exerciseListItems.exerciseId })
         .from(exerciseListItems)
-        .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-        .where(
-          exerciseListSpaceCondition(user.id, activeWorkClubId)
+        .innerJoin(
+          exerciseLists,
+          eq(exerciseLists.id, exerciseListItems.listId)
         )
+        .where(exerciseListSpaceCondition(user.id, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
@@ -287,7 +294,9 @@ export async function GET(request: Request) {
     conditions.push(
       inArray(
         exercisesTable.formato,
-        activeFormato as Array<"individual" | "parejas" | "grupal" | "multigrupo">
+        activeFormato as Array<
+          "individual" | "parejas" | "grupal" | "multigrupo"
+        >
       )
     );
   if (activeNivel.length > 0) {
@@ -315,10 +324,17 @@ export async function GET(request: Request) {
     conditions.push(inArray(exercisesTable.duracionRango, activeDuracionRango));
   }
   if (activeFase.length > 0) {
-    conditions.push(inArray(exercisesTable.phase, activeFase));
+    const faseWhere = or(
+      inArray(exercisesTable.phase, activeFase),
+      jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+    );
+    if (faseWhere) conditions.push(faseWhere);
   }
   if (activeCaracter.length > 0) {
-    const caracterWhere = jsonbArrayHasAny(exercisesTable.caracter, activeCaracter);
+    const caracterWhere = jsonbArrayHasAny(
+      exercisesTable.caracter,
+      activeCaracter
+    );
     if (caracterWhere) conditions.push(caracterWhere);
   }
   if (activeSituacionJuego.length > 0) {
@@ -352,14 +368,16 @@ export async function GET(request: Request) {
   }
   if (activeGolpes.length > 0) {
     const golpeConds = activeGolpes.map(
-      (g) => sql`${exercisesTable.golpes}::jsonb @> ${JSON.stringify([g])}::jsonb`
+      (g) =>
+        sql`${exercisesTable.golpes}::jsonb @> ${JSON.stringify([g])}::jsonb`
     );
     const combined = or(...golpeConds);
     if (combined) conditions.push(combined);
   }
   if (activeEfecto.length > 0) {
     const efectoConds = activeEfecto.map(
-      (e) => sql`${exercisesTable.efecto}::jsonb @> ${JSON.stringify([e])}::jsonb`
+      (e) =>
+        sql`${exercisesTable.efecto}::jsonb @> ${JSON.stringify([e])}::jsonb`
     );
     const combined = or(...efectoConds);
     if (combined) conditions.push(combined);
@@ -372,7 +390,10 @@ export async function GET(request: Request) {
   const where = and(...conditions);
 
   const [totalRows, rows] = await Promise.all([
-    db.select({ total: sql<number>`count(*)` }).from(exercisesTable).where(where),
+    db
+      .select({ total: sql<number>`count(*)` })
+      .from(exercisesTable)
+      .where(where),
     db
       .select({
         id: exercisesTable.id,
@@ -413,20 +434,25 @@ export async function GET(request: Request) {
   }));
 
   const summaryParts: string[] = [];
-  if (activeCategory !== "all") summaryParts.push(CATEGORY_LABEL[activeCategory]);
+  if (activeCategory !== "all")
+    summaryParts.push(CATEGORY_LABEL[activeCategory]);
   if (activeDifficulty !== "all")
     summaryParts.push(DIFFICULTY_LABEL[activeDifficulty]);
   if (searchTerm) summaryParts.push(`"${searchTerm}"`);
   if (activeTab !== "all")
     summaryParts.push(
-      activeTab === "global" ? "Biblioteca" : activeTab === "mine"
-        ? spaceLabels(!!activeWorkClubId).exercises
-        : spaceLabels(!!activeWorkClubId).favorites
+      activeTab === "global"
+        ? "Biblioteca"
+        : activeTab === "mine"
+          ? spaceLabels(!!activeWorkClubId).exercises
+          : spaceLabels(!!activeWorkClubId).favorites
     );
-  for (const value of activeFormato) summaryParts.push(FORMATO_LABEL[value] ?? value);
+  for (const value of activeFormato)
+    summaryParts.push(FORMATO_LABEL[value] ?? value);
   for (const value of activeNivel) summaryParts.push(value.replace(/_/g, " "));
   for (const value of activeTipoPelota) summaryParts.push(pelotaLabel(value));
-  for (const value of activeTipoActividad) summaryParts.push(getTipoActividadLabel(value));
+  for (const value of activeTipoActividad)
+    summaryParts.push(getTipoActividadLabel(value));
   for (const value of activeCaracter) summaryParts.push(caracterLabel(value));
   for (const value of activeSituacionJuego)
     summaryParts.push(situacionJuegoLabel(value));
@@ -446,7 +472,9 @@ export async function GET(request: Request) {
       },
     }) as unknown as ReactElement<DocumentProps>;
     const stream = await renderToStream(element);
-    const buffer = await streamToBuffer(stream as unknown as NodeJS.ReadableStream);
+    const buffer = await streamToBuffer(
+      stream as unknown as NodeJS.ReadableStream
+    );
     return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
