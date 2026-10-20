@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Loader2, Plus } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Check, Loader2, Plus, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExerciseQuickViewDialog } from "@/components/app/exercise-quick-view-dialog";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +19,17 @@ interface ExerciseListItem {
   difficulty: string;
   durationMinutes: number;
   imageUrl: string | null;
+  description?: string | null;
+  objectives?: string | null;
+  videoUrl?: string | null;
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  technique: "Técnica",
+  tactics: "Táctica",
+  fitness: "Físico",
+  "warm-up": "Calentamiento",
+};
 
 interface ExerciseListWithItems {
   id: string;
@@ -46,6 +58,7 @@ export function SessionExerciseLists({
   const [selectingList, setSelectingList] =
     useState<ExerciseListWithItems | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [quickView, setQuickView] = useState<ExerciseListItem | null>(null);
 
   const selectedSet = useMemo(
     () => new Set(selectedExerciseIds),
@@ -73,12 +86,22 @@ export function SessionExerciseLists({
 
   function openSelectDialog(list: ExerciseListWithItems) {
     setSelectingList(list);
-    setSelectedItems(
-      new Set(
-        list.items.filter((item) => !selectedSet.has(item.id)).map((i) => i.id)
-      )
-    );
+    // Empieza sin nada marcado: el monitor elige qué añadir (o "Seleccionar todos").
+    setSelectedItems(new Set());
     setSelectDialogOpen(true);
+  }
+
+  const selectableItems = useMemo(
+    () => selectingList?.items.filter((item) => !selectedSet.has(item.id)) ?? [],
+    [selectingList, selectedSet]
+  );
+  const allSelected =
+    selectableItems.length > 0 && selectedItems.size === selectableItems.length;
+
+  function toggleAll() {
+    setSelectedItems(
+      allSelected ? new Set() : new Set(selectableItems.map((i) => i.id))
+    );
   }
 
   function toggleItem(itemId: string) {
@@ -191,41 +214,122 @@ export function SessionExerciseLists({
       </div>
 
       <Dialog open={selectDialogOpen} onOpenChange={setSelectDialogOpen}>
-        <DialogContent className="flex max-h-[70vh] flex-col sm:max-w-md">
+        <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="pr-6">
               Selecciona ejercicios de {selectingList?.name}
             </DialogTitle>
           </DialogHeader>
 
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <button
+              type="button"
+              onClick={toggleAll}
+              disabled={selectableItems.length === 0}
+              className="inline-flex items-center gap-2 font-semibold text-foreground hover:text-brand disabled:opacity-50"
+            >
+              <span
+                className={cn(
+                  "flex size-4 items-center justify-center rounded border",
+                  allSelected
+                    ? "border-brand bg-brand text-brand-foreground"
+                    : "border-foreground/30"
+                )}
+              >
+                {allSelected ? <Check className="size-3" /> : null}
+              </span>
+              {allSelected ? "Quitar selección" : "Seleccionar todos"}
+            </button>
+            <span className="tabular-nums text-muted-foreground">
+              {selectedItems.size} de {selectableItems.length} seleccionados
+            </span>
+          </div>
+
           <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-foreground/10 bg-background">
             <div className="divide-y divide-foreground/8">
-              {selectingList?.items
-                .filter((item) => !selectedSet.has(item.id))
-                .map((item) => {
-                  const isSelected = selectedItems.has(item.id);
-                  return (
-                    <label
-                      key={item.id}
-                      className="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-foreground/[0.02]"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleItem(item.id)}
-                        className="size-4 rounded border-foreground/30"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="break-words text-sm font-medium text-foreground">
-                          {item.name}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
+              {selectableItems.map((item) => {
+                const isSelected = selectedItems.has(item.id);
+                const description = item.description?.trim();
+                return (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      "flex items-start gap-3 px-3 py-3 transition-colors",
+                      isSelected ? "bg-brand/5" : "hover:bg-foreground/[0.02]"
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleItem(item.id)}
+                      aria-label={`Seleccionar ${item.name}`}
+                      className="mt-1 size-4 shrink-0 cursor-pointer rounded border-foreground/30"
+                    />
+
+                    {item.imageUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => setQuickView(item)}
+                        aria-label={`Ver ${item.name}`}
+                        className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-foreground/5"
+                      >
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.name}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      </button>
+                    ) : null}
+
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleItem(item.id)}
+                        className="block w-full break-words text-left text-sm font-medium leading-tight text-foreground"
+                      >
+                        {item.name}
+                      </button>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="rounded bg-brand/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] text-brand">
+                          {CATEGORY_LABELS[item.category] ?? item.category}
+                        </span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground">
                           {item.durationMinutes}′
-                        </p>
+                        </span>
+                        {item.videoUrl ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Video className="size-3" /> Vídeo
+                          </span>
+                        ) : null}
                       </div>
-                    </label>
-                  );
-                })}
+                      {description ? (
+                        <p className="mt-1.5 line-clamp-2 break-words text-[11px] leading-snug text-foreground/60">
+                          {description}
+                        </p>
+                      ) : null}
+                      <div className="mt-1.5 flex items-center gap-3 text-[11px] font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => setQuickView(item)}
+                          className="text-foreground/50 hover:text-foreground"
+                        >
+                          Vista rápida
+                        </button>
+                        <a
+                          href={`/exercises/${item.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-brand hover:opacity-70"
+                        >
+                          Ficha <ArrowRight className="size-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -249,6 +353,14 @@ export function SessionExerciseLists({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ExerciseQuickViewDialog
+        exercise={quickView}
+        open={quickView !== null}
+        onOpenChange={(open) => {
+          if (!open) setQuickView(null);
+        }}
+      />
     </>
   );
 }
