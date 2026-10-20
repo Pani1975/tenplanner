@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { ExerciseQuickViewDialog } from "@/components/app/exercise-quick-view-dialog";
 import { AddToSessionDialog } from "@/components/app/add-to-session-dialog";
+import { AddToClassDialog } from "@/components/app/add-to-class-dialog";
 import {
   AddExercisesToListDialog,
   type ListableExercise,
@@ -137,6 +138,12 @@ function CollectionCard({
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
   const [addExercisesOpen, setAddExercisesOpen] = useState(false);
   const [quickView, setQuickView] = useState<ListedExercise | null>(null);
+  /** Un ejercicio concreto que se añade a una sesión o clase desde la vista rápida. */
+  const [singleAdd, setSingleAdd] = useState<{
+    kind: "session" | "class";
+    id: string;
+    name: string;
+  } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -576,6 +583,30 @@ function CollectionCard({
         onOpenChange={(open) => {
           if (!open) setQuickView(null);
         }}
+        onAddToSession={(ex) => {
+          setQuickView(null);
+          setSingleAdd({ kind: "session", id: ex.id, name: ex.name });
+        }}
+        onAddToClass={(ex) => {
+          setQuickView(null);
+          setSingleAdd({ kind: "class", id: ex.id, name: ex.name });
+        }}
+      />
+      <AddToSessionDialog
+        open={singleAdd?.kind === "session"}
+        onOpenChange={(open) => {
+          if (!open) setSingleAdd(null);
+        }}
+        exerciseIds={singleAdd?.kind === "session" ? [singleAdd.id] : []}
+        label={singleAdd?.name ?? ""}
+      />
+      <AddToClassDialog
+        open={singleAdd?.kind === "class"}
+        onOpenChange={(open) => {
+          if (!open) setSingleAdd(null);
+        }}
+        exerciseId={singleAdd?.kind === "class" ? singleAdd.id : ""}
+        label={singleAdd?.name ?? ""}
       />
       <AddExercisesToListDialog
         open={addExercisesOpen}
