@@ -449,6 +449,13 @@
       "when": 1792900000000,
       "tag": "0063_exercise_fases",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0064_exercise_tipo_competicion",
+      "breakpoints": true
     }
   ]
 }

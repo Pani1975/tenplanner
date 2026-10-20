@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
     duracionRango: getAllParam(searchParams, "duracionRango"),
     caracter: getAllParam(searchParams, "caracter"),
     situacionJuego: getAllParam(searchParams, "situacionJuego"),
+    tipoCompeticion: getAllParam(searchParams, "tipoCompeticion"),
   });
 
   if (!parsedQuery.success) {
@@ -113,6 +114,7 @@ export async function GET(request: NextRequest) {
     duracionRango,
     caracter,
     situacionJuego,
+    tipoCompeticion,
   } = parsedQuery.data;
   const activeTipoActividad = Array.from(
     new Set([...(tipoActividad ?? []), ...(tipologia ?? [])])
@@ -234,6 +236,13 @@ export async function GET(request: NextRequest) {
     );
     if (situacionWhere) whereConditions.push(situacionWhere);
   }
+  if (tipoCompeticion?.length) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercises.tipoCompeticion,
+      tipoCompeticion
+    );
+    if (competicionWhere) whereConditions.push(competicionWhere);
+  }
 
   const whereClause =
     whereConditions.length > 0 ? and(...whereConditions) : undefined;
@@ -275,6 +284,7 @@ export async function GET(request: NextRequest) {
         duracionRango: exercises.duracionRango,
         caracter: exercises.caracter,
         situacionJuego: exercises.situacionJuego,
+        tipoCompeticion: exercises.tipoCompeticion,
         createdBy: exercises.createdBy,
         createdAt: exercises.createdAt,
         updatedAt: exercises.updatedAt,
@@ -472,6 +482,7 @@ export async function POST(request: Request) {
         duracionRango: rest.duracionRango ?? null,
         caracter: normalizeMultiValue(rest.caracter),
         situacionJuego: normalizeMultiValue(rest.situacionJuego),
+        tipoCompeticion: normalizeMultiValue(rest.tipoCompeticion),
         isGlobal,
         autoria: isAdmin && requestedAutoria ? requestedAutoria : "libre",
         createdBy: user.id,

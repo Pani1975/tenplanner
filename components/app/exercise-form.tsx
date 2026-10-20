@@ -63,6 +63,7 @@ import {
   pelotaLabel,
   showsTipoPelota,
   SITUACION_JUEGO,
+  TIPO_COMPETICION,
   TIPO_PELOTA_VALUES,
   type TipoPelota,
   NUEVOS_TIPOS_ACTIVIDAD,
@@ -350,6 +351,7 @@ export interface ExerciseFormProps {
     tiposActividad?: TipoActividad[] | null;
     caracter?: string[] | null;
     situacionJuego?: string[] | null;
+    tipoCompeticion?: string[] | null;
     golpes?: string[] | null;
     efecto?: string[] | null;
     variantes?: string | null;
@@ -605,6 +607,9 @@ export function ExerciseForm({
   const [situacionJuego, setSituacionJuego] = useState<Set<string>>(
     new Set(initialData?.situacionJuego ?? [])
   );
+  const [tipoCompeticion, setTipoCompeticion] = useState<Set<string>>(
+    new Set(initialData?.tipoCompeticion ?? [])
+  );
   const [efecto, setEfecto] = useState<Set<string>>(
     new Set(initialData?.efecto ?? [])
   );
@@ -754,6 +759,7 @@ export function ExerciseForm({
       setGolpes(new Set(draft.payload.golpes));
       setCaracter(new Set(draft.payload.caracter ?? []));
       setSituacionJuego(new Set(draft.payload.situacionJuego ?? []));
+      setTipoCompeticion(new Set(draft.payload.tipoCompeticion ?? []));
       setEfecto(new Set(draft.payload.efecto));
       hydrationTimeout = window.setTimeout(() => {
         draftHydratedRef.current = true;
@@ -892,6 +898,7 @@ export function ExerciseForm({
     tiposActividad: Array.from(tiposActividad),
     caracter: Array.from(caracter),
     situacionJuego: Array.from(situacionJuego),
+    tipoCompeticion: Array.from(tipoCompeticion),
     duracionRango: watchedValues.duracionRango ?? null,
     isGlobal: watchedValues.isGlobal ?? false,
     autoria: watchedValues.autoria ?? "libre",
@@ -1036,6 +1043,8 @@ export function ExerciseForm({
       caracter: caracter.size > 0 ? Array.from(caracter) : null,
       situacionJuego:
         situacionJuego.size > 0 ? Array.from(situacionJuego) : null,
+      tipoCompeticion:
+        tipoCompeticion.size > 0 ? Array.from(tipoCompeticion) : null,
       variantes: values.variantes?.trim() || null,
       observaciones: values.observaciones?.trim() || null,
       steps: steps
@@ -1699,6 +1708,37 @@ export function ExerciseForm({
                     type="button"
                     onClick={() =>
                       toggleSetValue(setSituacionJuego, situacionJuego, id)
+                    }
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
+                      isSelected
+                        ? "bg-brand/10 border-brand text-brand"
+                        : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-foreground">
+              Tipo de competición{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional, puedes elegir las dos)
+              </span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TIPO_COMPETICION.map(({ id, label }) => {
+                const isSelected = tipoCompeticion.has(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      toggleSetValue(setTipoCompeticion, tipoCompeticion, id)
                     }
                     className={cn(
                       "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",

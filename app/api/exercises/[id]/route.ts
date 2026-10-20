@@ -82,6 +82,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
         duracionRango: exercises.duracionRango,
         caracter: exercises.caracter,
         situacionJuego: exercises.situacionJuego,
+        tipoCompeticion: exercises.tipoCompeticion,
         phase: exercises.phase,
         fases: exercises.fases,
         intensity: exercises.intensity,
@@ -247,6 +248,9 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
     }
     if (d.situacionJuego !== undefined) {
       updateValues.situacionJuego = normalizeMultiValue(d.situacionJuego);
+    }
+    if (d.tipoCompeticion !== undefined) {
+      updateValues.tipoCompeticion = normalizeMultiValue(d.tipoCompeticion);
     }
 
     if (d.durationMinutes !== undefined && d.durationMinutes !== null) {

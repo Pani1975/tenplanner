@@ -208,6 +208,7 @@ export const exercises = pgTable(
     tiposActividad: jsonb("tipos_actividad").$type<string[]>(),
     caracter: jsonb("caracter").$type<string[]>(),
     situacionJuego: jsonb("situacion_juego").$type<string[]>(),
+    tipoCompeticion: jsonb("tipo_competicion").$type<string[]>(), // individual|dobles
     // Autoría del ejercicio/clase: "ten_planner" | "libre" | el id de un
     // monitor/academia dado de alta (p. ej. "academia_christian_larsen").
     // Texto libre (no enum) para poder añadir nuevas autorías sin migración.

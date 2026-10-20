@@ -21,6 +21,7 @@ import {
   CARACTER_VALUES,
   FASES,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   TIPO_PELOTA_VALUES,
   type TipoPelota,
 } from "@/lib/exercise-taxonomy";
@@ -155,6 +156,9 @@ export async function getFilteredExerciseIds(
   const activeSituacionJuego = getStrings(params.situacionJuego).filter((v) =>
     (SITUACION_JUEGO_VALUES as readonly string[]).includes(v)
   );
+  const activeTipoCompeticion = getStrings(params.tipoCompeticion).filter((v) =>
+    (TIPO_COMPETICION_VALUES as readonly string[]).includes(v)
+  );
   const activeTipoActividad = uniqueStrings(
     getStrings(params.tipoActividad),
     getStrings(params.tipologia)
@@ -284,6 +288,13 @@ export async function getFilteredExerciseIds(
     );
     if (situacionWhere) conditions.push(situacionWhere);
   }
+  if (activeTipoCompeticion.length > 0) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercisesTable.tipoCompeticion,
+      activeTipoCompeticion
+    );
+    if (competicionWhere) conditions.push(competicionWhere);
+  }
   if (activeNumJugadores.length > 0)
     conditions.push(inArray(exercisesTable.numJugadores, activeNumJugadores));
   if (activeTipoPelota.length > 0)
@@ -361,6 +372,7 @@ const NAV_QUERY_KEYS = [
   "fase",
   "caracter",
   "situacionJuego",
+  "tipoCompeticion",
   "autoria",
 ];
 

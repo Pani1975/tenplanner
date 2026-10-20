@@ -37,7 +37,9 @@ import {
   FASES,
   pelotaLabel,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   situacionJuegoLabel,
+  tipoCompeticionLabel,
   TIPO_PELOTA_VALUES,
   TIPO_ACTIVIDAD_LABELS,
   type TipoPelota,
@@ -209,6 +211,9 @@ export async function GET(request: Request) {
   const activeSituacionJuego = getStrings(params.situacionJuego).filter((v) =>
     (SITUACION_JUEGO_VALUES as readonly string[]).includes(v)
   );
+  const activeTipoCompeticion = getStrings(params.tipoCompeticion).filter((v) =>
+    (TIPO_COMPETICION_VALUES as readonly string[]).includes(v)
+  );
   const activeTipoActividad = uniqueStrings(
     getStrings(params.tipoActividad),
     getStrings(params.tipologia)
@@ -344,6 +349,13 @@ export async function GET(request: Request) {
     );
     if (situacionWhere) conditions.push(situacionWhere);
   }
+  if (activeTipoCompeticion.length > 0) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercisesTable.tipoCompeticion,
+      activeTipoCompeticion
+    );
+    if (competicionWhere) conditions.push(competicionWhere);
+  }
   if (activeNumJugadores.length > 0)
     conditions.push(inArray(exercisesTable.numJugadores, activeNumJugadores));
   if (activeTipoPelota.length > 0)
@@ -456,6 +468,8 @@ export async function GET(request: Request) {
   for (const value of activeCaracter) summaryParts.push(caracterLabel(value));
   for (const value of activeSituacionJuego)
     summaryParts.push(situacionJuegoLabel(value));
+  for (const value of activeTipoCompeticion)
+    summaryParts.push(tipoCompeticionLabel(value));
   for (const value of activeAutoria) summaryParts.push(autoriaLabel(value));
 
   const filtersSummary =

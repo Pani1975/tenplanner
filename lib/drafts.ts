@@ -31,6 +31,7 @@ export interface ExerciseDraftPayload {
   tiposActividad?: string[];
   caracter?: string[];
   situacionJuego?: string[];
+  tipoCompeticion?: string[];
   duracionRango?: string | null;
   isGlobal?: boolean;
   autoria?: string | null;
@@ -286,6 +287,7 @@ export function hasMeaningfulExerciseDraft(payload: ExerciseDraftPayload) {
     (payload.tiposActividad?.length ?? 0) > 0 ||
     (payload.caracter?.length ?? 0) > 0 ||
     (payload.situacionJuego?.length ?? 0) > 0 ||
+    (payload.tipoCompeticion?.length ?? 0) > 0 ||
     payload.duracionRango ||
     payload.isGlobal ||
     payload.steps.some(

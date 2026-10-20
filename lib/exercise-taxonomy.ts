@@ -292,6 +292,18 @@ export function situacionJuegoLabel(id: string) {
   return SITUACION_JUEGO.find((c) => c.id === id)?.label ?? id;
 }
 
+// Tipo de competición (varias opciones): individual y/o dobles.
+export const TIPO_COMPETICION = [
+  { id: "individual", label: "Individual" },
+  { id: "dobles", label: "Dobles" },
+] as const;
+
+export const TIPO_COMPETICION_VALUES = ["individual", "dobles"] as const;
+
+export function tipoCompeticionLabel(id: string) {
+  return TIPO_COMPETICION.find((c) => c.id === id)?.label ?? id;
+}
+
 // Autoría del ejercicio/clase: de quién es el contenido.
 // "libre" es el valor por defecto (sin autoría asignada / uso libre).
 // Según los monitores vayan proponiendo ejercicios públicos, se añaden

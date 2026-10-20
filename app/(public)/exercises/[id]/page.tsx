@@ -185,6 +185,7 @@ export default async function ExercisePage({
         tiposActividad: (exercise.tiposActividad as string[] | null) ?? null,
         caracter: (exercise.caracter as string[] | null) ?? null,
         situacionJuego: (exercise.situacionJuego as string[] | null) ?? null,
+        tipoCompeticion: (exercise.tipoCompeticion as string[] | null) ?? null,
         golpes: (exercise.golpes as string[] | null) ?? null,
         efecto: (exercise.efecto as string[] | null) ?? null,
         nivel: exercise.nivel ?? null,

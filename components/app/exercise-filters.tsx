@@ -13,6 +13,7 @@ import {
   PELOTAS_LEGACY,
   showsTipoPelota,
   SITUACION_JUEGO,
+  TIPO_COMPETICION,
   tipoEjercicioOptionLabel,
 } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,7 @@ export interface ExerciseFiltersProps {
     fase: string[];
     caracter: string[];
     situacionJuego: string[];
+    tipoCompeticion: string[];
     autoria: string[];
   };
   preserved: {
@@ -200,6 +202,9 @@ export function ExerciseFilters({
   const [situacionJuego, setSituacionJuego] = useState(
     new Set(currentFilters.situacionJuego)
   );
+  const [tipoCompeticion, setTipoCompeticion] = useState(
+    new Set(currentFilters.tipoCompeticion)
+  );
   const [aspectoJuego, setAspectoJuego] = useState(
     new Set(currentFilters.aspectoJuego)
   );
@@ -226,6 +231,7 @@ export function ExerciseFilters({
     fase.size +
     caracter.size +
     situacionJuego.size +
+    tipoCompeticion.size +
     aspectoJuego.size +
     parametro.size +
     duracionRango.size +
@@ -252,6 +258,7 @@ export function ExerciseFilters({
     appendAll(p, "fase", fase);
     appendAll(p, "caracter", caracter);
     appendAll(p, "situacionJuego", situacionJuego);
+    appendAll(p, "tipoCompeticion", tipoCompeticion);
     appendAll(p, "aspectoJuego", aspectoJuego);
     appendAll(p, "parametro", parametro);
     appendAll(p, "duracionRango", duracionRango);
@@ -276,6 +283,7 @@ export function ExerciseFilters({
     setFase(new Set<string>());
     setCaracter(new Set<string>());
     setSituacionJuego(new Set<string>());
+    setTipoCompeticion(new Set<string>());
     setAspectoJuego(new Set<string>());
     setParametro(new Set<string>());
     setDuracionRango(new Set<string>());
@@ -422,6 +430,20 @@ export function ExerciseFilters({
                   active={situacionJuego.has(id)}
                   onClick={() =>
                     toggleString(situacionJuego, setSituacionJuego, id)
+                  }
+                >
+                  {label}
+                </ChipButton>
+              ))}
+            </FilterGroup>
+
+            <FilterGroup label="Tipo de competición">
+              {TIPO_COMPETICION.map(({ id, label }) => (
+                <ChipButton
+                  key={id}
+                  active={tipoCompeticion.has(id)}
+                  onClick={() =>
+                    toggleString(tipoCompeticion, setTipoCompeticion, id)
                   }
                 >
                   {label}

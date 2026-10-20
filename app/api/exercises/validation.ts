@@ -7,6 +7,7 @@ import {
   NIVEL_IDS,
   NUEVOS_TIPOS_ACTIVIDAD,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   TIPO_PELOTA_VALUES,
 } from "@/lib/exercise-taxonomy";
 
@@ -45,6 +46,7 @@ export const nuevoTipoActividadSchema = z.enum(NUEVOS_TIPOS_ACTIVIDAD);
 export const tipoPelotaSchema = z.enum(TIPO_PELOTA_VALUES);
 export const caracterSchema = z.enum(CARACTER_VALUES);
 export const situacionJuegoSchema = z.enum(SITUACION_JUEGO_VALUES);
+export const tipoCompeticionSchema = z.enum(TIPO_COMPETICION_VALUES);
 
 export const GOLPES_VALUES = [
   "derecha",
@@ -141,6 +143,7 @@ const multiTipoActividadSchema = z
   .max(NUEVOS_TIPOS_ACTIVIDAD.length);
 const multiCaracterSchema = z.array(caracterSchema).max(3);
 const multiSituacionJuegoSchema = z.array(situacionJuegoSchema).max(3);
+const multiTipoCompeticionSchema = z.array(tipoCompeticionSchema).max(2);
 
 const nameSchema = z
   .string()
@@ -212,6 +215,7 @@ export const exercisesListQuerySchema = z.object({
   duracionRango: repeated(duracionRangoSchema),
   caracter: repeated(caracterSchema),
   situacionJuego: repeated(situacionJuegoSchema),
+  tipoCompeticion: repeated(tipoCompeticionSchema),
   autoria: repeated(autoriaSchema),
 });
 
@@ -263,6 +267,7 @@ export const createExerciseSchema = z.object({
   tiposActividad: multiTipoActividadSchema.optional().nullable(),
   caracter: multiCaracterSchema.optional().nullable(),
   situacionJuego: multiSituacionJuegoSchema.optional().nullable(),
+  tipoCompeticion: multiTipoCompeticionSchema.optional().nullable(),
   steps: z
     .array(
       z.object({

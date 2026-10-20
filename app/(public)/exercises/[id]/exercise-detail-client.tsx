@@ -41,6 +41,7 @@ import {
   nivelLabel,
   pelotaLabel,
   situacionJuegoLabel,
+  tipoCompeticionLabel,
   type TipoPelota,
   TIPO_ACTIVIDAD_LABELS,
 } from "@/lib/exercise-taxonomy";
@@ -93,6 +94,7 @@ export interface ExerciseData {
   tiposActividad: string[] | null;
   caracter: string[] | null;
   situacionJuego: string[] | null;
+  tipoCompeticion: string[] | null;
   golpes: string[] | null;
   efecto: string[] | null;
   nivel: string | null;
@@ -368,6 +370,7 @@ export function ExerciseDetailClient({
               tiposActividad: exercise.tiposActividad as never,
               caracter: exercise.caracter,
               situacionJuego: exercise.situacionJuego,
+              tipoCompeticion: exercise.tipoCompeticion,
               golpes: exercise.golpes,
               efecto: exercise.efecto,
               nivel: exercise.nivel as never,
@@ -430,6 +433,7 @@ export function ExerciseDetailClient({
     tiposActividad.length > 0 ||
     (exercise.caracter?.length ?? 0) > 0 ||
     (exercise.situacionJuego?.length ?? 0) > 0 ||
+    (exercise.tipoCompeticion?.length ?? 0) > 0 ||
     exercise.duracionRango ||
     (exercise.golpes && exercise.golpes.length > 0) ||
     (exercise.efecto && exercise.efecto.length > 0);
@@ -768,6 +772,14 @@ export function ExerciseDetailClient({
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
                   Situación: {situacionJuegoLabel(sj)}
+                </span>
+              ))}
+              {exercise.tipoCompeticion?.map((tc) => (
+                <span
+                  key={`competicion-${tc}`}
+                  className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
+                >
+                  Competición: {tipoCompeticionLabel(tc)}
                 </span>
               ))}
               {exercise.golpes &&
