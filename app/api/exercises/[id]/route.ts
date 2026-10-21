@@ -112,13 +112,18 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
   }
 }
 
+// Administradores y la cuenta de la plataforma (la Biblioteca pública solo la
+// edita esta última: ver isTenPlannerMode más abajo).
 async function getCurrentUserIsAdmin(userId: string): Promise<boolean> {
   const [row] = await db
-    .select({ isAdmin: users.isAdmin })
+    .select({
+      isAdmin: users.isAdmin,
+      isPlatformAccount: users.isPlatformAccount,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  return !!row?.isAdmin;
+  return !!row?.isAdmin || !!row?.isPlatformAccount;
 }
 
 export async function PUT(request: Request, context: ExerciseRouteContext) {

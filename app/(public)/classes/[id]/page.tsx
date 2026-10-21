@@ -110,8 +110,10 @@ export default async function ClassDetailPage({
   )
     copyTargets.push("particular");
   // La Biblioteca pública solo se edita y se borra en Modo Ten Planner.
-  const canEditClass =
-    isOwner && !(cls.isLibrary && !(user && (await isTenPlannerMode(user.id))));
+  // (la de la plataforma la edita sea quien sea quien la creó).
+  const canEditClass = cls.isLibrary
+    ? !!user && (await isTenPlannerMode(user.id))
+    : isOwner;
 
   const blocks = await db
     .select()

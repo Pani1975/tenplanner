@@ -216,10 +216,12 @@ export async function PATCH(request: Request, ctx: Ctx) {
     .limit(1);
   if (!existing)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.createdBy !== user.id)
+  // La Biblioteca pública solo la edita la cuenta de la plataforma (sea quien
+  // sea quien la creó); el resto de clases, quien las creó.
+  const inTenPlanner = await isTenPlannerMode(user.id);
+  if (!existing.isLibrary && existing.createdBy !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  // La Biblioteca pública solo se edita en Modo Ten Planner.
-  if (existing.isLibrary && !(await isTenPlannerMode(user.id)))
+  if (existing.isLibrary && !inTenPlanner)
     return NextResponse.json(
       { error: "La Biblioteca pública solo se edita en Modo Ten Planner" },
       { status: 403 }
@@ -379,19 +381,25 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const [target] = await db
-    .select({ isLibrary: classes.isLibrary })
+    .select({ isLibrary: classes.isLibrary, createdBy: classes.createdBy })
     .from(classes)
-    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .where(eq(classes.id, id))
     .limit(1);
-  if (target?.isLibrary && !(await isTenPlannerMode(user.id)))
+  if (!target)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // La Biblioteca pública solo la borra la cuenta de la plataforma; el resto
+  // de clases, quien las creó.
+  if (target.isLibrary && !(await isTenPlannerMode(user.id)))
     return NextResponse.json(
       { error: "La Biblioteca pública solo se borra en Modo Ten Planner" },
       { status: 403 }
     );
+  if (!target.isLibrary && target.createdBy !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const [deleted] = await db
     .delete(classes)
-    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .where(eq(classes.id, id))
     .returning({ id: classes.id });
   if (!deleted)
     return NextResponse.json({ error: "Not found" }, { status: 404 });

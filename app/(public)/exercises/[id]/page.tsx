@@ -91,9 +91,7 @@ export default async function ExercisePage({
   const inTenPlanner = user ? await isTenPlannerMode(user.id) : false;
   // La Biblioteca pública solo se edita en Modo Ten Planner.
   const canEdit =
-    !!user &&
-    !(exercise.isGlobal && !inTenPlanner) &&
-    (isAdmin || (!exercise.isGlobal && isOwner));
+    !!user && (exercise.isGlobal ? inTenPlanner : isOwner || isAdmin);
 
   // Copiar a "Mis ejercicios": un ejercicio de la biblioteca se copia al
   // espacio activo (particular o club); uno que el propio monitor creó en
@@ -132,7 +130,7 @@ export default async function ExercisePage({
       copyTargets={copyTargets}
       inClub={inClub}
       isAdmin={isAdmin}
-      canPublish={isAdmin && inTenPlanner}
+      canPublish={inTenPlanner}
       userId={user?.id ?? null}
       initialRating={userRating}
       ratingAvg={ratingData.avg}

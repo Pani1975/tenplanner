@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -528,6 +529,8 @@ export default async function DashboardPage() {
   ) {
     redirect("/mi-familia/calendario");
   }
+  // La cuenta de la plataforma no tiene sesiones ni alumnos: va a Informes.
+  if (await isTenPlannerMode(user.id)) redirect("/informes");
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||

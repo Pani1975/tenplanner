@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
+  BarChart3,
   BookMarked,
   BookOpen,
   Building2,
@@ -13,6 +14,7 @@ import {
   ClipboardList,
   Dumbbell,
   FileText,
+  Globe2,
   GraduationCap,
   Heart,
   LayoutDashboard,
@@ -150,6 +152,59 @@ const navItems: NavItem[] = [
 ];
 
 // Vista simplificada para familias (ver lib/family.ts): solo lo que usan.
+// Cuenta de la plataforma (Modo Ten Planner): solo lo común de la plataforma
+// (Biblioteca de ejercicios y clases, catálogo de objetivos) y los Informes.
+// No tiene sesiones, alumnos, calendario ni club.
+const platformNavItems: NavItem[] = [
+  { href: "/informes", label: "Informes", icon: BarChart3 },
+  {
+    href: "/exercises",
+    label: "Ejercicios",
+    icon: Dumbbell,
+    allLabel: "Ver todos",
+    submenu: [
+      { href: "/exercises?tab=global", label: "Biblioteca", icon: BookOpen },
+      { href: "/exercises?tab=drafts", label: "Borradores", icon: FileText },
+      {
+        href: "/exercises/new",
+        label: "Nuevo ejercicio",
+        icon: Plus,
+        accent: true,
+        feature: "exerciseCreation",
+      },
+    ],
+  },
+  {
+    href: "/classes",
+    label: "Clases",
+    icon: GraduationCap,
+    allLabel: "Ver todas",
+    submenu: [
+      { href: "/classes?tab=library", label: "Biblioteca", icon: BookOpen },
+      { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
+      { href: "/classes/new", label: "Nueva clase", icon: Plus },
+    ],
+  },
+  { href: "/objetivos", label: "Objetivos", icon: Target },
+  { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
+/** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
+function PlatformBadge() {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-brand/50 bg-brand/10 px-3 py-2 text-[12px] font-bold text-foreground">
+      <Globe2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} />
+      <span className="min-w-0 flex-1 truncate">
+        <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
+          Modo
+        </span>
+        Ten Planner · público
+      </span>
+    </div>
+  );
+}
+
 const familyNavItems: NavItem[] = [
   { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/mi-familia/jugador", label: "Jugador", icon: UserRound },
@@ -228,7 +283,7 @@ function activeSubmenuIndex(
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
-  /** Modo Ten Planner activo (solo administradores). */
+  /** Cuenta de la plataforma: siempre en Modo Ten Planner, con su menú. */
   tenPlannerMode?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
@@ -292,7 +347,9 @@ function NavContent({
 } & WorkModeProps) {
   const items = familyOnly
     ? familyNavItems
-    : navItemsForSpace(!!activeWorkClubId);
+    : tenPlannerMode
+      ? platformNavItems
+      : navItemsForSpace(!!activeWorkClubId);
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName
@@ -323,7 +380,13 @@ function NavContent({
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-4 py-4">
         <Link
-          href={familyOnly ? "/mi-familia/calendario" : "/dashboard"}
+          href={
+            familyOnly
+              ? "/mi-familia/calendario"
+              : tenPlannerMode
+                ? "/informes"
+                : "/dashboard"
+          }
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
           onClick={onNavigate}
         >
@@ -339,13 +402,15 @@ function NavContent({
       {user && !familyOnly && (
         <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
           <SportBadge activeSport={activeSport} />
-          {(workModeClubs.length > 0 || isAdmin) && (
-            <WorkModeBadge
-              clubs={workModeClubs}
-              activeClubId={activeWorkClubId}
-              canUseTenPlanner={isAdmin}
-              tenPlannerActive={tenPlannerMode}
-            />
+          {tenPlannerMode ? (
+            <PlatformBadge />
+          ) : (
+            workModeClubs.length > 0 && (
+              <WorkModeBadge
+                clubs={workModeClubs}
+                activeClubId={activeWorkClubId}
+              />
+            )
           )}
         </div>
       )}
@@ -784,7 +849,13 @@ function SidebarNavInner({
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href={familyOnly ? "/mi-familia/calendario" : "/dashboard"}
+              href={
+                familyOnly
+                  ? "/mi-familia/calendario"
+                  : tenPlannerMode
+                    ? "/informes"
+                    : "/dashboard"
+              }
               className="flex min-w-0 shrink items-center gap-2.5"
             >
               <BrandMark className="size-9" />
@@ -825,13 +896,15 @@ function SidebarNavInner({
         {user && !familyOnly && (
           <div className="px-4 pb-3 space-y-2">
             <SportBadge activeSport={activeSport} />
-            {(workModeClubs.length > 0 || isAdmin) && (
-              <WorkModeBadge
-                clubs={workModeClubs}
-                activeClubId={activeWorkClubId}
-                canUseTenPlanner={isAdmin}
-                tenPlannerActive={tenPlannerMode}
-              />
+            {tenPlannerMode ? (
+              <PlatformBadge />
+            ) : (
+              workModeClubs.length > 0 && (
+                <WorkModeBadge
+                  clubs={workModeClubs}
+                  activeClubId={activeWorkClubId}
+                />
+              )
             )}
           </div>
         )}

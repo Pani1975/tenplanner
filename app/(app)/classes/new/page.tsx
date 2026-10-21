@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { and, eq, or } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { exercises, users } from "@/db/schema";
+import { exercises } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import { getActiveSport } from "@/lib/sports";
 import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
@@ -17,19 +17,11 @@ export default async function NewClassPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [[adminRow], sport] = await Promise.all([
-    db
-      .select({ isAdmin: users.isAdmin })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1),
-    getActiveSport(user.id),
-  ]);
+  const sport = await getActiveSport(user.id);
 
   const workMode = await getWorkMode(user.id);
   // Las opciones de Biblioteca pública solo existen en Modo Ten Planner.
-  const publishToLibrary =
-    !!adminRow?.isAdmin && workMode.kind === "tenplanner";
+  const publishToLibrary = workMode.kind === "tenplanner";
 
   const availableExercises = await db
     .select({

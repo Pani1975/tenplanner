@@ -393,12 +393,12 @@ export async function POST(request: Request) {
       .onConflictDoNothing();
 
     const [dbUser] = await db
-      .select({ isAdmin: users.isAdmin, tenPlannerMode: users.tenPlannerMode })
+      .select({ isPlatformAccount: users.isPlatformAccount })
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1);
-    // Solo un administrador en Modo Ten Planner publica en la Biblioteca.
-    const isAdmin = !!dbUser?.isAdmin && !!dbUser?.tenPlannerMode;
+    // Solo la cuenta de la plataforma publica en la Biblioteca.
+    const isAdmin = !!dbUser?.isPlatformAccount;
     const [sport, activeClubId] = await Promise.all([
       getActiveSport(user.id),
       getActiveWorkClubId(user.id),

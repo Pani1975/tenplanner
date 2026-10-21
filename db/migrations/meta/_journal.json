@@ -470,6 +470,13 @@
       "when": 1793200000000,
       "tag": "0066_user_ten_planner_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1793300000000,
+      "tag": "0067_platform_account",
+      "breakpoints": true
     }
   ]
 }

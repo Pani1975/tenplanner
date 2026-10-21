@@ -2,10 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { getWorkMode, spaceTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 import { ExerciseForm } from "@/components/app/exercise-form";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -23,12 +20,7 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
   const user = session?.user ?? null;
   if (!user) redirect("/login");
 
-  const [[dbUser], exerciseCreationEnabled, sport] = await Promise.all([
-    db
-      .select({ isAdmin: users.isAdmin })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1),
+  const [exerciseCreationEnabled, sport] = await Promise.all([
     getBooleanSetting("feature.exercise_creation_enabled"),
     getActiveSport(user.id),
   ]);
@@ -46,7 +38,7 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
 
   const workMode = await getWorkMode(user.id);
   // Las opciones de Biblioteca pública solo existen en Modo Ten Planner.
-  const isAdmin = !!dbUser?.isAdmin && workMode.kind === "tenplanner";
+  const isAdmin = workMode.kind === "tenplanner";
   const { mode } = await searchParams;
   const initialFormMode =
     mode === "full" || mode === "quick" ? mode : undefined;

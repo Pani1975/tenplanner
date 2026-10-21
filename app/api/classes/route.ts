@@ -276,12 +276,12 @@ export async function POST(request: Request) {
   const d = parsed.data;
 
   const [dbUser] = await db
-    .select({ isAdmin: users.isAdmin, tenPlannerMode: users.tenPlannerMode })
+    .select({ isPlatformAccount: users.isPlatformAccount })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  // Solo un administrador en Modo Ten Planner publica en la Biblioteca.
-  const isAdmin = !!dbUser?.isAdmin && !!dbUser?.tenPlannerMode;
+  // Solo la cuenta de la plataforma publica en la Biblioteca.
+  const isAdmin = !!dbUser?.isPlatformAccount;
   const niveles = normalizeMultiValue(d.niveles, d.nivel);
   const aspectosJuego = normalizeMultiValue(d.aspectosJuego, d.aspectoJuego);
 

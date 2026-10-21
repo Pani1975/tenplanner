@@ -61,7 +61,7 @@ export default async function ProfilePage() {
       .select({
         image: usersTable.image,
         isAdmin: usersTable.isAdmin,
-        tenPlannerMode: usersTable.tenPlannerMode,
+        isPlatformAccount: usersTable.isPlatformAccount,
       })
       .from(usersTable)
       .where(eq(usersTable.id, user.id))
@@ -91,12 +91,9 @@ export default async function ProfilePage() {
 
         <SportSwitcher activeSport={activeSport} />
 
-        <WorkModeSwitcher
-          clubs={clubOptions}
-          activeClubId={activeClubId}
-          canUseTenPlanner={!!dbUser[0]?.isAdmin}
-          tenPlannerActive={!!dbUser[0]?.isAdmin && !!dbUser[0]?.tenPlannerMode}
-        />
+        {!dbUser[0]?.isPlatformAccount && (
+          <WorkModeSwitcher clubs={clubOptions} activeClubId={activeClubId} />
+        )}
 
         <ProfileClient
           user={{

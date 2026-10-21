@@ -144,11 +144,11 @@ export const users = pgTable(
       (): AnyPgColumn => clubs.id,
       { onDelete: "set null" }
     ),
-    // "Modo Ten Planner" (solo administradores): lo que se crea o edita en
-    // este modo es de la plataforma (Biblioteca pública, catálogo base de
-    // objetivos). Excluye el modo club: con este modo activo, activeClubId
-    // queda a null. Ver lib/work-mode.ts.
-    tenPlannerMode: boolean("ten_planner_mode").default(false).notNull(),
+    // Cuenta de la plataforma (p. ej. admin@tenplanner.es): trabaja siempre
+    // en "Modo Ten Planner": lo que crea o edita es de la plataforma
+    // (Biblioteca pública, catálogo base de objetivos) y ve los Informes. No
+    // tiene sesiones, alumnos ni club. Ver lib/work-mode.ts.
+    isPlatformAccount: boolean("is_platform_account").default(false).notNull(),
     // Deporte activo: el contexto que filtra todo lo que el usuario ve y
     // crea (sesiones, biblioteca, grupos...). Se elige y cambia desde el
     // selector de deporte, no por elemento. Independiente de activeClubId:

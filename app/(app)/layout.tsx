@@ -67,7 +67,7 @@ export default async function AppLayout({
       .select({
         isAdmin: users.isAdmin,
         image: users.image,
-        tenPlannerMode: users.tenPlannerMode,
+        isPlatformAccount: users.isPlatformAccount,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -127,7 +127,7 @@ export default async function AppLayout({
       appName={appName}
       workModeClubs={workModeClubs}
       activeWorkClubId={activeWorkClubId}
-      tenPlannerMode={isAdmin && !!row?.tenPlannerMode}
+      tenPlannerMode={!!row?.isPlatformAccount}
       activeSport={activeSport}
       familyOnly={familyOnly}
       pendingInvites={pendingInvites}

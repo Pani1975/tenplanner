@@ -10,7 +10,6 @@ import {
   classBlocks,
   classBlockExercises,
   exercises,
-  users,
 } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import {
@@ -35,18 +34,16 @@ export default async function EditClassPage({ params }: PageProps) {
   const [cls] = await db
     .select()
     .from(classes)
-    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .where(eq(classes.id, id))
     .limit(1);
   if (!cls) notFound();
-  // La Biblioteca pública solo se edita en Modo Ten Planner.
-  if (cls.isLibrary && !(await isTenPlannerMode(user.id)))
-    redirect(`/classes/${id}`);
-
-  const [adminRow] = await db
-    .select({ isAdmin: users.isAdmin })
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
+  // La Biblioteca pública solo la edita la cuenta de la plataforma; el resto
+  // de clases, quien las creó.
+  const inTenPlanner = await isTenPlannerMode(user.id);
+  if (cls.isLibrary ? !inTenPlanner : cls.createdBy !== user.id) {
+    if (cls.isLibrary) redirect(`/classes/${id}`);
+    notFound();
+  }
 
   const blocks = await db
     .select()
@@ -208,9 +205,8 @@ export default async function EditClassPage({ params }: PageProps) {
         mode="edit"
         classId={cls.id}
         availableExercises={availableExercises}
-        isAdmin={
-          (adminRow?.isAdmin ?? false) && (await isTenPlannerMode(user.id))
-        }
+        isAdmin={inTenPlanner}
+        publishToLibrary={false}
         initialData={initialData}
         sport={cls.sport}
       />
