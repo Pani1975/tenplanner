@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClubOption } from "@/components/app/club-context-select";
+import { goAfterModeChange } from "@/lib/work-mode-navigation";
 
 const PARTICULAR = "particular";
 const TEN_PLANNER = "tenplanner";
@@ -23,6 +24,10 @@ const TEN_PLANNER = "tenplanner";
  * administradores tienen además el "Modo administrador": lo que crean o editan
  * en ese modo es de la plataforma (Biblioteca pública, objetivos base). Solo
  * se renderiza si hay algo que elegir.
+ *
+ * El estado inicial sale de las props: quien lo usa le pone `key` con el
+ * modo del servidor, para que se rehaga si el modo cambia desde otro sitio
+ * (p. ej. desde Perfil).
  */
 export function WorkModeBadge({
   clubs,
@@ -75,9 +80,10 @@ export function WorkModeBadge({
       ),
     });
     if (res.ok) {
+      const previous = activeClubId;
       setActiveClubId(clubId);
       setOpen(false);
-      router.refresh();
+      goAfterModeChange(router, previous, clubId);
     } else {
       setError("No se pudo cambiar. Inténtalo de nuevo.");
     }

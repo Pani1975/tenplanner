@@ -165,8 +165,14 @@ export default async function ReportsPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-black text-foreground">Clubes</h2>
-          {report.clubRows.length === 0 ? (
+          <h2 className="text-lg font-black text-foreground">
+            Clubes y monitores particulares
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Los jugadores de cada club más los de los monitores sin club suman
+            el total.
+          </p>
+          {report.clubRows.length === 0 && report.players.total === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Aún no hay clubes.
             </p>
@@ -201,7 +207,34 @@ export default async function ReportsPage() {
                       </td>
                     </tr>
                   ))}
+                  <tr className="border-b border-border/60">
+                    <td className="py-2.5 pr-3 font-semibold text-foreground">
+                      Sin club
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        (monitores particulares)
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums">
+                      {report.particular.coaches}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums">
+                      {report.particular.players}
+                    </td>
+                    <td className="py-2.5 text-right text-muted-foreground">
+                      —
+                    </td>
+                  </tr>
                 </tbody>
+                <tfoot>
+                  <tr className="text-[11px] font-black uppercase text-foreground/70">
+                    <td className="pt-3 pr-3">Total jugadores</td>
+                    <td />
+                    <td className="pt-3 pr-3 text-right text-sm tabular-nums text-foreground">
+                      {report.players.total}
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}

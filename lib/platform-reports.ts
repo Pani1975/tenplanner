@@ -29,6 +29,8 @@ export type PlatformReport = {
   players: ReportCount;
   library: { exercises: number; classes: number; objectives: number };
   clubRows: ClubReportRow[];
+  /** Monitores sin club activo y sus jugadores (fichas sin club). */
+  particular: { coaches: number; players: number };
 };
 
 function n(v: unknown) {
@@ -71,6 +73,11 @@ export async function loadPlatformReport(): Promise<PlatformReport> {
       (select count(*) from fam) as families,
       (select count(*) from fam where created_at > now() - interval '30 days') as families30,
       (select count(*) from students) as players,
+      (select count(*) from students where club_id is null) as particular_players,
+      (select count(*) from coaches c
+        where not exists (select 1 from club_members cm
+                          where cm.user_id = c.id and cm.status = 'active'))
+        as particular_coaches,
       (select count(*) from students where created_at > now() - interval '30 days') as players30,
       (select count(*) from exercises where is_global) as lib_exercises,
       (select count(*) from classes where is_library and status = 'published') as lib_classes,
@@ -96,6 +103,10 @@ export async function loadPlatformReport(): Promise<PlatformReport> {
       exercises: n(counts?.lib_exercises),
       classes: n(counts?.lib_classes),
       objectives: n(counts?.lib_objectives),
+    },
+    particular: {
+      coaches: n(counts?.particular_coaches),
+      players: n(counts?.particular_players),
     },
     clubRows: clubRows.map((r) => ({
       id: String(r.id),

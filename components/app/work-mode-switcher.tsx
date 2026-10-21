@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Globe2, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClubOption } from "@/components/app/club-context-select";
+import { goAfterModeChange } from "@/lib/work-mode-navigation";
 
 const PARTICULAR = "particular";
 const TEN_PLANNER = "tenplanner";
@@ -42,8 +43,9 @@ export function WorkModeSwitcher({
       ),
     });
     if (res.ok) {
+      const previous = activeClubId;
       setActiveClubId(clubId);
-      router.refresh();
+      goAfterModeChange(router, previous, clubId);
     } else {
       setError("No se pudo cambiar el modo de trabajo. Inténtalo de nuevo.");
     }

@@ -118,6 +118,11 @@ export default async function ProfilePage() {
 
         {!dbUser[0]?.isPlatformAccount && (
           <WorkModeSwitcher
+            key={
+              dbUser[0]?.isAdmin && dbUser[0]?.adminMode
+                ? "admin"
+                : (activeClubId ?? "particular")
+            }
             clubs={clubOptions}
             activeClubId={activeClubId}
             canUseTenPlanner={!!dbUser[0]?.isAdmin}

@@ -410,6 +410,7 @@ function NavContent({
           ) : (
             (workModeClubs.length > 0 || isAdmin) && (
               <WorkModeBadge
+                key={`${tenPlannerMode ? "admin" : (activeWorkClubId ?? "particular")}`}
                 clubs={workModeClubs}
                 activeClubId={activeWorkClubId}
                 canUseTenPlanner={isAdmin}
@@ -908,6 +909,7 @@ function SidebarNavInner({
             ) : (
               (workModeClubs.length > 0 || isAdmin) && (
                 <WorkModeBadge
+                  key={`${tenPlannerMode ? "admin" : (activeWorkClubId ?? "particular")}`}
                   clubs={workModeClubs}
                   activeClubId={activeWorkClubId}
                   canUseTenPlanner={isAdmin}
