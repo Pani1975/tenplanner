@@ -25,6 +25,8 @@ import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
 import { AssignClassToGroupButton } from "@/components/app/assign-class-to-group-button";
 import { GroupScheduleEditor } from "./group-schedule-editor";
+import { GroupObjectivesEditor } from "./group-objectives-editor";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
@@ -287,6 +289,16 @@ export default async function GroupDetailPage({ params }: PageProps) {
           members={memberRows}
           availableStudents={availableStudents}
           isOwner={isOwner}
+        />
+
+        <GroupObjectivesEditor
+          key={group.objetivos ?? ""}
+          groupId={id}
+          initialObjetivos={group.objetivos}
+          defaultBall={ballFromLevels(
+            memberRows.map((m) => m.playerLevel ?? "")
+          )}
+          canEdit={isOwner}
         />
 
         {/* Planificación: la secuencia de sesiones del grupo en el tiempo,

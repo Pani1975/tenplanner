@@ -65,6 +65,21 @@ const LEVEL_TO_BALL: Record<string, BallId> = {
   consolidacion: "verde",
 };
 
+/**
+ * Bola con la que abrir el selector de objetivos de un ejercicio, clase o
+ * sesión: su tipo de pelota si es roja, naranja o verde; si no, el primero de
+ * sus niveles que sea una de las tres etapas; si no, null.
+ */
+export function ballFromLevels(
+  levels: Iterable<string> | null | undefined,
+  pelota?: string | null
+): BallId | null {
+  if (pelota === "roja" || pelota === "naranja" || pelota === "verde")
+    return pelota;
+  for (const l of levels ?? []) if (LEVEL_TO_BALL[l]) return LEVEL_TO_BALL[l];
+  return null;
+}
+
 function ageFrom(birthDate: string, today: Date) {
   const d = new Date(birthDate + "T00:00:00Z");
   if (Number.isNaN(d.getTime())) return null;

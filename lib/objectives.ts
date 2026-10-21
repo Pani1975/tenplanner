@@ -109,6 +109,49 @@ export async function loadStudentObjectives(
 }
 
 /**
+ * Catálogo con el que trabaja el monitor ahora mismo, para cargar objetivos en
+ * ejercicios, clases, sesiones y grupos: el del club si trabaja como club
+ * (base + propios del club, con sus ajustes) o, si no, el suyo de particular
+ * (base + propios del monitor). Sin los ocultos.
+ */
+export async function loadWorkspaceObjectives(
+  userId: string,
+  clubId: string | null
+): Promise<ObjectiveItem[]> {
+  const ctx: ScopeContext = { studentId: null, clubId, coachId: userId };
+  const catalog = await db
+    .select()
+    .from(tennisObjectives)
+    .where(
+      and(
+        eq(tennisObjectives.sport, "tenis"),
+        eq(tennisObjectives.isActive, true),
+        objectiveScopeCondition(ctx)
+      )
+    )
+    .orderBy(asc(tennisObjectives.ball), asc(tennisObjectives.sortOrder));
+
+  const ids = catalog.map((o) => o.id);
+  const overrides = ids.length
+    ? await db
+        .select()
+        .from(objectiveOverrides)
+        .where(
+          and(
+            inArray(objectiveOverrides.objectiveId, ids),
+            clubId
+              ? eq(objectiveOverrides.clubId, clubId)
+              : eq(objectiveOverrides.coachId, userId)
+          )
+        )
+    : [];
+
+  return resolveObjectives(catalog, overrides, new Map(), ctx).filter(
+    (i) => !i.hidden
+  );
+}
+
+/**
  * Catálogo de un club: objetivos base + propios del club, con sus ajustes.
  * Incluye los ocultos (el club necesita verlos para restaurarlos).
  */

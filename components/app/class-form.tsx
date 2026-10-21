@@ -38,6 +38,9 @@ import {
 } from "@/lib/block-items";
 import { AUTORIAS, nivelesForSport } from "@/lib/exercise-taxonomy";
 import { SessionExerciseLists } from "@/components/app/session-exercise-lists";
+import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
+import { appendObjectiveLines } from "@/lib/objectives-text";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import {
   ExerciseForm,
   type ExerciseFormResult,
@@ -1159,15 +1162,28 @@ export function ClassForm({
           </p>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="objetivos"
-              className="block text-sm font-semibold text-foreground"
-            >
-              Objetivos{" "}
-              <span className="font-normal text-muted-foreground">
-                (numera con 1) 2)…)
-              </span>
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label
+                htmlFor="objetivos"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Objetivos{" "}
+                <span className="font-normal text-muted-foreground">
+                  (numera con 1) 2)…)
+                </span>
+              </label>
+              <ObjectivesPicker
+                currentText={objetivos}
+                defaultBall={ballFromLevels(niveles)}
+                onAdd={(titles) =>
+                  setObjetivos((prev) =>
+                    appendObjectiveLines(prev, titles, {
+                      numbered: true,
+                    }).slice(0, 4000)
+                  )
+                }
+              />
+            </div>
             <textarea
               id="objetivos"
               rows={4}

@@ -806,9 +806,11 @@ export function ExerciseDetailClient({
           {exercise.objectives && (
             <div className="bg-brand/5 border border-brand/20 rounded-xl px-4 py-3">
               <p className="text-xs font-bold text-brand uppercase tracking-widest mb-1">
-                Objetivo
+                Objetivos
               </p>
-              <p className="text-sm text-foreground">{exercise.objectives}</p>
+              <p className="whitespace-pre-line text-sm text-foreground">
+                {exercise.objectives}
+              </p>
             </div>
           )}
 

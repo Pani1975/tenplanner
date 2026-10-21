@@ -656,6 +656,9 @@ export const groups = pgTable(
     // Días de la semana (y hora) en que el grupo tiene clase habitualmente;
     // ver lib/groups/schedule.ts. Null/[] = sin horario fijo configurado.
     weeklySchedule: jsonb("weekly_schedule").$type<GroupScheduleEntry[]>(),
+    // Objetivos de trabajo del grupo: texto libre, uno por línea. Se pueden
+    // cargar del catálogo de Objetivos o escribir a mano.
+    objetivos: text("objetivos"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

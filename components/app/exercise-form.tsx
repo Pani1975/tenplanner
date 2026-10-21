@@ -47,6 +47,9 @@ import {
   type ExerciseDraftPayload,
 } from "@/lib/drafts";
 import { cn } from "@/lib/utils";
+import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
+import { appendObjectiveLines } from "@/lib/objectives-text";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import {
   ASPECTO_JUEGO_LABELS,
   AUTORIAS,
@@ -1874,21 +1877,38 @@ export function ExerciseForm({
       />
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label
-            htmlFor="objectives"
-            className="block text-sm font-semibold text-foreground"
-          >
-            Objetivo{" "}
-            <span className="font-normal text-muted-foreground">
-              (opcional)
-            </span>
-          </label>
-          <input
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label
+              htmlFor="objectives"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Objetivos{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional · uno por línea)
+              </span>
+            </label>
+            <ObjectivesPicker
+              currentText={watchedValues.objectives}
+              defaultBall={ballFromLevels(niveles, watchedValues.tipoPelota)}
+              onAdd={(titles) =>
+                setValue(
+                  "objectives",
+                  appendObjectiveLines(watchedValues.objectives, titles).slice(
+                    0,
+                    1000
+                  ),
+                  { shouldDirty: true }
+                )
+              }
+            />
+          </div>
+          <textarea
             id="objectives"
-            type="text"
+            rows={3}
+            maxLength={1000}
             placeholder="Ej: Mejorar la consistencia del globo defensivo"
             {...register("objectives")}
-            className="w-full h-10 px-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
+            className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-y leading-relaxed"
           />
         </div>
         <div className="space-y-1.5">

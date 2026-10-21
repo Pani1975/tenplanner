@@ -40,6 +40,8 @@ const updateSchema = z.object({
   studentIds: z.array(z.string().uuid()).optional(),
   // Días de la semana (y hora) habituales del grupo; [] o null los quita.
   weeklySchedule: z.array(scheduleEntrySchema).max(7).nullable().optional(),
+  // Objetivos de trabajo del grupo (texto libre, uno por línea).
+  objetivos: z.string().max(4000).nullable().optional(),
 });
 
 export async function GET(_req: Request, ctx: Ctx) {
@@ -129,6 +131,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     if (
       fields.name !== undefined ||
       fields.description !== undefined ||
+      fields.objetivos !== undefined ||
       weeklySchedule !== undefined
     ) {
       await tx
@@ -137,6 +140,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
           ...(fields.name !== undefined ? { name: fields.name } : {}),
           ...(fields.description !== undefined
             ? { description: fields.description }
+            : {}),
+          ...(fields.objetivos !== undefined
+            ? { objetivos: fields.objetivos?.trim() || null }
             : {}),
           ...(weeklySchedule !== undefined
             ? {
