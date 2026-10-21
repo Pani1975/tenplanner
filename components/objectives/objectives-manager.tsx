@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronUp,
+  Copy,
+  GripVertical,
   Loader2,
   Pencil,
   Plus,
@@ -47,7 +49,17 @@ export type ObjectiveActions = {
   remove: (objectiveId: string) => Result;
   restore: (objectiveId: string) => Result;
   move: (objectiveId: string, direction: "up" | "down") => Result;
+  /** Arrastrar: a otra posición o a otro grupo, antes de `beforeId` o al final. */
+  place: (
+    objectiveId: string,
+    target: { ball: string; aspect: string; block: string },
+    beforeId: string | null
+  ) => Result;
+  duplicate: (objectiveId: string) => Result;
 };
+
+/** Dónde se soltaría el objetivo arrastrado: grupo y objetivo de delante. */
+type DropTarget = { key: string; beforeId: string | null };
 
 const TAG: Record<ObjectiveItem["scope"], string | null> = {
   base: null,
@@ -109,6 +121,8 @@ export function ObjectivesManager({
   const [editor, setEditor] = useState<EditorState>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [drop, setDrop] = useState<DropTarget | null>(null);
 
   const matches = (i: ObjectiveItem) =>
     (ball === "todas" || i.ball === ball) &&
@@ -155,17 +169,93 @@ export function ObjectivesManager({
     });
   }
 
+  function groupOf(key: string) {
+    const [b, a, ...rest] = key.split("|");
+    return { ball: b, aspect: a, block: rest.join("|") };
+  }
+
+  function finishDrag() {
+    setDragId(null);
+    setDrop(null);
+  }
+
+  function dropHere(target: DropTarget) {
+    const id = dragId;
+    finishDrag();
+    if (!id) return;
+    run(id, () => actions.place(id, groupOf(target.key), target.beforeId));
+  }
+
+  /** Antes o después de la fila según la mitad sobre la que esté el puntero. */
+  function onRowDragOver(
+    e: React.DragEvent<HTMLLIElement>,
+    key: string,
+    list: ObjectiveItem[],
+    idx: number
+  ) {
+    if (!dragId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const after = e.clientY > rect.top + rect.height / 2;
+    const beforeId = after ? (list[idx + 1]?.id ?? null) : list[idx].id;
+    if (drop?.key !== key || drop.beforeId !== beforeId)
+      setDrop({ key, beforeId });
+  }
+
   function renderRow(
     item: ObjectiveItem,
     isHidden: boolean,
-    pos = { first: true, last: true }
+    pos = { first: true, last: true },
+    group?: { key: string; list: ObjectiveItem[]; idx: number }
   ) {
     const tag = scope === "base" ? null : TAG[item.scope];
     const edited =
       scope !== "base" && item.overriddenAt.length > 0 && item.scope === "base";
     const busy = busyId === item.id;
     return (
-      <li key={item.id} className="flex items-start">
+      <li
+        key={item.id}
+        draggable={!isHidden && !busy && !!group}
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", item.id);
+          setDragId(item.id);
+        }}
+        onDragEnd={finishDrag}
+        onDragOver={
+          group
+            ? (e) => onRowDragOver(e, group.key, group.list, group.idx)
+            : undefined
+        }
+        onDrop={
+          group && drop
+            ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropHere(drop);
+              }
+            : undefined
+        }
+        className={cn(
+          "flex items-start border-t-2 border-transparent first:rounded-t-2xl",
+          dragId === item.id && "opacity-40",
+          group &&
+            drop?.key === group.key &&
+            drop.beforeId === item.id &&
+            dragId !== item.id &&
+            "border-t-brand"
+        )}
+      >
+        {!isHidden && group && (
+          <span
+            title="Arrastrar para mover"
+            aria-hidden
+            className="ml-1 mt-3 flex shrink-0 cursor-grab items-center text-foreground/30 hover:text-brand active:cursor-grabbing"
+          >
+            <GripVertical className="size-4" />
+          </span>
+        )}
         <div className="min-w-0 flex-1 px-3 py-3">
           <span
             className={cn(
@@ -227,6 +317,15 @@ export function ObjectivesManager({
                 }
               >
                 <ChevronDown className="size-4" />
+              </button>
+              <button
+                type="button"
+                title="Duplicar"
+                aria-label="Duplicar objetivo"
+                className={iconBtn}
+                onClick={() => run(item.id, () => actions.duplicate(item.id))}
+              >
+                <Copy className="size-4" />
               </button>
               <button
                 type="button"
@@ -328,6 +427,12 @@ export function ObjectivesManager({
         ))}
       </div>
 
+      <p className="flex items-center gap-1.5 text-[12px] text-foreground/55">
+        <GripVertical className="size-3.5 shrink-0" />
+        Arrastra un objetivo para cambiarlo de sitio, también a otro bloque. Con
+        «Todas» y «Todos los aspectos» puedes llevarlo a otra bola o aspecto.
+      </p>
+
       {error && (
         <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] font-semibold text-destructive">
           {error}
@@ -357,12 +462,36 @@ export function ObjectivesManager({
                     {BALL_LABEL[first.ball].toLowerCase()}
                   </span>
                 </h3>
-                <ul className="divide-y divide-[#050505]/10 rounded-2xl border border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
+                <ul
+                  onDragOver={(e) => {
+                    // Debajo de la última fila: al final del grupo.
+                    if (!dragId) return;
+                    e.preventDefault();
+                    if (drop?.key !== key || drop.beforeId !== null)
+                      setDrop({ key, beforeId: null });
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (drop) dropHere(drop);
+                  }}
+                  className={cn(
+                    "divide-y divide-[#050505]/10 rounded-2xl border border-[#050505]/10 pb-1 dark:divide-white/10 dark:border-white/10",
+                    dragId &&
+                      drop?.key === key &&
+                      "border-brand/60 bg-brand/[0.03]",
+                    dragId &&
+                      drop?.key === key &&
+                      drop.beforeId === null &&
+                      "border-b-2 border-b-brand"
+                  )}
+                >
                   {list.map((item, idx) =>
-                    renderRow(item, false, {
-                      first: idx === 0,
-                      last: idx === list.length - 1,
-                    })
+                    renderRow(
+                      item,
+                      false,
+                      { first: idx === 0, last: idx === list.length - 1 },
+                      { key, list, idx }
+                    )
                   )}
                 </ul>
               </section>

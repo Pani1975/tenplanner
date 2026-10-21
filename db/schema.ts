@@ -557,6 +557,11 @@ export const objectiveOverrides = pgTable(
     criterion: text("criterion"),
     // Posición de este objetivo dentro de su grupo para este ámbito.
     sortOrder: integer("sort_order"),
+    // Grupo al que se ha arrastrado el objetivo en este ámbito (bola, aspecto
+    // y bloque van siempre juntos; null = el grupo original).
+    ball: text("ball"),
+    aspect: text("aspect"),
+    block: text("block"),
     updatedBy: uuid("updated_by").references(() => users.id, {
       onDelete: "set null",
     }),

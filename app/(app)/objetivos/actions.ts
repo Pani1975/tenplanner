@@ -12,7 +12,9 @@ import {
 } from "@/lib/objectives";
 import {
   createOwnObjective,
+  duplicateObjectiveFor,
   moveObjectiveFor,
+  placeObjectiveFor,
   removeObjectiveFor,
   restoreObjectiveFor,
   updateObjectiveText,
@@ -204,6 +206,64 @@ export async function moveWorkspaceObjective(input: {
       items,
       parsed.data.objectiveId,
       parsed.data.direction
+    )
+  );
+}
+
+const groupSchema = z.object({
+  ball: z.enum(BALLS.map((b) => b.id) as [string, ...string[]]),
+  aspect: z.enum(["tecnico", "tactico", "mental", "fisico"]),
+  block: z.string().trim().min(1).max(80),
+});
+
+/** Arrastra un objetivo a otra posición o a otro grupo (bola, aspecto, bloque). */
+export async function placeWorkspaceObjective(input: {
+  objectiveId: string;
+  target: { ball: string; aspect: string; block: string };
+  beforeId: string | null;
+}) {
+  const parsed = z
+    .object({
+      objectiveId: uuid,
+      target: groupSchema,
+      beforeId: uuid.nullable(),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+
+  const auth = await authorize();
+  if (!auth.ok) return auth;
+  const items = await loadItems(auth);
+  return done(
+    await placeObjectiveFor(
+      auth.ctx,
+      auth.scope,
+      auth.userId,
+      items,
+      parsed.data.objectiveId,
+      parsed.data.target,
+      parsed.data.beforeId
+    )
+  );
+}
+
+/** Duplica un objetivo justo debajo del original, como objetivo propio. */
+export async function duplicateWorkspaceObjective(input: {
+  objectiveId: string;
+}) {
+  const parsed = z.object({ objectiveId: uuid }).safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+
+  const auth = await authorize();
+  if (!auth.ok) return auth;
+  const items = await loadItems(auth);
+  return done(
+    await duplicateObjectiveFor(
+      auth.ctx,
+      auth.scope,
+      auth.userId,
+      items,
+      parsed.data.objectiveId
     )
   );
 }

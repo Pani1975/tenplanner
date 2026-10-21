@@ -4,7 +4,9 @@ import type { ObjectiveItem } from "@/lib/objectives-taxonomy";
 import { ObjectivesManager } from "@/components/objectives/objectives-manager";
 import {
   createClubObjective,
+  duplicateClubObjective,
   moveClubObjective,
+  placeClubObjective,
   removeClubObjective,
   restoreClubObjective,
   updateClubObjective,
@@ -43,6 +45,10 @@ export function ClubObjectivesManager({
         restore: (objectiveId) => restoreClubObjective({ clubId, objectiveId }),
         move: (objectiveId, direction) =>
           moveClubObjective({ clubId, objectiveId, direction }),
+        place: (objectiveId, target, beforeId) =>
+          placeClubObjective({ clubId, objectiveId, target, beforeId }),
+        duplicate: (objectiveId) =>
+          duplicateClubObjective({ clubId, objectiveId }),
       }}
     />
   );

@@ -11,6 +11,8 @@ import {
 import {
   objectiveScopeFor,
   planMove,
+  planPlace,
+  type ObjectiveGroupKey,
   type ScopeContext,
 } from "./objectives-resolve";
 
@@ -81,6 +83,9 @@ type OverridePatch = {
   title?: string | null;
   criterion?: string | null;
   sortOrder?: number | null;
+  ball?: string | null;
+  aspect?: string | null;
+  block?: string | null;
 };
 
 async function upsertOverride(
@@ -124,8 +129,10 @@ export async function createOwnObjective(
     block: string;
     title: string;
     criterion: string | null;
+    /** Posición; por defecto, al final de su bola. */
+    sortOrder?: number;
   }
-): Promise<WriteOk | WriteFailure> {
+): Promise<(WriteOk & { id: string; code: string }) | WriteFailure> {
   const ball = BALLS.find((b) => b.id === input.ball);
   if (!ball) return { ok: false, error: "Invalid ball" };
   const [last] = await db
@@ -135,21 +142,25 @@ export async function createOwnObjective(
     .orderBy(desc(tennisObjectives.sortOrder))
     .limit(1);
 
-  await db.insert(tennisObjectives).values({
-    code: `${scope === "base" ? "TP" : "CU"}-${randomBytes(5).toString("hex").toUpperCase()}`,
-    ball: input.ball,
-    stage: ball.stage,
-    ageRange: ball.age,
-    aspect: input.aspect as AspectId,
-    block: input.block,
-    title: input.title,
-    criterion: input.criterion,
-    source: scope === "base" ? "desglose" : "propio",
-    sortOrder: (last?.sortOrder ?? 0) + 1,
-    createdBy: userId,
-    ...scopeColumns(scope, ctx),
-  });
-  return { ok: true };
+  const code = `${scope === "base" ? "TP" : "CU"}-${randomBytes(5).toString("hex").toUpperCase()}`;
+  const [created] = await db
+    .insert(tennisObjectives)
+    .values({
+      code,
+      ball: input.ball,
+      stage: ball.stage,
+      ageRange: ball.age,
+      aspect: input.aspect as AspectId,
+      block: input.block,
+      title: input.title,
+      criterion: input.criterion,
+      source: scope === "base" ? "desglose" : "propio",
+      sortOrder: input.sortOrder ?? (last?.sortOrder ?? 0) + 1,
+      createdBy: userId,
+      ...scopeColumns(scope, ctx),
+    })
+    .returning({ id: tennisObjectives.id });
+  return { ok: true, id: created.id, code };
 }
 
 /**
@@ -319,4 +330,120 @@ export async function moveObjectiveFor(
     }
   }
   return { ok: true };
+}
+
+/**
+ * Arrastra un objetivo a cualquier sitio: otra posición de su grupo u otro
+ * grupo (bola, aspecto o bloque), antes de `beforeId` o al final. `items` es
+ * el catálogo efectivo del mismo contexto (con ocultos). Lo propio del ámbito
+ * se cambia en la propia fila; lo demás (p. ej. un objetivo de Ten Planner
+ * desde un club), con un ajuste para este ámbito, así no se pierden las
+ * marcas de los alumnos y se puede volver al original.
+ */
+export async function placeObjectiveFor(
+  ctx: ScopeContext,
+  scope: WriteScope,
+  userId: string,
+  items: ObjectiveItem[],
+  objectiveId: string,
+  target: ObjectiveGroupKey,
+  beforeId: string | null
+): Promise<WriteOk | WriteFailure> {
+  const ball = BALLS.find((b) => b.id === target.ball);
+  if (!ball) return { ok: false, error: "Invalid ball" };
+  const changes = planPlace(items, objectiveId, target, beforeId);
+  if (!changes) return { ok: true }; // ya está ahí
+  const byId = new Map(items.map((i) => [i.id, i]));
+
+  for (const change of changes) {
+    const item = byId.get(change.id);
+    if (!item || !allowedFor(item.scope, scope))
+      return { ok: false, error: "Not found" };
+    if (item.scope === scope) {
+      await db
+        .update(tennisObjectives)
+        .set({
+          sortOrder: change.sortOrder,
+          ...(change.group
+            ? {
+                ball: change.group.ball,
+                stage: ball.stage,
+                ageRange: ball.age,
+                aspect: change.group.aspect,
+                block: change.group.block,
+              }
+            : {}),
+        })
+        .where(eq(tennisObjectives.id, change.id));
+    } else {
+      await upsertOverride(change.id, scope, ctx, userId, {
+        sortOrder: change.sortOrder,
+        ...(change.group
+          ? {
+              ball: change.group.ball,
+              aspect: change.group.aspect,
+              block: change.group.block,
+            }
+          : {}),
+      });
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Duplica un objetivo (tal como se ve en este ámbito) como objetivo propio del
+ * ámbito, justo debajo del original y con "(copia)" en el título.
+ */
+export async function duplicateObjectiveFor(
+  ctx: ScopeContext,
+  scope: WriteScope,
+  userId: string,
+  items: ObjectiveItem[],
+  objectiveId: string
+): Promise<WriteOk | WriteFailure> {
+  const source = items.find((i) => i.id === objectiveId && !i.hidden);
+  if (!source || !allowedFor(source.scope, scope))
+    return { ok: false, error: "Not found" };
+
+  const created = await createOwnObjective(ctx, scope, userId, {
+    ball: source.ball,
+    aspect: source.aspect,
+    block: source.block,
+    title: `${source.title} (copia)`.slice(0, 200),
+    criterion: source.criterion,
+    sortOrder: source.sortOrder,
+  });
+  if (!created.ok) return created;
+
+  // Colocarla justo después del original.
+  const group = items
+    .filter(
+      (i) =>
+        !i.hidden &&
+        i.ball === source.ball &&
+        i.aspect === source.aspect &&
+        i.block === source.block
+    )
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
+  const next = group[group.findIndex((i) => i.id === objectiveId) + 1];
+  const copy: ObjectiveItem = {
+    ...source,
+    id: created.id,
+    code: created.code,
+    title: `${source.title} (copia)`,
+    scope: scope === "base" ? "base" : scope,
+    overriddenAt: [],
+    achieved: false,
+    achievedAt: null,
+  };
+  return placeObjectiveFor(
+    ctx,
+    scope,
+    userId,
+    [...items, copy],
+    created.id,
+    { ball: source.ball, aspect: source.aspect, block: source.block },
+    next?.id ?? null
+  );
 }

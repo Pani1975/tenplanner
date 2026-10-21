@@ -32,6 +32,10 @@ export type RawOverride = {
   title: string | null;
   criterion: string | null;
   sortOrder: number | null;
+  /** Grupo al que se ha movido (los tres juntos); null = el original. */
+  ball?: string | null;
+  aspect?: string | null;
+  block?: string | null;
 };
 
 /**
@@ -112,15 +116,18 @@ export function resolveObjectives(
       return null;
     };
 
+    // Grupo: el del ajuste más específico que lo haya movido.
+    const moved = ovs.find((ov) => ov.ball && ov.aspect && ov.block);
+
     const done = marks.get(o.id);
     const achievedAt =
       done instanceof Date ? done.toISOString() : (done ?? null);
     items.push({
       id: o.id,
       code: o.code,
-      ball: o.ball as BallId,
-      aspect: o.aspect as AspectId,
-      block: o.block,
+      ball: (moved?.ball ?? o.ball) as BallId,
+      aspect: (moved?.aspect ?? o.aspect) as AspectId,
+      block: moved?.block ?? o.block,
       title: pick((ov) => ov.title) ?? o.title,
       criterion: pick((ov) => ov.criterion) ?? o.criterion,
       source: o.source,
@@ -129,11 +136,15 @@ export function resolveObjectives(
       achievedAt,
       scope,
       hidden: pick((ov) => ov.hidden) ?? false,
-      // Solo cuentan como "editado" los cambios de texto u ocultar; el orden no.
+      // Cuentan como "editado" los cambios de texto, ocultar o moverlo de
+      // grupo; el orden dentro del grupo no.
       overriddenAt: ovs
         .filter(
           (ov) =>
-            ov.title !== null || ov.criterion !== null || ov.hidden !== null
+            ov.title !== null ||
+            ov.criterion !== null ||
+            ov.hidden !== null ||
+            !!ov.block
         )
         .map((ov) => (ov.studentId ? "student" : ov.clubId ? "club" : "coach")),
     });
@@ -185,4 +196,63 @@ export function planMove(
     }))
     .filter((change) => change.from !== change.sortOrder)
     .map(({ id, sortOrder }) => ({ id, sortOrder }));
+}
+
+/** Grupo de objetivos: misma bola, aspecto y bloque. */
+export type ObjectiveGroupKey = { ball: string; aspect: string; block: string };
+
+export type PlaceChange = {
+  id: string;
+  sortOrder: number;
+  /** Solo en el objetivo arrastrado, si cambia de grupo. */
+  group?: ObjectiveGroupKey;
+};
+
+function sameGroup(a: ObjectiveGroupKey, b: ObjectiveGroupKey) {
+  return a.ball === b.ball && a.aspect === b.aspect && a.block === b.block;
+}
+
+/**
+ * Plan para arrastrar un objetivo a cualquier posición: dentro de su grupo o a
+ * otro grupo (otra bola, aspecto o bloque), justo antes de `beforeId` o al
+ * final si es null. Reparte las posiciones del grupo de destino (y, si el
+ * objetivo viene de otro grupo, una más) sin tocar los demás grupos. Devuelve
+ * solo lo que cambia, o null si el objetivo no existe o ya está ahí.
+ */
+export function planPlace(
+  items: ObjectiveItem[],
+  objectiveId: string,
+  target: ObjectiveGroupKey,
+  beforeId: string | null
+): PlaceChange[] | null {
+  const moving = items.find((i) => i.id === objectiveId && !i.hidden);
+  if (!moving || beforeId === objectiveId) return null;
+  const crossGroup = !sameGroup(moving, target);
+
+  const groupItems = items
+    .filter((i) => !i.hidden && sameGroup(i, target))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
+  const others = groupItems.filter((i) => i.id !== objectiveId);
+  const at = beforeId ? others.findIndex((i) => i.id === beforeId) : -1;
+  const next = [...others];
+  next.splice(at < 0 ? next.length : at, 0, moving);
+
+  // Mismas posiciones que ya tenía el grupo; si llega de fuera, una más al
+  // final. Si había posiciones repetidas, se numeran seguidas desde la menor.
+  let slots = groupItems.map((i) => i.sortOrder);
+  if (crossGroup)
+    slots.push(slots.length ? Math.max(...slots) + 1 : moving.sortOrder);
+  slots.sort((a, b) => a - b);
+  if (new Set(slots).size !== slots.length)
+    slots = slots.map((_, k) => slots[0] + k);
+
+  const changes: PlaceChange[] = [];
+  next.forEach((item, k) => {
+    const isMoving = item.id === objectiveId;
+    if (isMoving && crossGroup)
+      changes.push({ id: item.id, sortOrder: slots[k], group: target });
+    else if (item.sortOrder !== slots[k])
+      changes.push({ id: item.id, sortOrder: slots[k] });
+  });
+  return changes.length ? changes : null;
 }

@@ -7,7 +7,9 @@ import {
 } from "@/components/objectives/objectives-manager";
 import {
   createWorkspaceObjective,
+  duplicateWorkspaceObjective,
   moveWorkspaceObjective,
+  placeWorkspaceObjective,
   removeWorkspaceObjective,
   restoreWorkspaceObjective,
   updateWorkspaceObjective,
@@ -44,6 +46,10 @@ export function WorkspaceObjectivesManager({
         restore: (objectiveId) => restoreWorkspaceObjective({ objectiveId }),
         move: (objectiveId, direction) =>
           moveWorkspaceObjective({ objectiveId, direction }),
+        place: (objectiveId, target, beforeId) =>
+          placeWorkspaceObjective({ objectiveId, target, beforeId }),
+        duplicate: (objectiveId) =>
+          duplicateWorkspaceObjective({ objectiveId }),
       }}
     />
   );

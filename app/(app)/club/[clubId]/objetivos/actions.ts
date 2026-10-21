@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { BALLS, loadClubObjectives, type ScopeContext } from "@/lib/objectives";
 import {
   createOwnObjective,
+  duplicateObjectiveFor,
   moveObjectiveFor,
+  placeObjectiveFor,
   removeObjectiveFor,
   restoreObjectiveFor,
   updateObjectiveText,
@@ -185,6 +187,71 @@ export async function moveClubObjective(input: {
     items,
     v.objectiveId,
     v.direction
+  );
+  refresh(v.clubId);
+  return res.ok
+    ? { ok: true as const }
+    : { ok: false as const, error: res.error };
+}
+
+const groupSchema = z.object({
+  ball: z.enum(BALLS.map((b) => b.id) as [string, ...string[]]),
+  aspect: z.enum(["tecnico", "tactico", "mental", "fisico"]),
+  block: z.string().trim().min(1).max(80),
+});
+
+export async function placeClubObjective(input: {
+  clubId: string;
+  objectiveId: string;
+  target: { ball: string; aspect: string; block: string };
+  beforeId: string | null;
+}) {
+  const parsed = z
+    .object({
+      clubId: uuid,
+      objectiveId: uuid,
+      target: groupSchema,
+      beforeId: uuid.nullable(),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+  const v = parsed.data;
+
+  const auth = await authorize(v.clubId);
+  if (!auth.ok) return auth;
+  const items = await loadClubObjectives(v.clubId, auth.userId);
+  const res = await placeObjectiveFor(
+    auth.ctx,
+    "club",
+    auth.userId,
+    items,
+    v.objectiveId,
+    v.target,
+    v.beforeId
+  );
+  refresh(v.clubId);
+  return res.ok
+    ? { ok: true as const }
+    : { ok: false as const, error: res.error };
+}
+
+export async function duplicateClubObjective(input: {
+  clubId: string;
+  objectiveId: string;
+}) {
+  const parsed = z.object({ clubId: uuid, objectiveId: uuid }).safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "Invalid input" };
+  const v = parsed.data;
+
+  const auth = await authorize(v.clubId);
+  if (!auth.ok) return auth;
+  const items = await loadClubObjectives(v.clubId, auth.userId);
+  const res = await duplicateObjectiveFor(
+    auth.ctx,
+    "club",
+    auth.userId,
+    items,
+    v.objectiveId
   );
   refresh(v.clubId);
   return res.ok
