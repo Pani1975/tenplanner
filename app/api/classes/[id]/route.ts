@@ -1,4 +1,5 @@
 import { normalizeTags } from "@/lib/tags";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextResponse } from "next/server";
 import { and, eq, asc, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -217,10 +218,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.createdBy !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  // La Biblioteca pública no se edita desde el modo particular.
-  if (existing.isLibrary && !(await getActiveWorkClubId(user.id)))
+  // La Biblioteca pública solo se edita en Modo Ten Planner.
+  if (existing.isLibrary && !(await isTenPlannerMode(user.id)))
     return NextResponse.json(
-      { error: "La Biblioteca pública no se puede editar en modo particular" },
+      { error: "La Biblioteca pública solo se edita en Modo Ten Planner" },
       { status: 403 }
     );
 
@@ -229,7 +230,8 @@ export async function PATCH(request: Request, ctx: Ctx) {
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  const isAdmin = !!dbUser?.isAdmin;
+  // Publicar o retirar de la Biblioteca solo en Modo Ten Planner.
+  const isAdmin = !!dbUser?.isAdmin && (await isTenPlannerMode(user.id));
 
   const d = parsed.data;
 
@@ -381,9 +383,9 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     .from(classes)
     .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
     .limit(1);
-  if (target?.isLibrary && !(await getActiveWorkClubId(user.id)))
+  if (target?.isLibrary && !(await isTenPlannerMode(user.id)))
     return NextResponse.json(
-      { error: "La Biblioteca pública no se puede borrar en modo particular" },
+      { error: "La Biblioteca pública solo se borra en Modo Ten Planner" },
       { status: 403 }
     );
 

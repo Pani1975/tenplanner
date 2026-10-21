@@ -116,7 +116,8 @@ export async function loadStudentObjectives(
  */
 export async function loadWorkspaceObjectives(
   userId: string,
-  clubId: string | null
+  clubId: string | null,
+  opts: { includeHidden?: boolean } = {}
 ): Promise<ObjectiveItem[]> {
   const ctx: ScopeContext = { studentId: null, clubId, coachId: userId };
   const catalog = await db
@@ -146,9 +147,40 @@ export async function loadWorkspaceObjectives(
         )
     : [];
 
-  return resolveObjectives(catalog, overrides, new Map(), ctx).filter(
-    (i) => !i.hidden
-  );
+  const items = resolveObjectives(catalog, overrides, new Map(), ctx);
+  return opts.includeHidden ? items : items.filter((i) => !i.hidden);
+}
+
+/**
+ * Catálogo base de Ten Planner tal cual, sin ajustes de nadie. Con
+ * `includeRemoved`, los desactivados vuelven como ocultos (para restaurarlos
+ * desde el Modo Ten Planner).
+ */
+export async function loadBaseObjectives(
+  opts: { includeRemoved?: boolean } = {}
+): Promise<ObjectiveItem[]> {
+  const rows = await db
+    .select()
+    .from(tennisObjectives)
+    .where(
+      and(
+        eq(tennisObjectives.sport, "tenis"),
+        isNull(tennisObjectives.clubId),
+        isNull(tennisObjectives.coachId),
+        isNull(tennisObjectives.studentId),
+        opts.includeRemoved ? undefined : eq(tennisObjectives.isActive, true)
+      )
+    )
+    .orderBy(asc(tennisObjectives.ball), asc(tennisObjectives.sortOrder));
+
+  const ctx: ScopeContext = { studentId: null, clubId: null, coachId: "" };
+  const removed = new Set(rows.filter((r) => !r.isActive).map((r) => r.id));
+  return resolveObjectives(
+    rows.map((r) => ({ ...r, isActive: true })),
+    [],
+    new Map(),
+    ctx
+  ).map((i) => (removed.has(i.id) ? { ...i, hidden: true } : i));
 }
 
 /**

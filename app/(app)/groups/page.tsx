@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -94,8 +95,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
               <Users className="size-3.5" />
               Cohortes
             </div>
-            <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-              Grupos
+            <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
+              {personalTitle("Grupos", await getWorkMode(user.id))}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {rows.length} {rows.length === 1 ? "grupo" : "grupos"} para

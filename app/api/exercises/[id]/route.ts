@@ -1,4 +1,4 @@
-import { getActiveWorkClubId } from "@/lib/clubs";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { eq } from "drizzle-orm";
 import { after } from "next/server";
 import { NextResponse } from "next/server";
@@ -177,11 +177,11 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    // La Biblioteca pública no se edita desde el modo particular.
-    if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
+    // La Biblioteca pública solo se edita en Modo Ten Planner.
+    if (existing.isGlobal && !(await isTenPlannerMode(user.id))) {
       return NextResponse.json(
         {
-          error: "La Biblioteca pública no se puede editar en modo particular",
+          error: "La Biblioteca pública solo se edita en Modo Ten Planner",
         },
         { status: 403 }
       );
@@ -318,11 +318,13 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
       updateValues.tipologia = legacyTipologiaFrom(tiposActividad);
     }
 
-    if (isAdmin && d.isGlobal !== undefined) {
+    // Publicar o retirar de la Biblioteca solo en Modo Ten Planner.
+    const canPublish = isAdmin && (await isTenPlannerMode(user.id));
+    if (canPublish && d.isGlobal !== undefined) {
       updateValues.isGlobal = d.isGlobal;
     }
 
-    if (isAdmin && d.autoria !== undefined) {
+    if (canPublish && d.autoria !== undefined) {
       updateValues.autoria = d.autoria ?? "libre";
     }
 
@@ -403,11 +405,11 @@ export async function DELETE(_request: Request, context: ExerciseRouteContext) {
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    // La Biblioteca pública no se edita desde el modo particular.
-    if (existing.isGlobal && !(await getActiveWorkClubId(user.id))) {
+    // La Biblioteca pública solo se edita en Modo Ten Planner.
+    if (existing.isGlobal && !(await isTenPlannerMode(user.id))) {
       return NextResponse.json(
         {
-          error: "La Biblioteca pública no se puede editar en modo particular",
+          error: "La Biblioteca pública solo se edita en Modo Ten Planner",
         },
         { status: 403 }
       );

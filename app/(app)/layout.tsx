@@ -64,7 +64,11 @@ export default async function AppLayout({
     unreadMessages,
   ] = await Promise.all([
     db
-      .select({ isAdmin: users.isAdmin, image: users.image })
+      .select({
+        isAdmin: users.isAdmin,
+        image: users.image,
+        tenPlannerMode: users.tenPlannerMode,
+      })
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1),
@@ -123,6 +127,7 @@ export default async function AppLayout({
       appName={appName}
       workModeClubs={workModeClubs}
       activeWorkClubId={activeWorkClubId}
+      tenPlannerMode={isAdmin && !!row?.tenPlannerMode}
       activeSport={activeSport}
       familyOnly={familyOnly}
       pendingInvites={pendingInvites}

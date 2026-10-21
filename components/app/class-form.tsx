@@ -178,7 +178,10 @@ export interface ClassFormProps {
   mode: "create" | "edit";
   classId?: string;
   availableExercises: AvailableExercise[];
+  /** Muestra las opciones de Biblioteca pública (admin en Modo Ten Planner). */
   isAdmin?: boolean;
+  /** Modo Ten Planner: la clase nueva nace en la Biblioteca pública. */
+  publishToLibrary?: boolean;
   initialData?: ClassInitialData;
   sport?: string | null;
 }
@@ -188,6 +191,7 @@ export function ClassForm({
   classId,
   availableExercises,
   isAdmin = false,
+  publishToLibrary = false,
   initialData,
   sport,
 }: ClassFormProps) {
@@ -225,8 +229,12 @@ export function ClassForm({
   const [aspectosImportantes, setAspectosImportantes] = useState(
     initialData?.aspectosImportantes ?? ""
   );
-  const [isLibrary, setIsLibrary] = useState(initialData?.isLibrary ?? false);
-  const [autoria, setAutoria] = useState(initialData?.autoria ?? "libre");
+  const [isLibrary, setIsLibrary] = useState(
+    initialData?.isLibrary ?? publishToLibrary
+  );
+  const [autoria, setAutoria] = useState(
+    initialData?.autoria ?? (publishToLibrary ? "ten_planner" : "libre")
+  );
   const isDraft = initialData?.status === "draft";
 
   const [blocks, setBlocks] = useState<BlockState[]>(() => {

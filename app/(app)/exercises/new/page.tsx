@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { getWorkMode, spaceTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -43,7 +44,9 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
     );
   }
 
-  const isAdmin = !!dbUser?.isAdmin;
+  const workMode = await getWorkMode(user.id);
+  // Las opciones de Biblioteca pública solo existen en Modo Ten Planner.
+  const isAdmin = !!dbUser?.isAdmin && workMode.kind === "tenplanner";
   const { mode } = await searchParams;
   const initialFormMode =
     mode === "full" || mode === "quick" ? mode : undefined;
@@ -60,7 +63,7 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
         </Link>
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            Biblioteca TenPlanner
+            {spaceTitle("Ejercicios", workMode)}
           </p>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Nuevo ejercicio
@@ -72,6 +75,7 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
         <ExerciseForm
           mode="create"
           isAdmin={isAdmin}
+          publishToLibrary={isAdmin}
           initialFormMode={initialFormMode}
           enableDrafts
           sport={sport}

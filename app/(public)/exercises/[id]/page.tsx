@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { db } from "@/db";
 import { exercises, users, exerciseRatings } from "@/db/schema";
 import { and, eq, avg, count } from "drizzle-orm";
@@ -87,10 +88,11 @@ export default async function ExercisePage({
   const isAdmin = !!dbUser?.isAdmin;
   const isOwner = exercise.createdBy === user?.id;
   const inClub = user ? !!(await getActiveWorkClubId(user.id)) : false;
-  // La Biblioteca pública no se edita desde el modo particular.
+  const inTenPlanner = user ? await isTenPlannerMode(user.id) : false;
+  // La Biblioteca pública solo se edita en Modo Ten Planner.
   const canEdit =
     !!user &&
-    !(exercise.isGlobal && !inClub) &&
+    !(exercise.isGlobal && !inTenPlanner) &&
     (isAdmin || (!exercise.isGlobal && isOwner));
 
   // Copiar a "Mis ejercicios": un ejercicio de la biblioteca se copia al
@@ -130,6 +132,7 @@ export default async function ExercisePage({
       copyTargets={copyTargets}
       inClub={inClub}
       isAdmin={isAdmin}
+      canPublish={isAdmin && inTenPlanner}
       userId={user?.id ?? null}
       initialRating={userRating}
       ratingAvg={ratingData.avg}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -208,8 +209,8 @@ export default async function CalendarPage({ searchParams }: PageProps) {
               <CalendarDays className="size-3.5" />
               Agenda operativa
             </div>
-            <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-              Calendario
+            <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
+              {personalTitle("Calendario", await getWorkMode(user.id))}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {total} sesión{total !== 1 ? "es" : ""} planificada

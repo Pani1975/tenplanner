@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveWorkClubId } from "@/lib/clubs";
-import { loadWorkspaceObjectives } from "@/lib/objectives";
+import { loadBaseObjectives, loadWorkspaceObjectives } from "@/lib/objectives";
+import { getWorkMode } from "@/lib/work-mode";
 
 // Catálogo de objetivos para el selector "Cargar objetivos" de ejercicios,
-// clases, sesiones y grupos: el del club con el que trabaja el monitor (o el
-// suyo de particular), con los cambios que haya hecho el club.
+// clases, sesiones y grupos, según el modo de trabajo: el de Ten Planner (Modo
+// Ten Planner), el del club con sus cambios o el particular del monitor.
 export async function GET() {
   const supabase = await createClient();
   const {
@@ -14,12 +14,23 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const clubId = await getActiveWorkClubId(user.id);
-  const items = await loadWorkspaceObjectives(user.id, clubId);
+  const mode = await getWorkMode(user.id);
+  const items =
+    mode.kind === "tenplanner"
+      ? await loadBaseObjectives()
+      : await loadWorkspaceObjectives(
+          user.id,
+          mode.kind === "club" ? mode.clubId : null
+        );
 
   return NextResponse.json({
     data: {
-      scope: clubId ? "club" : "coach",
+      scope:
+        mode.kind === "club"
+          ? "club"
+          : mode.kind === "tenplanner"
+            ? "base"
+            : "coach",
       items: items.map((i) => ({
         id: i.id,
         code: i.code,

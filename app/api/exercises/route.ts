@@ -393,11 +393,12 @@ export async function POST(request: Request) {
       .onConflictDoNothing();
 
     const [dbUser] = await db
-      .select({ isAdmin: users.isAdmin })
+      .select({ isAdmin: users.isAdmin, tenPlannerMode: users.tenPlannerMode })
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1);
-    const isAdmin = !!dbUser?.isAdmin;
+    // Solo un administrador en Modo Ten Planner publica en la Biblioteca.
+    const isAdmin = !!dbUser?.isAdmin && !!dbUser?.tenPlannerMode;
     const [sport, activeClubId] = await Promise.all([
       getActiveSport(user.id),
       getActiveWorkClubId(user.id),
@@ -484,7 +485,7 @@ export async function POST(request: Request) {
         situacionJuego: normalizeMultiValue(rest.situacionJuego),
         tipoCompeticion: normalizeMultiValue(rest.tipoCompeticion),
         isGlobal,
-        autoria: isAdmin && requestedAutoria ? requestedAutoria : "libre",
+        autoria: isAdmin ? (requestedAutoria ?? "ten_planner") : "libre",
         createdBy: user.id,
         // Creado trabajando como un club → compartido en "Mis ejercicios"
         // del espacio de ese club. Los globales (biblioteca) no son de club.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { and, asc, eq, or } from "drizzle-orm";
@@ -17,7 +18,6 @@ import {
   resolveItemKind,
   type StationItemJson,
 } from "@/lib/block-items";
-import { getActiveWorkClubId } from "@/lib/clubs";
 import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 interface PageProps {
@@ -38,7 +38,8 @@ export default async function EditClassPage({ params }: PageProps) {
     .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
     .limit(1);
   if (!cls) notFound();
-  if (cls.isLibrary && !(await getActiveWorkClubId(user.id)))
+  // La Biblioteca pública solo se edita en Modo Ten Planner.
+  if (cls.isLibrary && !(await isTenPlannerMode(user.id)))
     redirect(`/classes/${id}`);
 
   const [adminRow] = await db
@@ -207,7 +208,9 @@ export default async function EditClassPage({ params }: PageProps) {
         mode="edit"
         classId={cls.id}
         availableExercises={availableExercises}
-        isAdmin={adminRow?.isAdmin ?? false}
+        isAdmin={
+          (adminRow?.isAdmin ?? false) && (await isTenPlannerMode(user.id))
+        }
         initialData={initialData}
         sport={cls.sport}
       />

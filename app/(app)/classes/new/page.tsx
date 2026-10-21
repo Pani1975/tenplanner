@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getWorkMode, spaceTitle } from "@/lib/work-mode";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { and, eq, or } from "drizzle-orm";
@@ -24,6 +25,11 @@ export default async function NewClassPage() {
       .limit(1),
     getActiveSport(user.id),
   ]);
+
+  const workMode = await getWorkMode(user.id);
+  // Las opciones de Biblioteca pública solo existen en Modo Ten Planner.
+  const publishToLibrary =
+    !!adminRow?.isAdmin && workMode.kind === "tenplanner";
 
   const availableExercises = await db
     .select({
@@ -62,7 +68,7 @@ export default async function NewClassPage() {
 
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            Plantilla de clase
+            {spaceTitle("Clases", workMode)}
           </p>
           <h1 className="font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl">
             Nueva clase
@@ -77,7 +83,8 @@ export default async function NewClassPage() {
       <ClassForm
         mode="create"
         availableExercises={availableExercises}
-        isAdmin={adminRow?.isAdmin ?? false}
+        isAdmin={publishToLibrary}
+        publishToLibrary={publishToLibrary}
         sport={sport}
       />
     </div>

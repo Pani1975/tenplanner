@@ -276,11 +276,12 @@ export async function POST(request: Request) {
   const d = parsed.data;
 
   const [dbUser] = await db
-    .select({ isAdmin: users.isAdmin })
+    .select({ isAdmin: users.isAdmin, tenPlannerMode: users.tenPlannerMode })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  const isAdmin = !!dbUser?.isAdmin;
+  // Solo un administrador en Modo Ten Planner publica en la Biblioteca.
+  const isAdmin = !!dbUser?.isAdmin && !!dbUser?.tenPlannerMode;
   const niveles = normalizeMultiValue(d.niveles, d.nivel);
   const aspectosJuego = normalizeMultiValue(d.aspectosJuego, d.aspectoJuego);
 
@@ -361,7 +362,7 @@ export async function POST(request: Request) {
           golpes: d.golpes ?? null,
           tags: normalizeTags(d.tags),
           isLibrary: isAdmin && d.isLibrary === true,
-          autoria: isAdmin && d.autoria ? d.autoria : "libre",
+          autoria: isAdmin ? (d.autoria ?? "ten_planner") : "libre",
           clubId,
           sport,
           status: d.status,

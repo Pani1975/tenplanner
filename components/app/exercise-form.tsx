@@ -326,7 +326,10 @@ const PRESET_MATERIALS = [
 export interface ExerciseFormProps {
   mode: "create" | "edit";
   exerciseId?: string;
+  /** Muestra las opciones de Biblioteca pública (admin en Modo Ten Planner). */
   isAdmin?: boolean;
+  /** Modo Ten Planner: lo nuevo nace en la Biblioteca pública, autoría Ten Planner. */
+  publishToLibrary?: boolean;
   initialFormMode?: ExerciseFormMode;
   enableDrafts?: boolean;
   draftQueryParam?: string;
@@ -533,6 +536,7 @@ export function ExerciseForm({
   mode,
   exerciseId,
   isAdmin = false,
+  publishToLibrary = false,
   initialFormMode,
   enableDrafts = false,
   draftQueryParam = "draft",
@@ -647,8 +651,10 @@ export function ExerciseForm({
       numJugadores: initialData?.numJugadores ?? null,
       tipoPelota: initialData?.tipoPelota ?? null,
       tipoActividad: null,
-      isGlobal: initialData?.isGlobal ?? false,
-      autoria: (initialData?.autoria as FormValues["autoria"]) ?? "libre",
+      isGlobal: initialData?.isGlobal ?? publishToLibrary,
+      autoria:
+        (initialData?.autoria as FormValues["autoria"]) ??
+        (publishToLibrary ? "ten_planner" : "libre"),
       nivel: initialData?.niveles?.[0] ?? initialData?.nivel ?? null,
       aspectoJuegoPmv: resolveAspectosJuegoValues(initialData)[0] ?? null,
       parametro: initialData?.parametros?.[0] ?? initialData?.parametro ?? null,

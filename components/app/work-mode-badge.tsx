@@ -2,31 +2,45 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Check, ChevronDown, Loader2, User } from "lucide-react";
+import {
+  Building2,
+  Check,
+  ChevronDown,
+  Globe2,
+  Loader2,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClubOption } from "@/components/app/club-context-select";
 
 const PARTICULAR = "particular";
+const TEN_PLANNER = "tenplanner";
 
 /**
  * Indicador siempre visible (barra lateral / cabecera móvil) de en qué
  * "modo de trabajo" está el monitor ahora mismo — particular o un club —
- * con un desplegable para cambiarlo sin tener que ir a Perfil. Solo se
- * renderiza si el usuario pertenece a al menos un club (si no, no hay
- * nada que elegir y todo es particular).
+ * con un desplegable para cambiarlo sin tener que ir a Perfil. Los
+ * administradores tienen además el "Modo Ten Planner": lo que crean o editan
+ * en ese modo es de la plataforma (Biblioteca pública, objetivos base). Solo
+ * se renderiza si hay algo que elegir.
  */
 export function WorkModeBadge({
   clubs,
   activeClubId: initialActiveClubId,
+  canUseTenPlanner = false,
+  tenPlannerActive = false,
   className,
 }: {
   clubs: ClubOption[];
   activeClubId: string | null;
+  canUseTenPlanner?: boolean;
+  tenPlannerActive?: boolean;
   className?: string;
 }) {
   const router = useRouter();
+  // "tenplanner", el id del club activo o null (particular).
   const [activeClubId, setActiveClubId] = useState<string | null>(
-    initialActiveClubId
+    canUseTenPlanner && tenPlannerActive ? TEN_PLANNER : initialActiveClubId
   );
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
@@ -41,9 +55,10 @@ export function WorkModeBadge({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
-  if (clubs.length === 0) return null;
+  if (clubs.length === 0 && !canUseTenPlanner) return null;
 
   const activeClub = clubs.find((c) => c.id === activeClubId);
+  const inTenPlanner = activeClubId === TEN_PLANNER;
 
   async function selectMode(clubId: string | null) {
     if (clubId === activeClubId) {
@@ -55,7 +70,9 @@ export function WorkModeBadge({
     const res = await fetch("/api/account/work-mode", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clubId }),
+      body: JSON.stringify(
+        clubId === TEN_PLANNER ? { mode: TEN_PLANNER } : { clubId }
+      ),
     });
     if (res.ok) {
       setActiveClubId(clubId);
@@ -75,12 +92,14 @@ export function WorkModeBadge({
         aria-expanded={open}
         className={cn(
           "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-[12px] font-bold transition-colors",
-          activeClub
+          activeClub || inTenPlanner
             ? "border-brand/50 bg-brand/10 text-foreground"
             : "border-sidebar-border bg-sidebar-accent/60 text-sidebar-foreground/75 hover:bg-sidebar-accent"
         )}
       >
-        {activeClub ? (
+        {inTenPlanner ? (
+          <Globe2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} />
+        ) : activeClub ? (
           <Building2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} />
         ) : (
           <User className="size-3.5 shrink-0" strokeWidth={2} />
@@ -89,7 +108,11 @@ export function WorkModeBadge({
           <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
             Modo
           </span>
-          {activeClub ? activeClub.name : "Particular"}
+          {inTenPlanner
+            ? "Ten Planner"
+            : activeClub
+              ? activeClub.name
+              : "Particular"}
         </span>
         <ChevronDown
           className={cn(
@@ -109,6 +132,16 @@ export function WorkModeBadge({
             disabled={saving !== null}
             onClick={() => selectMode(null)}
           />
+          {canUseTenPlanner && (
+            <OptionRow
+              label="Ten Planner (público)"
+              icon={Globe2}
+              active={inTenPlanner}
+              saving={saving === TEN_PLANNER}
+              disabled={saving !== null}
+              onClick={() => selectMode(TEN_PLANNER)}
+            />
+          )}
           {clubs.map((club) => (
             <OptionRow
               key={club.id}

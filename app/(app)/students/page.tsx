@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import { redirect } from "next/navigation";
 import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm";
 import { Plus, Search, ArrowLeft, ArrowUpRight, Users } from "lucide-react";
@@ -152,8 +153,10 @@ export default async function StudentsPage({ searchParams }: PageProps) {
               <Users className="size-3.5" />
               Cartera
             </p>
-            <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-              Alumnos
+            <h1 className="break-words text-4xl font-black leading-tight text-white sm:text-5xl">
+              {user
+                ? personalTitle("Alumnos", await getWorkMode(user.id))
+                : "Alumnos"}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {totalStudents} alumno{totalStudents !== 1 ? "s" : ""} registrado

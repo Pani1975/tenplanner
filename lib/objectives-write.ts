@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { objectiveOverrides, tennisObjectives } from "@/db/schema";
 import {
@@ -14,11 +14,15 @@ import {
   type ScopeContext,
 } from "./objectives-resolve";
 
-// Escritura de objetivos propios y ajustes, compartida por la ficha del alumno
-// y el espacio del club. Las comprobaciones de acceso se hacen fuera.
+// Escritura de objetivos propios y ajustes, compartida por la ficha del alumno,
+// el espacio del club, el particular del monitor y el Modo Ten Planner. Las
+// comprobaciones de acceso se hacen fuera.
 
-/** Ámbito al que se aplica un cambio. */
-export type WriteScope = "student" | "club" | "coach";
+/**
+ * Ámbito al que se aplica un cambio. "base" = catálogo de Ten Planner (solo
+ * administradores en Modo Ten Planner): se cambia para todos.
+ */
+export type WriteScope = "student" | "club" | "coach" | "base";
 
 export type WriteFailure = { ok: false; error: string };
 export type WriteOk = { ok: true };
@@ -62,8 +66,13 @@ async function loadVisibleObjective(objectiveId: string, ctx: ScopeContext) {
   return own ? { objective: o, ownScope: own } : null;
 }
 
-/** Un objetivo propio de un alumno no se toca desde un ámbito más amplio. */
+/**
+ * Un objetivo propio de un alumno no se toca desde un ámbito más amplio, y el
+ * catálogo base solo cambia sus propios objetivos (nunca los de un club,
+ * monitor o alumno).
+ */
 function allowedFor(ownScope: string, scope: WriteScope) {
+  if (scope === "base") return ownScope === "base";
   return ownScope !== "student" || scope === "student";
 }
 
@@ -127,7 +136,7 @@ export async function createOwnObjective(
     .limit(1);
 
   await db.insert(tennisObjectives).values({
-    code: `CU-${randomBytes(5).toString("hex").toUpperCase()}`,
+    code: `${scope === "base" ? "TP" : "CU"}-${randomBytes(5).toString("hex").toUpperCase()}`,
     ball: input.ball,
     stage: ball.stage,
     ageRange: ball.age,
@@ -135,7 +144,7 @@ export async function createOwnObjective(
     block: input.block,
     title: input.title,
     criterion: input.criterion,
-    source: "propio",
+    source: scope === "base" ? "desglose" : "propio",
     sortOrder: (last?.sortOrder ?? 0) + 1,
     createdBy: userId,
     ...scopeColumns(scope, ctx),
@@ -208,6 +217,25 @@ export async function restoreObjectiveFor(
   userId: string,
   objectiveId: string
 ): Promise<(WriteOk & { stillHidden: boolean }) | WriteFailure> {
+  if (scope === "base") {
+    // En el catálogo base, "quitar" desactiva el objetivo: restaurar lo
+    // vuelve a activar.
+    const restored = await db
+      .update(tennisObjectives)
+      .set({ isActive: true })
+      .where(
+        and(
+          eq(tennisObjectives.id, objectiveId),
+          isNull(tennisObjectives.clubId),
+          isNull(tennisObjectives.coachId),
+          isNull(tennisObjectives.studentId)
+        )
+      )
+      .returning({ id: tennisObjectives.id });
+    return restored.length
+      ? { ok: true, stillHidden: false }
+      : { ok: false, error: "Not found" };
+  }
   const found = await loadVisibleObjective(objectiveId, ctx);
   if (!found || !allowedFor(found.ownScope, scope))
     return { ok: false, error: "Not found" };

@@ -30,22 +30,18 @@ export type CatalogObjective = {
   scope: "base" | "club" | "coach" | "student";
 };
 
-type Catalog = { scope: "club" | "coach"; items: CatalogObjective[] };
+type Catalog = {
+  scope: "club" | "coach" | "base";
+  items: CatalogObjective[];
+};
 
-// El catálogo cambia poco: se pide una vez por página y se reutiliza.
-let catalogPromise: Promise<Catalog> | null = null;
-function fetchCatalog(): Promise<Catalog> {
-  catalogPromise ??= fetch("/api/objectives/catalog")
-    .then((res) => {
-      if (!res.ok) throw new Error("catalog");
-      return res.json() as Promise<{ data: Catalog }>;
-    })
-    .then((json) => json.data)
-    .catch((err) => {
-      catalogPromise = null;
-      throw err;
-    });
-  return catalogPromise;
+// Se pide al abrir el selector por primera vez; depende del modo de trabajo,
+// así que no se comparte entre páginas.
+async function fetchCatalog(): Promise<Catalog> {
+  const res = await fetch("/api/objectives/catalog", { cache: "no-store" });
+  if (!res.ok) throw new Error("catalog");
+  const json = (await res.json()) as { data: Catalog };
+  return json.data;
 }
 
 const ASPECT_LABEL = Object.fromEntries(
@@ -173,7 +169,9 @@ export function ObjectivesPicker({
             <DialogDescription>
               {catalog?.scope === "club"
                 ? "Objetivos de tu club. Marca los que quieras añadir; después puedes editarlos o escribir otros."
-                : "Objetivos de Ten Planner y los tuyos. Marca los que quieras añadir; después puedes editarlos o escribir otros."}
+                : catalog?.scope === "base"
+                  ? "Objetivos de Ten Planner. Marca los que quieras añadir; después puedes editarlos o escribir otros."
+                  : "Tus objetivos (los de Ten Planner con tus cambios). Marca los que quieras añadir; después puedes editarlos o escribir otros."}
             </DialogDescription>
           </DialogHeader>
 

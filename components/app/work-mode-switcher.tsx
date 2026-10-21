@@ -2,27 +2,33 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Loader2, User } from "lucide-react";
+import { Building2, Globe2, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ClubOption } from "@/components/app/club-context-select";
 
 const PARTICULAR = "particular";
+const TEN_PLANNER = "tenplanner";
 
 export function WorkModeSwitcher({
   clubs,
   activeClubId: initialActiveClubId,
+  canUseTenPlanner = false,
+  tenPlannerActive = false,
 }: {
   clubs: ClubOption[];
   activeClubId: string | null;
+  canUseTenPlanner?: boolean;
+  tenPlannerActive?: boolean;
 }) {
   const router = useRouter();
+  // "tenplanner", el id del club activo o null (particular).
   const [activeClubId, setActiveClubId] = useState<string | null>(
-    initialActiveClubId
+    canUseTenPlanner && tenPlannerActive ? TEN_PLANNER : initialActiveClubId
   );
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (clubs.length === 0) return null;
+  if (clubs.length === 0 && !canUseTenPlanner) return null;
 
   async function selectMode(clubId: string | null) {
     if (clubId === activeClubId) return;
@@ -31,7 +37,9 @@ export function WorkModeSwitcher({
     const res = await fetch("/api/account/work-mode", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clubId }),
+      body: JSON.stringify(
+        clubId === TEN_PLANNER ? { mode: TEN_PLANNER } : { clubId }
+      ),
     });
     if (res.ok) {
       setActiveClubId(clubId);
@@ -76,6 +84,26 @@ export function WorkModeSwitcher({
           )}
           Particular
         </button>
+        {canUseTenPlanner && (
+          <button
+            type="button"
+            onClick={() => selectMode(TEN_PLANNER)}
+            disabled={saving !== null}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
+              activeClubId === TEN_PLANNER
+                ? "border-brand bg-brand/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-muted"
+            )}
+          >
+            {saving === TEN_PLANNER ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Globe2 className="size-4" />
+            )}
+            Ten Planner (público)
+          </button>
+        )}
         {clubs.map((club) => (
           <button
             key={club.id}
@@ -99,6 +127,13 @@ export function WorkModeSwitcher({
         ))}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {activeClubId === TEN_PLANNER && (
+        <p className="text-xs text-foreground/50">
+          Estás en <strong>Modo Ten Planner</strong>: los ejercicios y clases
+          que crees van a la Biblioteca pública, y los cambios en Objetivos
+          cambian el catálogo que ven todos los clubes y monitores.
+        </p>
+      )}
       {activeClub && (
         <p className="text-xs text-foreground/50">
           Ahora mismo trabajas como <strong>{activeClub.name}</strong>: lo que

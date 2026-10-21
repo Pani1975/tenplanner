@@ -202,6 +202,7 @@ export function ExerciseDetailClient({
   copyTargets = [],
   inClub = false,
   isAdmin = false,
+  canPublish = false,
   userId = null,
   initialRating = null,
   ratingAvg = null,
@@ -219,6 +220,8 @@ export function ExerciseDetailClient({
   copyTargets?: CopyTarget[];
   inClub?: boolean;
   isAdmin?: boolean;
+  /** Admin en Modo Ten Planner: puede tocar la Biblioteca pública. */
+  canPublish?: boolean;
   userId?: string | null;
   initialRating?: number | null;
   ratingAvg?: number | null;
@@ -345,7 +348,7 @@ export function ExerciseDetailClient({
           <ExerciseForm
             mode="edit"
             exerciseId={exercise.id}
-            isAdmin={isAdmin}
+            isAdmin={canPublish}
             sport={exercise.sport}
             initialData={{
               name: exercise.name,

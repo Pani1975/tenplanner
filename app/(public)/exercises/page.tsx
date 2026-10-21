@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import { LevelBalls } from "@/components/app/level-balls";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -280,6 +281,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   // particular, solo los del usuario creados en particular; trabajando como
   // un club, todos los del club (de cualquier monitor). Ver lib/clubs.ts.
   const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
+  // Cabecera con el dueño: "Ejercicios Ten Planner" en la Biblioteca,
+  // "Ejercicios CT Tenerife" / "Ejercicios de David" en el espacio propio.
+  const heading = libraryHeading(
+    "Ejercicios",
+    user ? await getWorkMode(user.id) : null,
+    activeTab === "global"
+  );
   const mineWhere = user
     ? sharedWithClubCondition(
         exercisesTable.createdBy,
@@ -734,12 +742,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-[#D6FF38]">
-                  Biblioteca pública
+                  {heading.kicker}
                 </p>
                 {!user && <SportChangePill sport={sport} />}
               </div>
-              <h1 className="mt-3 font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
-                Ejercicios
+              <h1 className="mt-3 break-words font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
+                {heading.title}
               </h1>
               <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/68">
                 Biblioteca de ejercicios sueltos, etiquetados por nivel,

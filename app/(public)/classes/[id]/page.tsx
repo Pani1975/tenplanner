@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { notFound } from "next/navigation";
 import { and, asc, avg, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import {
@@ -99,8 +100,9 @@ export default async function ClassDetailPage({
     cls.status === "published"
   )
     copyTargets.push("particular");
-  // La Biblioteca pública no se edita ni se borra desde el modo particular.
-  const canEditClass = isOwner && !(cls.isLibrary && !activeWorkClubId);
+  // La Biblioteca pública solo se edita y se borra en Modo Ten Planner.
+  const canEditClass =
+    isOwner && !(cls.isLibrary && !(user && (await isTenPlannerMode(user.id))));
 
   const blocks = await db
     .select()

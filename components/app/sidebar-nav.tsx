@@ -25,6 +25,7 @@ import {
   NotebookPen,
   Plus,
   ShieldCheck,
+  Target,
   UserCircle,
   UserRound,
   Users,
@@ -138,6 +139,8 @@ const navItems: NavItem[] = [
       { href: "/groups", label: "Grupos", icon: Users2, feature: "groups" },
     ],
   },
+  // Catálogo de objetivos del modo de trabajo (Ten Planner, club o particular).
+  { href: "/objetivos", label: "Objetivos", icon: Target },
   { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/places", label: "Lugares", icon: MapPin },
   { href: "/resources", label: "Mis recursos", icon: BookMarked },
@@ -225,6 +228,8 @@ function activeSubmenuIndex(
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
+  /** Modo Ten Planner activo (solo administradores). */
+  tenPlannerMode?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
   familyOnly?: boolean;
@@ -269,6 +274,7 @@ function NavContent({
   appName,
   workModeClubs = [],
   activeWorkClubId = null,
+  tenPlannerMode = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages = 0,
@@ -333,10 +339,12 @@ function NavContent({
       {user && !familyOnly && (
         <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
           <SportBadge activeSport={activeSport} />
-          {workModeClubs.length > 0 && (
+          {(workModeClubs.length > 0 || isAdmin) && (
             <WorkModeBadge
               clubs={workModeClubs}
               activeClubId={activeWorkClubId}
+              canUseTenPlanner={isAdmin}
+              tenPlannerActive={tenPlannerMode}
             />
           )}
         </div>
@@ -674,6 +682,7 @@ function SidebarNavInner({
   appName,
   workModeClubs = [],
   activeWorkClubId = null,
+  tenPlannerMode = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages: initialUnread = 0,
@@ -764,6 +773,7 @@ function SidebarNavInner({
           appName={appName}
           workModeClubs={workModeClubs}
           activeWorkClubId={activeWorkClubId}
+          tenPlannerMode={tenPlannerMode}
           activeSport={activeSport}
           familyOnly={familyOnly}
           unreadMessages={unreadMessages}
@@ -815,10 +825,12 @@ function SidebarNavInner({
         {user && !familyOnly && (
           <div className="px-4 pb-3 space-y-2">
             <SportBadge activeSport={activeSport} />
-            {workModeClubs.length > 0 && (
+            {(workModeClubs.length > 0 || isAdmin) && (
               <WorkModeBadge
                 clubs={workModeClubs}
                 activeClubId={activeWorkClubId}
+                canUseTenPlanner={isAdmin}
+                tenPlannerActive={tenPlannerMode}
               />
             )}
           </div>
@@ -865,6 +877,7 @@ function SidebarNavInner({
               appName={appName}
               workModeClubs={workModeClubs}
               activeWorkClubId={activeWorkClubId}
+              tenPlannerMode={tenPlannerMode}
               activeSport={activeSport}
               familyOnly={familyOnly}
               unreadMessages={unreadMessages}

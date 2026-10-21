@@ -6,10 +6,14 @@ import {
   getClubOptionsForUser,
   setActiveWorkClub,
 } from "@/lib/clubs";
+import { enterTenPlannerMode, isTenPlannerMode } from "@/lib/work-mode";
 
-const bodySchema = z.object({
-  clubId: z.string().uuid().nullable(),
-});
+// { clubId: "…" } = club, { clubId: null } = particular,
+// { mode: "tenplanner" } = Modo Ten Planner (solo administradores).
+const bodySchema = z.union([
+  z.object({ mode: z.literal("tenplanner") }),
+  z.object({ clubId: z.string().uuid().nullable() }),
+]);
 
 export async function GET() {
   const supabase = await createClient();
@@ -19,12 +23,15 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [activeClubId, options] = await Promise.all([
+  const [activeClubId, options, tenPlannerMode] = await Promise.all([
     getActiveWorkClubId(user.id),
     getClubOptionsForUser(user.id),
+    isTenPlannerMode(user.id),
   ]);
 
-  return NextResponse.json({ data: { activeClubId, options } });
+  return NextResponse.json({
+    data: { activeClubId, options, tenPlannerMode },
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -49,6 +56,21 @@ export async function PATCH(request: Request) {
       { status: 422 }
     );
 
+  if ("mode" in parsed.data) {
+    try {
+      await enterTenPlannerMode(user.id);
+    } catch {
+      return NextResponse.json(
+        { error: "Solo los administradores pueden usar el Modo Ten Planner." },
+        { status: 403 }
+      );
+    }
+    return NextResponse.json({
+      ok: true,
+      data: { activeClubId: null, tenPlannerMode: true },
+    });
+  }
+
   try {
     await setActiveWorkClub(user.id, parsed.data.clubId);
   } catch {
@@ -60,6 +82,6 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    data: { activeClubId: parsed.data.clubId },
+    data: { activeClubId: parsed.data.clubId, tenPlannerMode: false },
   });
 }

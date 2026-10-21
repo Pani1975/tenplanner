@@ -58,7 +58,11 @@ export default async function ProfilePage() {
         )
       ),
     db
-      .select({ image: usersTable.image })
+      .select({
+        image: usersTable.image,
+        isAdmin: usersTable.isAdmin,
+        tenPlannerMode: usersTable.tenPlannerMode,
+      })
       .from(usersTable)
       .where(eq(usersTable.id, user.id))
       .limit(1),
@@ -87,7 +91,12 @@ export default async function ProfilePage() {
 
         <SportSwitcher activeSport={activeSport} />
 
-        <WorkModeSwitcher clubs={clubOptions} activeClubId={activeClubId} />
+        <WorkModeSwitcher
+          clubs={clubOptions}
+          activeClubId={activeClubId}
+          canUseTenPlanner={!!dbUser[0]?.isAdmin}
+          tenPlannerActive={!!dbUser[0]?.isAdmin && !!dbUser[0]?.tenPlannerMode}
+        />
 
         <ProfileClient
           user={{

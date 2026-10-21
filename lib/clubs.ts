@@ -177,9 +177,10 @@ export async function setActiveWorkClub(userId: string, clubId: string | null) {
   if (clubId && !(await canTagWithClub(userId, clubId))) {
     throw new Error("not_a_member");
   }
+  // Elegir club o particular sale del "Modo Ten Planner" (lib/work-mode.ts).
   await db
     .update(users)
-    .set({ activeClubId: clubId })
+    .set({ activeClubId: clubId, tenPlannerMode: false })
     .where(eq(users.id, userId));
 }
 

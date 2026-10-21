@@ -1,4 +1,5 @@
 import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
+import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import Link from "next/link";
 import {
   eq,
@@ -145,6 +146,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
           spaceLabel: await getSpaceLabel(clubId),
         }))
       : null;
+
+  // Cabecera con el dueño: "Clases Ten Planner" en la Biblioteca,
+  // "Clases CT Tenerife" / "Clases de David" en el espacio propio.
+  const heading = libraryHeading(
+    "Clases",
+    user ? await getWorkMode(user.id) : null,
+    activeTab === "library"
+  );
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const nivel = typeof params.nivel === "string" ? params.nivel : "";
@@ -383,12 +392,12 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-[#D6FF38]">
-                  Biblioteca de clases
+                  {heading.kicker}
                 </p>
                 {!user && <SportChangePill sport={sport} />}
               </div>
-              <h1 className="mt-3 font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
-                Clases
+              <h1 className="mt-3 break-words font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
+                {heading.title}
               </h1>
               <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/68">
                 Plantillas reutilizables con bloques y ejercicios para preparar
