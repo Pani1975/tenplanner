@@ -24,8 +24,10 @@ interface AppShellProps {
   appName?: string;
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
-  /** Modo Ten Planner activo (solo administradores). */
+  /** Modo administrador activo. */
   tenPlannerMode?: boolean;
+  /** Cuenta de la plataforma (siempre en Modo administrador). */
+  platformAccount?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes (ver lib/family.ts) */
   familyOnly?: boolean;
@@ -47,6 +49,7 @@ export default function AppShell({
   workModeClubs = [],
   activeWorkClubId = null,
   tenPlannerMode = false,
+  platformAccount = false,
   activeSport = "tenis",
   familyOnly = false,
   pendingInvites = [],
@@ -68,6 +71,7 @@ export default function AppShell({
         workModeClubs={workModeClubs}
         activeWorkClubId={activeWorkClubId}
         tenPlannerMode={tenPlannerMode}
+        platformAccount={platformAccount}
         activeSport={activeSport}
         familyOnly={familyOnly}
         unreadMessages={unreadMessages}

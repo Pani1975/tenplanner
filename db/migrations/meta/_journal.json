@@ -477,6 +477,13 @@
       "when": 1793300000000,
       "tag": "0067_platform_account",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1793400000000,
+      "tag": "0068_admin_mode_club_identity",
+      "breakpoints": true
     }
   ]
 }

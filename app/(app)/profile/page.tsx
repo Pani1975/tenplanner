@@ -5,10 +5,13 @@ import {
   sessions as sessionsTable,
   exercises as exercisesTable,
   users as usersTable,
+  clubs,
+  clubMembers,
 } from "@/db/schema";
-import { eq, count, or, sql } from "drizzle-orm";
+import { and, eq, count, or, sql } from "drizzle-orm";
 import { ProfileClient } from "./profile-client";
 import { WorkModeSwitcher } from "@/components/app/work-mode-switcher";
+import { ClubIdentityForm } from "@/components/app/club-identity-form";
 import { SportSwitcher } from "@/components/app/sport-switcher";
 import {
   getActiveWorkClubId,
@@ -62,11 +65,33 @@ export default async function ProfilePage() {
         image: usersTable.image,
         isAdmin: usersTable.isAdmin,
         isPlatformAccount: usersTable.isPlatformAccount,
+        adminMode: usersTable.adminMode,
       })
       .from(usersTable)
       .where(eq(usersTable.id, user.id))
       .limit(1),
   ]);
+
+  // Ficha de identificación del club con el que se trabaja (modo club).
+  const [activeClub] = activeClubId
+    ? await db.select().from(clubs).where(eq(clubs.id, activeClubId)).limit(1)
+    : [];
+  const activeClubIsOwner = activeClub
+    ? (
+        await db
+          .select({ id: clubMembers.id })
+          .from(clubMembers)
+          .where(
+            and(
+              eq(clubMembers.clubId, activeClub.id),
+              eq(clubMembers.userId, user.id),
+              eq(clubMembers.role, "owner"),
+              eq(clubMembers.status, "active")
+            )
+          )
+          .limit(1)
+      ).length > 0
+    : false;
 
   const sessionStats = sessionStatsRows[0];
   const totalSessions = Number(sessionStats?.totalSessions ?? 0);
@@ -92,7 +117,27 @@ export default async function ProfilePage() {
         <SportSwitcher activeSport={activeSport} />
 
         {!dbUser[0]?.isPlatformAccount && (
-          <WorkModeSwitcher clubs={clubOptions} activeClubId={activeClubId} />
+          <WorkModeSwitcher
+            clubs={clubOptions}
+            activeClubId={activeClubId}
+            canUseTenPlanner={!!dbUser[0]?.isAdmin}
+            tenPlannerActive={!!dbUser[0]?.isAdmin && !!dbUser[0]?.adminMode}
+          />
+        )}
+
+        {activeClub && (
+          <ClubIdentityForm
+            key={activeClub.updatedAt.toISOString()}
+            clubId={activeClub.id}
+            canEdit={activeClubIsOwner}
+            initial={{
+              name: activeClub.name,
+              fullName: activeClub.fullName,
+              address: activeClub.address,
+              courts: activeClub.courts ?? null,
+              foundedYear: activeClub.foundedYear,
+            }}
+          />
         )}
 
         <ProfileClient

@@ -149,6 +149,10 @@ export const users = pgTable(
     // (Biblioteca pública, catálogo base de objetivos) y ve los Informes. No
     // tiene sesiones, alumnos ni club. Ver lib/work-mode.ts.
     isPlatformAccount: boolean("is_platform_account").default(false).notNull(),
+    // "Modo administrador" (solo administradores, elegible en el selector de
+    // modo): como la cuenta de la plataforma, lo que crea o edita es público.
+    // Excluye el modo club (activeClubId queda a null).
+    adminMode: boolean("admin_mode").default(false).notNull(),
     // Deporte activo: el contexto que filtra todo lo que el usuario ve y
     // crea (sesiones, biblioteca, grupos...). Se elige y cambia desde el
     // selector de deporte, no por elemento. Independiente de activeClubId:
@@ -1779,6 +1783,12 @@ export const clubs = pgTable(
       .notNull(),
     // Informational only for now — no seat billing/enforcement.
     plannedCoachSeats: integer("planned_coach_seats"),
+    // Ficha de identificación del club (Perfil, en modo club).
+    fullName: varchar("full_name", { length: 255 }),
+    address: text("address"),
+    // Número de pistas por tipo de superficie; ver lib/club-identity.ts.
+    courts: jsonb("courts").$type<Partial<Record<string, number>>>(),
+    foundedYear: integer("founded_year"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

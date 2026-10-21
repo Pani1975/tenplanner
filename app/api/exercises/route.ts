@@ -13,6 +13,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { after } from "next/server";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
@@ -393,12 +394,12 @@ export async function POST(request: Request) {
       .onConflictDoNothing();
 
     const [dbUser] = await db
-      .select({ isPlatformAccount: users.isPlatformAccount })
+      .select({ id: users.id })
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1);
-    // Solo la cuenta de la plataforma publica en la Biblioteca.
-    const isAdmin = !!dbUser?.isPlatformAccount;
+    // Solo en Modo administrador se publica en la Biblioteca.
+    const isAdmin = !!dbUser && (await isTenPlannerMode(user.id));
     const [sport, activeClubId] = await Promise.all([
       getActiveSport(user.id),
       getActiveWorkClubId(user.id),

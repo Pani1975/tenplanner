@@ -1,4 +1,5 @@
 import { normalizeTags } from "@/lib/tags";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextResponse } from "next/server";
 import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
 import { z } from "zod";
@@ -276,12 +277,12 @@ export async function POST(request: Request) {
   const d = parsed.data;
 
   const [dbUser] = await db
-    .select({ isPlatformAccount: users.isPlatformAccount })
+    .select({ id: users.id })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  // Solo la cuenta de la plataforma publica en la Biblioteca.
-  const isAdmin = !!dbUser?.isPlatformAccount;
+  // Solo en Modo administrador se publica en la Biblioteca.
+  const isAdmin = !!dbUser && (await isTenPlannerMode(user.id));
   const niveles = normalizeMultiValue(d.niveles, d.nivel);
   const aspectosJuego = normalizeMultiValue(d.aspectosJuego, d.aspectoJuego);
 

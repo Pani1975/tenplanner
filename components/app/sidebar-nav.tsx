@@ -152,9 +152,10 @@ const navItems: NavItem[] = [
 ];
 
 // Vista simplificada para familias (ver lib/family.ts): solo lo que usan.
-// Cuenta de la plataforma (Modo Ten Planner): solo lo común de la plataforma
-// (Biblioteca de ejercicios y clases, catálogo de objetivos) y los Informes.
-// No tiene sesiones, alumnos, calendario ni club.
+// Modo administrador (y cuenta de la plataforma): solo lo común de la
+// plataforma (Biblioteca de ejercicios y clases, catálogo de objetivos) y los
+// Informes. Sin sesiones, alumnos, calendario ni club; el modo se cambia en
+// el selector de la barra lateral.
 const platformNavItems: NavItem[] = [
   { href: "/informes", label: "Informes", icon: BarChart3 },
   {
@@ -186,7 +187,6 @@ const platformNavItems: NavItem[] = [
     ],
   },
   { href: "/objetivos", label: "Objetivos", icon: Target },
-  { href: "/profile", label: "Perfil", icon: UserCircle },
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
@@ -199,7 +199,7 @@ function PlatformBadge() {
         <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
           Modo
         </span>
-        Ten Planner · público
+        Administrador · público
       </span>
     </div>
   );
@@ -283,8 +283,10 @@ function activeSubmenuIndex(
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
-  /** Cuenta de la plataforma: siempre en Modo Ten Planner, con su menú. */
+  /** Modo administrador activo (cuenta de la plataforma o admin que lo elige). */
   tenPlannerMode?: boolean;
+  /** Cuenta de la plataforma: siempre en Modo administrador, sin selector. */
+  platformAccount?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
   familyOnly?: boolean;
@@ -330,6 +332,7 @@ function NavContent({
   workModeClubs = [],
   activeWorkClubId = null,
   tenPlannerMode = false,
+  platformAccount = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages = 0,
@@ -402,13 +405,15 @@ function NavContent({
       {user && !familyOnly && (
         <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
           <SportBadge activeSport={activeSport} />
-          {tenPlannerMode ? (
+          {platformAccount ? (
             <PlatformBadge />
           ) : (
-            workModeClubs.length > 0 && (
+            (workModeClubs.length > 0 || isAdmin) && (
               <WorkModeBadge
                 clubs={workModeClubs}
                 activeClubId={activeWorkClubId}
+                canUseTenPlanner={isAdmin}
+                tenPlannerActive={tenPlannerMode}
               />
             )
           )}
@@ -748,6 +753,7 @@ function SidebarNavInner({
   workModeClubs = [],
   activeWorkClubId = null,
   tenPlannerMode = false,
+  platformAccount = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages: initialUnread = 0,
@@ -839,6 +845,7 @@ function SidebarNavInner({
           workModeClubs={workModeClubs}
           activeWorkClubId={activeWorkClubId}
           tenPlannerMode={tenPlannerMode}
+          platformAccount={platformAccount}
           activeSport={activeSport}
           familyOnly={familyOnly}
           unreadMessages={unreadMessages}
@@ -896,13 +903,15 @@ function SidebarNavInner({
         {user && !familyOnly && (
           <div className="px-4 pb-3 space-y-2">
             <SportBadge activeSport={activeSport} />
-            {tenPlannerMode ? (
+            {platformAccount ? (
               <PlatformBadge />
             ) : (
-              workModeClubs.length > 0 && (
+              (workModeClubs.length > 0 || isAdmin) && (
                 <WorkModeBadge
                   clubs={workModeClubs}
                   activeClubId={activeWorkClubId}
+                  canUseTenPlanner={isAdmin}
+                  tenPlannerActive={tenPlannerMode}
                 />
               )
             )}
@@ -951,6 +960,7 @@ function SidebarNavInner({
               workModeClubs={workModeClubs}
               activeWorkClubId={activeWorkClubId}
               tenPlannerMode={tenPlannerMode}
+              platformAccount={platformAccount}
               activeSport={activeSport}
               familyOnly={familyOnly}
               unreadMessages={unreadMessages}

@@ -45,7 +45,7 @@ export function personalTitle(section: string, mode: WorkMode): string {
 /** Etiqueta corta del modo: "Ten Planner", "Club" o "Particular". */
 export function workModeKicker(mode: WorkMode): string {
   return mode.kind === "tenplanner"
-    ? "Modo Ten Planner"
+    ? "Modo administrador"
     : mode.kind === "club"
       ? "Modo club"
       : "Modo particular";
