@@ -12,6 +12,7 @@ import {
   Package,
   Hash,
   GraduationCap,
+  Dumbbell,
 } from "lucide-react";
 import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
 import {
@@ -56,6 +57,14 @@ function classValues(values: string[] | null, fallback: string | null) {
       ? [fallback]
       : [];
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  technique: "Técnica",
+  tactics: "Táctica",
+  fitness: "Físico",
+  "warm-up": "Calentamiento",
+  "trucos-tecnicos": "Trucos técnicos",
+};
 
 export default async function ClassDetailPage({
   params,
@@ -133,6 +142,35 @@ export default async function ClassDetailPage({
           asc(classBlockExercises.orderIndex)
         )
     : [];
+
+  // Ejercicios de la clase (también los de las estaciones), en el orden en
+  // que aparecen, con su ficha enlazada: igual que en la ficha de la sesión.
+  const linkedIds: string[] = [];
+  for (const block of blocks)
+    for (const it of items.filter((i) => i.blockId === block.id)) {
+      if (it.exerciseId) linkedIds.push(it.exerciseId);
+      for (const st of (it.stations as StationItemJson[] | null) ?? [])
+        if (st.kind === "exercise" && st.exerciseId)
+          linkedIds.push(st.exerciseId);
+    }
+  const uniqueLinkedIds = Array.from(new Set(linkedIds));
+  const linkedRows = uniqueLinkedIds.length
+    ? await db
+        .select({
+          id: exercises.id,
+          name: exercises.name,
+          description: exercises.description,
+          category: exercises.category,
+          materials: exercises.materials,
+          videoUrl: exercises.videoUrl,
+        })
+        .from(exercises)
+        .where(inArray(exercises.id, uniqueLinkedIds))
+    : [];
+  const linkedById = new Map(linkedRows.map((r) => [r.id, r]));
+  const classExercises = uniqueLinkedIds
+    .map((exId) => linkedById.get(exId))
+    .filter((r): r is (typeof linkedRows)[number] => !!r);
 
   // Favorito = la clase está en al menos una de las listas del monitor
   // (el corazón de la ficha abre ese selector; ver ClassFavoriteToggle).
@@ -542,7 +580,7 @@ export default async function ClassDetailPage({
                                             href={`/exercises/${st.exerciseId}?fromClass=${cls.id}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-foreground hover:text-brand"
+                                            className="font-medium text-foreground underline decoration-brand/50 underline-offset-2 hover:text-brand"
                                           >
                                             {st.exerciseName}
                                           </Link>
@@ -558,7 +596,7 @@ export default async function ClassDetailPage({
                                   href={`/exercises/${item.exerciseId}?fromClass=${cls.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="font-medium text-foreground hover:text-brand"
+                                  className="font-medium text-foreground underline decoration-brand/50 underline-offset-2 hover:text-brand"
                                 >
                                   {item.exerciseName}
                                 </Link>
@@ -608,6 +646,67 @@ export default async function ClassDetailPage({
                 </li>
               );
             })}
+          </ol>
+        </div>
+      )}
+
+      {classExercises.length > 0 && (
+        <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Dumbbell className="size-4 text-brand" />
+            <h2 className="font-heading text-xl text-foreground">Ejercicios</h2>
+            <span className="text-xs text-muted-foreground">
+              {classExercises.length}
+            </span>
+          </div>
+          <ol className="grid gap-3 sm:grid-cols-2">
+            {classExercises.map((ex, idx) => (
+              <li key={ex.id}>
+                <Link
+                  href={`/exercises/${ex.id}?fromClass=${cls.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3 shadow-sm transition-colors hover:border-brand/40"
+                >
+                  <span className="w-5 shrink-0 pt-0.5 text-right font-mono text-xs text-muted-foreground/60">
+                    {idx + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">
+                      {ex.name}
+                    </span>
+                    <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {CATEGORY_LABELS[ex.category] ?? ex.category}
+                      </span>
+                      {ex.videoUrl && (
+                        <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
+                          Vídeo
+                        </span>
+                      )}
+                    </span>
+                    {ex.description && (
+                      <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                        {ex.description}
+                      </span>
+                    )}
+                    {ex.materials && ex.materials.length > 0 && (
+                      <span className="mt-1.5 flex flex-wrap gap-1">
+                        {ex.materials.map((m) => (
+                          <span
+                            key={m}
+                            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                          >
+                            <Package className="size-2.5 opacity-60" />
+                            {m}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ol>
         </div>
       )}
