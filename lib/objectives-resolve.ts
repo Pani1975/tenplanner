@@ -17,6 +17,7 @@ export type RawObjective = {
   source: string;
   sortOrder: number;
   isActive: boolean;
+  isFinal: boolean;
   clubId: string | null;
   coachId: string | null;
   studentId: string | null;
@@ -132,6 +133,7 @@ export function resolveObjectives(
       criterion: pick((ov) => ov.criterion) ?? o.criterion,
       source: o.source,
       sortOrder: pick((ov) => ov.sortOrder) ?? o.sortOrder,
+      isFinal: o.isFinal,
       achieved: marks.has(o.id),
       achievedAt,
       scope,

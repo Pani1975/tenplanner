@@ -498,6 +498,8 @@ export const tennisObjectives = pgTable(
     source: text("source").default("desglose").notNull(),
     sortOrder: integer("sort_order").default(0).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    // Objetivo final de su subcategoría (se muestra al final y destacado).
+    isFinal: boolean("is_final").default(false).notNull(),
     // Ámbito: los tres a null = catálogo base de Ten Planner. Un objetivo propio
     // pertenece a UN solo ámbito: un club (todos sus alumnos), un monitor (sus
     // alumnos particulares, sin club) o un alumno concreto.
