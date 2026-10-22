@@ -29,7 +29,7 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
   if (!sessionRow) notFound();
   if (sessionRow.userId !== user.id) notFound();
 
-  const plan = await loadSessionPlan(id);
+  const plan = await loadSessionPlan(id, user.id);
   const resolvedExercises = plan.items.map((item, orderIndex) =>
     item.kind === "exercise"
       ? {

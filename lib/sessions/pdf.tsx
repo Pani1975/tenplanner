@@ -511,7 +511,6 @@ export function SessionPdf({ session }: { session: PdfSession }) {
                 <View
                   key={`${phase}-${ex.orderIndex}-${ex.name}`}
                   style={styles.exercise}
-                  wrap={false}
                 >
                   <View style={styles.exerciseHeader}>
                     <View

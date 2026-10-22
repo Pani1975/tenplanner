@@ -73,7 +73,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .where(eq(users.id, user.id))
     .limit(1);
 
-  const plan = await loadSessionPlan(id);
+  const plan = await loadSessionPlan(id, user.id);
   const blockTitles = new Map(
     plan.blocks.map((block) => [block.orderIndex, block.title])
   );

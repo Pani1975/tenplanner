@@ -45,7 +45,7 @@ export default async function EditSessionPage({ params }: PageProps) {
 
   const [plan, studentRows, coachPlaces, userRow, allExercises] =
     await Promise.all([
-      loadSessionPlan(id),
+      loadSessionPlan(id, user.id),
       db
         .select({ studentId: sessionStudents.studentId })
         .from(sessionStudents)
