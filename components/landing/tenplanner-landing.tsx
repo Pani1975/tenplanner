@@ -279,31 +279,13 @@ function HeroSection() {
             criterio.
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
-            <PrimaryButton href="/register">Empieza gratis →</PrimaryButton>
+            <PrimaryButton href="/register">Registrarse →</PrimaryButton>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
             >
               Ver cómo funciona <ArrowDown className="size-4" />
             </Link>
-          </div>
-          <div className="mt-14 flex items-center gap-3 text-sm text-[#66665d]">
-            <div className="flex -space-x-2">
-              {["M", "A", "L"].map((item, index) => (
-                <span
-                  key={item}
-                  className={cn(
-                    "grid size-7 place-items-center rounded-full text-xs font-bold text-white ring-2 ring-[#f4f4f1]",
-                    index === 0 && "bg-[#050505]",
-                    index === 1 && "bg-[#5f7000]",
-                    index === 2 && "bg-[#d6ff38] text-[#050505]"
-                  )}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-            Más de 200 monitores ya planifican con Ten Planner
           </div>
         </div>
 
@@ -505,16 +487,9 @@ function FinalCtaSection() {
                 lista en minutos.
               </span>
             </h2>
-            <p className="mt-5 text-base text-white/65">
-              Únete a más de 200 monitores que ya planifican mejor con Ten
-              Planner.
-            </p>
           </div>
           <div className="md:text-center">
-            <PrimaryButton href="/register">Empieza gratis →</PrimaryButton>
-            <p className="mt-4 text-xs text-white/42">
-              14 días gratis · Sin tarjeta
-            </p>
+            <PrimaryButton href="/register">Registrarse →</PrimaryButton>
           </div>
         </div>
       </Reveal>
