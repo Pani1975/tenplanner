@@ -368,7 +368,18 @@ function HowSection() {
         title="Tú decides."
         accent="En minutos."
       />
-      <RevealStagger className="mx-auto mt-20 grid max-w-[1100px] gap-10 md:grid-cols-3">
+      <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
+        Cualquier visitante puede explorar gratis la{" "}
+        <Link href="/exercises" className="font-semibold text-[#5f7000]">
+          biblioteca de ejercicios
+        </Link>{" "}
+        y la{" "}
+        <Link href="/classes" className="font-semibold text-[#5f7000]">
+          biblioteca de clases
+        </Link>
+        , sin crear cuenta. Regístrate para planificar tus sesiones.
+      </p>
+      <RevealStagger className="mx-auto mt-16 grid max-w-[1100px] gap-10 md:grid-cols-3">
         {steps.map((step, index) => (
           <RevealItem key={step.title}>
             <article className="relative text-center">
