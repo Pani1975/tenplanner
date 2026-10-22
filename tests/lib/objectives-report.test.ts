@@ -24,6 +24,7 @@ function item(
     criterion: null,
     source: "rfet",
     sortOrder: n,
+    isFinal: false,
     achieved,
     achievedAt: achieved ? (achievedAt ?? "2026-08-01T10:00:00Z") : null,
     scope: "base",

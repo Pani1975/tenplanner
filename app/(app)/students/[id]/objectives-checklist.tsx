@@ -273,6 +273,11 @@ export function ObjectivesChecklist({
                 )}
               >
                 {item.title}
+                {item.isFinal && (
+                  <span className="ml-2 inline-block rounded-full bg-foreground px-2 py-0.5 align-middle text-[9px] font-black uppercase text-background">
+                    Final
+                  </span>
+                )}
                 {(tag || edited) && (
                   <span className="ml-2 inline-block rounded-full bg-brand/10 px-2 py-0.5 align-middle text-[9px] font-black uppercase text-brand">
                     {tag ?? "Editado"}

@@ -37,6 +37,7 @@ function obj(id: string, extra: Partial<RawObjective> = {}): RawObjective {
     source: "desglose",
     sortOrder: 1,
     isActive: true,
+    isFinal: false,
     clubId: null,
     coachId: null,
     studentId: null,
@@ -238,6 +239,7 @@ describe("planMove", () => {
   ): ObjectiveItem => ({
     id,
     code: id,
+    isFinal: false,
     ball: "roja",
     aspect: "tecnico",
     block,

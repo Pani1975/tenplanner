@@ -46,6 +46,8 @@ export type ObjectiveItem = {
   criterion: string | null;
   source: string;
   sortOrder: number;
+  /** Objetivo de salida de su subcategoría (va el último y destacado). */
+  isFinal: boolean;
   achieved: boolean;
   achievedAt: string | null;
   /** De quién es el objetivo: catálogo base o creado por un club, monitor o alumno. */
