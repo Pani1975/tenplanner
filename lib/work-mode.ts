@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { clubs, users } from "@/db/schema";
-import { canTagWithClub } from "@/lib/clubs";
+import { canTagWithClub, getClubAccountClubId } from "@/lib/clubs";
 import type { WorkMode } from "@/lib/work-mode-labels";
 
 export * from "@/lib/work-mode-labels";
@@ -31,14 +31,18 @@ export async function getWorkMode(userId: string): Promise<WorkMode> {
   if (row.isPlatformAccount || (row.isAdmin && row.adminMode))
     return { kind: "tenplanner", ownerName: row.name };
 
-  if (row.activeClubId && (await canTagWithClub(userId, row.activeClubId))) {
+  // La cuenta de un club no tiene Modo particular: sin club activo, su club.
+  const clubId =
+    row.activeClubId && (await canTagWithClub(userId, row.activeClubId))
+      ? row.activeClubId
+      : await getClubAccountClubId(userId);
+  if (clubId) {
     const [club] = await db
       .select({ name: clubs.name })
       .from(clubs)
-      .where(eq(clubs.id, row.activeClubId))
+      .where(eq(clubs.id, clubId))
       .limit(1);
-    if (club)
-      return { kind: "club", clubId: row.activeClubId, clubName: club.name };
+    if (club) return { kind: "club", clubId, clubName: club.name };
   }
   return { kind: "particular", ownerName: row.name };
 }
@@ -70,6 +74,35 @@ export async function enterAdminMode(userId: string) {
   if (!row?.isAdmin) throw new Error("not_admin");
   await db
     .update(users)
-    .set({ adminMode: true, activeClubId: null })
+    .set({ adminMode: true, managementMode: false, activeClubId: null })
     .where(eq(users.id, userId));
+}
+
+/**
+ * ¿Está la cuenta de un club en "Modo gestión"? Devuelve el id de su club o
+ * null. Solo la cuenta del club (su dueño) puede usarlo.
+ */
+export async function getManagementClubId(
+  userId: string
+): Promise<string | null> {
+  const [[row], clubId] = await Promise.all([
+    db
+      .select({ managementMode: users.managementMode })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    getClubAccountClubId(userId),
+  ]);
+  return row?.managementMode && clubId ? clubId : null;
+}
+
+/** Entra en "Modo gestión". Lanza un error si no es la cuenta de un club. */
+export async function enterManagementMode(userId: string): Promise<string> {
+  const clubId = await getClubAccountClubId(userId);
+  if (!clubId) throw new Error("not_club_account");
+  await db
+    .update(users)
+    .set({ managementMode: true, adminMode: false, activeClubId: clubId })
+    .where(eq(users.id, userId));
+  return clubId;
 }

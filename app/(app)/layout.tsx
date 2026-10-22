@@ -7,6 +7,7 @@ import AppShell from "@/components/app/app-shell";
 import { getAppSettings, type SettingKey } from "@/lib/app-settings";
 import {
   getActiveWorkClubId,
+  getClubAccountClubId,
   getClubOptionsForUser,
   getPendingInvitesForEmail,
 } from "@/lib/clubs";
@@ -62,6 +63,7 @@ export default async function AppLayout({
     familyOnly,
     pendingInvites,
     unreadMessages,
+    clubAccountClubId,
   ] = await Promise.all([
     db
       .select({
@@ -69,6 +71,7 @@ export default async function AppLayout({
         image: users.image,
         isPlatformAccount: users.isPlatformAccount,
         adminMode: users.adminMode,
+        managementMode: users.managementMode,
       })
       .from(users)
       .where(eq(users.id, user.id))
@@ -85,6 +88,8 @@ export default async function AppLayout({
     getPendingInvitesForEmail(user.id, user.email).catch(() => []),
     // Contador de mensajes nuevos junto a "Mensajes"
     countUnreadMessages(user.id).catch(() => 0),
+    // Cuenta de un club: Modo <club> + Modo gestión, sin Modo particular
+    getClubAccountClubId(user.id),
   ]);
 
   const isAdmin = row?.isAdmin ?? false;
@@ -130,6 +135,8 @@ export default async function AppLayout({
       activeWorkClubId={activeWorkClubId}
       tenPlannerMode={!!row?.isPlatformAccount || (isAdmin && !!row?.adminMode)}
       platformAccount={!!row?.isPlatformAccount}
+      clubAccountClubId={clubAccountClubId}
+      managementMode={!!clubAccountClubId && !!row?.managementMode}
       activeSport={activeSport}
       familyOnly={familyOnly}
       pendingInvites={pendingInvites}

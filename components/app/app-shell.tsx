@@ -28,6 +28,10 @@ interface AppShellProps {
   tenPlannerMode?: boolean;
   /** Cuenta de la plataforma (siempre en Modo administrador). */
   platformAccount?: boolean;
+  /** Cuenta de un club: su club (Modo <club> + Modo gestión). */
+  clubAccountClubId?: string | null;
+  /** Modo gestión activo (solo la cuenta de un club). */
+  managementMode?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes (ver lib/family.ts) */
   familyOnly?: boolean;
@@ -50,6 +54,8 @@ export default function AppShell({
   activeWorkClubId = null,
   tenPlannerMode = false,
   platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
   pendingInvites = [],
@@ -72,6 +78,8 @@ export default function AppShell({
         activeWorkClubId={activeWorkClubId}
         tenPlannerMode={tenPlannerMode}
         platformAccount={platformAccount}
+        clubAccountClubId={clubAccountClubId}
+        managementMode={managementMode}
         activeSport={activeSport}
         familyOnly={familyOnly}
         unreadMessages={unreadMessages}

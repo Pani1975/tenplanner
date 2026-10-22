@@ -3,7 +3,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { clubMembers, clubs } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { getOwnedClub, getCoachMemberships } from "@/lib/clubs";
+import {
+  canUserCreateClub,
+  getOwnedClub,
+  getCoachMemberships,
+} from "@/lib/clubs";
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(255),
@@ -69,6 +73,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Ya tienes un club registrado.", data: existing },
       { status: 409 }
+    );
+  }
+  if (!(await canUserCreateClub(user.id, user.user_metadata))) {
+    return NextResponse.json(
+      {
+        error:
+          "Un club se da de alta con su propia cuenta: crea una cuenta nueva eligiendo «Como Club».",
+      },
+      { status: 403 }
     );
   }
 

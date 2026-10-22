@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { getOwnedClub, getCoachMemberships, listClubRoster } from "@/lib/clubs";
+import {
+  canUserCreateClub,
+  getOwnedClub,
+  getCoachMemberships,
+  listClubRoster,
+} from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { SPORT_LABELS } from "@/lib/sport-constants";
 import { redirect } from "next/navigation";
@@ -32,6 +37,10 @@ export default async function ClubPage() {
     getCoachMemberships(user.id),
     getActiveSport(user.id),
   ]);
+
+  // Un club se crea con su propia cuenta ("Como Club" al registrarse); un
+  // monitor no crea clubes desde la suya. Los administradores sí.
+  const canCreateClub = await canUserCreateClub(user.id, user.user_metadata);
 
   if (ownedClub) {
     const { members, invites } = await listClubRoster(ownedClub.id);
@@ -142,12 +151,15 @@ export default async function ClubPage() {
           ¿Diriges un club?
         </h2>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
-          Regístralo para invitar a tus monitores y gestionar su espacio desde
-          una cuenta común. Es solo informativo por ahora, sin facturación.
+          {canCreateClub
+            ? "Regístralo para invitar a tus monitores y gestionar su espacio desde una cuenta común. Es solo informativo por ahora, sin facturación."
+            : "Un club se da de alta con su propia cuenta: cierra sesión y crea una cuenta nueva eligiendo «Como Club», con otro correo. Desde esa cuenta invitarás a tus monitores (también a ti) y tendrás el Modo gestión con los informes del club."}
         </p>
-        <div className="mt-4">
-          <NewClubForm />
-        </div>
+        {canCreateClub && (
+          <div className="mt-4">
+            <NewClubForm />
+          </div>
+        )}
       </div>
     </div>
   );

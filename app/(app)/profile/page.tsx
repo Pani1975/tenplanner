@@ -15,6 +15,7 @@ import { ClubIdentityForm } from "@/components/app/club-identity-form";
 import { SportSwitcher } from "@/components/app/sport-switcher";
 import {
   getActiveWorkClubId,
+  getClubAccountClubId,
   getClubOptionsForUser,
   sharedWithClubCondition,
 } from "@/lib/clubs";
@@ -66,11 +67,14 @@ export default async function ProfilePage() {
         isAdmin: usersTable.isAdmin,
         isPlatformAccount: usersTable.isPlatformAccount,
         adminMode: usersTable.adminMode,
+        managementMode: usersTable.managementMode,
       })
       .from(usersTable)
       .where(eq(usersTable.id, user.id))
       .limit(1),
   ]);
+
+  const clubAccountClubId = await getClubAccountClubId(user.id);
 
   // Ficha de identificación del club con el que se trabaja (modo club).
   const [activeClub] = activeClubId
@@ -121,12 +125,16 @@ export default async function ProfilePage() {
             key={
               dbUser[0]?.isAdmin && dbUser[0]?.adminMode
                 ? "admin"
-                : (activeClubId ?? "particular")
+                : clubAccountClubId && dbUser[0]?.managementMode
+                  ? "gestion"
+                  : (activeClubId ?? "particular")
             }
             clubs={clubOptions}
             activeClubId={activeClubId}
             canUseTenPlanner={!!dbUser[0]?.isAdmin}
             tenPlannerActive={!!dbUser[0]?.isAdmin && !!dbUser[0]?.adminMode}
+            clubAccountClubId={clubAccountClubId}
+            managementActive={!!dbUser[0]?.managementMode}
           />
         )}
 

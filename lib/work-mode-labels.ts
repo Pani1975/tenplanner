@@ -42,12 +42,12 @@ export function personalTitle(section: string, mode: WorkMode): string {
   return spaceTitle(section, mode);
 }
 
-/** Etiqueta corta del modo: "Ten Planner", "Club" o "Particular". */
+/** Etiqueta del modo: "Modo administrador", "Modo CT Tenerife" o "Modo particular". */
 export function workModeKicker(mode: WorkMode): string {
   return mode.kind === "tenplanner"
     ? "Modo administrador"
     : mode.kind === "club"
-      ? "Modo club"
+      ? `Modo ${mode.clubName}`
       : "Modo particular";
 }
 

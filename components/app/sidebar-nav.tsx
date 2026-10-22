@@ -190,6 +190,16 @@ const platformNavItems: NavItem[] = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
+// Modo gestión (solo la cuenta de un club): informes y estadísticas del club
+// y gestión de sus monitores. Solo consulta: para crear ejercicios, clases o
+// sesiones del club se cambia al modo del club en el selector.
+const managementNavItems: NavItem[] = [
+  { href: "/gestion", label: "Informes", icon: BarChart3 },
+  { href: "/gestion/monitores", label: "Monitores", icon: Users2 },
+  { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
 /** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
 function PlatformBadge() {
   return (
@@ -287,6 +297,10 @@ interface WorkModeProps {
   tenPlannerMode?: boolean;
   /** Cuenta de la plataforma: siempre en Modo administrador, sin selector. */
   platformAccount?: boolean;
+  /** Cuenta de un club: su club (Modo <club> + Modo gestión). */
+  clubAccountClubId?: string | null;
+  /** Modo gestión activo (solo la cuenta de un club). */
+  managementMode?: boolean;
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
   familyOnly?: boolean;
@@ -333,6 +347,8 @@ function NavContent({
   activeWorkClubId = null,
   tenPlannerMode = false,
   platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages = 0,
@@ -352,7 +368,9 @@ function NavContent({
     ? familyNavItems
     : tenPlannerMode
       ? platformNavItems
-      : navItemsForSpace(!!activeWorkClubId);
+      : managementMode
+        ? managementNavItems
+        : navItemsForSpace(!!activeWorkClubId);
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName
@@ -388,7 +406,9 @@ function NavContent({
               ? "/mi-familia/calendario"
               : tenPlannerMode
                 ? "/informes"
-                : "/dashboard"
+                : managementMode
+                  ? "/gestion"
+                  : "/dashboard"
           }
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
           onClick={onNavigate}
@@ -410,11 +430,13 @@ function NavContent({
           ) : (
             (workModeClubs.length > 0 || isAdmin) && (
               <WorkModeBadge
-                key={`${tenPlannerMode ? "admin" : (activeWorkClubId ?? "particular")}`}
+                key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
                 clubs={workModeClubs}
                 activeClubId={activeWorkClubId}
                 canUseTenPlanner={isAdmin}
                 tenPlannerActive={tenPlannerMode}
+                clubAccountClubId={clubAccountClubId}
+                managementActive={managementMode}
               />
             )
           )}
@@ -755,6 +777,8 @@ function SidebarNavInner({
   activeWorkClubId = null,
   tenPlannerMode = false,
   platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
   unreadMessages: initialUnread = 0,
@@ -847,6 +871,8 @@ function SidebarNavInner({
           activeWorkClubId={activeWorkClubId}
           tenPlannerMode={tenPlannerMode}
           platformAccount={platformAccount}
+          clubAccountClubId={clubAccountClubId}
+          managementMode={managementMode}
           activeSport={activeSport}
           familyOnly={familyOnly}
           unreadMessages={unreadMessages}
@@ -862,7 +888,9 @@ function SidebarNavInner({
                   ? "/mi-familia/calendario"
                   : tenPlannerMode
                     ? "/informes"
-                    : "/dashboard"
+                    : managementMode
+                      ? "/gestion"
+                      : "/dashboard"
               }
               className="flex min-w-0 shrink items-center gap-2.5"
             >
@@ -909,11 +937,13 @@ function SidebarNavInner({
             ) : (
               (workModeClubs.length > 0 || isAdmin) && (
                 <WorkModeBadge
-                  key={`${tenPlannerMode ? "admin" : (activeWorkClubId ?? "particular")}`}
+                  key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
                   clubs={workModeClubs}
                   activeClubId={activeWorkClubId}
                   canUseTenPlanner={isAdmin}
                   tenPlannerActive={tenPlannerMode}
+                  clubAccountClubId={clubAccountClubId}
+                  managementActive={managementMode}
                 />
               )
             )}
@@ -963,6 +993,8 @@ function SidebarNavInner({
               activeWorkClubId={activeWorkClubId}
               tenPlannerMode={tenPlannerMode}
               platformAccount={platformAccount}
+              clubAccountClubId={clubAccountClubId}
+              managementMode={managementMode}
               activeSport={activeSport}
               familyOnly={familyOnly}
               unreadMessages={unreadMessages}

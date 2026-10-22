@@ -498,6 +498,13 @@
       "when": 1793600000000,
       "tag": "0070_objetivos_bola_roja_estructura",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1793700000000,
+      "tag": "0071_management_mode",
+      "breakpoints": true
     }
   ]
 }

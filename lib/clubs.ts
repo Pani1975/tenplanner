@@ -32,6 +32,55 @@ export async function getOwnedClub(userId: string) {
 }
 
 /**
+ * Cuenta de club: la que se dio de alta como club (es dueña de un club) y no
+ * es administradora de la plataforma. Trabaja siempre en su club — Modo
+ * <club> o Modo gestión —, sin Modo particular. Devuelve el id de su club o
+ * null. Los administradores con club propio (p. ej. "Paniagua") conservan el
+ * Modo administrador y el Modo particular.
+ */
+export async function getClubAccountClubId(
+  userId: string
+): Promise<string | null> {
+  const [[row], owned] = await Promise.all([
+    db
+      .select({
+        isAdmin: users.isAdmin,
+        isPlatformAccount: users.isPlatformAccount,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    getOwnedClub(userId),
+  ]);
+  if (!owned || row?.isAdmin || row?.isPlatformAccount) return null;
+  return owned.id;
+}
+
+/**
+ * ¿Puede esta cuenta crear un club? Un club se da de alta con su propia
+ * cuenta ("Como Club" al registrarse, que deja club_name en los metadatos);
+ * un monitor no crea clubes desde la suya — si quiere uno, usa otra cuenta.
+ * Los administradores de la plataforma sí pueden. Una cuenta, un club.
+ */
+export async function canUserCreateClub(
+  userId: string,
+  metadata: Record<string, unknown> | undefined
+): Promise<boolean> {
+  const [[row], owned] = await Promise.all([
+    db
+      .select({ isAdmin: users.isAdmin })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    getOwnedClub(userId),
+  ]);
+  if (owned) return false;
+  if (row?.isAdmin) return true;
+  const clubName = metadata?.club_name;
+  return typeof clubName === "string" && clubName.trim().length >= 2;
+}
+
+/**
  * Every club a user is linked to as an active coach (not counting one they
  * own), one row per club — with every sport they're linked for at that
  * club (club_members has one row per (club, user, sport), see schema.ts).
@@ -161,9 +210,9 @@ export async function getActiveWorkClubId(
     .where(eq(users.id, userId))
     .limit(1);
   const clubId = row?.activeClubId ?? null;
-  if (!clubId) return null;
-  const stillActive = await canTagWithClub(userId, clubId);
-  return stillActive ? clubId : null;
+  if (clubId && (await canTagWithClub(userId, clubId))) return clubId;
+  // La cuenta de un club no tiene Modo particular: trabaja en su club.
+  return getClubAccountClubId(userId);
 }
 
 /**
@@ -177,10 +226,14 @@ export async function setActiveWorkClub(userId: string, clubId: string | null) {
   if (clubId && !(await canTagWithClub(userId, clubId))) {
     throw new Error("not_a_member");
   }
-  // Elegir club o particular sale del "Modo administrador" (lib/work-mode.ts).
+  if (!clubId && (await getClubAccountClubId(userId))) {
+    throw new Error("club_account");
+  }
+  // Elegir club o particular sale del "Modo administrador" y del "Modo
+  // gestión" (lib/work-mode.ts).
   await db
     .update(users)
-    .set({ activeClubId: clubId, adminMode: false })
+    .set({ activeClubId: clubId, adminMode: false, managementMode: false })
     .where(eq(users.id, userId));
 }
 

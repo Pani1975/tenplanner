@@ -6,12 +6,18 @@ import {
   getClubOptionsForUser,
   setActiveWorkClub,
 } from "@/lib/clubs";
-import { enterAdminMode, isTenPlannerMode } from "@/lib/work-mode";
+import {
+  enterAdminMode,
+  enterManagementMode,
+  getManagementClubId,
+  isTenPlannerMode,
+} from "@/lib/work-mode";
 
 // { clubId: "…" } = club, { clubId: null } = particular,
-// { mode: "tenplanner" } = Modo administrador (solo administradores).
+// { mode: "tenplanner" } = Modo administrador (solo administradores),
+// { mode: "gestion" } = Modo gestión (solo la cuenta de un club).
 const bodySchema = z.union([
-  z.object({ mode: z.literal("tenplanner") }),
+  z.object({ mode: z.enum(["tenplanner", "gestion"]) }),
   z.object({ clubId: z.string().uuid().nullable() }),
 ]);
 
@@ -23,14 +29,21 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [activeClubId, options, tenPlannerMode] = await Promise.all([
-    getActiveWorkClubId(user.id),
-    getClubOptionsForUser(user.id),
-    isTenPlannerMode(user.id),
-  ]);
+  const [activeClubId, options, tenPlannerMode, managementClubId] =
+    await Promise.all([
+      getActiveWorkClubId(user.id),
+      getClubOptionsForUser(user.id),
+      isTenPlannerMode(user.id),
+      getManagementClubId(user.id),
+    ]);
 
   return NextResponse.json({
-    data: { activeClubId, options, tenPlannerMode },
+    data: {
+      activeClubId,
+      options,
+      tenPlannerMode,
+      managementMode: !!managementClubId,
+    },
   });
 }
 
@@ -56,6 +69,25 @@ export async function PATCH(request: Request) {
       { status: 422 }
     );
 
+  if ("mode" in parsed.data && parsed.data.mode === "gestion") {
+    try {
+      const clubId = await enterManagementMode(user.id);
+      return NextResponse.json({
+        ok: true,
+        data: {
+          activeClubId: clubId,
+          tenPlannerMode: false,
+          managementMode: true,
+        },
+      });
+    } catch {
+      return NextResponse.json(
+        { error: "Solo la cuenta del club puede usar el Modo gestión." },
+        { status: 403 }
+      );
+    }
+  }
+
   if ("mode" in parsed.data) {
     try {
       await enterAdminMode(user.id);
@@ -75,9 +107,14 @@ export async function PATCH(request: Request) {
 
   try {
     await setActiveWorkClub(user.id, parsed.data.clubId);
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "No perteneces a ese club." },
+      {
+        error:
+          error instanceof Error && error.message === "club_account"
+            ? "La cuenta de un club trabaja siempre en su club."
+            : "No perteneces a ese club.",
+      },
       { status: 403 }
     );
   }

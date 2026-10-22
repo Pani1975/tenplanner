@@ -153,6 +153,10 @@ export const users = pgTable(
     // modo): como la cuenta de la plataforma, lo que crea o edita es público.
     // Excluye el modo club (activeClubId queda a null).
     adminMode: boolean("admin_mode").default(false).notNull(),
+    // "Modo gestión" (solo la cuenta del club, su dueño): informes y
+    // estadísticas de monitores y alumnos del club, y gestión de monitores.
+    // Solo consulta; activeClubId sigue apuntando a su club.
+    managementMode: boolean("management_mode").default(false).notNull(),
     // Deporte activo: el contexto que filtra todo lo que el usuario ve y
     // crea (sesiones, biblioteca, grupos...). Se elige y cambia desde el
     // selector de deporte, no por elemento. Independiente de activeClubId:
