@@ -505,6 +505,13 @@
       "when": 1793700000000,
       "tag": "0071_management_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1793800000000,
+      "tag": "0072_objetivos_con_golpe",
+      "breakpoints": true
     }
   ]
 }
