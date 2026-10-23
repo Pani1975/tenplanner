@@ -512,6 +512,13 @@
       "when": 1793800000000,
       "tag": "0072_objetivos_con_golpe",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1793900000000,
+      "tag": "0073_objetivos_naranja_verde_estructura",
+      "breakpoints": true
     }
   ]
 }
