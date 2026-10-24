@@ -1182,6 +1182,7 @@ export function ClassForm({
               </label>
               <ObjectivesPicker
                 currentText={objetivos}
+                infinitive
                 defaultBall={ballFromLevels(niveles)}
                 onAdd={(titles) =>
                   setObjetivos((prev) =>

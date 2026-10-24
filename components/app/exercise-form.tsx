@@ -1895,6 +1895,7 @@ export function ExerciseForm({
             </label>
             <ObjectivesPicker
               currentText={watchedValues.objectives}
+              infinitive
               defaultBall={ballFromLevels(niveles, watchedValues.tipoPelota)}
               onAdd={(titles) =>
                 setValue(

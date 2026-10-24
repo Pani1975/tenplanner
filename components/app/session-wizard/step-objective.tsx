@@ -58,6 +58,7 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
           </label>
           <ObjectivesPicker
             currentText={state.objective}
+            infinitive
             onAdd={(titles) =>
               update({
                 objective: appendObjectiveLines(state.objective, titles).slice(

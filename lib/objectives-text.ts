@@ -21,7 +21,14 @@ function normalize(s: string) {
 
 /** Objetivos ya escritos en el texto (una línea por objetivo, sin numeración). */
 export function objectiveLines(text: string | null | undefined): string[] {
-  return (text ?? "").split(/\r?\n/).map(stripObjectivePrefix).filter(Boolean);
+  return (
+    (text ?? "")
+      .split(/\r?\n/)
+      // Las clases guardan "1) … . 2) … ." en una sola línea.
+      .flatMap((l) => l.split(/(?<=\.)\s+(?=\d+\)\s)/))
+      .map(stripObjectivePrefix)
+      .filter(Boolean)
+  );
 }
 
 /** ¿Está ya este objetivo en el texto? */

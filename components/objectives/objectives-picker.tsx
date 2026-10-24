@@ -10,6 +10,7 @@ import {
   type BallId,
 } from "@/lib/objectives-taxonomy";
 import { textHasObjective } from "@/lib/objectives-text";
+import { objectiveToInfinitive } from "@/lib/objectives-infinitive";
 import {
   Dialog,
   DialogContent,
@@ -73,8 +74,14 @@ export function ObjectivesPicker({
   defaultBall,
   label = "Cargar objetivos",
   className,
+  infinitive = false,
 }: {
   onAdd: (titles: string[]) => void;
+  /**
+   * En ejercicios, clases y sesiones los objetivos se escriben en infinitivo
+   * ("Golpear…"); en el catálogo y en grupos se quedan en presente ("Golpea…").
+   */
+  infinitive?: boolean;
   /** Texto actual del campo, para marcar los objetivos que ya están. */
   currentText?: string | null;
   defaultBall?: BallId | null;
@@ -143,7 +150,7 @@ export function ObjectivesPicker({
     const order = new Map(items.map((i, idx) => [i.id, idx]));
     const titles = [...selected.entries()]
       .sort((a, b) => (order.get(a[0]) ?? 0) - (order.get(b[0]) ?? 0))
-      .map(([, title]) => title);
+      .map(([, title]) => (infinitive ? objectiveToInfinitive(title) : title));
     if (titles.length) onAdd(titles);
     setOpen(false);
   }
@@ -246,10 +253,13 @@ export function ObjectivesPicker({
                     </p>
                     <ul className="divide-y divide-border rounded-xl border border-border">
                       {g.rows.map((item) => {
-                        const already = textHasObjective(
-                          currentText,
-                          item.title
-                        );
+                        const already =
+                          textHasObjective(currentText, item.title) ||
+                          (infinitive &&
+                            textHasObjective(
+                              currentText,
+                              objectiveToInfinitive(item.title)
+                            ));
                         const checked = selected.has(item.id);
                         return (
                           <li key={item.id}>
