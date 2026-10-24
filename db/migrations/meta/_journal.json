@@ -519,6 +519,13 @@
       "when": 1793900000000,
       "tag": "0073_objetivos_naranja_verde_estructura",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794000000000,
+      "tag": "0074_objetivos_etapas_amarillas",
+      "breakpoints": true
     }
   ]
 }

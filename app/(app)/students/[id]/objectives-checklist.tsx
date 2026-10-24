@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   ASPECTS,
   BALLS,
+  ballName,
   type AspectId,
   type BallId,
   type ObjectiveItem,
@@ -142,7 +143,10 @@ export function ObjectivesChecklist({
     ball === "todas" ? [] : active.filter((i) => i.ball === ball);
   const levelDone =
     levelItems.length > 0 && levelItems.every((i) => state[i.id]);
-  const levelName = ball === "todas" ? "" : BALL_LABEL[ball];
+  const levelName =
+    ball === "todas"
+      ? ""
+      : (BALLS.find((b) => b.id === ball)?.chip ?? BALL_LABEL[ball]);
 
   function toggleLevel() {
     if (levelItems.length === 0) return;
@@ -575,14 +579,12 @@ export function ObjectivesChecklist({
                   <span
                     className="size-2.5 rounded-full"
                     style={{ backgroundColor: BALL_COLOR[first.ball] }}
-                    title={`Bola ${BALL_LABEL[first.ball].toLowerCase()}`}
+                    title={ballName(first.ball)}
                   />
                   {first.block}
                   <span className="text-foreground/35">
                     · {aspectLabel}
-                    {ball === "todas"
-                      ? ` · Bola ${BALL_LABEL[first.ball].toLowerCase()}`
-                      : ""}
+                    {ball === "todas" ? ` · ${ballName(first.ball)}` : ""}
                   </span>
                 </h3>
                 <ul className="divide-y divide-[#050505]/10 rounded-2xl border border-[#050505]/10 dark:divide-white/10 dark:border-white/10">

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { defaultBallForStudent } from "@/lib/objectives-taxonomy";
+import {
+  ballFromLevels,
+  ballName,
+  defaultBallForStudent,
+} from "@/lib/objectives-taxonomy";
 
 const today = new Date("2026-10-19T12:00:00Z");
 
@@ -29,5 +33,43 @@ describe("defaultBallForStudent", () => {
   it("sin datos o fecha inválida → roja", () => {
     expect(defaultBallForStudent(null, null, today)).toBe("roja");
     expect(defaultBallForStudent(null, "no-es-fecha", today)).toBe("roja");
+  });
+  it("las etapas amarillas por nivel y por edad", () => {
+    expect(defaultBallForStudent("especializacion", null, today)).toBe(
+      "especializacion"
+    );
+    expect(defaultBallForStudent("rendimiento", "2017-01-01", today)).toBe(
+      "rendimiento"
+    );
+    expect(defaultBallForStudent(null, "2015-03-01", today)).toBe(
+      "especializacion"
+    );
+    expect(defaultBallForStudent(null, "2013-03-01", today)).toBe(
+      "precompeticion"
+    );
+    expect(defaultBallForStudent(null, "2011-03-01", today)).toBe(
+      "competicion"
+    );
+    expect(defaultBallForStudent(null, "2009-03-01", today)).toBe(
+      "rendimiento"
+    );
+  });
+  it("los adultos sin etapa empiezan en verde", () => {
+    expect(defaultBallForStudent(null, "1990-03-01", today)).toBe("verde");
+  });
+});
+
+describe("ballFromLevels", () => {
+  it("la pelota amarilla sola no decide la etapa; el nivel sí", () => {
+    expect(ballFromLevels([], "amarilla")).toBeNull();
+    expect(ballFromLevels(["competicion"], "amarilla")).toBe("competicion");
+    expect(ballFromLevels(["consolidacion"], "verde")).toBe("verde");
+  });
+});
+
+describe("ballName", () => {
+  it("distingue las etapas amarillas", () => {
+    expect(ballName("roja")).toBe("Bola roja");
+    expect(ballName("precompeticion")).toBe("Bola amarilla · Precompetición");
   });
 });

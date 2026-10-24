@@ -1,10 +1,14 @@
-// Objetivos por etapa (tenisXetapas · RFET): bola roja (Descubrimiento),
-// naranja (Desarrollo) y verde (Consolidación), por aspecto del juego.
+// Objetivos por etapa (tenisXetapas · RFET), por aspecto del juego: bola roja
+// (Descubrimiento), naranja (Desarrollo), verde (Consolidación) y, con pelota
+// amarilla, Especialización, Precompetición, Competición y Rendimiento. Las
+// cuatro etapas amarillas comparten color de pelota, así que cada una es su
+// propio catálogo y su id es el de la etapa.
 
 export const BALLS = [
   {
     id: "roja",
     label: "Roja",
+    chip: "Roja",
     stage: "Descubrimiento",
     age: "4-6 años",
     color: "#E53935",
@@ -12,6 +16,7 @@ export const BALLS = [
   {
     id: "naranja",
     label: "Naranja",
+    chip: "Naranja",
     stage: "Desarrollo",
     age: "6-8 años",
     color: "#FB8C00",
@@ -19,13 +24,58 @@ export const BALLS = [
   {
     id: "verde",
     label: "Verde",
+    chip: "Verde",
     stage: "Consolidación",
     age: "8-10 años",
     color: "#43A047",
   },
+  {
+    id: "especializacion",
+    label: "Amarilla",
+    chip: "Especialización",
+    stage: "Especialización",
+    age: "10-12 años",
+    color: "#FFE600",
+  },
+  {
+    id: "precompeticion",
+    label: "Amarilla",
+    chip: "Precompetición",
+    stage: "Precompetición",
+    age: "12-14 años",
+    color: "#FFE600",
+  },
+  {
+    id: "competicion",
+    label: "Amarilla",
+    chip: "Competición",
+    stage: "Competición",
+    age: "14-16 años",
+    color: "#FFE600",
+  },
+  {
+    id: "rendimiento",
+    label: "Amarilla",
+    chip: "Rendimiento",
+    stage: "Rendimiento",
+    age: "16-18 años",
+    color: "#FFE600",
+  },
 ] as const;
 
 export type BallId = (typeof BALLS)[number]["id"];
+
+/**
+ * Nombre de un catálogo para textos: "Bola roja", "Bola naranja", "Bola verde"
+ * o, en las etapas amarillas, "Bola amarilla · Especialización" (las cuatro
+ * comparten pelota y solo se distinguen por la etapa).
+ */
+export function ballName(id: string): string {
+  const b = BALLS.find((x) => x.id === id);
+  if (!b) return id;
+  const base = `Bola ${b.label.toLowerCase()}`;
+  return b.label === "Amarilla" ? `${base} · ${b.stage}` : base;
+}
 
 export const ASPECTS = [
   { id: "tecnico", label: "Técnico" },
@@ -65,12 +115,17 @@ const LEVEL_TO_BALL: Record<string, BallId> = {
   descubrimiento: "roja",
   desarrollo: "naranja",
   consolidacion: "verde",
+  especializacion: "especializacion",
+  precompeticion: "precompeticion",
+  competicion: "competicion",
+  rendimiento: "rendimiento",
 };
 
 /**
  * Bola con la que abrir el selector de objetivos de un ejercicio, clase o
  * sesión: su tipo de pelota si es roja, naranja o verde; si no, el primero de
- * sus niveles que sea una de las tres etapas; si no, null.
+ * sus niveles que sea una de las etapas (la pelota amarilla no basta para
+ * saber cuál de las cuatro etapas amarillas es); si no, null.
  */
 export function ballFromLevels(
   levels: Iterable<string> | null | undefined,
@@ -93,8 +148,10 @@ function ageFrom(birthDate: string, today: Date) {
 
 /**
  * Bola con la que se abre el checklist de un alumno: su nivel si es una de las
- * tres etapas; si no, la edad (menos de 6 → roja, menos de 8 → naranja, resto
- * → verde); si no hay datos, roja. El monitor siempre puede cambiar de bola.
+ * etapas; si no, la edad (menos de 6 → roja, 8 → naranja, 10 → verde,
+ * 12 → Especialización, 14 → Precompetición, 16 → Competición, 19 →
+ * Rendimiento; los adultos, sin etapa por edad, empiezan en verde); si no hay
+ * datos, roja. El monitor siempre puede cambiar de bola.
  */
 export function defaultBallForStudent(
   playerLevel: string | null,
@@ -105,7 +162,16 @@ export function defaultBallForStudent(
     return LEVEL_TO_BALL[playerLevel];
   if (birthDate) {
     const age = ageFrom(birthDate, today);
-    if (age != null) return age < 6 ? "roja" : age < 8 ? "naranja" : "verde";
+    if (age != null) {
+      if (age < 6) return "roja";
+      if (age < 8) return "naranja";
+      if (age < 10) return "verde";
+      if (age < 12) return "especializacion";
+      if (age < 14) return "precompeticion";
+      if (age < 16) return "competicion";
+      if (age < 19) return "rendimiento";
+      return "verde";
+    }
   }
   return "roja";
 }

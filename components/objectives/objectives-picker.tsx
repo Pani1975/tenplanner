@@ -199,7 +199,7 @@ export function ObjectivesPicker({
                     className="size-2 rounded-full"
                     style={{ backgroundColor: b.color }}
                   />
-                  {b.label}
+                  {b.chip}
                 </button>
               ))}
             <span className="mx-1 hidden h-6 w-px self-center bg-border sm:block" />

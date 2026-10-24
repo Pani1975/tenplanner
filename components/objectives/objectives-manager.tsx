@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   ASPECTS,
   BALLS,
+  ballName,
   type AspectId,
   type BallId,
   type ObjectiveItem,
@@ -30,9 +31,6 @@ import {
 type BallFilter = BallId | "todas";
 type AspectFilter = AspectId | "todos";
 
-const BALL_LABEL = Object.fromEntries(
-  BALLS.map((b) => [b.id, b.label])
-) as Record<BallId, string>;
 const BALL_COLOR = Object.fromEntries(
   BALLS.map((b) => [b.id, b.color])
 ) as Record<BallId, string>;
@@ -458,8 +456,7 @@ export function ObjectivesManager({
                   />
                   {first.block}
                   <span className="text-foreground/35">
-                    · {aspectLabel} · Bola{" "}
-                    {BALL_LABEL[first.ball].toLowerCase()}
+                    · {aspectLabel} · {ballName(first.ball)}
                   </span>
                 </h3>
                 <ul

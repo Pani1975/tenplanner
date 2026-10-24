@@ -4,6 +4,7 @@ import type {
   ObjectiveItem,
   ObjectiveScope,
 } from "./objectives-taxonomy";
+import { BALLS } from "./objectives-taxonomy";
 
 /** Fila de tennis_objectives con su ámbito (los tres a null = catálogo base). */
 export type RawObjective = {
@@ -159,7 +160,10 @@ export function resolveObjectives(
   );
 }
 
-const BALL_ORDER: Record<BallId, number> = { roja: 0, naranja: 1, verde: 2 };
+const BALL_ORDER = Object.fromEntries(BALLS.map((b, i) => [b.id, i])) as Record<
+  BallId,
+  number
+>;
 
 /**
  * Plan para subir/bajar un objetivo dentro de su grupo (misma bola, aspecto y

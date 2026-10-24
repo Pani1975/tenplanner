@@ -482,7 +482,8 @@ export const students = pgTable(
   ]
 );
 
-// Catálogo de objetivos por etapa (bola roja / naranja / verde) y aspecto del
+// Catálogo de objetivos por etapa (bola roja / naranja / verde y las cuatro
+// etapas de pelota amarilla) y aspecto del
 // juego. Basado en tenisXetapas (RFET): `source` indica si el objetivo recoge
 // un punto de la RFET ("rfet"), es un desglose propuesto ("desglose") o lo ha
 // creado un monitor ("propio").
@@ -492,7 +493,7 @@ export const tennisObjectives = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     code: text("code").notNull().unique(),
     sport: text("sport").default("tenis").notNull(),
-    ball: text("ball").notNull(), // "roja" | "naranja" | "verde"
+    ball: text("ball").notNull(), // "roja" | "naranja" | "verde" | etapa amarilla (especializacion, precompeticion, competicion, rendimiento)
     stage: text("stage").notNull(),
     ageRange: text("age_range").notNull(),
     aspect: text("aspect").notNull(), // "tecnico" | "tactico" | "mental" | "fisico"
