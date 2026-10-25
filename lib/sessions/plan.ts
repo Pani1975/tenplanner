@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   exercises,
@@ -6,6 +6,7 @@ import {
   sessionBlocks,
   sessionExercises,
 } from "@/db/schema";
+import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 
 export type SessionPlanPhase = "activation" | "main" | "cooldown";
 
@@ -96,7 +97,10 @@ function toStrings(value: unknown): string[] {
  * ejercicios de la biblioteca y textos libres tal como los ordenó el monitor.
  * Para sesiones antiguas sin bloques, se reconstruye desde session_exercises.
  */
-export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
+export async function loadSessionPlan(
+  sessionId: string,
+  viewerId: string
+): Promise<SessionPlan> {
   const rows = await db
     .select({
       blockOrder: sessionBlocks.orderIndex,
@@ -125,7 +129,13 @@ export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
       sessionBlockItems,
       eq(sessionBlockItems.blockId, sessionBlocks.id)
     )
-    .leftJoin(exercises, eq(exercises.id, sessionBlockItems.exerciseId))
+    .leftJoin(
+      exercises,
+      and(
+        eq(exercises.id, sessionBlockItems.exerciseId),
+        exerciseVisibleToUserCondition(viewerId)
+      )
+    )
     .where(eq(sessionBlocks.sessionId, sessionId))
     .orderBy(asc(sessionBlocks.orderIndex), asc(sessionBlockItems.orderIndex));
 
@@ -185,9 +195,10 @@ export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
         phase,
         blockOrder: order,
         text,
-        description: row.itemFreeText
-          ? null
-          : (row.itemExerciseDescription ?? null),
+        description:
+          row.itemFreeText || row.itemExerciseId
+            ? null
+            : (row.itemExerciseDescription ?? null),
         durationMinutes: row.itemDuration ?? null,
         notes: row.itemNotes ?? null,
       });
@@ -213,7 +224,13 @@ export async function loadSessionPlan(sessionId: string): Promise<SessionPlan> {
       exMaterials: exercises.materials,
     })
     .from(sessionExercises)
-    .innerJoin(exercises, eq(exercises.id, sessionExercises.exerciseId))
+    .innerJoin(
+      exercises,
+      and(
+        eq(exercises.id, sessionExercises.exerciseId),
+        exerciseVisibleToUserCondition(viewerId)
+      )
+    )
     .where(eq(sessionExercises.sessionId, sessionId))
     .orderBy(asc(sessionExercises.orderIndex));
 

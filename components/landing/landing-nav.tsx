@@ -46,10 +46,16 @@ export function LandingNav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link
+            href="/login"
+            className="hidden min-h-11 items-center px-4 text-sm font-medium text-[#4d4d45] transition hover:text-[#5f7000] md:inline-flex"
+          >
+            Iniciar sesión
+          </Link>
+          <Link
             href="/register"
             className="hidden min-h-11 items-center rounded-full bg-[#050505] px-6 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505] md:inline-flex"
           >
-            Empieza gratis
+            Registrarse
           </Link>
           <button
             type="button"
@@ -84,11 +90,18 @@ export function LandingNav() {
               </Link>
             ))}
             <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-4 py-3 text-sm font-medium text-[#050505] transition hover:bg-[#f4f4f1]"
+            >
+              Iniciar sesión
+            </Link>
+            <Link
               href="/register"
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex justify-center rounded-full bg-[#050505] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505]"
             >
-              Empieza gratis →
+              Registrarse →
             </Link>
           </div>
         </div>

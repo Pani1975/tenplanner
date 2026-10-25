@@ -266,7 +266,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         location: sourceSession.location,
       };
 
-      const plan = await loadSessionPlan(fromSessionId);
+      const plan = await loadSessionPlan(fromSessionId, user.id);
       fromExercises = planItemsToWizard(plan.items);
     }
   }
