@@ -30,7 +30,7 @@ export default async function ManagementCoachesPage() {
   const { members, invites } = await listClubRoster(club.id);
 
   return (
-    <div className="min-h-full w-full bg-[#050505] text-white">
+    <div className="tp-page">
       <div className="tp-page-pad mx-auto max-w-3xl space-y-6">
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
