@@ -105,10 +105,10 @@ export default async function ManagementPage({
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <BarChart3 className="size-3.5" />
-            Modo gestión
+            Modo gestión · Informes
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Informes {club?.name}
+            Espacio gestión {club?.name}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
             Actividad de los monitores y seguimiento de los alumnos del club.

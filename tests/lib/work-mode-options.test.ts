@@ -11,16 +11,28 @@ const tenerife = { id: "club-t", name: "CT Tenerife" };
 const names = (opts: { name: string }[]) => opts.map((o) => `Modo ${o.name}`);
 
 describe("workModeOptions", () => {
-  it("administrador: administrador, su club y particular", () => {
+  it("administrador con club propio: administrador, su club y gestión, sin particular", () => {
     expect(
       names(
         workModeOptions({
           clubs: [paniagua],
           isAdmin: true,
+          clubAccountClubId: paniagua.id,
+        })
+      )
+    ).toEqual(["Modo administrador", "Modo Paniagua", "Modo gestión"]);
+  });
+
+  it("administrador sin club propio: administrador, clubes y particular", () => {
+    expect(
+      names(
+        workModeOptions({
+          clubs: [tenerife],
+          isAdmin: true,
           clubAccountClubId: null,
         })
       )
-    ).toEqual(["Modo administrador", "Modo Paniagua", "Modo particular"]);
+    ).toEqual(["Modo administrador", "Modo CT Tenerife", "Modo particular"]);
   });
 
   it("cuenta de club: su club y gestión, sin particular", () => {

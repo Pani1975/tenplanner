@@ -138,7 +138,9 @@ export default async function ProfilePage() {
           />
         )}
 
-        {activeClub && (
+        {/* La ficha del club es del modo del club; el Espacio gestión solo
+            muestra los datos de la persona gestora. */}
+        {activeClub && !(clubAccountClubId && dbUser[0]?.managementMode) && (
           <ClubIdentityForm
             key={activeClub.updatedAt.toISOString()}
             clubId={activeClub.id}

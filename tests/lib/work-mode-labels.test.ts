@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   libraryHeading,
   personalTitle,
+  workModeKicker,
   spaceTitle,
   type WorkMode,
 } from "@/lib/work-mode-labels";
@@ -39,5 +40,10 @@ describe("cabeceras con el dueño del espacio", () => {
   it("los datos propios en Modo Ten Planner son del monitor", () => {
     expect(personalTitle("Alumnos", tp)).toBe("Alumnos de David");
     expect(personalTitle("Alumnos", club)).toBe("Alumnos CT Tenerife");
+  });
+
+  it("el Modo gestión del club se llama Modo gestión", () => {
+    expect(workModeKicker(club)).toBe("Modo CT Tenerife");
+    expect(workModeKicker({ ...club, management: true })).toBe("Modo gestión");
   });
 });

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isTenPlannerMode } from "@/lib/work-mode";
+import { getWorkMode } from "@/lib/work-mode";
 import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -530,7 +530,10 @@ export default async function DashboardPage() {
     redirect("/mi-familia/calendario");
   }
   // La cuenta de la plataforma no tiene sesiones ni alumnos: va a Informes.
-  if (await isTenPlannerMode(user.id)) redirect("/informes");
+  // El Espacio gestión tampoco tiene panel de sesiones: va a su Informes.
+  const workMode = await getWorkMode(user.id);
+  if (workMode.kind === "tenplanner") redirect("/informes");
+  if (workMode.kind === "club" && workMode.management) redirect("/gestion");
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||
@@ -554,10 +557,17 @@ export default async function DashboardPage() {
               <p className="mb-2 inline-flex rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[12px] font-semibold text-foreground/60 dark:bg-[#050505]/70">
                 {formatLongDate(now)}
               </p>
-              <TimeGreeting
-                name={displayName}
-                initialGreeting={greetingForHour(now.getHours())}
-              />
+              {workMode.kind === "club" ? (
+                <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
+                  Espacio de{" "}
+                  <span className="text-brand">{workMode.clubName}</span>
+                </h1>
+              ) : (
+                <TimeGreeting
+                  name={displayName}
+                  initialGreeting={greetingForHour(now.getHours())}
+                />
+              )}
             </div>
             {sessionCreationEnabled ? (
               <Link

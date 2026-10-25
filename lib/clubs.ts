@@ -32,11 +32,11 @@ export async function getOwnedClub(userId: string) {
 }
 
 /**
- * Cuenta de club: la que se dio de alta como club (es dueña de un club) y no
- * es administradora de la plataforma. Trabaja siempre en su club — Modo
- * <club> o Modo gestión —, sin Modo particular. Devuelve el id de su club o
- * null. Los administradores con club propio (p. ej. "Paniagua") conservan el
- * Modo administrador y el Modo particular.
+ * Cuenta de club: la que es dueña de un club (se dio de alta como club, o es
+ * un administrador con club propio, p. ej. "Paniagua"). Trabaja siempre en su
+ * club — Modo <club> o Modo gestión —, sin Modo particular; un administrador
+ * además conserva el Modo administrador. Devuelve el id de su club o null.
+ * La cuenta de la plataforma no es una cuenta de club.
  */
 export async function getClubAccountClubId(
   userId: string
@@ -52,7 +52,7 @@ export async function getClubAccountClubId(
       .limit(1),
     getOwnedClub(userId),
   ]);
-  if (!owned || row?.isAdmin || row?.isPlatformAccount) return null;
+  if (!owned || row?.isPlatformAccount) return null;
   return owned.id;
 }
 
@@ -205,10 +205,16 @@ export async function getActiveWorkClubId(
   userId: string
 ): Promise<string | null> {
   const [row] = await db
-    .select({ activeClubId: users.activeClubId })
+    .select({
+      activeClubId: users.activeClubId,
+      adminMode: users.adminMode,
+      isPlatformAccount: users.isPlatformAccount,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+  // En Modo administrador no se trabaja en ningún club.
+  if (row?.adminMode || row?.isPlatformAccount) return null;
   const clubId = row?.activeClubId ?? null;
   if (clubId && (await canTagWithClub(userId, clubId))) return clubId;
   // La cuenta de un club no tiene Modo particular: trabaja en su club.

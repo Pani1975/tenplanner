@@ -1,11 +1,13 @@
 // Qué modos de trabajo puede elegir cada cuenta (selector de la barra lateral
 // y de Perfil). Sin dependencias de servidor: se usa en componentes cliente.
 //
-// - Administrador de la plataforma: Modo administrador (lo público), el modo
-//   de su club si tiene uno (p. ej. Modo Paniagua) y Modo particular.
 // - Cuenta de un club: Modo <club> (compartido con sus monitores) y Modo
-//   gestión (solo esta cuenta: informes, estadísticas y monitores). Sin Modo
-//   particular.
+//   gestión (solo esta cuenta: informes, calendario, alumnos, mensajes y
+//   monitores). Sin Modo particular.
+// - Administrador de la plataforma con club propio (p. ej. Paniagua): además
+//   de lo de una cuenta de club, el Modo administrador (lo público).
+// - Administrador sin club: Modo administrador, los clubes a los que
+//   pertenece y Modo particular.
 // - Monitor: Modo particular y el modo de cada club que le ha invitado.
 
 export const MODE_PARTICULAR = "particular";
@@ -45,6 +47,9 @@ export function workModeOptions({
   if (clubAccountClubId) {
     const own = clubOptions.filter((o) => o.key === clubAccountClubId);
     return [
+      ...(isAdmin
+        ? [{ key: MODE_ADMIN, kind: "admin", name: "administrador" } as const]
+        : []),
       ...own,
       { key: MODE_MANAGEMENT, kind: "management", name: "gestión" },
     ];

@@ -4,7 +4,13 @@
 
 export type WorkMode =
   | { kind: "tenplanner"; ownerName: string }
-  | { kind: "club"; clubId: string; clubName: string }
+  | {
+      kind: "club";
+      clubId: string;
+      clubName: string;
+      /** Modo gestión: el espacio privado del gestor del club. */
+      management?: boolean;
+    }
   | { kind: "particular"; ownerName: string };
 
 export const TEN_PLANNER_NAME = "Ten Planner";
@@ -47,7 +53,9 @@ export function workModeKicker(mode: WorkMode): string {
   return mode.kind === "tenplanner"
     ? "Modo administrador"
     : mode.kind === "club"
-      ? `Modo ${mode.clubName}`
+      ? mode.management
+        ? "Modo gestión"
+        : `Modo ${mode.clubName}`
       : "Modo particular";
 }
 

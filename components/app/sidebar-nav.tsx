@@ -190,12 +190,22 @@ const platformNavItems: NavItem[] = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
-// Modo gestión (solo la cuenta de un club): informes y estadísticas del club
-// y gestión de sus monitores. Solo consulta: para crear ejercicios, clases o
-// sesiones del club se cambia al modo del club en el selector.
+// Espacio gestión (solo la cuenta de un club): informes y estadísticas, sus
+// monitores, el calendario y los alumnos del club (por ahora los mismos datos
+// que en el modo del club) y los mensajes privados del gestor. Sin ejercicios,
+// clases, sesiones, objetivos, club ni lugares: para eso se cambia al modo
+// del club en el selector.
 const managementNavItems: NavItem[] = [
   { href: "/gestion", label: "Informes", icon: BarChart3 },
   { href: "/gestion/monitores", label: "Monitores", icon: Users2 },
+  {
+    href: "/calendar",
+    label: "Calendario",
+    icon: CalendarDays,
+    feature: "calendar",
+  },
+  { href: "/students", label: "Alumnos", icon: Users },
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/profile", label: "Perfil", icon: UserCircle },
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];

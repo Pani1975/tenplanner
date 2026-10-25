@@ -12,7 +12,8 @@ export * from "@/lib/work-mode-labels";
  *   (users.is_platform_account) siempre, o un administrador que lo elige en
  *   el selector de modo (users.admin_mode). Lo que crea o edita es público:
  *   Biblioteca de ejercicios y clases, catálogo base de objetivos.
- * - "club": trabaja como un club del que es miembro activo.
+ * - "club": trabaja como un club del que es miembro activo. Con
+ *   `management`, en el Modo gestión de la cuenta de ese club.
  * - "particular": su espacio personal.
  */
 export async function getWorkMode(userId: string): Promise<WorkMode> {
@@ -23,6 +24,7 @@ export async function getWorkMode(userId: string): Promise<WorkMode> {
       isPlatformAccount: users.isPlatformAccount,
       isAdmin: users.isAdmin,
       adminMode: users.adminMode,
+      managementMode: users.managementMode,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -32,17 +34,24 @@ export async function getWorkMode(userId: string): Promise<WorkMode> {
     return { kind: "tenplanner", ownerName: row.name };
 
   // La cuenta de un club no tiene Modo particular: sin club activo, su club.
+  const accountClubId = await getClubAccountClubId(userId);
   const clubId =
     row.activeClubId && (await canTagWithClub(userId, row.activeClubId))
       ? row.activeClubId
-      : await getClubAccountClubId(userId);
+      : accountClubId;
   if (clubId) {
     const [club] = await db
       .select({ name: clubs.name })
       .from(clubs)
       .where(eq(clubs.id, clubId))
       .limit(1);
-    if (club) return { kind: "club", clubId, clubName: club.name };
+    if (club)
+      return {
+        kind: "club",
+        clubId,
+        clubName: club.name,
+        management: row.managementMode && clubId === accountClubId,
+      };
   }
   return { kind: "particular", ownerName: row.name };
 }
