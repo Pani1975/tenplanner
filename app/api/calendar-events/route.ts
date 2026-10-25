@@ -4,7 +4,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { calendarEvents } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { getActiveWorkClubId } from "@/lib/clubs";
+import {
+  calendarEventsVisibility,
+  isManagementWorkMode,
+} from "@/lib/calendar-events";
 
 const createSchema = z
   .object({
@@ -29,14 +33,12 @@ export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get("from");
   const to = request.nextUrl.searchParams.get("to");
 
-  const activeClubId = await getActiveWorkClubId(user.id);
+  const [activeClubId, management] = await Promise.all([
+    getActiveWorkClubId(user.id),
+    isManagementWorkMode(user.id),
+  ]);
   const conditions = [
-    sharedWithClubCondition(
-      calendarEvents.userId,
-      calendarEvents.clubId,
-      user.id,
-      activeClubId
-    ),
+    calendarEventsVisibility(user.id, activeClubId, management),
   ];
   if (from) conditions.push(gte(calendarEvents.startAt, new Date(from)));
   if (to) conditions.push(lte(calendarEvents.startAt, new Date(to)));
@@ -72,7 +74,10 @@ export async function POST(request: Request) {
       { status: 422 }
     );
 
-  const clubId = await getActiveWorkClubId(user.id);
+  const [clubId, management] = await Promise.all([
+    getActiveWorkClubId(user.id),
+    isManagementWorkMode(user.id),
+  ]);
 
   const [created] = await db
     .insert(calendarEvents)
@@ -83,6 +88,8 @@ export async function POST(request: Request) {
       startAt: new Date(parsed.data.startAt),
       endAt: new Date(parsed.data.endAt),
       clubId,
+      // Desde el Espacio gestión, solo lo ve el gestor.
+      management,
     })
     .returning();
 

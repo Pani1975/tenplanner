@@ -526,6 +526,13 @@
       "when": 1794000000000,
       "tag": "0074_objetivos_etapas_amarillas",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794100000000,
+      "tag": "0075_calendar_events_management",
+      "breakpoints": true
     }
   ]
 }

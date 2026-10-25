@@ -1201,6 +1201,9 @@ export const calendarEvents = pgTable(
     clubId: uuid("club_id").references(() => clubs.id, {
       onDelete: "set null",
     }),
+    // Creado desde el Espacio gestión: solo lo ve el gestor (su dueño), en ese
+    // modo; ni los monitores ni él mismo en el modo del club.
+    management: boolean("management").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

@@ -20,6 +20,10 @@ import {
   getOwnedClub,
   sharedWithClubCondition,
 } from "@/lib/clubs";
+import {
+  calendarEventsVisibility,
+  isManagementWorkMode,
+} from "@/lib/calendar-events";
 import { CalendarDays, Download, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -73,11 +77,10 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     user.id,
     activeClubId
   );
-  const eventsVisibility = sharedWithClubCondition(
-    calendarEventsTable.userId,
-    calendarEventsTable.clubId,
+  const eventsVisibility = calendarEventsVisibility(
     user.id,
-    activeClubId
+    activeClubId,
+    await isManagementWorkMode(user.id)
   );
 
   const sessions = await db
