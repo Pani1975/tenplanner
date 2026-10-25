@@ -84,6 +84,13 @@ function LoginForm() {
       return;
     }
 
+    // Cada inicio de sesión empieza en el modo por defecto de la cuenta.
+    await fetch("/api/account/work-mode", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "default" }),
+    }).catch(() => {});
+
     router.push(safeNext(searchParams.get("next")));
   }
 

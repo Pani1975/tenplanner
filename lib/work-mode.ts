@@ -106,3 +106,26 @@ export async function enterManagementMode(userId: string): Promise<string> {
     .where(eq(users.id, userId));
   return clubId;
 }
+
+/**
+ * Modo con el que se empieza al entrar: Modo administrador si es
+ * administrador, el modo de su club si es la cuenta de un club y Modo
+ * particular si es monitor. Se aplica en cada inicio de sesión.
+ */
+export async function resetToDefaultWorkMode(userId: string) {
+  const [row] = await db
+    .select({ isAdmin: users.isAdmin })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!row) return;
+  const clubId = row.isAdmin ? null : await getClubAccountClubId(userId);
+  await db
+    .update(users)
+    .set({
+      adminMode: row.isAdmin,
+      managementMode: false,
+      activeClubId: clubId,
+    })
+    .where(eq(users.id, userId));
+}

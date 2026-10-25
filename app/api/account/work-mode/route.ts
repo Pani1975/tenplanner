@@ -11,13 +11,15 @@ import {
   enterManagementMode,
   getManagementClubId,
   isTenPlannerMode,
+  resetToDefaultWorkMode,
 } from "@/lib/work-mode";
 
 // { clubId: "…" } = club, { clubId: null } = particular,
 // { mode: "tenplanner" } = Modo administrador (solo administradores),
-// { mode: "gestion" } = Modo gestión (solo la cuenta de un club).
+// { mode: "gestion" } = Modo gestión (solo la cuenta de un club),
+// { mode: "default" } = el modo por defecto de la cuenta (al iniciar sesión).
 const bodySchema = z.union([
-  z.object({ mode: z.enum(["tenplanner", "gestion"]) }),
+  z.object({ mode: z.enum(["tenplanner", "gestion", "default"]) }),
   z.object({ clubId: z.string().uuid().nullable() }),
 ]);
 
@@ -68,6 +70,11 @@ export async function PATCH(request: Request) {
       { error: parsed.error.flatten() },
       { status: 422 }
     );
+
+  if ("mode" in parsed.data && parsed.data.mode === "default") {
+    await resetToDefaultWorkMode(user.id);
+    return NextResponse.json({ ok: true });
+  }
 
   if ("mode" in parsed.data && parsed.data.mode === "gestion") {
     try {

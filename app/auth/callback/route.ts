@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { clubMembers, clubs, users } from "@/db/schema";
 import { getOwnedClub } from "@/lib/clubs";
 import { isFamilyAccountType } from "@/lib/family-account";
+import { resetToDefaultWorkMode } from "@/lib/work-mode";
 
 function safeNext(raw: string | null): string {
   const fallback = "/dashboard";
@@ -100,6 +101,16 @@ export async function GET(request: Request) {
               error,
             });
           }
+        }
+
+        // Cada inicio de sesión empieza en el modo por defecto de la cuenta.
+        try {
+          await resetToDefaultWorkMode(user.id);
+        } catch (error) {
+          console.error("Error resetting work mode during auth callback", {
+            userId: user.id,
+            error,
+          });
         }
       }
 
