@@ -65,8 +65,7 @@ export async function GET(request: Request) {
     cutoff: cutoff.toISOString(),
     chatsDeleted: deletedChats.length,
     messagesDeleted: orphanMessages.length,
-    expiredTokensInvalidated:
-      expiredTokens.length + expiredCoachLinks.length,
+    expiredTokensInvalidated: expiredTokens.length + expiredCoachLinks.length,
   };
 
   console.info("[cron/cleanup]", JSON.stringify(summary));
