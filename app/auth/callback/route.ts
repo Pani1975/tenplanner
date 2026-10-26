@@ -3,8 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { clubMembers, clubs, users } from "@/db/schema";
 import { getOwnedClub } from "@/lib/clubs";
+import { cleanOptionalText, normalizeWebsite } from "@/lib/club-identity";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { resetToDefaultWorkMode } from "@/lib/work-mode";
+
+function metaText(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
 
 function safeNext(raw: string | null): string {
   const fallback = "/dashboard";
@@ -85,6 +90,17 @@ export async function GET(request: Request) {
                     ownerId: user.id,
                     plannedCoachSeats:
                       seats !== null && Number.isFinite(seats) ? seats : null,
+                    address: cleanOptionalText(
+                      metaText(user.user_metadata?.club_address),
+                      500
+                    ),
+                    phone: cleanOptionalText(
+                      metaText(user.user_metadata?.club_phone),
+                      50
+                    ),
+                    website: normalizeWebsite(
+                      metaText(user.user_metadata?.club_website)
+                    ),
                   })
                   .returning();
                 await tx.insert(clubMembers).values({

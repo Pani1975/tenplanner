@@ -39,6 +39,9 @@ const registerSchema = z
     confirmAdult: z.boolean(),
     clubName: z.string().trim().optional(),
     clubSeats: z.string().optional(),
+    clubAddress: z.string().trim().max(500, "Demasiado largo").optional(),
+    clubPhone: z.string().trim().max(50, "Demasiado largo").optional(),
+    clubWebsite: z.string().trim().max(255, "Demasiado largo").optional(),
     accepted: z
       .boolean()
       .refine(Boolean, "Debes aceptar las condiciones para crear la cuenta"),
@@ -69,6 +72,9 @@ const initialForm: RegisterForm = {
   confirmAdult: false,
   clubName: "",
   clubSeats: "",
+  clubAddress: "",
+  clubPhone: "",
+  clubWebsite: "",
   accepted: false,
 };
 
@@ -243,6 +249,9 @@ export default function RegisterPage() {
               ? {
                   club_name: parsed.data.clubName,
                   club_seats: parsed.data.clubSeats || null,
+                  club_address: parsed.data.clubAddress || null,
+                  club_phone: parsed.data.clubPhone || null,
+                  club_website: parsed.data.clubWebsite || null,
                 }
               : {}),
           },
@@ -291,6 +300,9 @@ export default function RegisterPage() {
               plannedCoachSeats: parsed.data.clubSeats
                 ? Number(parsed.data.clubSeats)
                 : null,
+              address: parsed.data.clubAddress || null,
+              phone: parsed.data.clubPhone || null,
+              website: parsed.data.clubWebsite || null,
             }),
           });
         }
@@ -582,6 +594,54 @@ export default function RegisterPage() {
                   {fieldErrors.clubName}
                 </p>
               )}
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="clubAddress">
+                Dirección{" "}
+                <span className="font-normal text-foreground/50">
+                  (opcional)
+                </span>
+              </Label>
+              <Input
+                id="clubAddress"
+                value={form.clubAddress}
+                onChange={(e) => update("clubAddress", e.target.value)}
+                autoComplete="street-address"
+                aria-invalid={!!fieldErrors.clubAddress}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clubPhone">
+                Teléfono{" "}
+                <span className="font-normal text-foreground/50">
+                  (opcional)
+                </span>
+              </Label>
+              <Input
+                id="clubPhone"
+                type="tel"
+                value={form.clubPhone}
+                onChange={(e) => update("clubPhone", e.target.value)}
+                autoComplete="tel"
+                aria-invalid={!!fieldErrors.clubPhone}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clubWebsite">
+                Página web{" "}
+                <span className="font-normal text-foreground/50">
+                  (opcional)
+                </span>
+              </Label>
+              <Input
+                id="clubWebsite"
+                inputMode="url"
+                placeholder="www.miclub.es"
+                value={form.clubWebsite}
+                onChange={(e) => update("clubWebsite", e.target.value)}
+                autoComplete="url"
+                aria-invalid={!!fieldErrors.clubWebsite}
+              />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="clubSeats">

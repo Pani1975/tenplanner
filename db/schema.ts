@@ -1801,6 +1801,9 @@ export const clubs = pgTable(
     // Ficha de identificación del club (Perfil, en modo club).
     fullName: varchar("full_name", { length: 255 }),
     address: text("address"),
+    // Contacto del club, pedido en el registro ("Como Club").
+    phone: varchar("phone", { length: 50 }),
+    website: varchar("website", { length: 255 }),
     // Número de pistas por tipo de superficie; ver lib/club-identity.ts.
     courts: jsonb("courts").$type<Partial<Record<string, number>>>(),
     foundedYear: integer("founded_year"),
@@ -1863,6 +1866,8 @@ export const clubInvites = pgTable(
       .references(() => clubs.id, { onDelete: "cascade" })
       .notNull(),
     email: varchar("email", { length: 255 }).notNull(),
+    // Nombre del monitor tal como lo escribe el director al invitarlo.
+    inviteeName: varchar("invitee_name", { length: 255 }),
     token: varchar("token", { length: 128 }).notNull().unique(),
     status: clubInviteStatusEnum("status").notNull().default("pending"),
     // El deporte para el que se invita al monitor — una invitación es para

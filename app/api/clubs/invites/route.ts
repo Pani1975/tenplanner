@@ -9,11 +9,17 @@ import {
   generateInviteToken,
   inviteExpiryDate,
   listClubRoster,
+  CLUB_INVITE_EXPIRY_DAYS,
 } from "@/lib/clubs";
+import { sendEmail } from "@/lib/email";
+import { buildClubInviteEmail } from "@/lib/club-invite-email";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
+import { SPORT_LABELS } from "@/lib/sport-constants";
 import { getActiveSport, SPORTS } from "@/lib/sports";
 
 const createSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
+  name: z.string().trim().max(255).optional(),
   sport: z.enum(SPORTS).optional(),
 });
 
@@ -48,6 +54,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No tienes un club." }, { status: 403 });
   }
 
+  // Cada invitación envía un correo: limitamos para que no se use de spam.
+  const limit = await rateLimit(`club-invites:${user.id}`, 30, 60 * 60_000);
+  if (!limit.ok) return tooManyRequestsResponse(limit);
+
   let body: unknown;
   try {
     body = await request.json();
@@ -64,6 +74,7 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email;
+  const inviteeName = parsed.data.name || null;
   // Por defecto, el deporte activo del dueño del club — así el formulario
   // puede omitirlo y seguir invitando "para lo que estoy viendo ahora".
   const sport = parsed.data.sport ?? (await getActiveSport(user.id));
@@ -110,7 +121,11 @@ export async function POST(request: Request) {
   const [invite] = existingInvite
     ? await db
         .update(clubInvites)
-        .set({ token, expiresAt })
+        .set({
+          token,
+          expiresAt,
+          ...(inviteeName ? { inviteeName } : {}),
+        })
         .where(eq(clubInvites.id, existingInvite.id))
         .returning()
     : await db
@@ -118,6 +133,7 @@ export async function POST(request: Request) {
         .values({
           clubId: club.id,
           email,
+          inviteeName,
           sport,
           token,
           invitedByUserId: user.id,
@@ -125,5 +141,23 @@ export async function POST(request: Request) {
         })
         .returning();
 
-  return NextResponse.json({ data: invite }, { status: 201 });
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
+  ).replace(/\/$/, "");
+  const emailResult = await sendEmail(
+    buildClubInviteEmail({
+      to: email,
+      inviteeName: invite.inviteeName,
+      clubName: club.name,
+      sportLabel: SPORT_LABELS[sport],
+      inviteUrl: `${siteUrl}/invite/${invite.token}`,
+      expiryDays: CLUB_INVITE_EXPIRY_DAYS,
+      replyTo: user.email ?? undefined,
+    })
+  );
+
+  return NextResponse.json(
+    { data: invite, emailSent: emailResult.sent },
+    { status: 201 }
+  );
 }

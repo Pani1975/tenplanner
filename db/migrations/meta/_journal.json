@@ -533,6 +533,13 @@
       "when": 1794100000000,
       "tag": "0075_calendar_events_management",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1794200000000,
+      "tag": "0076_club_contact_invitee_name",
+      "breakpoints": true
     }
   ]
 }
