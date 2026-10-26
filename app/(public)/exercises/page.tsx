@@ -201,6 +201,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       : "all"
   ) as "all" | Difficulty;
 
+  // Modo administrador: trabaja sobre la Biblioteca pública, sin espacio
+  // propio, así que no tiene "Mis ejercicios".
+  const workMode = user ? await getWorkMode(user.id) : null;
+  const inTenPlanner = workMode?.kind === "tenplanner";
+
   // Tabs `mine`, `favorites`, `drafts` require auth — fall back to "all" if unauthenticated
   const requestedTab = TABS.includes(params.tab as Tab)
     ? (params.tab as Tab)
@@ -211,7 +216,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       requestedTab === "favorites" ||
       requestedTab === "drafts")
       ? "all"
-      : !publicExercisesEnabled && requestedTab === "global"
+      : inTenPlanner && requestedTab === "mine"
+        ? "global"
+        : !publicExercisesEnabled && requestedTab === "global"
         ? "mine"
         : requestedTab;
 
@@ -285,7 +292,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   // "Ejercicios CT Tenerife" / "Ejercicios de David" en el espacio propio.
   const heading = libraryHeading(
     "Ejercicios",
-    user ? await getWorkMode(user.id) : null,
+    workMode,
     activeTab === "global"
   );
   const mineWhere = user
@@ -817,6 +824,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               {TABS.map((t) => {
                 if (t === "global" && !publicExercisesEnabled) return null;
                 if (t === "drafts" && !user) return null;
+                if (t === "mine" && inTenPlanner) return null;
 
                 const isActive = activeTab === t;
                 const requiresAuth =

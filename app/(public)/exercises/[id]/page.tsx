@@ -98,8 +98,10 @@ export default async function ExercisePage({
   // el espacio de un club se puede copiar a su espacio particular.
   const isPublicExercise = exercise.isGlobal || exercise.createdBy === null;
   const copyTargets: Array<"active" | "particular"> = [];
-  if (user && isPublicExercise) copyTargets.push("active");
-  if (user && isOwner && exercise.clubId) copyTargets.push("particular");
+  // En Modo administrador no hay espacio propio al que copiar.
+  if (user && !inTenPlanner && isPublicExercise) copyTargets.push("active");
+  if (user && !inTenPlanner && isOwner && exercise.clubId)
+    copyTargets.push("particular");
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"

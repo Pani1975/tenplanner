@@ -130,8 +130,16 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   const tab: Tab = TABS.includes(requestedTab as Tab)
     ? (requestedTab as Tab)
     : "all";
+  // Modo administrador: trabaja sobre la Biblioteca pública, sin espacio
+  // propio, así que no tiene "Mis clases".
+  const workMode = user ? await getWorkMode(user.id) : null;
+  const inTenPlanner = workMode?.kind === "tenplanner";
   const activeTab: Tab =
-    !user && (tab === "mine" || tab === "favorites") ? "all" : tab;
+    !user && (tab === "mine" || tab === "favorites")
+      ? "all"
+      : inTenPlanner && tab === "mine"
+        ? "library"
+        : tab;
 
   // Cabecera de "Mis listas": en qué espacio se está (particular o club) y
   // si el usuario es admin (puede publicar listas en la Biblioteca).
@@ -151,7 +159,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
   // "Clases CT Tenerife" / "Clases de David" en el espacio propio.
   const heading = libraryHeading(
     "Clases",
-    user ? await getWorkMode(user.id) : null,
+    workMode,
     activeTab === "library"
   );
 
@@ -436,6 +444,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
           {TABS.map((t) => {
             if (!user && (t === "mine" || t === "favorites" || t === "drafts"))
               return null;
+            if (t === "mine" && inTenPlanner) return null;
             const active = activeTab === t;
             const sp = new URLSearchParams();
             if (t !== "all") sp.set("tab", t);

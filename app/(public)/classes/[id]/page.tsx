@@ -96,13 +96,16 @@ export default async function ClassDetailPage({
 
   // Copiar a "Mis clases": de la Biblioteca al espacio activo; una clase que
   // el propio monitor creó en el espacio de un club, a su espacio particular.
+  // En Modo administrador no hay espacio propio al que copiar.
+  const inTenPlanner = user ? await isTenPlannerMode(user.id) : false;
   const copyTargets: CopyTarget[] = [];
-  if (user && cls.isLibrary && cls.status === "published")
+  if (user && !inTenPlanner && cls.isLibrary && cls.status === "published")
     copyTargets.push("active");
   // Para una clase de la Biblioteca ya existe "Copiar a Mis clases": el botón
   // al espacio particular solo aplica a clases propias del club.
   if (
     user &&
+    !inTenPlanner &&
     isOwner &&
     !cls.isLibrary &&
     cls.clubId &&
@@ -112,7 +115,7 @@ export default async function ClassDetailPage({
   // La Biblioteca pública solo se edita y se borra en Modo Ten Planner.
   // (la de la plataforma la edita sea quien sea quien la creó).
   const canEditClass = cls.isLibrary
-    ? !!user && (await isTenPlannerMode(user.id))
+    ? !!user && inTenPlanner
     : isOwner;
 
   const blocks = await db
