@@ -4,7 +4,11 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import AppShell from "@/components/app/app-shell";
 import { getAppSettings } from "@/lib/app-settings";
-import { getActiveWorkClubId, getClubOptionsForUser } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getClubAccountClubId,
+  getClubOptionsForUser,
+} from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 
 export default async function PublicLayout({
@@ -23,23 +27,38 @@ export default async function PublicLayout({
     workModeClubs,
     activeWorkClubId,
     activeSport,
+    clubAccountClubId,
   ] = await Promise.all([
     user
       ? db
-          .select({ isAdmin: users.isAdmin, image: users.image })
+          .select({
+            isAdmin: users.isAdmin,
+            image: users.image,
+            isPlatformAccount: users.isPlatformAccount,
+            adminMode: users.adminMode,
+            managementMode: users.managementMode,
+          })
           .from(users)
           .where(eq(users.id, user.id))
           .limit(1)
       : Promise.resolve(
-          [] as { isAdmin: boolean | null; image: string | null }[]
+          [] as {
+            isAdmin: boolean | null;
+            image: string | null;
+            isPlatformAccount: boolean | null;
+            adminMode: boolean | null;
+            managementMode: boolean | null;
+          }[]
         ),
     getAppSettings(["system.maintenance_banner", "feature.dr_planner_enabled"]),
     user ? getClubOptionsForUser(user.id) : Promise.resolve([]),
     user ? getActiveWorkClubId(user.id) : Promise.resolve(null),
     user ? getActiveSport(user.id) : Promise.resolve(undefined),
+    user ? getClubAccountClubId(user.id) : Promise.resolve(null),
   ]);
 
   const isAdmin = adminRows[0]?.isAdmin ?? false;
+  const row = adminRows[0];
   const avatarUrl =
     adminRows[0]?.image ??
     (typeof user?.user_metadata?.avatar_url === "string"
@@ -62,6 +81,10 @@ export default async function PublicLayout({
       workModeClubs={workModeClubs}
       activeWorkClubId={activeWorkClubId}
       activeSport={activeSport}
+      tenPlannerMode={!!row?.isPlatformAccount || (isAdmin && !!row?.adminMode)}
+      platformAccount={!!row?.isPlatformAccount}
+      clubAccountClubId={clubAccountClubId}
+      managementMode={!!clubAccountClubId && !!row?.managementMode}
     >
       {children}
     </AppShell>
