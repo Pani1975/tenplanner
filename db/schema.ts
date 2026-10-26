@@ -1890,6 +1890,58 @@ export const clubInvites = pgTable(
   ]
 );
 
+// Monitores asignados por el gestor del club a un grupo o a un alumno del club.
+// Es una relación muchos-a-muchos (un grupo puede tener varios monitores y un
+// monitor varios grupos). Solo asigna el dueño del club, y solo entre los
+// monitores activos del propio club; ver lib/club-coaches.ts.
+export const groupCoaches = pgTable(
+  "group_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .references(() => groups.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_coaches_group_user_uniq").on(t.groupId, t.userId),
+    index("group_coaches_group_id_idx").on(t.groupId),
+    index("group_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+export const studentCoaches = pgTable(
+  "student_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("student_coaches_student_user_uniq").on(t.studentId, t.userId),
+    index("student_coaches_student_id_idx").on(t.studentId),
+    index("student_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
 export const clubsRelations = relations(clubs, ({ many }) => ({
   members: many(clubMembers),
   invites: many(clubInvites),

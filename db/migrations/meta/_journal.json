@@ -540,6 +540,13 @@
       "when": 1794200000000,
       "tag": "0076_club_contact_invitee_name",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1794300000000,
+      "tag": "0077_group_student_coaches",
+      "breakpoints": true
     }
   ]
 }

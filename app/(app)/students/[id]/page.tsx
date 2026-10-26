@@ -15,7 +15,13 @@ import { GenerateProfileLinkButton } from "./generate-profile-link";
 import { GuardiansPanel } from "./guardians-panel";
 import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getOwnedClub,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
+import { AssignedCoachesPanel } from "@/components/app/assigned-coaches-panel";
+import { getAssignableCoaches, listStudentCoaches } from "@/lib/club-coaches";
 import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
 import { ObjectivesChecklist, type ScopeOption } from "./objectives-checklist";
 import { ReportDialogButton } from "./report-dialog";
@@ -146,6 +152,18 @@ export default async function StudentDetailPage({ params }: PageProps) {
     : null;
 
   const trainingStatsPromise = loadStudentTrainingStats(id);
+
+  // Monitores asignados por el gestor (solo alumnos de un club).
+  const ownedClub = student.clubId ? await getOwnedClub(user.id) : null;
+  const canAssignCoaches = !!student.clubId && ownedClub?.id === student.clubId;
+  const [assignedCoaches, coachOptions] = student.clubId
+    ? await Promise.all([
+        listStudentCoaches(id),
+        canAssignCoaches
+          ? getAssignableCoaches(student.clubId)
+          : Promise.resolve([]),
+      ])
+    : [[], []];
   // Si las tablas de objetivos no existieran, la ficha se muestra igual sin la sección.
   const objectives = await loadStudentObjectives(student.id, {
     includeHidden: true,
@@ -346,6 +364,17 @@ export default async function StudentDetailPage({ params }: PageProps) {
             </div>
           </div>
         </header>
+
+        {student.clubId && (
+          <AssignedCoachesPanel
+            key={assignedCoaches.map((c) => c.id).join(",")}
+            endpoint={`/api/students/${id}/coaches`}
+            assigned={assignedCoaches}
+            options={coachOptions}
+            canEdit={canAssignCoaches}
+            subject="este alumno"
+          />
+        )}
 
         {/* Stats strip */}
         <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4">
