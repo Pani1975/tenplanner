@@ -8,10 +8,14 @@ import {
   getOwnedClub,
   getCoachMemberships,
 } from "@/lib/clubs";
+import { cleanOptionalText, normalizeWebsite } from "@/lib/club-identity";
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(255),
   plannedCoachSeats: z.number().int().min(0).max(999).optional().nullable(),
+  address: z.string().max(500).optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  website: z.string().max(255).optional().nullable(),
 });
 
 export async function GET() {
@@ -92,6 +96,9 @@ export async function POST(request: Request) {
         name: parsed.data.name,
         ownerId: user.id,
         plannedCoachSeats: parsed.data.plannedCoachSeats ?? null,
+        address: cleanOptionalText(parsed.data.address, 500),
+        phone: cleanOptionalText(parsed.data.phone, 50),
+        website: normalizeWebsite(parsed.data.website),
       })
       .returning();
 

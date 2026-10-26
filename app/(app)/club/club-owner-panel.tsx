@@ -24,6 +24,7 @@ interface Member {
 interface Invite {
   id: string;
   email: string;
+  inviteeName: string | null;
   sport: Sport;
   token: string;
   status: string;
@@ -53,11 +54,13 @@ export function ClubOwnerPanel({
   const [editingMembers, setEditingMembers] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [invites, setInvites] = useState(initialInvites);
+  const [inviteeName, setInviteeName] = useState("");
   const [email, setEmail] = useState("");
   const [sport, setSport] = useState<Sport>(defaultSport);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const seatCount = club.plannedCoachSeats;
 
@@ -66,11 +69,16 @@ export function ClubOwnerPanel({
     if (!email.trim()) return;
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch("/api/clubs/invites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), sport }),
+        body: JSON.stringify({
+          email: email.trim(),
+          name: inviteeName.trim() || undefined,
+          sport,
+        }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
@@ -85,7 +93,18 @@ export function ClubOwnerPanel({
         body.data,
         ...prev.filter((i) => i.id !== body.data.id),
       ]);
+      const sent = body.emailSent
+        ? `Invitación enviada a ${body.data.email}.`
+        : "No hemos podido enviar el correo. Copia el enlace de la lista y envíaselo tú.";
+      setNotice(
+        body.profileCreated
+          ? `${sent} Se ha creado su ficha (pendiente de rellenar) en Fichas de monitores.`
+          : sent
+      );
       setEmail("");
+      setInviteeName("");
+      // Recarga la página para que aparezca la ficha recién creada.
+      router.refresh();
     } finally {
       setSubmitting(false);
     }
@@ -141,6 +160,19 @@ export function ClubOwnerPanel({
         <form onSubmit={onInvite} className="mt-3 space-y-2">
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex-1 space-y-1">
+              <Label htmlFor="invite-name" className="sr-only">
+                Nombre del monitor
+              </Label>
+              <Input
+                id="invite-name"
+                placeholder="Nombre"
+                value={inviteeName}
+                onChange={(e) => setInviteeName(e.target.value)}
+                autoComplete="off"
+                required
+              />
+            </div>
+            <div className="flex-1 space-y-1">
               <Label htmlFor="invite-email" className="sr-only">
                 Email del monitor
               </Label>
@@ -180,9 +212,10 @@ export function ClubOwnerPanel({
           </div>
         </form>
         {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+        {notice && <p className="mt-2 text-xs text-foreground/70">{notice}</p>}
         <p className="mt-2 text-xs text-foreground/50">
-          Se genera un enlace de invitación — cópialo y envíaselo tú mismo (aún
-          no enviamos el email automáticamente).
+          Enviamos la invitación por email. Si prefieres, también puedes copiar
+          el enlace de la lista y mandárselo tú.
         </p>
         {typeof seatCount === "number" && (
           <p className="mt-1 text-xs text-foreground/50">
@@ -203,7 +236,9 @@ export function ClubOwnerPanel({
                 className="flex items-center justify-between gap-3 rounded-2xl border border-[#050505]/10 px-4 py-3 dark:border-white/10"
               >
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                  {invite.email}
+                  {invite.inviteeName
+                    ? `${invite.inviteeName} · ${invite.email}`
+                    : invite.email}
                   <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
                     {SPORT_LABELS[invite.sport]}
                   </span>

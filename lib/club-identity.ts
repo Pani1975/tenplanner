@@ -61,3 +61,28 @@ export function normalizeCourts(
 export function totalCourts(courts: Courts | null | undefined): number {
   return COURT_TYPES.reduce((sum, c) => sum + (courts?.[c.id] ?? 0), 0);
 }
+
+// Contacto que se pide al registrar un club ("Como Club"). Todo opcional:
+// vacío se guarda como null.
+
+/** Añade https:// si falta y devuelve null si el texto no es una URL válida. */
+export function normalizeWebsite(raw: string | null | undefined) {
+  const value = raw?.trim();
+  if (!value) return null;
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    const url = new URL(withScheme);
+    if (!url.hostname.includes(".")) return null;
+    return url.toString().slice(0, 255);
+  } catch {
+    return null;
+  }
+}
+
+export function cleanOptionalText(
+  raw: string | null | undefined,
+  maxLength: number
+) {
+  const value = raw?.trim();
+  return value ? value.slice(0, maxLength) : null;
+}

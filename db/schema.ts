@@ -22,6 +22,7 @@ import {
 import { relations, sql } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -1801,6 +1802,9 @@ export const clubs = pgTable(
     // Ficha de identificación del club (Perfil, en modo club).
     fullName: varchar("full_name", { length: 255 }),
     address: text("address"),
+    // Contacto del club, pedido en el registro ("Como Club").
+    phone: varchar("phone", { length: 50 }),
+    website: varchar("website", { length: 255 }),
     // Número de pistas por tipo de superficie; ver lib/club-identity.ts.
     courts: jsonb("courts").$type<Partial<Record<string, number>>>(),
     foundedYear: integer("founded_year"),
@@ -1863,6 +1867,8 @@ export const clubInvites = pgTable(
       .references(() => clubs.id, { onDelete: "cascade" })
       .notNull(),
     email: varchar("email", { length: 255 }).notNull(),
+    // Nombre del monitor tal como lo escribe el director al invitarlo.
+    inviteeName: varchar("invitee_name", { length: 255 }),
     token: varchar("token", { length: 128 }).notNull().unique(),
     status: clubInviteStatusEnum("status").notNull().default("pending"),
     // El deporte para el que se invita al monitor — una invitación es para
@@ -1882,6 +1888,101 @@ export const clubInvites = pgTable(
     index("club_invites_club_id_idx").on(t.clubId),
     index("club_invites_email_idx").on(t.email),
     index("club_invites_sport_idx").on(t.sport),
+  ]
+);
+
+// Monitores asignados por el gestor del club a un grupo o a un alumno del club.
+// Es una relación muchos-a-muchos (un grupo puede tener varios monitores y un
+// monitor varios grupos). Solo asigna el dueño del club, y solo entre los
+// monitores activos del propio club; ver lib/club-coaches.ts.
+export const groupCoaches = pgTable(
+  "group_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .references(() => groups.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_coaches_group_user_uniq").on(t.groupId, t.userId),
+    index("group_coaches_group_id_idx").on(t.groupId),
+    index("group_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+export const studentCoaches = pgTable(
+  "student_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("student_coaches_student_user_uniq").on(t.studentId, t.userId),
+    index("student_coaches_student_id_idx").on(t.studentId),
+    index("student_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+// Ficha de un monitor del club (Gestión → Monitores). La rellena el gestor
+// directamente o el propio monitor desde un enlace con token de un solo uso;
+// hasta que la rellena, `status` es "pending" y `phone` puede estar vacío.
+// Se relaciona con una cuenta de Ten Planner por el email, no por clave.
+export const clubCoachProfiles = pgTable(
+  "club_coach_profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    fullName: varchar("full_name", { length: 255 }).notNull(),
+    // Siempre en minúsculas: una ficha por email dentro de cada club.
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 32 }),
+    academicTraining: text("academic_training"),
+    tennisTraining: text("tennis_training"),
+    // { lunes: ["manana", "tarde"], ... }; ver lib/coach-profile.ts.
+    availability: jsonb("availability").$type<Availability>(),
+    startedTeachingYear: integer("started_teaching_year"),
+    experience: jsonb("experience").$type<ExperienceEntry[]>(),
+    status: varchar("status", { length: 10 }).default("complete").notNull(),
+    // Enlace para que el monitor rellene su ficha; se anula al enviarla.
+    profileToken: varchar("profile_token", { length: 128 }).unique(),
+    profileTokenExpiresAt: timestamp("profile_token_expires_at", {
+      withTimezone: true,
+    }),
+    // Solo si la rellenó el propio monitor, al aceptar el tratamiento de datos.
+    consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("club_coach_profiles_club_email_uniq").on(t.clubId, t.email),
+    index("club_coach_profiles_club_id_idx").on(t.clubId),
   ]
 );
 

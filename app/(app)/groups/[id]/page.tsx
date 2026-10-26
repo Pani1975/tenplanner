@@ -29,7 +29,13 @@ import { GroupObjectivesEditor } from "./group-objectives-editor";
 import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getOwnedClub,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
+import { AssignedCoachesPanel } from "@/components/app/assigned-coaches-panel";
+import { getAssignableCoaches, listGroupCoaches } from "@/lib/club-coaches";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -219,6 +225,19 @@ export default async function GroupDetailPage({ params }: PageProps) {
 
   const trainingStats = await loadGroupTrainingStats(id);
 
+  // Monitores asignados por el gestor (solo grupos de un club). Los ve todo
+  // el club; solo el gestor, dueño del club, puede cambiarlos.
+  const ownedClub = group.clubId ? await getOwnedClub(user.id) : null;
+  const canAssignCoaches = !!group.clubId && ownedClub?.id === group.clubId;
+  const [assignedCoaches, coachOptions] = group.clubId
+    ? await Promise.all([
+        listGroupCoaches(id),
+        canAssignCoaches
+          ? getAssignableCoaches(group.clubId, group.sport)
+          : Promise.resolve([]),
+      ])
+    : [[], []];
+
   const availableStudents = await db
     .select({
       id: students.id,
@@ -290,6 +309,17 @@ export default async function GroupDetailPage({ params }: PageProps) {
           availableStudents={availableStudents}
           isOwner={isOwner}
         />
+
+        {group.clubId && (
+          <AssignedCoachesPanel
+            key={assignedCoaches.map((c) => c.id).join(",")}
+            endpoint={`/api/groups/${id}/coaches`}
+            assigned={assignedCoaches}
+            options={coachOptions}
+            canEdit={canAssignCoaches}
+            subject="este grupo"
+          />
+        )}
 
         <GroupObjectivesEditor
           key={group.objetivos ?? ""}

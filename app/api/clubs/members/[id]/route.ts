@@ -4,11 +4,13 @@ import { db } from "@/db";
 import { clubMembers } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getOwnedClub } from "@/lib/clubs";
+import { clearCoachAssignments } from "@/lib/club-coaches";
 
 /**
  * El dueño del club desvincula a un monitor (marca la vinculación como
  * "removed"). El contenido que el monitor creó en el club se queda en el
- * club; él deja de verlo al perder la vinculación.
+ * club; él deja de verlo al perder la vinculación. También se le quita de
+ * los grupos y alumnos a los que el gestor lo había asignado.
  */
 export async function DELETE(
   _request: Request,
@@ -37,7 +39,11 @@ export async function DELETE(
         eq(clubMembers.role, "coach")
       )
     )
-    .returning({ id: clubMembers.id });
+    .returning({
+      id: clubMembers.id,
+      userId: clubMembers.userId,
+      sport: clubMembers.sport,
+    });
 
   if (!updated) {
     return NextResponse.json(
@@ -45,5 +51,11 @@ export async function DELETE(
       { status: 404 }
     );
   }
+  // Ya no es monitor de ese deporte: fuera también de sus grupos y alumnos.
+  await clearCoachAssignments({
+    clubId: club.id,
+    userId: updated.userId,
+    sport: updated.sport,
+  });
   return NextResponse.json({ ok: true });
 }

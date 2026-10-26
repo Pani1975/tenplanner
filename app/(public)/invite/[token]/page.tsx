@@ -91,7 +91,11 @@ export default async function InvitePage({
 
   return card(
     <>
-      <p className="tp-kicker">Invitación de club</p>
+      <p className="tp-kicker">
+        {invite.inviteeName
+          ? `Hola, ${invite.inviteeName}`
+          : "Invitación de club"}
+      </p>
       <h1 className="mt-3 text-2xl font-black leading-tight text-foreground">
         {club.name} quiere vincularte como monitor de{" "}
         {SPORT_LABELS[invite.sport]}
