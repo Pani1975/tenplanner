@@ -93,13 +93,18 @@ export function ClubOwnerPanel({
         body.data,
         ...prev.filter((i) => i.id !== body.data.id),
       ]);
+      const sent = body.emailSent
+        ? `Invitación enviada a ${body.data.email}.`
+        : "No hemos podido enviar el correo. Copia el enlace de la lista y envíaselo tú.";
       setNotice(
-        body.emailSent
-          ? `Invitación enviada a ${body.data.email}.`
-          : "No hemos podido enviar el correo. Copia el enlace de la lista y envíaselo tú."
+        body.profileCreated
+          ? `${sent} Se ha creado su ficha (pendiente de rellenar) en Fichas de monitores.`
+          : sent
       );
       setEmail("");
       setInviteeName("");
+      // Recarga la página para que aparezca la ficha recién creada.
+      router.refresh();
     } finally {
       setSubmitting(false);
     }
@@ -160,10 +165,11 @@ export function ClubOwnerPanel({
               </Label>
               <Input
                 id="invite-name"
-                placeholder="Nombre (opcional)"
+                placeholder="Nombre"
                 value={inviteeName}
                 onChange={(e) => setInviteeName(e.target.value)}
                 autoComplete="off"
+                required
               />
             </div>
             <div className="flex-1 space-y-1">

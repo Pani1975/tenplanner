@@ -358,7 +358,7 @@ export function CoachProfilesPanel({
                           <p className="text-sm text-foreground/60">
                             {profile.linkToken
                               ? `Esperando a que ${profile.fullName.split(" ")[0]} rellene su ficha. El enlace caduca el ${dateFormat.format(new Date(profile.linkExpiresAt!))}.`
-                              : "El enlace ha caducado. Envía uno nuevo o rellena la ficha tú."}
+                              : "No hay un enlace activo. Envíaselo al monitor para que la rellene, o rellena la ficha tú."}
                           </p>
                         ) : (
                           <ProfileSummary profile={profile} />

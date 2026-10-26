@@ -244,3 +244,12 @@ export const coachProfileLinkRequestSchema = z.object({
 });
 
 export type CoachProfileStatus = "pending" | "complete";
+
+/**
+ * Nombre provisional para la ficha que se crea al invitar a un monitor del
+ * que solo se conoce el email: la parte anterior a la @.
+ */
+export function fallbackNameFromEmail(email: string) {
+  const local = email.split("@")[0]?.trim();
+  return local ? local : email;
+}

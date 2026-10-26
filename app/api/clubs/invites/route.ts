@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { clubInvites, clubMembers, users } from "@/db/schema";
+import {
+  clubCoachProfiles,
+  clubInvites,
+  clubMembers,
+  users,
+} from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import {
   getOwnedClub,
@@ -11,6 +16,7 @@ import {
   listClubRoster,
   CLUB_INVITE_EXPIRY_DAYS,
 } from "@/lib/clubs";
+import { fallbackNameFromEmail } from "@/lib/coach-profile";
 import { getSiteUrl, sendEmail } from "@/lib/email";
 import { buildClubInviteEmail } from "@/lib/club-invite-email";
 import { rateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
@@ -141,6 +147,29 @@ export async function POST(request: Request) {
         })
         .returning();
 
+  // Al invitar a un monitor se crea también su ficha, pendiente de rellenar
+  // (la rellena el gestor o se la pide al monitor desde Gestión → Monitores).
+  // Si ya tenía ficha en el club, se deja como está.
+  let profileCreated = false;
+  try {
+    const created = await db
+      .insert(clubCoachProfiles)
+      .values({
+        clubId: club.id,
+        fullName: inviteeName ?? fallbackNameFromEmail(email),
+        email,
+        status: "pending",
+      })
+      .onConflictDoNothing({
+        target: [clubCoachProfiles.clubId, clubCoachProfiles.email],
+      })
+      .returning({ id: clubCoachProfiles.id });
+    profileCreated = created.length > 0;
+  } catch (error) {
+    // La invitación es lo importante: si la ficha falla, no la bloqueamos.
+    console.error("Could not create coach profile for invite", { error });
+  }
+
   const siteUrl = getSiteUrl(request.url);
   const emailResult = await sendEmail(
     buildClubInviteEmail({
@@ -155,7 +184,7 @@ export async function POST(request: Request) {
   );
 
   return NextResponse.json(
-    { data: invite, emailSent: emailResult.sent },
+    { data: invite, emailSent: emailResult.sent, profileCreated },
     { status: 201 }
   );
 }

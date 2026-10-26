@@ -57,6 +57,7 @@ export default async function ManagementCoachesPage() {
           defaultSport={activeSport}
         />
         <CoachProfilesPanel
+          key={profiles.map((p) => `${p.id}:${p.updatedAt}`).join("|")}
           clubName={club.name}
           initialProfiles={profiles}
           members={members.map((m) => ({ name: m.name, email: m.email }))}

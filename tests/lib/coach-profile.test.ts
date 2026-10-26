@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   coachProfileLinkRequestSchema,
   coachProfileSchema,
+  fallbackNameFromEmail,
   formatExperienceRange,
   isAllSelected,
   normalizeAvailability,
@@ -216,5 +217,15 @@ describe("formatExperienceRange", () => {
   it("muestra 'actualidad' cuando no hay año de finalización", () => {
     expect(formatExperienceRange(2018, null)).toBe("2018 – actualidad");
     expect(formatExperienceRange(2012, 2017)).toBe("2012 – 2017");
+  });
+});
+
+describe("fallbackNameFromEmail", () => {
+  it("usa lo anterior a la arroba", () => {
+    expect(fallbackNameFromEmail("angel.perez@club.es")).toBe("angel.perez");
+  });
+
+  it("si no hay arroba, devuelve el texto tal cual", () => {
+    expect(fallbackNameFromEmail("sin-arroba")).toBe("sin-arroba");
   });
 });
