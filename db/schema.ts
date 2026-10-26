@@ -22,6 +22,7 @@ import {
 import { relations, sql } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -1939,6 +1940,49 @@ export const studentCoaches = pgTable(
     uniqueIndex("student_coaches_student_user_uniq").on(t.studentId, t.userId),
     index("student_coaches_student_id_idx").on(t.studentId),
     index("student_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+// Ficha de un monitor del club (Gestión → Monitores). La rellena el gestor
+// directamente o el propio monitor desde un enlace con token de un solo uso;
+// hasta que la rellena, `status` es "pending" y `phone` puede estar vacío.
+// Se relaciona con una cuenta de Ten Planner por el email, no por clave.
+export const clubCoachProfiles = pgTable(
+  "club_coach_profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    fullName: varchar("full_name", { length: 255 }).notNull(),
+    // Siempre en minúsculas: una ficha por email dentro de cada club.
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 32 }),
+    academicTraining: text("academic_training"),
+    tennisTraining: text("tennis_training"),
+    // { lunes: ["manana", "tarde"], ... }; ver lib/coach-profile.ts.
+    availability: jsonb("availability").$type<Availability>(),
+    startedTeachingYear: integer("started_teaching_year"),
+    experience: jsonb("experience").$type<ExperienceEntry[]>(),
+    status: varchar("status", { length: 10 }).default("complete").notNull(),
+    // Enlace para que el monitor rellene su ficha; se anula al enviarla.
+    profileToken: varchar("profile_token", { length: 128 }).unique(),
+    profileTokenExpiresAt: timestamp("profile_token_expires_at", {
+      withTimezone: true,
+    }),
+    // Solo si la rellenó el propio monitor, al aceptar el tratamiento de datos.
+    consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("club_coach_profiles_club_email_uniq").on(t.clubId, t.email),
+    index("club_coach_profiles_club_id_idx").on(t.clubId),
   ]
 );
 

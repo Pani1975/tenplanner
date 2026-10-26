@@ -8,12 +8,14 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { ClubOwnerPanel } from "../../club/club-owner-panel";
+import { listClubCoachProfiles } from "@/lib/club-coach-profiles";
+import { CoachProfilesPanel } from "./coach-profiles-panel";
 
 export const metadata = { title: "Monitores" };
 export const dynamic = "force-dynamic";
 
-// Modo gestión: invitar monitores al club, ver quién está dentro y darles de
-// baja. Solo la cuenta del club.
+// Modo gestión: invitar monitores al club, ver quién está dentro, darles de
+// baja y llevar la ficha de cada uno. Solo la cuenta del club.
 export default async function ManagementCoachesPage() {
   const supabase = await createClient();
   const {
@@ -27,7 +29,10 @@ export default async function ManagementCoachesPage() {
     getActiveSport(user.id),
   ]);
   if (!club) notFound();
-  const { members, invites } = await listClubRoster(club.id);
+  const [{ members, invites }, profiles] = await Promise.all([
+    listClubRoster(club.id),
+    listClubCoachProfiles(club.id),
+  ]);
 
   return (
     <div className="tp-page">
@@ -50,6 +55,11 @@ export default async function ManagementCoachesPage() {
           initialMembers={members}
           initialInvites={invites}
           defaultSport={activeSport}
+        />
+        <CoachProfilesPanel
+          clubName={club.name}
+          initialProfiles={profiles}
+          members={members.map((m) => ({ name: m.name, email: m.email }))}
         />
       </div>
     </div>

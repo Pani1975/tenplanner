@@ -60,3 +60,10 @@ export function escapeHtml(value: string) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+/** URL pública del sitio: la variable de entorno o, si falta, la de la petición. */
+export function getSiteUrl(requestUrl: string) {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL || new URL(requestUrl).origin
+  ).replace(/\/$/, "");
+}

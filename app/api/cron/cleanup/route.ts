@@ -1,7 +1,12 @@
 import { and, isNotNull, lt } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { drPlannerChats, drPlannerMessages, students } from "@/db/schema";
+import {
+  clubCoachProfiles,
+  drPlannerChats,
+  drPlannerMessages,
+  students,
+} from "@/db/schema";
 
 const CHAT_RETENTION_DAYS = 180;
 
@@ -44,12 +49,24 @@ export async function GET(request: Request) {
     )
     .returning({ id: students.id });
 
+  const expiredCoachLinks = await db
+    .update(clubCoachProfiles)
+    .set({ profileToken: null, profileTokenExpiresAt: null })
+    .where(
+      and(
+        isNotNull(clubCoachProfiles.profileToken),
+        lt(clubCoachProfiles.profileTokenExpiresAt, now)
+      )
+    )
+    .returning({ id: clubCoachProfiles.id });
+
   const summary = {
     ranAt: now.toISOString(),
     cutoff: cutoff.toISOString(),
     chatsDeleted: deletedChats.length,
     messagesDeleted: orphanMessages.length,
-    expiredTokensInvalidated: expiredTokens.length,
+    expiredTokensInvalidated:
+      expiredTokens.length + expiredCoachLinks.length,
   };
 
   console.info("[cron/cleanup]", JSON.stringify(summary));

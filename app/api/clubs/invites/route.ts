@@ -11,7 +11,7 @@ import {
   listClubRoster,
   CLUB_INVITE_EXPIRY_DAYS,
 } from "@/lib/clubs";
-import { sendEmail } from "@/lib/email";
+import { getSiteUrl, sendEmail } from "@/lib/email";
 import { buildClubInviteEmail } from "@/lib/club-invite-email";
 import { rateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 import { SPORT_LABELS } from "@/lib/sport-constants";
@@ -141,9 +141,7 @@ export async function POST(request: Request) {
         })
         .returning();
 
-  const siteUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
-  ).replace(/\/$/, "");
+  const siteUrl = getSiteUrl(request.url);
   const emailResult = await sendEmail(
     buildClubInviteEmail({
       to: email,

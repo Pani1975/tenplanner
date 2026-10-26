@@ -547,6 +547,13 @@
       "when": 1794300000000,
       "tag": "0077_group_student_coaches",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1794400000000,
+      "tag": "0078_club_coach_profiles",
+      "breakpoints": true
     }
   ]
 }
