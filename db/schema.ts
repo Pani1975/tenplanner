@@ -329,6 +329,10 @@ export const sessions = pgTable(
     // Comentario libre del monitor sobre la sesión en general; se puede
     // escribir antes o después de marcarla como completada.
     coachComment: text("coach_comment"),
+    // Nota de voz del monitor sobre la sesión en general: ruta del archivo
+    // en el bucket privado "session-audio" y duración en segundos.
+    coachAudioPath: text("coach_audio_path"),
+    coachAudioSeconds: integer("coach_audio_seconds"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -432,6 +436,9 @@ export const sessionBlockItems = pgTable(
     // Comentario del monitor sobre este ejercicio/actividad de la sesión
     // (antes o después de darla). Se conserva al editar el plan.
     coachComment: text("coach_comment"),
+    // Nota de voz sobre este ejercicio/actividad (bucket "session-audio").
+    coachAudioPath: text("coach_audio_path"),
+    coachAudioSeconds: integer("coach_audio_seconds"),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),

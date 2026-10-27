@@ -4,6 +4,10 @@ import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useState } from "react";
 import { SessionCommentBox } from "@/components/app/session-comment-box";
+import {
+  SessionVoiceNote,
+  type VoiceNoteSaved,
+} from "@/components/app/session-voice-note";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -75,6 +79,9 @@ export interface SessionData {
   observations: string | null;
   /** Comentario del monitor sobre la sesión en general. */
   coachComment?: string | null;
+  /** Nota de voz de la sesión (URL firmada; solo para el monitor dueño). */
+  coachAudioUrl?: string | null;
+  coachAudioSeconds?: number | null;
   sourceClassId: string | null;
   intensity: number | null;
   tags: string[];
@@ -195,6 +202,9 @@ export interface SessionBlockData {
     aspectoJuego?: string | null;
     /** Comentario del monitor sobre este ejercicio/actividad. */
     coachComment?: string | null;
+    /** Nota de voz sobre este ejercicio (URL firmada; solo el dueño). */
+    coachAudioUrl?: string | null;
+    coachAudioSeconds?: number | null;
   }>;
 }
 
@@ -506,6 +516,44 @@ export function SessionDetailClient({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, itemComment: comment }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async function uploadVoiceNote(
+    blob: Blob,
+    seconds: number,
+    itemId?: string
+  ): Promise<VoiceNoteSaved | null> {
+    try {
+      const form = new FormData();
+      form.append("file", blob, "nota-de-voz");
+      form.append("seconds", String(seconds));
+      if (itemId) form.append("itemId", itemId);
+      const res = await fetch(`/api/sessions/${session.id}/audio`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) return null;
+      const json = (await res.json()) as {
+        url?: string | null;
+        seconds?: number;
+      };
+      return { url: json.url ?? null, seconds: json.seconds ?? seconds };
+    } catch {
+      return null;
+    }
+  }
+
+  async function deleteVoiceNote(itemId?: string) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/audio`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemId ? { itemId } : {}),
       });
       return res.ok;
     } catch {
@@ -995,15 +1043,25 @@ export function SessionDetailClient({
                           </p>
                         )}
                         {item.kind !== "warmup" && (
-                          <SessionCommentBox
-                            value={item.coachComment}
-                            readOnly={!isOwner}
-                            onSave={(comment) =>
-                              saveItemComment(item.id, comment)
-                            }
-                            placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
-                            className="mt-2"
-                          />
+                          <div className="mt-2 space-y-2">
+                            <SessionCommentBox
+                              value={item.coachComment}
+                              readOnly={!isOwner}
+                              onSave={(comment) =>
+                                saveItemComment(item.id, comment)
+                              }
+                              placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
+                            />
+                            <SessionVoiceNote
+                              url={item.coachAudioUrl}
+                              seconds={item.coachAudioSeconds}
+                              readOnly={!isOwner}
+                              onUpload={(blob, seconds) =>
+                                uploadVoiceNote(blob, seconds, item.id)
+                              }
+                              onDelete={() => deleteVoiceNote(item.id)}
+                            />
+                          </div>
                         )}
                       </div>
                     ))
@@ -1036,6 +1094,15 @@ export function SessionDetailClient({
               addLabel="Comentarios de la sesión"
               placeholder="Ritmo del grupo, qué ha funcionado, qué repetir o cambiar la próxima vez…"
               maxLength={4000}
+            />
+            <SessionVoiceNote
+              url={session.coachAudioUrl}
+              seconds={session.coachAudioSeconds}
+              readOnly={!isOwner}
+              onUpload={(blob, seconds) => uploadVoiceNote(blob, seconds)}
+              onDelete={() => deleteVoiceNote()}
+              addLabel="Grabar nota de voz de la sesión"
+              className="mt-3"
             />
           </div>
         </div>

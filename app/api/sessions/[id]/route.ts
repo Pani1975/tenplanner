@@ -14,6 +14,7 @@ import {
   students,
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { removeSessionAudio } from "@/lib/session-audio";
 import {
   sessionIdParamsSchema,
   updateSessionSchema,
@@ -666,6 +667,7 @@ export async function PUT(request: Request, context: RouteContext) {
       updateValues.durationMinutes = sessionFields.durationMinutes;
     }
 
+    const orphanAudioPaths: string[] = [];
     const updatedSession = await db.transaction(async (tx) => {
       const [session] = await tx
         .update(sessions)
@@ -737,6 +739,8 @@ export async function PUT(request: Request, context: RouteContext) {
             title: sessionBlockItems.title,
             freeText: sessionBlockItems.freeText,
             coachComment: sessionBlockItems.coachComment,
+            coachAudioPath: sessionBlockItems.coachAudioPath,
+            coachAudioSeconds: sessionBlockItems.coachAudioSeconds,
           })
           .from(sessionBlockItems)
           .innerJoin(
@@ -749,8 +753,8 @@ export async function PUT(request: Request, context: RouteContext) {
             asc(sessionBlockItems.orderIndex)
           );
 
-        // Los comentarios del monitor sobre cada ejercicio también se
-        // conservan al editar el plan. Los items se recrean, así que se
+        // Los comentarios y notas de voz del monitor sobre cada ejercicio
+        // también se conservan al editar el plan. Los items se recrean, así que se
         // emparejan por bloque + ejercicio/texto (y por orden si se repiten).
         const commentKey = (
           blockOrder: number,
@@ -771,13 +775,25 @@ export async function PUT(request: Request, context: RouteContext) {
           seen.set(base, n + 1);
           return `${base}|${n}`;
         };
-        const previousComments = new Map<string, string>();
+        const previousComments = new Map<
+          string,
+          {
+            comment: string | null;
+            audioPath: string | null;
+            audioSeconds: number | null;
+          }
+        >();
         const seenPrevious = new Map<string, number>();
         for (const row of previousItems) {
           const key = commentKey(row.blockOrder, row, seenPrevious);
-          if (row.coachComment?.trim())
-            previousComments.set(key, row.coachComment);
+          if (row.coachComment?.trim() || row.coachAudioPath)
+            previousComments.set(key, {
+              comment: row.coachComment?.trim() ? row.coachComment : null,
+              audioPath: row.coachAudioPath,
+              audioSeconds: row.coachAudioSeconds,
+            });
         }
+        const keptAudioPaths = new Set<string>();
         const seenNew = new Map<string, number>();
         for (const row of previousItems) {
           if (
@@ -821,6 +837,10 @@ export async function PUT(request: Request, context: RouteContext) {
                 const snapshot = item.exerciseId
                   ? snapshots.get(item.exerciseId)
                   : undefined;
+                const kept = previousComments.get(
+                  commentKey(block.orderIndex, item, seenNew)
+                );
+                if (kept?.audioPath) keptAudioPaths.add(kept.audioPath);
                 return {
                   blockId: sessionBlock.id,
                   exerciseId: item.exerciseId ?? null,
@@ -837,10 +857,9 @@ export async function PUT(request: Request, context: RouteContext) {
                   durationMinutes:
                     item.durationMinutes ?? snapshot?.durationMinutes ?? null,
                   notes: item.notes ?? null,
-                  coachComment:
-                    previousComments.get(
-                      commentKey(block.orderIndex, item, seenNew)
-                    ) ?? null,
+                  coachComment: kept?.comment ?? null,
+                  coachAudioPath: kept?.audioPath ?? null,
+                  coachAudioSeconds: kept?.audioSeconds ?? null,
                   kind: item.kind ?? null,
                   stations:
                     item.kind === "stations"
@@ -851,6 +870,13 @@ export async function PUT(request: Request, context: RouteContext) {
               })
             );
           }
+        }
+
+        // Notas de voz de ejercicios que ya no están en el plan: su archivo
+        // se borra al terminar (el item se ha recreado sin ellas).
+        for (const row of previousItems) {
+          if (row.coachAudioPath && !keptAudioPaths.has(row.coachAudioPath))
+            orphanAudioPaths.push(row.coachAudioPath);
         }
       }
 
@@ -868,6 +894,10 @@ export async function PUT(request: Request, context: RouteContext) {
 
       return session;
     });
+
+    if (orphanAudioPaths.length > 0) {
+      after(() => removeSessionAudio(orphanAudioPaths));
+    }
 
     if (updatedSession) {
       after(() =>
@@ -901,7 +931,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   try {
     const [existing] = await db
-      .select({ userId: sessions.userId })
+      .select({
+        userId: sessions.userId,
+        coachAudioPath: sessions.coachAudioPath,
+      })
       .from(sessions)
       .where(eq(sessions.id, id))
       .limit(1);
@@ -914,7 +947,19 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Los archivos de audio no se borran solos con la sesión.
+    const audioRows = await db
+      .select({ path: sessionBlockItems.coachAudioPath })
+      .from(sessionBlockItems)
+      .innerJoin(sessionBlocks, eq(sessionBlocks.id, sessionBlockItems.blockId))
+      .where(eq(sessionBlocks.sessionId, id));
+    const audioPaths = [
+      existing.coachAudioPath,
+      ...audioRows.map((row) => row.path),
+    ];
+
     await db.delete(sessions).where(eq(sessions.id, id));
+    await removeSessionAudio(audioPaths);
 
     return NextResponse.json({ ok: true });
   } catch {

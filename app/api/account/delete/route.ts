@@ -5,7 +5,11 @@ import {
   users as usersTable,
   exercises as exercisesTable,
   students as studentsTable,
+  sessions as sessionsTable,
+  sessionBlocks as sessionBlocksTable,
+  sessionBlockItems as sessionBlockItemsTable,
 } from "@/db/schema";
+import { removeSessionAudio } from "@/lib/session-audio";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -91,6 +95,28 @@ export async function POST(request: Request) {
   if (studentAvatarPaths.length > 0) {
     await admin.storage.from(AVATARS_BUCKET).remove(studentAvatarPaths);
   }
+
+  // Notas de voz de sus sesiones (bucket privado): se borran con la cuenta.
+  const sessionAudioRows = await db
+    .select({ path: sessionsTable.coachAudioPath })
+    .from(sessionsTable)
+    .where(eq(sessionsTable.userId, user.id));
+  const itemAudioRows = await db
+    .select({ path: sessionBlockItemsTable.coachAudioPath })
+    .from(sessionBlockItemsTable)
+    .innerJoin(
+      sessionBlocksTable,
+      eq(sessionBlocksTable.id, sessionBlockItemsTable.blockId)
+    )
+    .innerJoin(
+      sessionsTable,
+      eq(sessionsTable.id, sessionBlocksTable.sessionId)
+    )
+    .where(eq(sessionsTable.userId, user.id));
+  await removeSessionAudio([
+    ...sessionAudioRows.map((row) => row.path),
+    ...itemAudioRows.map((row) => row.path),
+  ]);
 
   await db.delete(usersTable).where(eq(usersTable.id, user.id));
 
