@@ -3,6 +3,7 @@
 import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useState } from "react";
+import { SessionCommentBox } from "@/components/app/session-comment-box";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -72,6 +73,8 @@ export interface SessionData {
   objective: string | null;
   material: string | null;
   observations: string | null;
+  /** Comentario del monitor sobre la sesión en general. */
+  coachComment?: string | null;
   sourceClassId: string | null;
   intensity: number | null;
   tags: string[];
@@ -190,6 +193,8 @@ export interface SessionBlockData {
     /** Aspecto del juego (técnica/táctica/física/mental) para items sin
      * ejercicio de biblioteca, elegido al crear el texto libre. */
     aspectoJuego?: string | null;
+    /** Comentario del monitor sobre este ejercicio/actividad. */
+    coachComment?: string | null;
   }>;
 }
 
@@ -480,6 +485,32 @@ export function SessionDetailClient({
       router.refresh();
     }
     setUpdatingStatus(false);
+  }
+
+  async function saveSessionComment(comment: string | null) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionComment: comment }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async function saveItemComment(itemId: string, comment: string | null) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, itemComment: comment }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
   }
 
   async function handleRateExercise(exerciseId: string, rating: number) {
@@ -963,12 +994,49 @@ export function SessionDetailClient({
                             {item.notes}
                           </p>
                         )}
+                        {item.kind !== "warmup" && (
+                          <SessionCommentBox
+                            value={item.coachComment}
+                            readOnly={!isOwner}
+                            onSave={(comment) =>
+                              saveItemComment(item.id, comment)
+                            }
+                            placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
+                            className="mt-2"
+                          />
+                        )}
                       </div>
                     ))
                   )}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comentarios generales de la sesión (antes o después de completarla) */}
+      {(isOwner || session.coachComment?.trim()) && (
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/50">
+            <h2 className="font-semibold text-sm text-foreground">
+              Comentarios de la sesión
+            </h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Anota cómo ha ido la clase en general. Puedes escribir antes o
+              después de marcarla como completada.
+            </p>
+          </div>
+          <div className="p-4 sm:p-5">
+            <SessionCommentBox
+              value={session.coachComment}
+              readOnly={!isOwner}
+              onSave={saveSessionComment}
+              alwaysOpen
+              addLabel="Comentarios de la sesión"
+              placeholder="Ritmo del grupo, qué ha funcionado, qué repetir o cambiar la próxima vez…"
+              maxLength={4000}
+            />
           </div>
         </div>
       )}

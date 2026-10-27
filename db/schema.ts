@@ -326,6 +326,9 @@ export const sessions = pgTable(
     sport: sportEnum("sport").default("tenis").notNull(),
     status: sessionStatusEnum("status").notNull().default("scheduled"),
     statusNote: text("status_note"), // notas de completada / motivo de cancelada
+    // Comentario libre del monitor sobre la sesión en general; se puede
+    // escribir antes o después de marcarla como completada.
+    coachComment: text("coach_comment"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -426,6 +429,9 @@ export const sessionBlockItems = pgTable(
     // una ficha completa. Null para ejercicios de biblioteca (su aspecto
     // sale de exercises.aspecto_juego) y para items sin clasificar.
     aspectoJuego: varchar("aspecto_juego", { length: 16 }),
+    // Comentario del monitor sobre este ejercicio/actividad de la sesión
+    // (antes o después de darla). Se conserva al editar el plan.
+    coachComment: text("coach_comment"),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),
