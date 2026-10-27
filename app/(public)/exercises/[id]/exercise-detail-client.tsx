@@ -27,6 +27,7 @@ import {
   Lock,
   ShieldAlert,
   FileDown,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -474,6 +475,15 @@ export function ExerciseDetailClient({
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
           {userId && <AddToOpenEditorButton exerciseId={exercise.id} />}
+          {userId && (
+            <Link
+              href={`/exercises/new?duplicar=${exercise.id}`}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:w-auto"
+            >
+              <Copy className="size-3.5" />
+              Duplicar ejercicio
+            </Link>
+          )}
           {canEdit ? (
             <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
               <button
