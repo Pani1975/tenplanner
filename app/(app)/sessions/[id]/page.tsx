@@ -141,6 +141,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         itemKind: sessionBlockItems.kind,
         itemStations: sessionBlockItems.stations,
         itemAspectoJuego: sessionBlockItems.aspectoJuego,
+        itemCoachComment: sessionBlockItems.coachComment,
       })
       .from(sessionBlocks)
       .leftJoin(
@@ -245,6 +246,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         kind: "exercise" | "text" | "warmup" | "stations";
         stations: StationItemJson[];
         aspectoJuego: string | null;
+        coachComment: string | null;
       }>;
     }>
   >((blocks, row) => {
@@ -277,6 +279,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         }),
         stations: (row.itemStations as StationItemJson[] | null) ?? [],
         aspectoJuego: row.itemAspectoJuego,
+        coachComment: row.itemCoachComment,
       });
     }
     return blocks;
@@ -394,6 +397,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         objective: session.objective,
         material: session.material,
         observations: session.observations,
+        coachComment: session.coachComment,
         sourceClassId: session.sourceClassId,
         intensity: session.intensity,
         tags,

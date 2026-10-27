@@ -732,13 +732,53 @@ export async function PUT(request: Request, context: RouteContext) {
           .select({
             exerciseId: sessionBlockItems.exerciseId,
             exerciseDescription: sessionBlockItems.exerciseDescription,
+            blockOrder: sessionBlocks.orderIndex,
+            itemOrder: sessionBlockItems.orderIndex,
+            title: sessionBlockItems.title,
+            freeText: sessionBlockItems.freeText,
+            coachComment: sessionBlockItems.coachComment,
           })
           .from(sessionBlockItems)
           .innerJoin(
             sessionBlocks,
             eq(sessionBlocks.id, sessionBlockItems.blockId)
           )
-          .where(eq(sessionBlocks.sessionId, id));
+          .where(eq(sessionBlocks.sessionId, id))
+          .orderBy(
+            asc(sessionBlocks.orderIndex),
+            asc(sessionBlockItems.orderIndex)
+          );
+
+        // Los comentarios del monitor sobre cada ejercicio también se
+        // conservan al editar el plan. Los items se recrean, así que se
+        // emparejan por bloque + ejercicio/texto (y por orden si se repiten).
+        const commentKey = (
+          blockOrder: number,
+          item: {
+            exerciseId?: string | null;
+            title?: string | null;
+            freeText?: string | null;
+          },
+          seen: Map<string, number>
+        ) => {
+          const base = [
+            blockOrder,
+            item.exerciseId ?? "",
+            item.title?.trim() ?? "",
+            item.freeText?.trim() ?? "",
+          ].join("|");
+          const n = seen.get(base) ?? 0;
+          seen.set(base, n + 1);
+          return `${base}|${n}`;
+        };
+        const previousComments = new Map<string, string>();
+        const seenPrevious = new Map<string, number>();
+        for (const row of previousItems) {
+          const key = commentKey(row.blockOrder, row, seenPrevious);
+          if (row.coachComment?.trim())
+            previousComments.set(key, row.coachComment);
+        }
+        const seenNew = new Map<string, number>();
         for (const row of previousItems) {
           if (
             row.exerciseId &&
@@ -797,6 +837,10 @@ export async function PUT(request: Request, context: RouteContext) {
                   durationMinutes:
                     item.durationMinutes ?? snapshot?.durationMinutes ?? null,
                   notes: item.notes ?? null,
+                  coachComment:
+                    previousComments.get(
+                      commentKey(block.orderIndex, item, seenNew)
+                    ) ?? null,
                   kind: item.kind ?? null,
                   stations:
                     item.kind === "stations"
