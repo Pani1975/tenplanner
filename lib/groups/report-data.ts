@@ -10,12 +10,21 @@ import {
 } from "@/db/schema";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { buildGroupReport, type GroupReport } from "@/lib/groups/report";
+import {
+  loadGroupTrainingStats,
+  type StudentHours,
+} from "@/lib/stats/load-training-stats";
+import type { TrainingStats } from "@/lib/stats/training-stats";
 
 export type GroupReportData = {
   groupName: string;
   coachName: string;
   generatedAt: Date;
   report: GroupReport;
+  /** Fases, aspectos, tipos de juego, golpes y ejercicios más repetidos. */
+  training: TrainingStats;
+  /** Horas de cada alumno en las sesiones del grupo. */
+  studentHours: StudentHours[];
 };
 
 /**
@@ -72,6 +81,7 @@ export async function loadGroupReportData(
   const groupSessions = await db
     .select({
       id: sessions.id,
+      title: sessions.title,
       scheduledAt: sessions.scheduledAt,
       durationMinutes: sessions.durationMinutes,
       status: sessions.status,
@@ -98,6 +108,10 @@ export async function loadGroupReportData(
             )
           );
 
+  const { stats: training, studentHours } = await loadGroupTrainingStats(
+    groupId
+  );
+
   return {
     groupName: group.name,
     coachName: coach?.name ?? coach?.email ?? "Entrenador",
@@ -108,5 +122,7 @@ export async function loadGroupReportData(
       members,
       now,
     }),
+    training,
+    studentHours,
   };
 }

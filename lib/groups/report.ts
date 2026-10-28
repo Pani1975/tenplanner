@@ -10,6 +10,7 @@
 
 export interface GroupReportSession {
   id: string;
+  title?: string;
   scheduledAt: Date;
   durationMinutes: number;
   status: "scheduled" | "completed" | "cancelled";
@@ -42,6 +43,27 @@ export interface GroupReportStudent {
   avgRating: number | null;
 }
 
+/** Una sesión ya impartida, con su asistencia y valoración. */
+export interface GroupReportTaughtRow {
+  id: string;
+  title: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  intensity: number | null;
+  /** Alumnos que asistieron / con asistencia registrada (null si no se pasó lista). */
+  attended: number | null;
+  recorded: number;
+  avgRating: number | null;
+}
+
+/** Una sesión pendiente de impartir al grupo. */
+export interface GroupReportUpcomingRow {
+  id: string;
+  title: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+}
+
 export interface GroupReport {
   taught: number;
   upcoming: number;
@@ -59,6 +81,10 @@ export interface GroupReport {
   nextAt: Date | null;
   levels: { level: string; count: number }[];
   students: GroupReportStudent[];
+  /** Sesiones impartidas, de la más reciente a la más antigua. */
+  taughtSessions: GroupReportTaughtRow[];
+  /** Sesiones por impartir, de la más próxima a la más lejana. */
+  upcomingSessions: GroupReportUpcomingRow[];
 }
 
 export const GROUP_LEVEL_LABEL: Record<string, string> = {
@@ -141,6 +167,37 @@ export function buildGroupReport({
     taughtList.map((s) => s.intensity).filter((v): v is number => v !== null)
   );
 
+  const taughtSessions: GroupReportTaughtRow[] = [...taughtList]
+    .sort((a, b) => b.scheduledAt.getTime() - a.scheduledAt.getTime())
+    .map((session) => {
+      const mine = taughtRecords.filter((r) => r.sessionId === session.id);
+      const recordedRows = mine.filter((r) => r.attended !== null);
+      const sessionRatings = mine
+        .map((r) => r.rating)
+        .filter((v): v is number => v !== null);
+      const avg = average(sessionRatings);
+      return {
+        id: session.id,
+        title: session.title ?? "Sesión",
+        scheduledAt: session.scheduledAt,
+        durationMinutes: session.durationMinutes,
+        intensity: session.intensity,
+        attended:
+          recordedRows.length > 0
+            ? recordedRows.filter((r) => r.attended === true).length
+            : null,
+        recorded: recordedRows.length,
+        avgRating: avg === null ? null : Math.round(avg * 10) / 10,
+      };
+    });
+
+  const upcomingSessions: GroupReportUpcomingRow[] = upcomingList.map((s) => ({
+    id: s.id,
+    title: s.title ?? "Sesión",
+    scheduledAt: s.scheduledAt,
+    durationMinutes: s.durationMinutes,
+  }));
+
   const minutes = taughtList.reduce((sum, s) => sum + s.durationMinutes, 0);
 
   return {
@@ -168,5 +225,7 @@ export function buildGroupReport({
       .map(([level, count]) => ({ level, count }))
       .sort((a, b) => b.count - a.count),
     students,
+    taughtSessions,
+    upcomingSessions,
   };
 }

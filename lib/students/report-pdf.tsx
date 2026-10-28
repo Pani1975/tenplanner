@@ -1,5 +1,21 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import {
+  ACCENT,
+  BRAND_DARK,
+  CHART_COLORS,
+  Donut,
+  HBars,
+  SectionHeading,
+  StatTile,
+  VIOLET,
+  Watermark,
+} from "@/lib/pdf/brand";
+import {
+  ASPECT_COLOR,
+  PHASE_COLOR,
+  PHASE_LABEL,
+} from "@/lib/stats/labels";
+import {
   BORDER,
   BRAND,
   BRAND_LIGHT,
@@ -38,6 +54,15 @@ const BALL_LABEL = Object.fromEntries(
 ) as Record<BallId, string>;
 
 const s = StyleSheet.create({
+  chartCard: {
+    flexGrow: 1,
+    flexBasis: 0,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 6,
+  },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 5, marginBottom: 8 },
   chip: {
     backgroundColor: BRAND_LIGHT,
@@ -161,15 +186,6 @@ function ageFrom(birthDate: string | null, today: Date) {
   return age;
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={base.metaItem}>
-      <Text style={base.metaLabel}>{label}</Text>
-      <Text style={base.metaValue}>{value}</Text>
-    </View>
-  );
-}
-
 function Checkbox({ checked }: { checked: boolean }) {
   return (
     <View
@@ -203,6 +219,7 @@ export function StudentReportPdf({
       producer="TenPlanner"
     >
       <Page size="A4" style={base.page}>
+        <Watermark />
         <View style={base.header}>
           <Text style={base.brandLabel}>Informe del alumno</Text>
           <Text style={base.title}>{student.name}</Text>
@@ -215,23 +232,31 @@ export function StudentReportPdf({
           </Text>
         </View>
 
-        <Text style={base.sectionTitle}>Resumen del periodo</Text>
-        <View style={base.metaGrid}>
-          <Meta label="Sesiones" value={String(summary.held)} />
-          <Meta label="Asistió" value={String(summary.attended)} />
-          <Meta label="Faltó" value={String(summary.absent)} />
-          <Meta label="Horas entrenadas" value={fmtHours(summary.minutes)} />
-          <Meta
+        <SectionHeading>Resumen del periodo</SectionHeading>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+          <StatTile label="Sesiones" value={String(summary.held)} color={BRAND} />
+          <StatTile label="Asistió" value={String(summary.attended)} color={GREEN} />
+          <StatTile label="Faltó" value={String(summary.absent)} color={RED} />
+        </View>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+          <StatTile
+            label="Horas entrenadas"
+            value={fmtHours(summary.minutes)}
+            color={BRAND_DARK}
+          />
+          <StatTile
             label="Asistencia"
             value={
               summary.attendanceRate != null
                 ? `${summary.attendanceRate} %`
                 : "—"
             }
+            color={VIOLET}
           />
-          <Meta
+          <StatTile
             label="Objetivos nuevos"
             value={String(report.achievedInPeriod)}
+            color={ACCENT}
           />
         </View>
         {summary.unrecorded > 0 && (
@@ -243,30 +268,47 @@ export function StudentReportPdf({
 
         {hasStats && (
           <>
-            <Text style={base.sectionTitle}>Qué se ha trabajado</Text>
-            {stats.aspects.length > 0 && (
-              <>
-                <Text style={s.smallLabel}>Aspectos del juego</Text>
-                <View style={s.chips}>
-                  {stats.aspects.map((a) => (
-                    <Text key={a.key} style={s.chip}>
-                      {ASPECT_LABEL[a.key]} · {Math.round(a.pct)} %
-                    </Text>
-                  ))}
+            <SectionHeading color={ACCENT}>Qué se ha trabajado</SectionHeading>
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}>
+              {stats.phases.length > 0 && (
+                <View style={s.chartCard} wrap={false}>
+                  <Text style={s.smallLabel}>Tiempo por fase</Text>
+                  <Donut
+                    size={78}
+                    slices={stats.phases.map((p) => ({
+                      label: PHASE_LABEL[p.key],
+                      value: p.minutes,
+                      color: PHASE_COLOR[p.key],
+                    }))}
+                  />
                 </View>
-              </>
-            )}
+              )}
+              {stats.aspects.length > 0 && (
+                <View style={s.chartCard} wrap={false}>
+                  <Text style={s.smallLabel}>Aspectos del juego</Text>
+                  <Donut
+                    size={78}
+                    slices={stats.aspects.map((a) => ({
+                      label: ASPECT_LABEL[a.key],
+                      value: a.minutes,
+                      color: ASPECT_COLOR[a.key],
+                    }))}
+                  />
+                </View>
+              )}
+            </View>
             {strokes.length > 0 && (
-              <>
-                <Text style={s.smallLabel}>Golpes</Text>
-                <View style={s.chips}>
-                  {strokes.map((a) => (
-                    <Text key={a.key} style={s.chip}>
-                      {STROKE_LABEL[a.key] ?? a.key} · {Math.round(a.pct)} %
-                    </Text>
-                  ))}
-                </View>
-              </>
+              <View style={s.chartCard} wrap={false}>
+                <Text style={s.smallLabel}>Golpes trabajados</Text>
+                <HBars
+                  rows={strokes.map((a, i) => ({
+                    label: STROKE_LABEL[a.key] ?? a.key,
+                    pct: a.pct,
+                    value: `${Math.round(a.pct)} %`,
+                    color: CHART_COLORS[i % CHART_COLORS.length],
+                  }))}
+                />
+              </View>
             )}
             {stats.topExercises.length > 0 && (
               <>
