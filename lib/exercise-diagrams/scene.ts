@@ -122,6 +122,19 @@ function arrowHead(from: Pt, to: Pt, size: number): string {
   return `${num(to[0])},${num(to[1])} ${num(p1[0])},${num(p1[1])} ${num(p2[0])},${num(p2[1])}`;
 }
 
+/** Pasa coordenadas del esquema (0-100) a las de dibujo de `buildScene`. */
+export function projector(court: CourtKind) {
+  const { cw, ch } = frameFor(court);
+  return {
+    width: num(cw + PAD * 2),
+    height: num(ch + PAD * 2),
+    point: (p: Pt): Pt => {
+      const c = clampPt(p);
+      return [PAD + (c[0] / 100) * cw, PAD + (c[1] / 100) * ch];
+    },
+  };
+}
+
 export function buildScene(diagram: Diagram): Scene {
   const { cw, ch } = frameFor(diagram.court);
   const width = cw + PAD * 2;

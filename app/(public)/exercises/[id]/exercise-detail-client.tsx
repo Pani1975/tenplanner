@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
+import { ExerciseDiagramAnimated } from "@/components/app/exercise-diagram-animated";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useRouter } from "next/navigation";
 import {
@@ -838,7 +838,7 @@ export function ExerciseDetailClient({
             </div>
           )}
 
-          {diagram && <ExerciseDiagramView diagram={diagram} maxWidth={300} />}
+          {diagram && <ExerciseDiagramAnimated diagram={diagram} maxWidth={300} />}
 
           {exercise.steps && exercise.steps.length > 0 && (
             <div>
