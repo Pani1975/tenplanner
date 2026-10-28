@@ -34,6 +34,7 @@ import {
   type CalendarHolidayData,
 } from "@/lib/calendar/holidays";
 import { retitleForDate } from "@/lib/sessions/retitle";
+import { useTouchDragSessions } from "@/lib/hooks/use-touch-drag-sessions";
 import { cn } from "@/lib/utils";
 
 interface SessionData {
@@ -489,6 +490,16 @@ export function CalendarClient({
     }
   }
 
+  // Arrastre con el dedo (móvil/tablet): pulsación larga sobre la sesión y
+  // arrastrar a otro día. El ratón sigue usando el drag & drop nativo.
+  useTouchDragSessions({
+    onHover: setDragOverDate,
+    onDrop: (id, key) => {
+      const [y, m, d] = key.split("-").map(Number);
+      void moveSessionToDate(id, new Date(y, m - 1, d));
+    },
+  });
+
   function handleDialogDone(result: DialogResult) {
     if (!dialog) return;
     const original = dialog.session;
@@ -746,6 +757,7 @@ export function CalendarClient({
                   return (
                     <div
                       key={idx}
+                      data-drop-date={isValid ? cellKey : undefined}
                       onClick={() => {
                         if (!isValid) return;
                         const next = dayNum === selectedDay ? null : dayNum;
@@ -835,6 +847,12 @@ export function CalendarClient({
                                       !currentUserId ||
                                       item.session.userId === currentUserId
                                     }
+                                    data-session-drag-id={
+                                      !currentUserId ||
+                                      item.session.userId === currentUserId
+                                        ? item.session.id
+                                        : undefined
+                                    }
                                     onDragStart={(e) => {
                                       if (
                                         currentUserId &&
@@ -857,7 +875,7 @@ export function CalendarClient({
                                         : item.session.title
                                     }
                                     className={cn(
-                                      "block truncate rounded-full bg-brand/20 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
+                                      "block select-none truncate rounded-full bg-brand/20 px-1.5 py-0.5 [-webkit-touch-callout:none] text-[10px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
                                       isNotTaught(item.session) &&
                                         "line-through opacity-60"
                                     )}
@@ -992,6 +1010,7 @@ export function CalendarClient({
               return (
                 <div
                   key={key}
+                  data-drop-date={key}
                   onDragOver={(e) => {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = "move";
@@ -1053,6 +1072,12 @@ export function CalendarClient({
                             !currentUserId ||
                             item.session.userId === currentUserId
                           }
+                          data-session-drag-id={
+                            !currentUserId ||
+                            item.session.userId === currentUserId
+                              ? item.session.id
+                              : undefined
+                          }
                           onDragStart={(e) => {
                             if (
                               currentUserId &&
@@ -1074,7 +1099,7 @@ export function CalendarClient({
                               : item.session.title
                           }
                           className={cn(
-                            "block truncate rounded-full bg-brand/20 px-2 py-1 text-[11px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
+                            "block select-none truncate rounded-full bg-brand/20 px-2 py-1 [-webkit-touch-callout:none] text-[11px] font-bold leading-tight text-foreground transition-colors hover:bg-brand hover:text-brand-foreground",
                             isNotTaught(item.session) &&
                               "line-through opacity-60"
                           )}
