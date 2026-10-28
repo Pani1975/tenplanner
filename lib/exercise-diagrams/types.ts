@@ -48,9 +48,32 @@ export type DiagramElement =
   /** Texto corto sobre el esquema (máx. ~14 caracteres). */
   | { t: "text"; at: Pt; text: string };
 
+/**
+ * Coreografía opcional: guion de la animación paso a paso. Sin ella, la
+ * animación se deduce de los elementos (cada flecha "shot" es un vuelo de la
+ * pelota y cada "move" lo hace el jugador más cercano a su inicio). Con ella
+ * el ejercicio se anima "currado": botes, trayectorias suaves, golpes y una
+ * frase por paso.
+ */
+export type ChoreoStep = {
+  /** Frase que se muestra mientras dura el paso (máx. ~80 caracteres). */
+  text?: string;
+  /** Duración en segundos; si falta se calcula por lo que recorre. */
+  dur?: number;
+  /** Desplazamientos; `who` = nº del jugador en orden de aparición (desde 0). */
+  moves?: { who: number; path: Pt[] }[];
+  /** Vuelo de la pelota; `bounces` = índices de `path` donde bota. */
+  ball?: { path: Pt[]; bounces?: number[] };
+  /** Jugador que golpea al empezar el paso (anillo de impacto). */
+  swing?: number;
+};
+
+export type Choreo = { steps: ChoreoStep[] };
+
 export type Diagram = {
   court: CourtKind;
   elements: DiagramElement[];
+  choreo?: Choreo;
   /** Pie del esquema, una frase corta (máx. ~70 caracteres). */
   caption?: string;
 };

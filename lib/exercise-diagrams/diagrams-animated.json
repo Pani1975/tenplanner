@@ -1,0 +1,1388 @@
+{
+  "35412a8d-51b0-5f60-8d7a-a65bdf8f6508": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          30,
+          8
+        ],
+        "to": [
+          70,
+          40
+        ],
+        "label": "Objetivo"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            80
+          ],
+          [
+            51,
+            87
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            90
+          ],
+          [
+            48,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor lanza muy cerca; el alumno contacta tras el bote y la envía al otro campo"
+  },
+  "820c6f3c-4b08-5e55-a02c-d744e4097e48": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          96
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          64,
+          80
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          32,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          52,
+          78
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            78
+          ],
+          [
+            34,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            32,
+            90
+          ],
+          [
+            46,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            32,
+            92
+          ],
+          [
+            50,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "Tras cada golpe, el alumno vuelve al cono central antes de la siguiente pelota"
+  },
+  "e37a6575-708f-5dcf-acf3-e3b50fdb5aee": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          42,
+          62
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          62
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          58,
+          62
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          46,
+          56
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          56
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          50
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          90
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            92
+          ],
+          [
+            50,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            46,
+            64
+          ]
+        ]
+      }
+    ],
+    "caption": "Seis conos hacen de bolos: golpe suave de derecha tras el bote para derribarlos"
+  },
+  "c5c7a32a-a1ec-58b3-82a3-67a87f5d0ad3": {
+    "court": "tenis",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          12.5,
+          23
+        ],
+        "to": [
+          50,
+          50
+        ],
+        "label": "Casilla"
+      },
+      {
+        "t": "cone",
+        "at": [
+          31,
+          36
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          84,
+          106
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          6
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            98
+          ],
+          [
+            30,
+            40
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            84,
+            106
+          ],
+          [
+            62,
+            102
+          ]
+        ]
+      }
+    ],
+    "caption": "Cada alumno saca al cuadro cruzado; si entra, deja un cono de su equipo en la casilla"
+  },
+  "7bbcefd0-4c1a-56fd-b629-2b64c3e40e5a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          34
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          34
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          34
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            30,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            70,
+            34
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            50,
+            22
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            30,
+            34
+          ]
+        ]
+      }
+    ],
+    "caption": "Dos equipos golpean a los aros del otro campo y ganan cada aro con un cono de su color"
+  },
+  "9a4a7921-71d2-52ec-862c-ec502c1d421a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          94
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          60,
+          70
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "El monitor lanza a unos 2 m; el alumno corre y la golpea antes del segundo bote",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza la pelota a unos 2 m del alumno",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  94
+                ],
+                [
+                  30,
+                  92
+                ],
+                [
+                  24,
+                  88
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                50,
+                72
+              ],
+              [
+                26,
+                82
+              ],
+              [
+                19,
+                88
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "El alumno corre y la golpea antes del segundo bote",
+          "dur": 1.5,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  88
+                ],
+                [
+                  19,
+                  88
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                19,
+                88
+              ],
+              [
+                38,
+                50
+              ],
+              [
+                42,
+                20
+              ],
+              [
+                44,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro: ¡punto para su equipo!",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  19,
+                  88
+                ],
+                [
+                  34,
+                  92
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "1dc29da8-fc62-5a49-b365-7c24d446b2cb": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          62,
+          78
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          78
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Cesta con desplazamiento: el alumno llega a golpear y se recoloca entre pelotas",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza a unos 2 m, a la derecha",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  62,
+                  92
+                ],
+                [
+                  68,
+                  92
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                52,
+                78
+              ],
+              [
+                66,
+                86
+              ],
+              [
+                70,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea tras el bote y se recoloca",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  68,
+                  92
+                ],
+                [
+                  58,
+                  94
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                70,
+                92
+              ],
+              [
+                56,
+                50
+              ],
+              [
+                52,
+                20
+              ],
+              [
+                51,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Ahora a la izquierda: corre con intensidad",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  38,
+                  92
+                ],
+                [
+                  32,
+                  92
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                48,
+                78
+              ],
+              [
+                34,
+                86
+              ],
+              [
+                30,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea y vuelve al centro",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  32,
+                  92
+                ],
+                [
+                  42,
+                  94
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                30,
+                92
+              ],
+              [
+                44,
+                50
+              ],
+              [
+                48,
+                20
+              ],
+              [
+                49,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
+  },
+  "22a3e960-96dc-5493-a0c2-6cb3c2bfb6eb": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          26,
+          92
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          92
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          74,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          92
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          92
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          100
+        ],
+        "text": "Casas"
+      }
+    ],
+    "caption": "Cada cono es una casa: golpea y vuelve a casa antes de que el monitor cuente tres",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza a un alumno",
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  92
+                ],
+                [
+                  56,
+                  86
+                ],
+                [
+                  60,
+                  86
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                50,
+                72
+              ],
+              [
+                58,
+                80
+              ],
+              [
+                60,
+                86
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 3
+        },
+        {
+          "text": "Golpea y empieza la cuenta: ¡uno, dos, tres!",
+          "dur": 1.5,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  86
+                ],
+                [
+                  66,
+                  82
+                ],
+                [
+                  70,
+                  84
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                60,
+                86
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                50,
+                20
+              ],
+              [
+                49,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Tiene que volver a casa antes del tres",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  70,
+                  84
+                ],
+                [
+                  58,
+                  90
+                ],
+                [
+                  50,
+                  92
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "¡Si llega, punto para su equipo!",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "3a075ee2-8e1d-5cc3-95b2-918a1909880d": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          0,
+          46
+        ],
+        "to": [
+          100,
+          54
+        ],
+        "label": "Río"
+      },
+      {
+        "t": "line",
+        "from": [
+          -4,
+          44
+        ],
+        "to": [
+          104,
+          44
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          40
+        ],
+        "text": "Arcoíris"
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          8
+        ],
+        "role": "rival",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          8
+        ],
+        "role": "rival",
+        "label": "D"
+      }
+    ],
+    "caption": "La cuerda sobre la red es el arcoíris: hay que pasar la pelota alta por encima de él",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Por equipos, golpean alto para pasar el arcoíris",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  94
+                ],
+                [
+                  40,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                40,
+                90
+              ],
+              [
+                44,
+                44
+              ],
+              [
+                46,
+                16
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "El otro equipo devuelve también por encima",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 2,
+              "path": [
+                [
+                  36,
+                  8
+                ],
+                [
+                  46,
+                  12
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                46,
+                14
+              ],
+              [
+                54,
+                44
+              ],
+              [
+                62,
+                84
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 2
+        },
+        {
+          "text": "¡Cada pelota que pasa por el arcoíris suma!",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  94
+                ],
+                [
+                  62,
+                  88
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                62,
+                86
+              ],
+              [
+                56,
+                44
+              ],
+              [
+                48,
+                14
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        }
+      ]
+    }
+  },
+  "480effbb-1be9-5c5f-9c0b-498044c50d6a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          25,
+          14
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          14
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          75,
+          14
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          25,
+          24
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          24
+        ],
+        "text": "Azul"
+      },
+      {
+        "t": "text",
+        "at": [
+          75,
+          24
+        ],
+        "text": "Verde"
+      },
+      {
+        "t": "basket",
+        "at": [
+          62,
+          80
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "El monitor dice un color y el alumno golpea de revés para que la pelota bote en ese aro",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor dice un color: ¡Azul!",
+          "dur": 1.4
+        },
+        {
+          "text": "Lanza hacia el lado del revés",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  60,
+                  92
+                ],
+                [
+                  64,
+                  92
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                52,
+                80
+              ],
+              [
+                62,
+                87
+              ],
+              [
+                64,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "El alumno golpea de revés al aro azul",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                64,
+                92
+              ],
+              [
+                56,
+                50
+              ],
+              [
+                50,
+                20
+              ],
+              [
+                50,
+                14
+              ]
+            ],
+            "bounces": [
+              3
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "¡Acierto! Punto para su equipo",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  64,
+                  92
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
