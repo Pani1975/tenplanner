@@ -267,14 +267,17 @@ export default async function GroupDetailPage({ params }: PageProps) {
                 {!isOwner && authorName && <> · Grupo de {authorName}</>}
               </p>
             </div>
-            {isOwner && (
-              <GroupEditDetails
-                key={`${group.name}|${group.description ?? ""}`}
-                groupId={id}
-                name={group.name}
-                description={group.description}
-              />
-            )}
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <GroupReportButton groupId={id} tone="hero" />
+              {isOwner && (
+                <GroupEditDetails
+                  key={`${group.name}|${group.description ?? ""}`}
+                  groupId={id}
+                  name={group.name}
+                  description={group.description}
+                />
+              )}
+            </div>
           </div>
         </header>
 
@@ -302,7 +305,6 @@ export default async function GroupDetailPage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <GroupReportButton groupId={id} />
               <AssignClassToGroupButton
                 groupId={id}
                 weeklySchedule={group.weeklySchedule}

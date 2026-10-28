@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function GroupReportButton({ groupId }: { groupId: string }) {
+export function GroupReportButton({
+  groupId,
+  tone = "light",
+}: {
+  groupId: string;
+  tone?: "light" | "hero";
+}) {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +45,12 @@ export function GroupReportButton({ groupId }: { groupId: string }) {
         type="button"
         onClick={download}
         disabled={downloading}
-        className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-foreground/40 disabled:opacity-60"
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-bold transition-colors disabled:opacity-60",
+          tone === "hero"
+            ? "border-white/12 bg-white/8 text-white hover:bg-white/12"
+            : "border-foreground/20 text-foreground hover:border-foreground/40"
+        )}
       >
         {downloading ? (
           <Loader2 className="size-4 animate-spin" />
