@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import {
   ASPECTO_JUEGO_LABELS,
   AUTORIAS,
@@ -11,57 +17,67 @@ import {
   NUEVOS_TIPOS_ACTIVIDAD,
   PELOTAS,
   PELOTAS_LEGACY,
-  showsTipoPelota,
   SITUACION_JUEGO,
+  showsTipoPelota,
   tipoEjercicioOptionLabel,
 } from "@/lib/exercise-taxonomy";
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const FORMATOS = [
+type Option = { id: string; label: string; color?: string };
+
+const FORMATOS: Option[] = [
   { id: "individual", label: "Individual" },
   { id: "parejas", label: "Parejas" },
   { id: "grupal", label: "Grupal" },
   { id: "multigrupo", label: "Multigrupo" },
-] as const;
+];
 
-const ASPECTOS = [
+const ASPECTOS: Option[] = [
   { id: "tecnica", label: "Técnica" },
   { id: "tactica", label: "Táctica" },
   { id: "mental", label: ASPECTO_JUEGO_LABELS.mental },
   { id: "fisico", label: ASPECTO_JUEGO_LABELS.fisico },
-] as const;
+];
 
-const PARAMETROS = [
+const PARAMETROS: Option[] = [
   { id: "altura", label: "Altura" },
   { id: "profundidad", label: "Profundidad" },
   { id: "velocidad", label: "Velocidad" },
   { id: "direccion", label: "Dirección" },
   { id: "efecto", label: "Efecto" },
-] as const;
+];
 
-const DURACION_RANGOS = [
+const DURACION_RANGOS: Option[] = [
   { id: "1-5", label: "1-5 min" },
   { id: "5-10", label: "5-10 min" },
   { id: "10-15", label: "10-15 min" },
   { id: "15-20", label: "15-20 min" },
   { id: "+20", label: "+20 min" },
-] as const;
+];
 
 // Incluye los tipos antiguos (marcados "antiguo") para poder encontrar los
 // ejercicios que aún no se han re-etiquetado.
-const TIPOS_ACTIVIDAD = NUEVOS_TIPOS_ACTIVIDAD.map((id) => ({
+const TIPOS_ACTIVIDAD: Option[] = NUEVOS_TIPOS_ACTIVIDAD.map((id) => ({
   id,
   label: tipoEjercicioOptionLabel(id),
 }));
 
-// Incluye las pelotas antiguas (marcadas) para encontrar los ejercicios
-// que aún no se han re-etiquetado.
-const TIPOS_PELOTA: { id: string; label: string; color?: string }[] = [
-  ...PELOTAS,
-  ...PELOTAS_LEGACY.map((p) => ({ id: p.id, label: `${p.label} (antigua)` })),
-];
+const PELOTAS_COLOR: Option[] = PELOTAS.map((p) => ({ ...p }));
 
-const GOLPES = [
+// Las pelotas antiguas se listan aparte para encontrar los ejercicios que
+// aún no se han re-etiquetado.
+const PELOTAS_ANTIGUAS: Option[] = PELOTAS_LEGACY.map((p) => ({
+  id: p.id,
+  label: `${p.label} (antigua)`,
+}));
+
+const GOLPES: Option[] = [
   { id: "derecha", label: "Derecha" },
   { id: "reves", label: "Revés" },
   { id: "saque", label: "Saque" },
@@ -70,20 +86,30 @@ const GOLPES = [
   { id: "globo", label: "Globo" },
   { id: "dejada", label: "Dejada" },
   { id: "resto", label: "Resto" },
-] as const;
+];
 
-const EFECTOS = [
+const EFECTOS: Option[] = [
   { id: "liftado", label: "Liftado" },
   { id: "cortado", label: "Cortado" },
   { id: "plano", label: "Plano" },
-] as const;
+];
 
-const UBICACIONES = [
+const UBICACIONES: Option[] = [
   { id: "pista", label: "Pista" },
   { id: "pared", label: "Pared" },
   { id: "playa", label: "Playa" },
   { id: "casa", label: "Casa" },
-] as const;
+];
+
+const JUGADORES: Option[] = [
+  { id: "1", label: "1" },
+  { id: "2", label: "2" },
+  { id: "3", label: "3" },
+  { id: "4", label: "4" },
+  { id: "5", label: "5" },
+  { id: "6", label: "6" },
+  { id: "7", label: "+6" },
+];
 
 export interface ExerciseFiltersProps {
   currentFilters: {
@@ -103,6 +129,7 @@ export interface ExerciseFiltersProps {
     situacionJuego: string[];
     autoria: string[];
   };
+  sport?: string | null;
   preserved: {
     // El nivel se elige en la primera pantalla; aquí solo se conserva.
     nivel?: string[];
@@ -111,7 +138,88 @@ export interface ExerciseFiltersProps {
     category?: string;
     difficulty?: string;
   };
-  sport?: string | null;
+}
+
+type FilterDef = {
+  // Nombre del parámetro en la URL.
+  param: string;
+  label: string;
+  options: Option[];
+  // Opciones secundarias (sin color) que se muestran bajo la rejilla de color.
+  extraOptions?: Option[];
+  swatches?: boolean;
+};
+
+// Los más usados van en la barra; el resto, bajo "Más filtros".
+const PRIMARY_FILTERS: FilterDef[] = [
+  { param: "aspectoJuego", label: "Aspecto", options: ASPECTOS },
+  {
+    param: "tipoActividad",
+    label: "Tipo de ejercicio",
+    options: TIPOS_ACTIVIDAD,
+  },
+  { param: "duracionRango", label: "Duración", options: DURACION_RANGOS },
+  { param: "formato", label: "Formato", options: FORMATOS },
+  {
+    param: "tipoPelota",
+    label: "Pelota",
+    options: PELOTAS_COLOR,
+    extraOptions: PELOTAS_ANTIGUAS,
+    swatches: true,
+  },
+  { param: "fase", label: "Fase", options: FASES.map((f) => ({ ...f })) },
+];
+
+const SECONDARY_FILTERS: FilterDef[] = [
+  { param: "parametro", label: "Parámetros", options: PARAMETROS },
+  {
+    param: "caracter",
+    label: "Carácter",
+    options: CARACTER.map((c) => ({ ...c })),
+  },
+  {
+    param: "situacionJuego",
+    label: "Situación del juego",
+    options: SITUACION_JUEGO.map((s) => ({ ...s })),
+  },
+  { param: "numJugadores", label: "Jugadores", options: JUGADORES },
+  { param: "location", label: "Lugar", options: UBICACIONES },
+  {
+    param: "autoria",
+    label: "Autoría",
+    options: AUTORIAS.map((a) => ({ ...a })),
+  },
+  { param: "golpe", label: "Golpes", options: GOLPES },
+  { param: "efecto", label: "Efecto", options: EFECTOS },
+];
+
+const ALL_PARAMS = [...PRIMARY_FILTERS, ...SECONDARY_FILTERS].map(
+  (f) => f.param
+);
+
+const APPLY_DELAY_MS = 350;
+
+type Values = Record<string, string[]>;
+
+function valuesFromProps(
+  current: ExerciseFiltersProps["currentFilters"]
+): Values {
+  return {
+    formato: current.formato,
+    fase: current.fase,
+    caracter: current.caracter,
+    situacionJuego: current.situacionJuego,
+    aspectoJuego: current.aspectoJuego,
+    parametro: current.parametro,
+    duracionRango: current.duracionRango,
+    numJugadores: current.numJugadores.map(String),
+    tipoPelota: current.tipoPelota,
+    tipoActividad: current.tipoActividad,
+    golpe: current.golpes,
+    efecto: current.efecto,
+    location: current.location,
+    autoria: current.autoria,
+  };
 }
 
 function ChipButton({
@@ -127,6 +235,7 @@ function ChipButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-sans font-semibold tracking-[0.04em] transition-colors",
         active
@@ -156,34 +265,146 @@ function FilterGroup({
   );
 }
 
-function toggleString(
-  set: Set<string>,
-  setter: (next: Set<string>) => void,
-  value: string
-) {
-  const next = new Set(set);
-  if (next.has(value)) next.delete(value);
-  else next.add(value);
-  setter(next);
+function CountBadge({ count }: { count: number }) {
+  return (
+    <span className="flex size-4 items-center justify-center rounded-full bg-[#050505] text-[9px] font-bold text-[#D6FF38]">
+      {count}
+    </span>
+  );
 }
 
-function toggleNumber(
-  set: Set<number>,
-  setter: (next: Set<number>) => void,
-  value: number
-) {
-  const next = new Set(set);
-  if (next.has(value)) next.delete(value);
-  else next.add(value);
-  setter(next);
+function CheckboxRow({
+  option,
+  checked,
+  onToggle,
+}: {
+  option: Option;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 font-sans text-sm text-foreground/80 transition-colors hover:bg-muted">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="size-4 shrink-0 cursor-pointer accent-[#050505]"
+      />
+      {option.label}
+    </label>
+  );
 }
 
-function appendAll(
-  params: URLSearchParams,
-  key: string,
-  values: Iterable<string | number>
-) {
-  for (const value of values) params.append(key, String(value));
+function SwatchButton({
+  option,
+  checked,
+  onToggle,
+}: {
+  option: Option;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={checked}
+      className="flex flex-col items-center gap-1.5 rounded-md px-1 py-1.5 font-sans text-xs text-foreground/80 transition-colors hover:bg-muted"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "grid size-9 place-items-center rounded-full border border-black/10",
+          checked && "ring-2 ring-[#050505] ring-offset-2 ring-offset-popover"
+        )}
+        style={{ backgroundColor: option.color }}
+      >
+        {checked && (
+          <Check className="size-4 text-black/70" strokeWidth={2.5} />
+        )}
+      </span>
+      {option.label}
+    </button>
+  );
+}
+
+function FilterDropdown({
+  def,
+  selected,
+  onToggle,
+}: {
+  def: FilterDef;
+  selected: string[];
+  onToggle: (param: string, id: string) => void;
+}) {
+  const count = selected.length;
+  return (
+    <Popover>
+      <PopoverTrigger
+        className={cn(
+          "group inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 font-sans text-[11px] font-bold tracking-[0.08em] transition-colors",
+          count > 0
+            ? "border-[#050505] bg-[#D6FF38] text-[#050505]"
+            : "border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground"
+        )}
+      >
+        {def.label}
+        {count > 0 && <CountBadge count={count} />}
+        <ChevronDown
+          className="size-3.5 transition-transform group-data-popup-open:rotate-180"
+          strokeWidth={1.8}
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <div className="flex items-center justify-between pb-2">
+          <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-foreground/40">
+            {def.label}
+          </p>
+          <PopoverClose
+            aria-label="Cerrar"
+            className="grid size-7 place-items-center rounded-full text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" />
+          </PopoverClose>
+        </div>
+        {def.swatches ? (
+          <div className="grid grid-cols-3 gap-1">
+            {def.options.map((option) => (
+              <SwatchButton
+                key={option.id}
+                option={option}
+                checked={selected.includes(option.id)}
+                onToggle={() => onToggle(def.param, option.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-0.5">
+            {def.options.map((option) => (
+              <CheckboxRow
+                key={option.id}
+                option={option}
+                checked={selected.includes(option.id)}
+                onToggle={() => onToggle(def.param, option.id)}
+              />
+            ))}
+          </div>
+        )}
+        {def.extraOptions && (
+          <div className="mt-2 grid gap-0.5 border-t border-foreground/10 pt-2">
+            {def.extraOptions.map((option) => (
+              <CheckboxRow
+                key={option.id}
+                option={option}
+                checked={selected.includes(option.id)}
+                onToggle={() => onToggle(def.param, option.id)}
+              />
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function ExerciseFilters({
@@ -192,52 +413,32 @@ export function ExerciseFilters({
   sport,
 }: ExerciseFiltersProps) {
   const router = useRouter();
-  const showPelota = showsTipoPelota(sport);
-  const [open, setOpen] = useState(false);
-  const [formato, setFormato] = useState(new Set(currentFilters.formato));
-  const [fase, setFase] = useState(new Set(currentFilters.fase));
-  const [caracter, setCaracter] = useState(new Set(currentFilters.caracter));
-  const [situacionJuego, setSituacionJuego] = useState(
-    new Set(currentFilters.situacionJuego)
+  const primaryFilters = showsTipoPelota(sport)
+    ? PRIMARY_FILTERS
+    : PRIMARY_FILTERS.filter((f) => f.param !== "tipoPelota");
+  const [isPending, startTransition] = useTransition();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [values, setValues] = useState<Values>(() =>
+    valuesFromProps(currentFilters)
   );
-  const [aspectoJuego, setAspectoJuego] = useState(
-    new Set(currentFilters.aspectoJuego)
-  );
-  const [parametro, setParametro] = useState(new Set(currentFilters.parametro));
-  const [duracionRango, setDuracionRango] = useState(
-    new Set(currentFilters.duracionRango)
-  );
-  const [numJugadores, setNumJugadores] = useState(
-    new Set(currentFilters.numJugadores)
-  );
-  const [tipoPelota, setTipoPelota] = useState(
-    new Set(currentFilters.tipoPelota)
-  );
-  const [tipoActividad, setTipoActividad] = useState(
-    new Set(currentFilters.tipoActividad)
-  );
-  const [golpes, setGolpes] = useState(new Set(currentFilters.golpes));
-  const [efecto, setEfecto] = useState(new Set(currentFilters.efecto));
-  const [location, setLocation] = useState(new Set(currentFilters.location));
-  const [autoria, setAutoria] = useState(new Set(currentFilters.autoria));
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const activeCount =
-    formato.size +
-    fase.size +
-    caracter.size +
-    situacionJuego.size +
-    aspectoJuego.size +
-    parametro.size +
-    duracionRango.size +
-    numJugadores.size +
-    tipoPelota.size +
-    tipoActividad.size +
-    golpes.size +
-    efecto.size +
-    location.size +
-    autoria.size;
+  // Si la URL cambia desde fuera (p. ej. un enlace del resumen), se vuelve a
+  // leer. Mientras hay una navegación propia en curso se conserva lo marcado.
+  const serverKey = JSON.stringify(currentFilters);
+  const [prevServerKey, setPrevServerKey] = useState(serverKey);
+  if (prevServerKey !== serverKey) {
+    setPrevServerKey(serverKey);
+    if (!isPending) setValues(valuesFromProps(currentFilters));
+  }
 
-  function buildParams() {
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  function buildUrl(next: Values) {
     const p = new URLSearchParams();
     if (preserved.q) p.set("q", preserved.q);
     if (preserved.tab && preserved.tab !== "all") p.set("tab", preserved.tab);
@@ -247,332 +448,111 @@ export function ExerciseFilters({
     if (preserved.difficulty && preserved.difficulty !== "all") {
       p.set("difficulty", preserved.difficulty);
     }
-    appendAll(p, "formato", formato);
-    appendAll(p, "nivel", preserved.nivel ?? []);
-    appendAll(p, "fase", fase);
-    appendAll(p, "caracter", caracter);
-    appendAll(p, "situacionJuego", situacionJuego);
-    appendAll(p, "aspectoJuego", aspectoJuego);
-    appendAll(p, "parametro", parametro);
-    appendAll(p, "duracionRango", duracionRango);
-    appendAll(p, "numJugadores", numJugadores);
-    appendAll(p, "tipoPelota", tipoPelota);
-    appendAll(p, "tipoActividad", tipoActividad);
-    appendAll(p, "golpe", golpes);
-    appendAll(p, "efecto", efecto);
-    appendAll(p, "location", location);
-    appendAll(p, "autoria", autoria);
-    return p;
-  }
-
-  function applyFilters() {
-    const p = buildParams();
-    router.push(`/exercises${p.toString() ? `?${p}` : ""}`);
-    setOpen(false);
-  }
-
-  function clearFilters() {
-    setFormato(new Set<string>());
-    setFase(new Set<string>());
-    setCaracter(new Set<string>());
-    setSituacionJuego(new Set<string>());
-    setAspectoJuego(new Set<string>());
-    setParametro(new Set<string>());
-    setDuracionRango(new Set<string>());
-    setNumJugadores(new Set<number>());
-    setTipoPelota(new Set<string>());
-    setTipoActividad(new Set<string>());
-    setGolpes(new Set<string>());
-    setEfecto(new Set<string>());
-    setLocation(new Set<string>());
-    setAutoria(new Set<string>());
-
-    const p = new URLSearchParams();
-    if (preserved.q) p.set("q", preserved.q);
-    if (preserved.tab && preserved.tab !== "all") p.set("tab", preserved.tab);
-    if (preserved.category && preserved.category !== "all") {
-      p.set("category", preserved.category);
+    for (const value of preserved.nivel ?? []) p.append("nivel", value);
+    for (const param of ALL_PARAMS) {
+      for (const value of next[param] ?? []) p.append(param, value);
     }
-    if (preserved.difficulty && preserved.difficulty !== "all") {
-      p.set("difficulty", preserved.difficulty);
-    }
-    appendAll(p, "nivel", preserved.nivel ?? []);
-    router.push(`/exercises${p.toString() ? `?${p}` : ""}`);
+    return `/exercises${p.toString() ? `?${p}` : ""}`;
   }
+
+  function navigate(next: Values, delay: number) {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      startTransition(() => {
+        router.replace(buildUrl(next), { scroll: false });
+      });
+    }, delay);
+  }
+
+  function toggle(param: string, id: string) {
+    const current = values[param] ?? [];
+    const next: Values = {
+      ...values,
+      [param]: current.includes(id)
+        ? current.filter((v) => v !== id)
+        : [...current, id],
+    };
+    setValues(next);
+    navigate(next, APPLY_DELAY_MS);
+  }
+
+  function clearAll() {
+    const next: Values = {};
+    setValues(next);
+    navigate(next, 0);
+  }
+
+  const primaryCount = primaryFilters.reduce(
+    (sum, f) => sum + (values[f.param]?.length ?? 0),
+    0
+  );
+  const secondaryCount = SECONDARY_FILTERS.reduce(
+    (sum, f) => sum + (values[f.param]?.length ?? 0),
+    0
+  );
+  const activeCount = primaryCount + secondaryCount;
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={cn(
-          "inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-[11px] font-sans font-bold tracking-[0.08em] transition-colors",
-          open || activeCount > 0
-            ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
-            : "border-foreground/20 text-foreground/55 hover:border-foreground/30 hover:bg-muted hover:text-foreground"
-        )}
-      >
-        <SlidersHorizontal className="size-3.5" strokeWidth={1.6} />
-        Filtros
-        {activeCount > 0 && (
-          <span className="flex size-4 items-center justify-center rounded-full bg-[#050505] text-[9px] font-bold text-[#D6FF38]">
-            {activeCount}
-          </span>
-        )}
-        {open ? (
-          <ChevronUp className="size-3" strokeWidth={1.6} />
-        ) : (
-          <ChevronDown className="size-3" strokeWidth={1.6} />
-        )}
-      </button>
-
-      {open && (
-        <div className="mt-3 space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
-          <div className="flex flex-wrap items-center gap-3 border-b border-foreground/10 pb-3">
+    <div className={cn("transition-opacity", isPending && "opacity-70")}>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setMoreOpen((o) => !o)}
+          aria-expanded={moreOpen}
+          aria-controls="exercise-more-filters"
+          aria-label="Más filtros"
+          title="Más filtros"
+          className={cn(
+            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 transition-colors",
+            moreOpen || secondaryCount > 0
+              ? "border-[#050505] bg-[#D6FF38] text-[#050505]"
+              : "border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground"
+          )}
+        >
+          <SlidersHorizontal className="size-4" strokeWidth={1.8} />
+          {secondaryCount > 0 && <CountBadge count={secondaryCount} />}
+        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {primaryFilters.map((def) => (
+            <FilterDropdown
+              key={def.param}
+              def={def}
+              selected={values[def.param] ?? []}
+              onToggle={toggle}
+            />
+          ))}
+          {activeCount > 0 && (
             <button
               type="button"
-              onClick={applyFilters}
-              className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-4 py-2 text-[12px] font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
+              onClick={clearAll}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 font-sans text-[11px] text-foreground/50 transition-colors hover:text-foreground"
             >
-              Aplicar filtros
+              <X className="size-3" />
+              Limpiar ({activeCount})
             </button>
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-flex items-center gap-1.5 text-[11px] text-foreground/50 transition-colors hover:text-foreground"
-              >
-                <X className="size-3" />
-                Limpiar ({activeCount})
-              </button>
-            )}
-          </div>
+          )}
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <FilterGroup label="Fase de la sesión">
-              {FASES.map(({ id, label }) => (
+      {moreOpen && (
+        <div
+          id="exercise-more-filters"
+          className="mt-3 grid grid-cols-1 gap-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5 md:grid-cols-2"
+        >
+          {SECONDARY_FILTERS.map((def) => (
+            <FilterGroup key={def.param} label={def.label}>
+              {def.options.map((option) => (
                 <ChipButton
-                  key={id}
-                  active={fase.has(id)}
-                  onClick={() => toggleString(fase, setFase, id)}
+                  key={option.id}
+                  active={(values[def.param] ?? []).includes(option.id)}
+                  onClick={() => toggle(def.param, option.id)}
                 >
-                  {label}
+                  {option.label}
                 </ChipButton>
               ))}
             </FilterGroup>
-
-            <FilterGroup label="Aspectos del juego">
-              {ASPECTOS.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={aspectoJuego.has(id)}
-                  onClick={() =>
-                    toggleString(aspectoJuego, setAspectoJuego, id)
-                  }
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <FilterGroup label="Parámetros">
-              {PARAMETROS.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={parametro.has(id)}
-                  onClick={() => toggleString(parametro, setParametro, id)}
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-
-            <FilterGroup label="Tipo de ejercicio">
-              {TIPOS_ACTIVIDAD.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={tipoActividad.has(id)}
-                  onClick={() =>
-                    toggleString(tipoActividad, setTipoActividad, id)
-                  }
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-
-            <FilterGroup label="Carácter">
-              {CARACTER.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={caracter.has(id)}
-                  onClick={() => toggleString(caracter, setCaracter, id)}
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-
-            <FilterGroup label="Situación del juego">
-              {SITUACION_JUEGO.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={situacionJuego.has(id)}
-                  onClick={() =>
-                    toggleString(situacionJuego, setSituacionJuego, id)
-                  }
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-
-            <FilterGroup label="Rango de duración">
-              {DURACION_RANGOS.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={duracionRango.has(id)}
-                  onClick={() =>
-                    toggleString(duracionRango, setDuracionRango, id)
-                  }
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <FilterGroup label="Formato">
-              {FORMATOS.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={formato.has(id)}
-                  onClick={() => toggleString(formato, setFormato, id)}
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-
-            <FilterGroup label="Jugadores">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <ChipButton
-                  key={n}
-                  active={numJugadores.has(n)}
-                  onClick={() => toggleNumber(numJugadores, setNumJugadores, n)}
-                >
-                  {n}
-                </ChipButton>
-              ))}
-              <ChipButton
-                active={numJugadores.has(7)}
-                onClick={() => toggleNumber(numJugadores, setNumJugadores, 7)}
-              >
-                +6
-              </ChipButton>
-            </FilterGroup>
-          </div>
-
-          <div
-            className={cn(
-              "grid grid-cols-1 gap-5",
-              showPelota && "md:grid-cols-2"
-            )}
-          >
-            {showPelota && (
-              <FilterGroup label="Pelota">
-                {TIPOS_PELOTA.map(({ id, label, color }) => (
-                  <ChipButton
-                    key={id}
-                    active={tipoPelota.has(id)}
-                    onClick={() => toggleString(tipoPelota, setTipoPelota, id)}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      {color && (
-                        <span
-                          aria-hidden
-                          className="size-2 shrink-0 rounded-full border border-black/10"
-                          style={{ backgroundColor: color }}
-                        />
-                      )}
-                      {label}
-                    </span>
-                  </ChipButton>
-                ))}
-              </FilterGroup>
-            )}
-
-            <FilterGroup label="Lugar">
-              {UBICACIONES.map(({ id, label }) => (
-                <ChipButton
-                  key={id}
-                  active={location.has(id)}
-                  onClick={() => toggleString(location, setLocation, id)}
-                >
-                  {label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
-          </div>
-
-          <FilterGroup label="Autoría">
-            {AUTORIAS.map(({ id, label }) => (
-              <ChipButton
-                key={id}
-                active={autoria.has(id)}
-                onClick={() => toggleString(autoria, setAutoria, id)}
-              >
-                {label}
-              </ChipButton>
-            ))}
-          </FilterGroup>
-
-          <FilterGroup label="Golpes">
-            {GOLPES.map(({ id, label }) => (
-              <ChipButton
-                key={id}
-                active={golpes.has(id)}
-                onClick={() => toggleString(golpes, setGolpes, id)}
-              >
-                {label}
-              </ChipButton>
-            ))}
-          </FilterGroup>
-
-          <FilterGroup label="Efecto">
-            {EFECTOS.map(({ id, label }) => (
-              <ChipButton
-                key={id}
-                active={efecto.has(id)}
-                onClick={() => toggleString(efecto, setEfecto, id)}
-              >
-                {label}
-              </ChipButton>
-            ))}
-          </FilterGroup>
-
-          <div className="flex flex-wrap items-center gap-3 border-t border-foreground/10 pt-3">
-            <button
-              type="button"
-              onClick={applyFilters}
-              className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-4 py-2 text-[12px] font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
-            >
-              Aplicar filtros
-            </button>
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-flex items-center gap-1.5 text-[11px] text-foreground/50 transition-colors hover:text-foreground"
-              >
-                <X className="size-3" />
-                Limpiar ({activeCount})
-              </button>
-            )}
-          </div>
+          ))}
         </div>
       )}
     </div>

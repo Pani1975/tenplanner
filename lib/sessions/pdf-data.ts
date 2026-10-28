@@ -35,7 +35,7 @@ export async function buildPdfSession(
   session: SessionRow,
   coachName: string
 ): Promise<PdfSession> {
-  const plan = await loadSessionPlan(session.id);
+  const plan = await loadSessionPlan(session.id, session.userId);
   const blockTitles = new Map(
     plan.blocks.map((block) => [block.orderIndex, block.title])
   );

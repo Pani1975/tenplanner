@@ -396,7 +396,6 @@ export function TrainingItemsSection({
               <View
                 key={`${phase}-${ex.orderIndex}-${ex.name}`}
                 style={styles.exercise}
-                wrap={false}
               >
                 <View style={styles.exerciseHeader}>
                   <View
