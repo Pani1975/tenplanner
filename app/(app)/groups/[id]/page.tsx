@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
+import { GroupReportButton } from "@/components/app/group-report-button";
 import { AssignClassToGroupButton } from "@/components/app/assign-class-to-group-button";
 import { GroupScheduleEditor } from "./group-schedule-editor";
 import { GroupObjectivesEditor } from "./group-objectives-editor";
@@ -291,14 +292,17 @@ export default async function GroupDetailPage({ params }: PageProps) {
                 {!isOwner && authorName && <> · Grupo de {authorName}</>}
               </p>
             </div>
-            {isOwner && (
-              <GroupEditDetails
-                key={`${group.name}|${group.description ?? ""}`}
-                groupId={id}
-                name={group.name}
-                description={group.description}
-              />
-            )}
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <GroupReportButton groupId={id} tone="hero" />
+              {isOwner && (
+                <GroupEditDetails
+                  key={`${group.name}|${group.description ?? ""}`}
+                  groupId={id}
+                  name={group.name}
+                  description={group.description}
+                />
+              )}
+            </div>
           </div>
         </header>
 
