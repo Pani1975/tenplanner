@@ -11,8 +11,8 @@ import { useEffect, useRef } from "react";
  * `data-drop-date="AAAA-MM-DD"`. Un toque o un desplazamiento normal
  * (scroll) no activan nada.
  */
-const LONG_PRESS_MS = 350;
-const MOVE_TOLERANCE_PX = 10;
+const LONG_PRESS_MS = 250;
+const MOVE_TOLERANCE_PX = 16;
 const EDGE_SCROLL_PX = 60;
 
 export function useTouchDragSessions({
@@ -40,6 +40,7 @@ export function useTouchDragSessions({
       null;
     let lastY = 0;
     let scrollRaf: number | null = null;
+    let pressedEl: HTMLElement | null = null;
 
     function clearTimer() {
       if (timer) clearTimeout(timer);
@@ -81,9 +82,15 @@ export function useTouchDragSessions({
       scrollRaf = requestAnimationFrame(autoScroll);
     }
 
+    function restoreDraggable() {
+      if (pressedEl) pressedEl.draggable = true;
+      pressedEl = null;
+    }
+
     function finish(drop: boolean) {
       clearTimer();
       candidate = null;
+      restoreDraggable();
       if (!active) return;
       const { id, ghost, over } = active;
       active = null;
@@ -101,6 +108,11 @@ export function useTouchDragSessions({
       );
       if (!target) return;
       const t = e.touches[0];
+      // Con el dedo el navegador (Chrome Android) arrancaría su propio drag
+      // del enlace y abriría su menú contextual: se desactiva mientras dura
+      // el toque.
+      pressedEl = target;
+      target.draggable = false;
       candidate = {
         el: target,
         id: target.dataset.sessionDragId!,
@@ -143,6 +155,7 @@ export function useTouchDragSessions({
       } else {
         clearTimer();
         candidate = null;
+        restoreDraggable();
       }
     }
 
@@ -153,7 +166,18 @@ export function useTouchDragSessions({
     // El navegador puede intentar su propio drag del enlace o el menú
     // contextual durante la pulsación larga.
     function onNativeInterference(e: Event) {
-      if (candidate || active) e.preventDefault();
+      if (candidate || active) {
+        e.preventDefault();
+        return;
+      }
+      // Menú contextual de Chrome Android al mantener pulsada una sesión.
+      if (
+        e.type === "contextmenu" &&
+        (e.target as HTMLElement | null)?.closest("[data-session-drag-id]") &&
+        window.matchMedia("(pointer: coarse)").matches
+      ) {
+        e.preventDefault();
+      }
     }
 
     const opts = { passive: false } as const;
