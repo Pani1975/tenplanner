@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Watermark } from "@/lib/pdf/brand";
 import { styles, TrainingItemsSection, type PdfExercise } from "@/lib/sessions/pdf";
 
 export type { PdfExercise };
@@ -29,6 +30,7 @@ function formatDate(date: Date) {
 export function ExerciseListPdfPage({ list }: { list: PdfExerciseList }) {
   return (
     <Page size="A4" style={styles.page}>
+      <Watermark />
       <View style={styles.header}>
         <Text style={styles.brandLabel}>TenPlanner · Biblioteca de ejercicios</Text>
         <Text style={styles.title}>{list.title}</Text>

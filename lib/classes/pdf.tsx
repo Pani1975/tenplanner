@@ -1,4 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Watermark, PlanCharts } from "@/lib/pdf/brand";
 import {
   styles,
   TrainingItemsSection,
@@ -66,6 +67,7 @@ export function ClassPdfPage({ cls }: { cls: PdfClass }) {
 
   return (
     <Page size="A4" style={styles.page}>
+      <Watermark />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.brandLabel}>
@@ -120,6 +122,8 @@ export function ClassPdfPage({ cls }: { cls: PdfClass }) {
           </View>
         )}
       </View>
+
+      <PlanCharts exercises={cls.exercises} />
 
       {/* Objective */}
       {cls.objetivos && (

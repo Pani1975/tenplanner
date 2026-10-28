@@ -1,6 +1,21 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { ExerciseDiagramPdf } from "@/lib/exercise-diagrams/pdf";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
+import {
+  ACCENT,
+  BORDER,
+  BRAND,
+  BRAND_DARK,
+  BRAND_LIGHT,
+  BRAND_MUTED,
+  GRAY,
+  LIGHT_GRAY,
+  Watermark,
+  IntensityDots,
+  PlanCharts,
+} from "@/lib/pdf/brand";
+
+export { BORDER, BRAND, BRAND_LIGHT, BRAND_MUTED, GRAY, LIGHT_GRAY };
 
 export type PdfExercise = {
   /** "text" = texto libre del monitor. */
@@ -38,12 +53,6 @@ export type PdfSession = {
   coachName: string;
 };
 
-export const BRAND = "#2563EB";
-export const BRAND_LIGHT = "#EFF6FF";
-export const BRAND_MUTED = "#93C5FD";
-export const GRAY = "#6B7280";
-export const LIGHT_GRAY = "#F3F4F6";
-export const BORDER = "#E5E7EB";
 
 export const styles = StyleSheet.create({
   page: {
@@ -58,13 +67,16 @@ export const styles = StyleSheet.create({
   // Header
   header: {
     marginBottom: 20,
-    paddingBottom: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: BRAND,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: BRAND_DARK,
+    borderBottomWidth: 4,
+    borderBottomColor: ACCENT,
   },
   brandLabel: {
     fontSize: 8,
-    color: BRAND,
+    color: ACCENT,
     fontFamily: "Helvetica-Bold",
     letterSpacing: 1.5,
     textTransform: "uppercase",
@@ -73,12 +85,12 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontFamily: "Helvetica-Bold",
-    color: "#111827",
+    color: "#FFFFFF",
     lineHeight: 1.2,
     marginBottom: 3,
   },
-  subtitle: { fontSize: 9.5, color: GRAY, marginTop: 1 },
-  coachLine: { fontSize: 9, color: GRAY, marginTop: 4 },
+  subtitle: { fontSize: 9.5, color: BRAND_MUTED, marginTop: 1 },
+  coachLine: { fontSize: 9, color: BRAND_MUTED, marginTop: 4 },
 
   // Meta grid
   metaGrid: {
@@ -88,7 +100,9 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   metaItem: {
-    backgroundColor: LIGHT_GRAY,
+    backgroundColor: BRAND_LIGHT,
+    borderLeftWidth: 3,
+    borderLeftColor: BRAND,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -500,6 +514,7 @@ export function SessionPdfPage({ session }: { session: PdfSession }) {
 
   return (
     <Page size="A4" style={styles.page}>
+      <Watermark />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.brandLabel}>
@@ -528,6 +543,7 @@ export function SessionPdfPage({ session }: { session: PdfSession }) {
             <Text style={styles.metaValue}>
               {session.intensity}/5 — {INTENSITY_LABEL[session.intensity]}
             </Text>
+            <IntensityDots value={session.intensity} />
           </View>
         )}
         {session.location && (
@@ -543,6 +559,8 @@ export function SessionPdfPage({ session }: { session: PdfSession }) {
           </View>
         )}
       </View>
+
+      <PlanCharts exercises={session.exercises} />
 
       {/* Objective */}
       {session.objective && (
