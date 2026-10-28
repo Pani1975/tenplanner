@@ -7,13 +7,11 @@ import {
   groups,
   groupStudents,
   sessions,
-  sessionStudents,
   students,
   users,
 } from "@/db/schema";
-import { and, desc, eq, inArray, ne, notInArray } from "drizzle-orm";
-import { buildGroupReport } from "@/lib/groups/report";
-import { GroupReportSection } from "./group-report";
+import { and, desc, eq, ne, notInArray } from "drizzle-orm";
+import { GroupReportButton } from "@/components/app/group-report-button";
 import {
   ArrowLeft,
   CalendarDays,
@@ -42,7 +40,6 @@ type GroupSessionRow = {
   status: "scheduled" | "completed" | "cancelled";
   sourceClassId: string | null;
   className: string | null;
-  intensity: number | null;
 };
 
 const sessionDateFormat = new Intl.DateTimeFormat("es-ES", {
@@ -202,7 +199,6 @@ export default async function GroupDetailPage({ params }: PageProps) {
       status: sessions.status,
       sourceClassId: sessions.sourceClassId,
       className: classes.name,
-      intensity: sessions.intensity,
     })
     .from(sessions)
     .leftJoin(classes, eq(classes.id, sessions.sourceClassId))
@@ -217,38 +213,6 @@ export default async function GroupDetailPage({ params }: PageProps) {
   const upcomingSessions = groupSessions
     .filter((s) => s.status !== "completed" && s.scheduledAt >= now)
     .reverse();
-
-  // Registros de asistencia de las sesiones del grupo, para el informe.
-  const attendanceRecords =
-    groupSessions.length === 0
-      ? []
-      : await db
-          .select({
-            sessionId: sessionStudents.sessionId,
-            studentId: sessionStudents.studentId,
-            attended: sessionStudents.attended,
-            rating: sessionStudents.rating,
-          })
-          .from(sessionStudents)
-          .where(
-            inArray(
-              sessionStudents.sessionId,
-              groupSessions.map((s) => s.id)
-            )
-          );
-
-  const groupReport = buildGroupReport({
-    sessions: groupSessions.map((s) => ({
-      id: s.id,
-      scheduledAt: s.scheduledAt,
-      durationMinutes: s.durationMinutes,
-      status: s.status,
-      intensity: s.intensity,
-    })),
-    records: attendanceRecords,
-    members: memberRows,
-    now,
-  });
 
   const availableStudents = await db
     .select({
@@ -314,8 +278,6 @@ export default async function GroupDetailPage({ params }: PageProps) {
           </div>
         </header>
 
-        <GroupReportSection groupName={group.name} report={groupReport} />
-
         <GroupDetailClient
           groupId={id}
           groupName={group.name}
@@ -340,6 +302,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <GroupReportButton groupId={id} />
               <AssignClassToGroupButton
                 groupId={id}
                 weeklySchedule={group.weeklySchedule}
