@@ -99,6 +99,13 @@ export const createStudentSchema = z.object({
     .max(500, "Máximo 500 caracteres")
     .optional()
     .nullable(),
+  locality: z
+    .string()
+    .trim()
+    .max(120, "Máximo 120 caracteres")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   notes: z
     .string()
     .trim()

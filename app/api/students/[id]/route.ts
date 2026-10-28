@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { students } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { geocodeLocality } from "@/lib/geo/geocode";
 import {
   studentIdParamsSchema,
   updateStudentSchema,
@@ -81,7 +82,11 @@ export async function PUT(request: Request, context: StudentRouteContext) {
 
   try {
     const [existing] = await db
-      .select({ id: students.id })
+      .select({
+        id: students.id,
+        locality: students.locality,
+        localityLat: students.localityLat,
+      })
       .from(students)
       .where(
         and(eq(students.id, parsed.data.id), eq(students.coachId, user.id))
@@ -120,6 +125,21 @@ export async function PUT(request: Request, context: StudentRouteContext) {
     }
     if (d.phone !== undefined) {
       updateValues.phone = d.phone === "" ? null : d.phone;
+    }
+    if (d.locality !== undefined) {
+      const locality = d.locality ? d.locality : null;
+      updateValues.locality = locality;
+      if (!locality) {
+        updateValues.localityLat = null;
+        updateValues.localityLng = null;
+      } else if (
+        locality !== existing.locality ||
+        existing.localityLat === null
+      ) {
+        const geo = await geocodeLocality(locality);
+        updateValues.localityLat = geo?.lat ?? null;
+        updateValues.localityLng = geo?.lng ?? null;
+      }
     }
     if (
       d.yearStartedRacketSports !== undefined &&
