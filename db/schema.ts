@@ -11,6 +11,7 @@ import {
   date,
   index,
   numeric,
+  doublePrecision,
   vector,
   uniqueIndex,
   jsonb,
@@ -468,6 +469,12 @@ export const students = pgTable(
     yearStartedRacketSports: integer("year_started_racket_sports"),
     phone: varchar("phone", { length: 32 }),
     preferredSchedule: text("preferred_schedule"),
+    // Localidad de procedencia (texto libre) y sus coordenadas aproximadas
+    // (centro de la localidad, no una dirección). Se usan solo para el mapa
+    // de procedencia de las estadísticas del club.
+    locality: varchar("locality", { length: 120 }),
+    localityLat: doublePrecision("locality_lat"),
+    localityLng: doublePrecision("locality_lng"),
     notes: text("notes"),
     imageUrl: text("image_url"),
     profileToken: varchar("profile_token", { length: 128 }).unique(),

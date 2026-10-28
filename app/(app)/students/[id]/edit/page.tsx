@@ -84,6 +84,7 @@ export default async function EditStudentPage({ params }: PageProps) {
           yearStartedRacketSports: student.yearStartedRacketSports,
           phone: student.phone,
           preferredSchedule: student.preferredSchedule,
+          locality: student.locality,
           notes: student.notes,
           imageUrl: student.imageUrl,
         }}
