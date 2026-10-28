@@ -230,13 +230,13 @@ export const PELOTAS = [
   { id: "naranja", label: "Naranja", color: "#FB8C00" },
   { id: "verde", label: "Verde", color: "#43A047" },
   { id: "amarilla", label: "Amarilla", color: "#D4E157" },
+  { id: "sin_pelota", label: "Sin pelota" },
 ] as const;
 
 export const PELOTAS_LEGACY = [
   { id: "normal", label: "Normal" },
   { id: "lenta", label: "Lenta" },
   { id: "rapida", label: "Rápida" },
-  { id: "sin_pelota", label: "Sin pelota" },
 ] as const;
 
 export const TIPO_PELOTA_VALUES = [
