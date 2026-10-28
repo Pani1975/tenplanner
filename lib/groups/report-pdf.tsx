@@ -333,7 +333,13 @@ export function GroupReportPdf({
               </View>
             </View>
             {training.topExercises.length > 0 && (
-              <View style={[styles.card, { flexGrow: 0 }]} wrap={false}>
+              <View
+                style={[
+                  styles.card,
+                  { flexGrow: 0, flexBasis: "auto", marginBottom: 8 },
+                ]}
+                wrap={false}
+              >
                 <Text style={styles.cardTitle}>Ejercicios más repetidos</Text>
                 {training.topExercises.map((e, i) => (
                   <View key={e.key} style={styles.topRow}>
