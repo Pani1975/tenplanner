@@ -328,7 +328,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "A golpea suave tras el bote para derribar los bolos",
+          "text": "A golpea suave tras el bote y derriba los bolos del centro",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -341,37 +342,71 @@
               ],
               [
                 50,
-                63
+                62
+              ],
+              [
+                50,
+                46
               ]
             ],
             "bounces": [
               1
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            5
+          ]
         },
         {
-          "text": "Ahora B, con otra pelota",
+          "text": "Ahora B, con otra pelota, derriba los de los lados",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  40,
+                  88
+                ]
+              ]
+            }
+          ],
           "ball": {
             "path": [
               [
-                36,
-                90
+                40,
+                88
               ],
               [
-                44,
+                42,
                 76
               ],
               [
-                46,
+                44,
                 62
+              ],
+              [
+                46,
+                46
               ]
             ],
             "bounces": [
               1
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            0,
+            2,
+            4
+          ]
         },
         {
           "text": "Cuentan los bolos derribados y cambian de turno",
@@ -382,7 +417,7 @@
               "path": [
                 [
                   50,
-                  94
+                  92
                 ],
                 [
                   36,
@@ -394,12 +429,12 @@
               "who": 1,
               "path": [
                 [
-                  36,
-                  90
+                  40,
+                  88
                 ],
                 [
                   50,
-                  94
+                  92
                 ]
               ]
             }
@@ -4722,7 +4757,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "A lanza por encima de la cabeza a su castillo",
+          "text": "A lanza por encima de la cabeza contra su castillo",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -4742,10 +4778,16 @@
               2
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            0,
+            1,
+            2
+          ]
         },
         {
           "text": "B hace lo mismo contra el otro castillo",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -4765,7 +4807,12 @@
               2
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            3,
+            4,
+            5
+          ]
         },
         {
           "text": "Si cae un castillo, lo reconstruyen y repiten",
@@ -7251,7 +7298,7 @@
         },
         {
           "text": "A, de lado, golpea de revés y derriba los conos",
-          "dur": 1.6,
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -7264,18 +7311,23 @@
               ],
               [
                 46,
-                20
+                24
               ],
               [
                 46,
-                10
+                12
               ]
             ],
             "bounces": [
               2
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            4
+          ]
         },
         {
           "text": "Cuentan los conos derribados y cambian",
@@ -8023,7 +8075,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "De rodillas, A rueda la pelota para derribar los bolos",
+          "text": "De rodillas, A rueda la pelota y derriba los bolos del centro",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -8032,14 +8085,24 @@
               ],
               [
                 50,
-                64
+                62
+              ],
+              [
+                50,
+                46
               ]
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            5
+          ]
         },
         {
-          "text": "Ahora B, con otra pelota",
+          "text": "Ahora B rueda la suya contra los de los lados",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -8047,12 +8110,25 @@
                 90
               ],
               [
-                46,
-                64
+                40,
+                76
+              ],
+              [
+                42,
+                61
+              ],
+              [
+                44,
+                46
               ]
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            0,
+            2,
+            4
+          ]
         },
         {
           "text": "Cuentan los bolos derribados y cambian",
