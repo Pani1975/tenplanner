@@ -1,16 +1,30 @@
 import { notFound, redirect } from "next/navigation";
+import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
+import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { Pencil, ClipboardList, Clock, Flame } from "lucide-react";
+import { Pencil, ClipboardList, Clock, Flame, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { students, sessionStudents, sessions, users } from "@/db/schema";
+import { clubs, students, sessionStudents, sessions, users } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { DeleteStudentButton } from "./delete-student-button";
 import { SessionFeedback } from "./session-feedback";
 import { UpcomingList } from "./upcoming-list";
 import { GenerateProfileLinkButton } from "./generate-profile-link";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { GuardiansPanel } from "./guardians-panel";
+import { listGuardians } from "@/lib/guardians";
+import { isAdult } from "@/lib/age";
+import {
+  getActiveWorkClubId,
+  getOwnedClub,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
+import { AssignedCoachesPanel } from "@/components/app/assigned-coaches-panel";
+import { getAssignableCoaches, listStudentCoaches } from "@/lib/club-coaches";
+import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
+import { ObjectivesChecklist, type ScopeOption } from "./objectives-checklist";
+import { ReportDialogButton } from "./report-dialog";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -119,6 +133,61 @@ export default async function StudentDetailPage({ params }: PageProps) {
           .limit(1)
       )[0]?.name ?? null);
 
+  // Contactos para los mensajes del club (solo alumnos de un club). Si las
+  // tablas de mensajes no existieran, la ficha se muestra igual sin la sección.
+  const guardiansData = student.clubId
+    ? await Promise.all([
+        listGuardians(student.id),
+        db
+          .select({ name: clubs.name })
+          .from(clubs)
+          .where(eq(clubs.id, student.clubId))
+          .limit(1),
+      ])
+        .then(([list, [club]]) => ({ list, clubName: club?.name ?? "El club" }))
+        .catch((error) => {
+          console.error("[student] guardians failed", error);
+          return null;
+        })
+    : null;
+
+  const trainingStatsPromise = loadStudentTrainingStats(id);
+
+  // Monitores asignados por el gestor (solo alumnos de un club).
+  const ownedClub = student.clubId ? await getOwnedClub(user.id) : null;
+  const canAssignCoaches = !!student.clubId && ownedClub?.id === student.clubId;
+  const [assignedCoaches, coachOptions] = student.clubId
+    ? await Promise.all([
+        listStudentCoaches(id),
+        canAssignCoaches
+          ? getAssignableCoaches(student.clubId)
+          : Promise.resolve([]),
+      ])
+    : [[], []];
+  // Si las tablas de objetivos no existieran, la ficha se muestra igual sin la sección.
+  const objectives = await loadStudentObjectives(student.id, {
+    includeHidden: true,
+  }).catch((error) => {
+    console.error("[student] objectives failed", error);
+    return null;
+  });
+  // Desde la ficha solo se personaliza para este alumno o, si es particular y
+  // el monitor es el propietario, para todos sus alumnos particulares. Los
+  // cambios para todo el club se hacen en /club/[clubId]/objetivos.
+  const objectiveScopes: ScopeOption[] = [
+    {
+      id: "student",
+      label: "Solo este alumno",
+      hint: `Los cambios solo afectan a ${student.name}.`,
+    },
+  ];
+  if (!student.clubId && isOwner) {
+    objectiveScopes.push({
+      id: "coach",
+      label: "Todos mis alumnos",
+      hint: "Los cambios afectan a todos tus alumnos particulares.",
+    });
+  }
   const [statsRows, past, upcoming] = await Promise.all([
     db
       .select({
@@ -127,12 +196,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
         pastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now())`,
         upcomingCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= now())`,
         pastMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now()), 0)`,
-        avgRating: sql<
-          number | null
-        >`AVG(${sessionStudents.rating}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.rating} IS NOT NULL)`,
-        avgIntensity: sql<
-          number | null
-        >`AVG(${sessions.intensity}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.intensity} IS NOT NULL)`,
         pastWithAttendanceCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} IS NOT NULL)`,
         attendedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} = true)`,
         last30PastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= (now() - INTERVAL '30 days') AND ${sessions.scheduledAt} < now())`,
@@ -189,9 +252,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
   const pastCount = Number(stats?.pastCount ?? 0);
   const upcomingCount = Number(stats?.upcomingCount ?? 0);
   const pastMinutes = Number(stats?.pastMinutes ?? 0);
-  const avgRating = stats?.avgRating == null ? null : Number(stats.avgRating);
-  const avgIntensity =
-    stats?.avgIntensity == null ? null : Number(stats.avgIntensity);
   const pastWithAttendanceCount = Number(stats?.pastWithAttendanceCount ?? 0);
   const attendedCount = Number(stats?.attendedCount ?? 0);
   const attendanceRate =
@@ -202,8 +262,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
     attendanceRate != null &&
     attendanceRate >= 0.8 &&
     pastWithAttendanceCount >= 3;
-
-  const recentEvolution = past.slice(0, 8).reverse();
 
   const sessionsPerWeek =
     Number(stats?.last30PastCount ?? 0) > 0
@@ -234,21 +292,27 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 Ficha individual
               </p>
             </div>
-            {isOwner && (
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/students/${student.id}/edit`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
-                >
-                  <Pencil className="size-3" strokeWidth={1.6} />
-                  Editar
-                </Link>
-                <DeleteStudentButton
-                  studentId={student.id}
-                  studentName={student.name}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <ReportDialogButton
+                studentId={student.id}
+                studentName={student.name}
+              />
+              {isOwner && (
+                <>
+                  <Link
+                    href={`/students/${student.id}/edit`}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                  >
+                    <Pencil className="size-3" strokeWidth={1.6} />
+                    Editar
+                  </Link>
+                  <DeleteStudentButton
+                    studentId={student.id}
+                    studentName={student.name}
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-[auto_1fr] items-end gap-4 sm:gap-6">
@@ -301,8 +365,19 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </div>
         </header>
 
+        {student.clubId && (
+          <AssignedCoachesPanel
+            key={assignedCoaches.map((c) => c.id).join(",")}
+            endpoint={`/api/students/${id}/coaches`}
+            assigned={assignedCoaches}
+            options={coachOptions}
+            canEdit={canAssignCoaches}
+            subject="este alumno"
+          />
+        )}
+
         {/* Stats strip */}
-        <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4 lg:grid-cols-6">
+        <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4">
           <StatCell label="Sesiones totales" value={totalSessions.toString()} />
           <StatCell label="Completadas" value={pastCount.toString()} />
           <StatCell label="Próximas" value={upcomingCount.toString()} accent />
@@ -310,15 +385,12 @@ export default async function StudentDetailPage({ params }: PageProps) {
             label="Horas totales"
             value={`${Math.round(totalMinutes / 60)}h`}
           />
-          <StatCell
-            label="Intensidad media"
-            value={avgIntensity != null ? `${avgIntensity.toFixed(1)}/5` : "—"}
-          />
-          <StatCell
-            label="Valoración media"
-            value={avgRating != null ? `${avgRating.toFixed(1)}/5` : "—"}
-          />
         </section>
+
+        <TrainingStatsPanel
+          stats={await trainingStatsPromise}
+          title="Estadística de entrenamiento"
+        />
 
         {/* Perfil + enlace */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
@@ -409,6 +481,24 @@ export default async function StudentDetailPage({ params }: PageProps) {
             )}
           </aside>
         </section>
+
+        {guardiansData && (
+          <section className="tp-panel p-5 sm:p-6">
+            <div className="mb-4 grid grid-cols-[auto_1fr] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+              <Mail className="size-3 text-brand" />
+              <p className="text-[10px] font-black uppercase text-foreground/50">
+                Contactos para mensajes
+              </p>
+            </div>
+            <GuardiansPanel
+              studentId={student.id}
+              studentName={student.name}
+              clubName={guardiansData.clubName}
+              adult={isAdult(student.birthDate)}
+              initialGuardians={guardiansData.list}
+            />
+          </section>
+        )}
 
         {/* Fiabilidad + Proyección */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -520,30 +610,30 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Evolución */}
-        {recentEvolution.length > 0 && (
+        {/* Objetivos por etapa */}
+        {objectives && (
           <section className="tp-panel p-5 sm:p-6">
             <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
               <p className="text-[10px] font-black tabular-nums text-brand">
                 05
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Evolución reciente
+                Objetivos por etapa
               </p>
               <p className="text-[10px] font-black tabular-nums text-foreground/40">
-                últimas {recentEvolution.length}
+                {objectives.filter((o) => !o.hidden && o.achieved).length}/
+                {objectives.filter((o) => !o.hidden).length}
               </p>
             </div>
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <EvolutionChart
-                label="Intensidad"
-                items={recentEvolution.map((s) => s.intensity)}
-              />
-              <EvolutionChart
-                label="Valoración"
-                items={recentEvolution.map((s) => s.rating)}
-              />
-            </div>
+            <ObjectivesChecklist
+              studentId={student.id}
+              items={objectives}
+              scopes={objectiveScopes}
+              defaultBall={defaultBallForStudent(
+                student.playerLevel,
+                student.birthDate
+              )}
+            />
           </section>
         )}
 
@@ -702,53 +792,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="text-[14px] text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function EvolutionChart({
-  label,
-  items,
-}: {
-  label: string;
-  items: Array<number | null>;
-}) {
-  const max = 5;
-  return (
-    <div>
-      <p className="mb-3 text-[10px] font-black uppercase text-foreground/55">
-        {label}
-      </p>
-      <div className="flex items-end gap-1.5 h-20 border-b border-foreground/15">
-        {items.map((v, i) => {
-          const h = v == null ? 0 : (v / max) * 100;
-          return (
-            <div
-              key={i}
-              className="flex-1 flex flex-col items-center justify-end gap-1.5"
-            >
-              <div
-                className={cn(
-                  "w-full transition-all",
-                  v == null ? "bg-foreground/10" : "bg-brand"
-                )}
-                style={{ height: v == null ? "2px" : `${Math.max(h, 8)}%` }}
-                title={v == null ? "Sin datos" : `${v}/5`}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-start gap-1.5 mt-1.5">
-        {items.map((v, i) => (
-          <span
-            key={i}
-            className="flex-1 text-center font-sans text-[9px] tabular-nums text-foreground/40"
-          >
-            {v ?? "—"}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }

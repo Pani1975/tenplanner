@@ -78,24 +78,44 @@ export function StepStudents({ state, update }: StepStudentsProps) {
     update({ studentIds: Array.from(set) });
   }
 
+  // Los grupos se marcan de forma independiente: un grupo solo aparece
+  // seleccionado si se ha pulsado él mismo, aunque comparta alumnos con otro.
+  const selectedGroupIds =
+    state.selectedGroupIds ?? (state.groupId ? [state.groupId] : []);
+
   function selectGroup(group: GroupOption) {
+    const isSelected = selectedGroupIds.includes(group.id);
+    const nextGroupIds = isSelected
+      ? selectedGroupIds.filter((id) => id !== group.id)
+      : [...selectedGroupIds, group.id];
+
     const set = new Set(state.studentIds);
-    const allSelected = group.studentIds.every((id) => set.has(id));
-    if (allSelected) {
-      group.studentIds.forEach((id) => set.delete(id));
+    if (isSelected) {
+      // Solo se quitan los alumnos que no estén en otro grupo aún marcado.
+      const keep = new Set(
+        groups
+          .filter((g) => nextGroupIds.includes(g.id))
+          .flatMap((g) => g.studentIds)
+      );
+      group.studentIds.forEach((id) => {
+        if (!keep.has(id)) set.delete(id);
+      });
     } else {
       group.studentIds.forEach((id) => set.add(id));
     }
+
     update({
       studentIds: Array.from(set),
-      // La sesión queda vinculada al grupo elegido (se quita si se deselecciona).
-      groupId: allSelected
+      selectedGroupIds: nextGroupIds,
+      // La sesión queda vinculada al último grupo elegido; si se desmarca,
+      // pasa al último que siga marcado.
+      groupId: isSelected
         ? state.groupId === group.id
-          ? null
+          ? (nextGroupIds[nextGroupIds.length - 1] ?? null)
           : (state.groupId ?? null)
         : group.id,
       // Propone el nombre del grupo para el código de la sesión.
-      ...(!allSelected && !state.groupName?.trim()
+      ...(!isSelected && !state.groupName?.trim()
         ? {
             groupName: group.name,
             ...(state.useCodeTitle &&
@@ -205,12 +225,7 @@ export function StepStudents({ state, update }: StepStudentsProps) {
             </div>
           ) : (
             groups.map((g) => {
-              const allSelected =
-                g.studentIds.length > 0 &&
-                g.studentIds.every((id) => state.studentIds.includes(id));
-              const someSelected = g.studentIds.some((id) =>
-                state.studentIds.includes(id)
-              );
+              const allSelected = selectedGroupIds.includes(g.id);
               return (
                 <button
                   key={g.id}
@@ -220,26 +235,17 @@ export function StepStudents({ state, update }: StepStudentsProps) {
                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors",
                     allSelected
                       ? "border-brand bg-brand/5"
-                      : someSelected
-                        ? "border-brand/40 bg-brand/[0.02]"
-                        : "border-border bg-background hover:border-brand/40"
+                      : "border-border bg-background hover:border-brand/40"
                   )}
                 >
                   <div
                     className={cn(
                       "size-5 rounded-md border flex items-center justify-center shrink-0 transition-colors",
-                      allSelected
-                        ? "bg-brand border-brand"
-                        : someSelected
-                          ? "bg-brand/20 border-brand/40"
-                          : "border-border"
+                      allSelected ? "bg-brand border-brand" : "border-border"
                     )}
                   >
                     {allSelected && (
                       <Check className="size-3.5 text-background" />
-                    )}
-                    {someSelected && !allSelected && (
-                      <span className="size-2 rounded-sm bg-brand" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

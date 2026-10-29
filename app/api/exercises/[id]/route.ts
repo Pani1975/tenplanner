@@ -1,9 +1,11 @@
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { eq } from "drizzle-orm";
 import { after } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { canAccessExercise } from "@/lib/exercise-access";
 import { embedExercise } from "@/lib/ai/semantic-search";
 import {
   deriveDurationMinutesFromRange,
@@ -58,6 +60,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
         tips: exercises.tips,
         createdBy: exercises.createdBy,
         isGlobal: exercises.isGlobal,
+        clubId: exercises.clubId,
         autoria: exercises.autoria,
         formato: exercises.formato,
         numJugadores: exercises.numJugadores,
@@ -79,7 +82,9 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
         duracionRango: exercises.duracionRango,
         caracter: exercises.caracter,
         situacionJuego: exercises.situacionJuego,
+        tipoCompeticion: exercises.tipoCompeticion,
         phase: exercises.phase,
+        fases: exercises.fases,
         intensity: exercises.intensity,
         createdAt: exercises.createdAt,
         updatedAt: exercises.updatedAt,
@@ -95,10 +100,7 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
       );
     }
 
-    const canAccess =
-      exercise.isGlobal ||
-      exercise.createdBy === null ||
-      exercise.createdBy === user.id;
+    const canAccess = await canAccessExercise(exercise, user.id);
 
     if (!canAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -110,13 +112,18 @@ export async function GET(_request: Request, context: ExerciseRouteContext) {
   }
 }
 
+// Administradores y la cuenta de la plataforma (la Biblioteca pública solo la
+// edita esta última: ver isTenPlannerMode más abajo).
 async function getCurrentUserIsAdmin(userId: string): Promise<boolean> {
   const [row] = await db
-    .select({ isAdmin: users.isAdmin })
+    .select({
+      isAdmin: users.isAdmin,
+      isPlatformAccount: users.isPlatformAccount,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  return !!row?.isAdmin;
+  return !!row?.isAdmin || !!row?.isPlatformAccount;
 }
 
 export async function PUT(request: Request, context: ExerciseRouteContext) {
@@ -175,6 +182,15 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+    // La Biblioteca pública solo se edita en Modo Ten Planner.
+    if (existing.isGlobal && !(await isTenPlannerMode(user.id))) {
+      return NextResponse.json(
+        {
+          error: "La Biblioteca pública solo se edita en Modo Ten Planner",
+        },
+        { status: 403 }
+      );
+    }
     if (
       !existing.isGlobal &&
       existing.createdBy &&
@@ -214,7 +230,6 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
       "videoUrl",
       "steps",
       "materials",
-      "phase",
       "intensity",
       "formato",
       "numJugadores",
@@ -239,6 +254,9 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
     if (d.situacionJuego !== undefined) {
       updateValues.situacionJuego = normalizeMultiValue(d.situacionJuego);
     }
+    if (d.tipoCompeticion !== undefined) {
+      updateValues.tipoCompeticion = normalizeMultiValue(d.tipoCompeticion);
+    }
 
     if (d.durationMinutes !== undefined && d.durationMinutes !== null) {
       updateValues.durationMinutes = d.durationMinutes;
@@ -251,6 +269,14 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
         );
       }
       updateValues.durationMinutes = derivedDuration;
+    }
+
+    if (d.fases !== undefined || d.phase !== undefined) {
+      const fases = normalizeMultiValue(
+        d.fases ?? (d.phase ? [d.phase] : null)
+      );
+      updateValues.fases = fases;
+      updateValues.phase = fases?.[0] ?? null;
     }
 
     if (d.niveles !== undefined || d.nivel !== undefined) {
@@ -297,11 +323,13 @@ export async function PUT(request: Request, context: ExerciseRouteContext) {
       updateValues.tipologia = legacyTipologiaFrom(tiposActividad);
     }
 
-    if (isAdmin && d.isGlobal !== undefined) {
+    // Publicar o retirar de la Biblioteca solo en Modo Ten Planner.
+    const canPublish = isAdmin && (await isTenPlannerMode(user.id));
+    if (canPublish && d.isGlobal !== undefined) {
       updateValues.isGlobal = d.isGlobal;
     }
 
-    if (isAdmin && d.autoria !== undefined) {
+    if (canPublish && d.autoria !== undefined) {
       updateValues.autoria = d.autoria ?? "libre";
     }
 
@@ -381,6 +409,15 @@ export async function DELETE(_request: Request, context: ExerciseRouteContext) {
 
     if (existing.isGlobal && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // La Biblioteca pública solo se edita en Modo Ten Planner.
+    if (existing.isGlobal && !(await isTenPlannerMode(user.id))) {
+      return NextResponse.json(
+        {
+          error: "La Biblioteca pública solo se edita en Modo Ten Planner",
+        },
+        { status: 403 }
+      );
     }
     if (
       !existing.isGlobal &&

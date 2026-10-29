@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Loader2, Mail, X } from "lucide-react";
+import { Check, Copy, Loader2, Mail, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ interface Member {
 interface Invite {
   id: string;
   email: string;
+  inviteeName: string | null;
   sport: Sport;
   token: string;
   status: string;
@@ -49,13 +50,17 @@ export function ClubOwnerPanel({
   defaultSport?: Sport;
 }) {
   const router = useRouter();
-  const [members] = useState(initialMembers);
+  const [members, setMembers] = useState(initialMembers);
+  const [editingMembers, setEditingMembers] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [invites, setInvites] = useState(initialInvites);
+  const [inviteeName, setInviteeName] = useState("");
   const [email, setEmail] = useState("");
   const [sport, setSport] = useState<Sport>(defaultSport);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const seatCount = club.plannedCoachSeats;
 
@@ -64,11 +69,16 @@ export function ClubOwnerPanel({
     if (!email.trim()) return;
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch("/api/clubs/invites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), sport }),
+        body: JSON.stringify({
+          email: email.trim(),
+          name: inviteeName.trim() || undefined,
+          sport,
+        }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
@@ -83,7 +93,18 @@ export function ClubOwnerPanel({
         body.data,
         ...prev.filter((i) => i.id !== body.data.id),
       ]);
+      const sent = body.emailSent
+        ? `Invitación enviada a ${body.data.email}.`
+        : "No hemos podido enviar el correo. Copia el enlace de la lista y envíaselo tú.";
+      setNotice(
+        body.profileCreated
+          ? `${sent} Se ha creado su ficha (pendiente de rellenar) en Fichas de monitores.`
+          : sent
+      );
       setEmail("");
+      setInviteeName("");
+      // Recarga la página para que aparezca la ficha recién creada.
+      router.refresh();
     } finally {
       setSubmitting(false);
     }
@@ -93,6 +114,29 @@ export function ClubOwnerPanel({
     await fetch(`/api/clubs/invites/${id}`, { method: "DELETE" });
     setInvites((prev) => prev.filter((i) => i.id !== id));
     router.refresh();
+  }
+
+  async function removeMember(member: Member) {
+    if (
+      !window.confirm(
+        `¿Desvincular a ${member.name} del club? Dejará de ver el contenido del club.`
+      )
+    )
+      return;
+    setRemovingId(member.id);
+    try {
+      const res = await fetch(`/api/clubs/members/${member.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        setError("No se pudo desvincular al monitor.");
+        return;
+      }
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+      router.refresh();
+    } finally {
+      setRemovingId(null);
+    }
   }
 
   async function copyLink(invite: Invite) {
@@ -115,6 +159,19 @@ export function ClubOwnerPanel({
         </h2>
         <form onSubmit={onInvite} className="mt-3 space-y-2">
           <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="invite-name" className="sr-only">
+                Nombre del monitor
+              </Label>
+              <Input
+                id="invite-name"
+                placeholder="Nombre"
+                value={inviteeName}
+                onChange={(e) => setInviteeName(e.target.value)}
+                autoComplete="off"
+                required
+              />
+            </div>
             <div className="flex-1 space-y-1">
               <Label htmlFor="invite-email" className="sr-only">
                 Email del monitor
@@ -155,9 +212,10 @@ export function ClubOwnerPanel({
           </div>
         </form>
         {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+        {notice && <p className="mt-2 text-xs text-foreground/70">{notice}</p>}
         <p className="mt-2 text-xs text-foreground/50">
-          Se genera un enlace de invitación — cópialo y envíaselo tú mismo (aún
-          no enviamos el email automáticamente).
+          Enviamos la invitación por email. Si prefieres, también puedes copiar
+          el enlace de la lista y mandárselo tú.
         </p>
         {typeof seatCount === "number" && (
           <p className="mt-1 text-xs text-foreground/50">
@@ -178,7 +236,9 @@ export function ClubOwnerPanel({
                 className="flex items-center justify-between gap-3 rounded-2xl border border-[#050505]/10 px-4 py-3 dark:border-white/10"
               >
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                  {invite.email}
+                  {invite.inviteeName
+                    ? `${invite.inviteeName} · ${invite.email}`
+                    : invite.email}
                   <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
                     {SPORT_LABELS[invite.sport]}
                   </span>
@@ -212,9 +272,21 @@ export function ClubOwnerPanel({
       )}
 
       <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
-        <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
-          Monitores vinculados
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
+            Monitores vinculados
+          </h2>
+          {members.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingMembers((v) => !v)}
+            >
+              {editingMembers ? "Listo" : "Editar"}
+            </Button>
+          )}
+        </div>
         {members.length === 0 ? (
           <p className="mt-2 text-sm text-foreground/50">
             Todavía no hay monitores vinculados a este club.
@@ -234,9 +306,26 @@ export function ClubOwnerPanel({
                     {member.email}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
-                  {SPORT_LABELS[member.sport]}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
+                    {SPORT_LABELS[member.sport]}
+                  </span>
+                  {editingMembers && (
+                    <button
+                      type="button"
+                      onClick={() => void removeMember(member)}
+                      disabled={removingId === member.id}
+                      aria-label={`Desvincular a ${member.name}`}
+                      className="rounded-full p-1.5 text-foreground/50 transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                    >
+                      {removingId === member.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { and, asc, eq, or } from "drizzle-orm";
@@ -9,10 +10,14 @@ import {
   classBlocks,
   classBlockExercises,
   exercises,
-  users,
 } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
-import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
+import {
+  DEFAULT_BLOCK_ITEM_DURATION,
+  resolveItemKind,
+  type StationItemJson,
+} from "@/lib/block-items";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -29,15 +34,16 @@ export default async function EditClassPage({ params }: PageProps) {
   const [cls] = await db
     .select()
     .from(classes)
-    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .where(eq(classes.id, id))
     .limit(1);
   if (!cls) notFound();
-
-  const [adminRow] = await db
-    .select({ isAdmin: users.isAdmin })
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
+  // La Biblioteca pública solo la edita la cuenta de la plataforma; el resto
+  // de clases, quien las creó.
+  const inTenPlanner = await isTenPlannerMode(user.id);
+  if (cls.isLibrary ? !inTenPlanner : cls.createdBy !== user.id) {
+    if (cls.isLibrary) redirect(`/classes/${id}`);
+    notFound();
+  }
 
   const blocks = await db
     .select()
@@ -52,6 +58,7 @@ export default async function EditClassPage({ params }: PageProps) {
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           title: classBlockExercises.title,
+          notes: classBlockExercises.notes,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -76,6 +83,7 @@ export default async function EditClassPage({ params }: PageProps) {
       nivel: exercises.nivel,
       niveles: exercises.niveles,
       phase: exercises.phase,
+      fases: exercises.fases,
       aspectoJuego: exercises.aspectoJuego,
       aspectosJuego: exercises.aspectosJuego,
       golpes: exercises.golpes,
@@ -83,7 +91,7 @@ export default async function EditClassPage({ params }: PageProps) {
     .from(exercises)
     .where(
       and(
-        or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id)),
+        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id)),
         eq(exercises.sport, cls.sport)
       )
     )
@@ -110,6 +118,7 @@ export default async function EditClassPage({ params }: PageProps) {
           ? [cls.aspectoJuego]
           : null,
     golpes: Array.isArray(cls.golpes) ? cls.golpes : null,
+    tags: Array.isArray(cls.tags) ? cls.tags : null,
     objetivos: cls.objetivos,
     material: cls.material,
     videoUrl: cls.videoUrl,
@@ -130,7 +139,8 @@ export default async function EditClassPage({ params }: PageProps) {
           if (itemKind === "warmup") {
             return {
               kind: "warmup" as const,
-              durationMinutes: it.durationMinutes,
+              durationMinutes:
+                it.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
             };
           }
           if (itemKind === "stations") {
@@ -154,12 +164,16 @@ export default async function EditClassPage({ params }: PageProps) {
                 exerciseId: it.exerciseId,
                 name: it.exerciseName,
                 durationMinutes: it.durationMinutes,
+                // Texto propio (p. ej. copiado de la sesión) y notas.
+                freeText: it.freeText ?? "",
+                notes: it.notes ?? "",
               }
             : {
                 kind: "text" as const,
                 freeText: it.freeText ?? "",
                 title: it.title ?? "",
                 durationMinutes: it.durationMinutes,
+                notes: it.notes ?? "",
               };
         }),
     })),
@@ -191,7 +205,8 @@ export default async function EditClassPage({ params }: PageProps) {
         mode="edit"
         classId={cls.id}
         availableExercises={availableExercises}
-        isAdmin={adminRow?.isAdmin ?? false}
+        isAdmin={inTenPlanner}
+        publishToLibrary={false}
         initialData={initialData}
         sport={cls.sport}
       />

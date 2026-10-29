@@ -107,6 +107,10 @@ export interface WizardState {
   groupName?: string;
   /** Grupo al que se imparte la sesión (se guarda en sessions.group_id). */
   groupId?: string | null;
+  /** El monitor ha fijado la duración a mano: no se recalcula del plan. */
+  durationManual?: boolean;
+  /** Grupos marcados en el paso de alumnos (selección independiente). */
+  selectedGroupIds?: string[];
   /** Si está activo, cada sesión se llama AAMMDD_Grupo según su fecha. */
   useCodeTitle?: boolean;
 }

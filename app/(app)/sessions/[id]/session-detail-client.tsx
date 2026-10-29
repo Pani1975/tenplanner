@@ -3,6 +3,11 @@
 import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useState } from "react";
+import { SessionCommentBox } from "@/components/app/session-comment-box";
+import {
+  SessionVoiceNote,
+  type VoiceNoteSaved,
+} from "@/components/app/session-voice-note";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +28,7 @@ import {
   Star,
   Play,
   CalendarClock,
+  BookmarkPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { SessionDateDialog } from "@/components/app/session-date-dialog";
@@ -32,8 +38,12 @@ import { SessionAnalyticsView } from "@/components/app/session-analytics";
 import type { SessionAnalytics } from "@/lib/sessions/analytics";
 import { cn } from "@/lib/utils";
 import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
-import { Target, MapPin, Hash, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import { SessionInfoSummary } from "@/components/app/session-info-summary";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
+import { hasSessionAnimation } from "@/lib/classes/animation";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -67,10 +77,17 @@ export interface SessionData {
   objective: string | null;
   material: string | null;
   observations: string | null;
+  /** Comentario del monitor sobre la sesión en general. */
+  coachComment?: string | null;
+  /** Nota de voz de la sesión (URL firmada; solo para el monitor dueño). */
+  coachAudioUrl?: string | null;
+  coachAudioSeconds?: number | null;
   sourceClassId: string | null;
   intensity: number | null;
   tags: string[];
   location: string | null;
+  /** Nombre del lugar (Mis lugares) donde se imparte. */
+  placeName?: string | null;
   status: "scheduled" | "completed" | "cancelled";
 }
 
@@ -149,6 +166,7 @@ interface Props {
   nextHref?: string | null;
   navPosition?: number | null;
   navTotal?: number | null;
+  backToSearchHref?: string | null;
   /** false cuando se ve una sesión compartida por el club de otro
    * monitor: oculta editar/eliminar/cambiar estado/duplicar/repetir. */
   isOwner?: boolean;
@@ -182,40 +200,12 @@ export interface SessionBlockData {
     /** Aspecto del juego (técnica/táctica/física/mental) para items sin
      * ejercicio de biblioteca, elegido al crear el texto libre. */
     aspectoJuego?: string | null;
+    /** Comentario del monitor sobre este ejercicio/actividad. */
+    coachComment?: string | null;
+    /** Nota de voz sobre este ejercicio (URL firmada; solo el dueño). */
+    coachAudioUrl?: string | null;
+    coachAudioSeconds?: number | null;
   }>;
-}
-
-
-function MetadataChips({ session }: { session: SessionData }) {
-  const hasAny =
-    !!session.objective || !!session.location || session.tags.length > 0;
-  if (!hasAny) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {session.objective && (
-        <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
-          <Target className="size-3 text-muted-foreground" />
-          <span className="truncate max-w-[24ch]">{session.objective}</span>
-        </span>
-      )}
-      {session.location && (
-        <span className="inline-flex items-center gap-1.5 text-xs text-foreground bg-muted/60 border border-border px-2.5 py-1 rounded-full">
-          <MapPin className="size-3 text-muted-foreground" />
-          {session.location}
-        </span>
-      )}
-      {session.tags.map((tag) => (
-        <span
-          key={tag}
-          className="inline-flex items-center gap-1 text-xs text-brand bg-brand/10 border border-brand/20 px-2.5 py-1 rounded-full"
-        >
-          <Hash className="size-3" />
-          {tag}
-        </span>
-      ))}
-    </div>
-  );
 }
 
 function getInitials(name: string) {
@@ -437,6 +427,7 @@ export function SessionDetailClient({
   nextHref = null,
   navPosition = null,
   navTotal = null,
+  backToSearchHref = null,
   isOwner = true,
   authorName = null,
 }: Props) {
@@ -506,6 +497,70 @@ export function SessionDetailClient({
     setUpdatingStatus(false);
   }
 
+  async function saveSessionComment(comment: string | null) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionComment: comment }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async function saveItemComment(itemId: string, comment: string | null) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, itemComment: comment }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async function uploadVoiceNote(
+    blob: Blob,
+    seconds: number,
+    itemId?: string
+  ): Promise<VoiceNoteSaved | null> {
+    try {
+      const form = new FormData();
+      form.append("file", blob, "nota-de-voz");
+      form.append("seconds", String(seconds));
+      if (itemId) form.append("itemId", itemId);
+      const res = await fetch(`/api/sessions/${session.id}/audio`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) return null;
+      const json = (await res.json()) as {
+        url?: string | null;
+        seconds?: number;
+      };
+      return { url: json.url ?? null, seconds: json.seconds ?? seconds };
+    } catch {
+      return null;
+    }
+  }
+
+  async function deleteVoiceNote(itemId?: string) {
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/audio`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemId ? { itemId } : {}),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
   async function handleRateExercise(exerciseId: string, rating: number) {
     setSavingRating(exerciseId);
     const res = await fetch(`/api/sessions/${session.id}/exercise-rating`, {
@@ -517,6 +572,33 @@ export function SessionDetailClient({
       setExerciseRatings((prev) => ({ ...prev, [exerciseId]: rating }));
     }
     setSavingRating(null);
+  }
+
+  const [savingAsClass, setSavingAsClass] = useState(false);
+  async function handleSaveAsClass() {
+    if (
+      !window.confirm(
+        "Se creará una clase en Mis clases con el plan, objetivo, material y observaciones de esta sesión. ¿Continuar?"
+      )
+    )
+      return;
+    setSavingAsClass(true);
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/to-class`, {
+        method: "POST",
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { classId?: string };
+        error?: string;
+      };
+      if (!res.ok || !json.data?.classId) {
+        window.alert(json.error ?? "No se pudo guardar como clase.");
+        return;
+      }
+      router.push(`/classes/${json.data.classId}`);
+    } finally {
+      setSavingAsClass(false);
+    }
   }
 
   async function handleDelete() {
@@ -557,10 +639,12 @@ export function SessionDetailClient({
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/sessions"
+            title="Volver a todas las sesiones"
             className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[#F4F4F1] text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
           >
             <ArrowLeft className="size-4" />
           </Link>
+          <BackToSearchLink href={backToSearchHref} className="relative" />
           <p className="relative rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground dark:bg-[#050505]/70">
             Sesiones de Entrenamiento
           </p>
@@ -624,6 +708,23 @@ export function SessionDetailClient({
             )}
             <span className="hidden sm:inline">PDF</span>
           </button>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleSaveAsClass}
+              disabled={savingAsClass}
+              title="Guardar esta sesión como clase en Mis clases"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/[0.035]"
+            >
+              {savingAsClass ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <BookmarkPlus className="size-3.5" />
+              )}
+              <span className="sm:hidden">Clase</span>
+              <span className="hidden sm:inline">Guardar como clase</span>
+            </button>
+          )}
           {isOwner && (
             <Link
               href={`/sessions/${session.id}/edit`}
@@ -762,32 +863,19 @@ export function SessionDetailClient({
             </span>
           </div>
 
-          <MetadataChips session={session} />
-
-          {(session.material || session.observations) && (
-            <div className="grid gap-4 border-t border-border/50 pt-4 sm:grid-cols-2">
-              {session.material && (
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                    Material
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {session.material}
-                  </p>
-                </div>
-              )}
-              {session.observations && (
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                    Observaciones
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {session.observations}
-                  </p>
-                </div>
-              )}
-            </div>
+          {hasSessionAnimation(session.id) && (
+            <ClassAnimationButton sessionId={session.id} variant="hero" />
           )}
+
+          <SessionInfoSummary
+            objective={session.objective}
+            material={session.material}
+            observations={session.observations}
+            tags={session.tags}
+            place={session.placeName ?? session.location}
+            showEmptyObjective
+            className="border-t border-border/50 pt-4"
+          />
 
           {session.description && (
             <div>
@@ -954,12 +1042,68 @@ export function SessionDetailClient({
                             {item.notes}
                           </p>
                         )}
+                        {item.kind !== "warmup" && (
+                          <div className="mt-2 space-y-2">
+                            <SessionCommentBox
+                              value={item.coachComment}
+                              readOnly={!isOwner}
+                              onSave={(comment) =>
+                                saveItemComment(item.id, comment)
+                              }
+                              placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
+                            />
+                            <SessionVoiceNote
+                              url={item.coachAudioUrl}
+                              seconds={item.coachAudioSeconds}
+                              readOnly={!isOwner}
+                              onUpload={(blob, seconds) =>
+                                uploadVoiceNote(blob, seconds, item.id)
+                              }
+                              onDelete={() => deleteVoiceNote(item.id)}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comentarios generales de la sesión (antes o después de completarla) */}
+      {(isOwner || session.coachComment?.trim()) && (
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/50">
+            <h2 className="font-semibold text-sm text-foreground">
+              Comentarios de la sesión
+            </h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Anota cómo ha ido la clase en general. Puedes escribir antes o
+              después de marcarla como completada.
+            </p>
+          </div>
+          <div className="p-4 sm:p-5">
+            <SessionCommentBox
+              value={session.coachComment}
+              readOnly={!isOwner}
+              onSave={saveSessionComment}
+              alwaysOpen
+              addLabel="Comentarios de la sesión"
+              placeholder="Ritmo del grupo, qué ha funcionado, qué repetir o cambiar la próxima vez…"
+              maxLength={4000}
+            />
+            <SessionVoiceNote
+              url={session.coachAudioUrl}
+              seconds={session.coachAudioSeconds}
+              readOnly={!isOwner}
+              onUpload={(blob, seconds) => uploadVoiceNote(blob, seconds)}
+              onDelete={() => deleteVoiceNote()}
+              addLabel="Grabar nota de voz de la sesión"
+              className="mt-3"
+            />
           </div>
         </div>
       )}
@@ -1118,29 +1262,29 @@ export function SessionDetailClient({
                         {ex.durationMinutes} min
                       </span>
                       {status === "completed" && (
-                      <div
-                        className="flex items-center gap-0.5"
-                        title="Valorar ejercicio"
-                      >
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() =>
-                              handleRateExercise(ex.exerciseId, star)
-                            }
-                            disabled={isSaving}
-                            aria-label={`Valorar con ${star} estrellas`}
-                            className={cn(
-                              "p-0.5 transition-colors disabled:opacity-50 touch-manipulation",
-                              star <= currentRating
-                                ? "text-amber-400"
-                                : "text-muted-foreground/25 hover:text-amber-400/60"
-                            )}
-                          >
-                            <Star className="size-4 fill-current" />
-                          </button>
-                        ))}
-                      </div>
+                        <div
+                          className="flex items-center gap-0.5"
+                          title="Valorar ejercicio"
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() =>
+                                handleRateExercise(ex.exerciseId, star)
+                              }
+                              disabled={isSaving}
+                              aria-label={`Valorar con ${star} estrellas`}
+                              className={cn(
+                                "p-0.5 transition-colors disabled:opacity-50 touch-manipulation",
+                                star <= currentRating
+                                  ? "text-amber-400"
+                                  : "text-muted-foreground/25 hover:text-amber-400/60"
+                              )}
+                            >
+                              <Star className="size-4 fill-current" />
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>

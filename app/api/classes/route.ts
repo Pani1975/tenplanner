@@ -1,5 +1,7 @@
+import { normalizeTags } from "@/lib/tags";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextResponse } from "next/server";
-import { eq, or, desc, and, ilike, sql } from "drizzle-orm";
+import { eq, or, desc, and, ilike, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -20,6 +22,7 @@ import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { CLASS_STATUSES } from "@/lib/classes/visibility";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 const stationItemSchema = z
   .object({
@@ -39,6 +42,7 @@ const blockExerciseSchema = z
     exerciseId: z.string().uuid().optional().nullable(),
     freeText: z.string().trim().max(2000).optional().nullable(),
     title: z.string().trim().max(120).optional().nullable(),
+    notes: z.string().trim().max(2000).optional().nullable(),
     durationMinutes: z.number().int().min(1).max(300).optional().nullable(),
     stations: z
       .array(stationItemSchema)
@@ -86,6 +90,7 @@ const createSchema = z.object({
   aspectoJuego: z.string().trim().max(16).optional().nullable(),
   aspectosJuego: z.array(z.string().trim().max(16)).optional().nullable(),
   golpes: z.array(z.string().max(32)).optional().nullable(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).optional().nullable(),
   isLibrary: z.boolean().optional().default(false),
   autoria: z.enum(AUTORIA_VALUES).optional().nullable(),
   blocks: z.array(blockSchema).max(3).default([]),
@@ -118,6 +123,17 @@ export async function GET(request: Request) {
   const q = searchParams.get("q")?.trim();
   const nivel = searchParams.get("nivel")?.trim();
   const aspecto = searchParams.get("aspecto")?.trim();
+  const duracion = searchParams.get("duracion")?.trim();
+  const golpe = searchParams.get("golpe")?.trim();
+  // Paginación opcional (selectores con "Mostrar más"). Sin `page` se
+  // mantiene el comportamiento anterior: las 60 primeras.
+  const pageParam = Number(searchParams.get("page"));
+  const paginated = Number.isInteger(pageParam) && pageParam >= 1;
+  const limitParam = Number(searchParams.get("limit"));
+  const pageSize =
+    Number.isInteger(limitParam) && limitParam >= 1
+      ? Math.min(limitParam, 100)
+      : 60;
 
   const [activeClubId, activeSport] = user
     ? await Promise.all([getActiveWorkClubId(user.id), getActiveSport(user.id)])
@@ -176,10 +192,34 @@ export async function GET(request: Request) {
     );
   }
 
+  if (duracion === "120") {
+    conds.push(sql`${classes.duracionMinutes} > 90`);
+  } else if (duracion) {
+    const d = Number(duracion);
+    if (Number.isFinite(d)) conds.push(eq(classes.duracionMinutes, d));
+  }
+  if (golpe) {
+    conds.push(
+      sql`${classes.golpes}::jsonb @> ${JSON.stringify([golpe])}::jsonb`
+    );
+  }
+
+  const total = paginated
+    ? Number(
+        (
+          await db
+            .select({ total: count() })
+            .from(classes)
+            .where(and(...conds))
+        )[0]?.total ?? 0
+      )
+    : 0;
+
   const rows = await db
     .select({
       id: classes.id,
       name: classes.name,
+      objetivos: classes.objetivos,
       duracionMinutes: classes.duracionMinutes,
       alumnosTipo: classes.alumnosTipo,
       numAlumnos: classes.numAlumnos,
@@ -198,13 +238,17 @@ export async function GET(request: Request) {
     .leftJoin(users, eq(users.id, classes.createdBy))
     .where(and(...conds))
     .orderBy(desc(classes.createdAt))
-    .limit(60);
+    .limit(paginated ? pageSize : 60)
+    .offset(paginated ? (pageParam - 1) * pageSize : 0);
 
   return NextResponse.json({
     data: rows.map((r) => ({
       ...r,
       authorName: user && r.createdBy !== user.id ? r.authorName : null,
     })),
+    ...(paginated
+      ? { pagination: { page: pageParam, limit: pageSize, total } }
+      : {}),
   });
 }
 
@@ -233,11 +277,12 @@ export async function POST(request: Request) {
   const d = parsed.data;
 
   const [dbUser] = await db
-    .select({ isAdmin: users.isAdmin })
+    .select({ id: users.id })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  const isAdmin = !!dbUser?.isAdmin;
+  // Solo en Modo administrador se publica en la Biblioteca.
+  const isAdmin = !!dbUser && (await isTenPlannerMode(user.id));
   const niveles = normalizeMultiValue(d.niveles, d.nivel);
   const aspectosJuego = normalizeMultiValue(d.aspectosJuego, d.aspectoJuego);
 
@@ -271,7 +316,7 @@ export async function POST(request: Request) {
             exerciseIds.map((id) => sql`${id}::uuid`),
             sql`, `
           )})`,
-          or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!
+          or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id))!
         )
       );
     if (accessible.length !== exerciseIds.length) {
@@ -316,8 +361,9 @@ export async function POST(request: Request) {
           aspectoJuego: aspectosJuego?.[0] ?? null,
           aspectosJuego,
           golpes: d.golpes ?? null,
+          tags: normalizeTags(d.tags),
           isLibrary: isAdmin && d.isLibrary === true,
-          autoria: isAdmin && d.autoria ? d.autoria : "libre",
+          autoria: isAdmin ? (d.autoria ?? "ten_planner") : "libre",
           clubId,
           sport,
           status: d.status,
@@ -342,6 +388,7 @@ export async function POST(request: Request) {
               exerciseId: item.exerciseId ?? null,
               freeText: item.freeText ?? null,
               title: item.title ?? null,
+              notes: item.notes ?? null,
               orderIndex: idx,
               durationMinutes: item.durationMinutes ?? null,
               kind: item.kind ?? null,

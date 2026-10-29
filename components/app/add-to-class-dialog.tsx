@@ -214,7 +214,7 @@ export function AddToClassDialog({
                           {isSelected && <Check className="size-3" />}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-foreground">
+                          <span className="block break-words text-sm font-semibold text-foreground">
                             {option.name}
                           </span>
                           <span className="block text-xs text-muted-foreground">

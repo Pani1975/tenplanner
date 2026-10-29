@@ -11,8 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ScheduleChoiceStep } from "./schedule-choice-step";
-import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import { ClassDatesCalendar } from "./class-dates-calendar";
+import {
+  toLocalDateTimeInput,
+  type GroupScheduleEntry,
+} from "@/lib/groups/schedule";
 
 interface ClassOption {
   id: string;
@@ -24,11 +27,11 @@ interface ClassOption {
 
 /**
  * Botón "Asignar clase" en la ficha de grupo: deja elegir una clase
- * (propia o de la biblioteca) y lleva al wizard de sesión con la clase y el
- * grupo ya precargados — ahí solo falta confirmar el día y la hora (el
- * resto, título, alumnos y contenido, ya vienen rellenos). Si el grupo
- * tiene horario habitual, antes pregunta si va al día que toca o es una
- * clase suelta.
+ * (propia o de la biblioteca) y un calendario para decir qué día (o
+ * varios, para repetirla) — si el grupo tiene horario habitual, esos días
+ * se marcan en el calendario, pero se puede elegir cualquier otro.
+ * Con una sola fecha, lleva al wizard de sesión con todo precargado; con
+ * varias, crea directamente una sesión por cada fecha.
  */
 export function AssignClassToGroupButton({
   groupId,
@@ -42,7 +45,8 @@ export function AssignClassToGroupButton({
   const [query, setQuery] = useState("");
   const [classesList, setClassesList] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pickedClassId, setPickedClassId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,24 +77,57 @@ export function AssignClassToGroupButton({
   }, [open, query]);
 
   function pick(classId: string) {
-    if (weeklySchedule && weeklySchedule.length > 0) {
-      setPickedClassId(classId);
-      return;
-    }
-    goToSession(classId);
+    setError(null);
+    setPickedClassId(classId);
   }
 
-  function goToSession(classId: string, scheduledAt?: string) {
-    setNavigatingTo(classId);
-    const qs = new URLSearchParams({ fromClass: classId, group: groupId });
-    if (scheduledAt) qs.set("at", scheduledAt);
-    router.push(`/sessions/new?${qs.toString()}`);
+  async function handleDates(dates: Date[]) {
+    if (!pickedClassId || dates.length === 0) return;
+    if (dates.length === 1) {
+      setBusy(true);
+      const qs = new URLSearchParams({
+        fromClass: pickedClassId,
+        group: groupId,
+        at: toLocalDateTimeInput(dates[0]),
+      });
+      router.push(`/sessions/new?${qs.toString()}`);
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/sessions/from-class", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          classId: pickedClassId,
+          groupId,
+          dates: dates.map((d) => d.toISOString()),
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? "No se pudieron crear las sesiones.");
+        setBusy(false);
+        return;
+      }
+      router.push(`/groups/${groupId}`);
+      router.refresh();
+    } catch {
+      setError("Error de red. Inténtalo de nuevo.");
+      setBusy(false);
+    }
   }
 
   function close() {
     setOpen(false);
     setQuery("");
     setPickedClassId(null);
+    setError(null);
+    setBusy(false);
   }
 
   return (
@@ -116,7 +153,10 @@ export function AssignClassToGroupButton({
                 {pickedClassId && (
                   <button
                     type="button"
-                    onClick={() => setPickedClassId(null)}
+                    onClick={() => {
+                      setPickedClassId(null);
+                      setError(null);
+                    }}
                     aria-label="Volver"
                     className="flex size-7 shrink-0 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
                   >
@@ -144,12 +184,11 @@ export function AssignClassToGroupButton({
             </div>
 
             {pickedClassId ? (
-              <ScheduleChoiceStep
+              <ClassDatesCalendar
                 schedule={weeklySchedule ?? []}
-                busy={!!navigatingTo}
-                onChoose={(scheduledAt) =>
-                  goToSession(pickedClassId, scheduledAt)
-                }
+                busy={busy}
+                error={error}
+                onConfirm={handleDates}
               />
             ) : (
               <>
@@ -181,15 +220,13 @@ export function AssignClassToGroupButton({
                         key={cls.id}
                         type="button"
                         onClick={() => pick(cls.id)}
-                        disabled={!!navigatingTo}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",
-                          "border-foreground/10 hover:border-foreground/25",
-                          navigatingTo === cls.id && "opacity-60"
+                          "border-foreground/10 hover:border-foreground/25"
                         )}
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-bold text-foreground">
+                          <span className="block break-words text-sm font-bold text-foreground">
                             {cls.name}
                           </span>
                           <span className="block text-xs text-foreground/45">
@@ -201,9 +238,6 @@ export function AssignClassToGroupButton({
                                 : ""}
                           </span>
                         </span>
-                        {navigatingTo === cls.id && (
-                          <Loader2 className="size-4 animate-spin text-foreground/40" />
-                        )}
                       </button>
                     ))
                   )}

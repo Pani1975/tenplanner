@@ -91,7 +91,11 @@ export default async function InvitePage({
 
   return card(
     <>
-      <p className="tp-kicker">Invitación de club</p>
+      <p className="tp-kicker">
+        {invite.inviteeName
+          ? `Hola, ${invite.inviteeName}`
+          : "Invitación de club"}
+      </p>
       <h1 className="mt-3 text-2xl font-black leading-tight text-foreground">
         {club.name} quiere vincularte como monitor de{" "}
         {SPORT_LABELS[invite.sport]}
@@ -99,9 +103,9 @@ export default async function InvitePage({
       <p className="mt-3 text-sm leading-6 text-foreground/62">
         Invitación enviada a{" "}
         <span className="font-semibold text-foreground">{invite.email}</span>{" "}
-        para <strong>{SPORT_LABELS[invite.sport]}</strong>. Al aceptar, el
-        club tendrá acceso compartido a tus sesiones, alumnos, grupos y
-        calendario de ese deporte. Tu cuenta sigue siendo tuya.
+        para <strong>{SPORT_LABELS[invite.sport]}</strong>. Al aceptar, el club
+        tendrá acceso compartido a tus sesiones, alumnos, grupos y calendario de
+        ese deporte. Tu cuenta sigue siendo tuya.
       </p>
 
       {!user && (
@@ -112,13 +116,13 @@ export default async function InvitePage({
           </p>
           <div className="flex gap-2">
             <Link
-              href="/login"
+              href={`/login?next=${encodeURIComponent(`/invite/${token}`)}`}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-foreground/10 text-sm font-black text-foreground"
             >
               Iniciar sesión
             </Link>
             <Link
-              href="/register?type=monitor"
+              href={`/register?type=monitor&next=${encodeURIComponent(`/invite/${token}`)}`}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-brand text-sm font-black text-brand-foreground"
             >
               Crear cuenta

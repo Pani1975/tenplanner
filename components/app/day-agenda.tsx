@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CalendarDays,
+  CalendarOff,
   Clock,
   Copy,
   Loader2,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { DayPdfButton } from "@/components/app/day-pdf-dialog";
 import type { CalendarEventData } from "@/components/app/event-dialog";
+import type { CalendarHolidayData } from "@/lib/calendar/holidays";
 
 export interface AgendaSession {
   id: string;
@@ -45,6 +47,14 @@ export function DayAgenda({
   deletingEventId,
   deleteError,
   eventError,
+  holidays = [],
+  holidayLabel = (h) => h.title,
+  isSessionNotTaught = () => false,
+  onAddHoliday,
+  onEditHoliday,
+  onDeleteHoliday,
+  deletingHolidayId = null,
+  holidayError = null,
 }: {
   title: React.ReactNode;
   items: DayItem[];
@@ -60,6 +70,16 @@ export function DayAgenda({
   deletingEventId: string | null;
   deleteError: string | null;
   eventError: string | null;
+  /** Festivos que afectan a este día. */
+  holidays?: CalendarHolidayData[];
+  holidayLabel?: (holiday: CalendarHolidayData) => string;
+  /** La sesión cae en un festivo que le afecta: se muestra «no se imparte». */
+  isSessionNotTaught?: (sessionId: string) => boolean;
+  onAddHoliday?: () => void;
+  onEditHoliday?: (holiday: CalendarHolidayData) => void;
+  onDeleteHoliday?: (holiday: CalendarHolidayData) => void;
+  deletingHolidayId?: string | null;
+  holidayError?: string | null;
 }) {
   return (
     <div className="space-y-3">
@@ -82,10 +102,76 @@ export function DayAgenda({
             <Plus className="size-3.5" />
             Evento
           </button>
+          {onAddHoliday && (
+            <button
+              type="button"
+              onClick={onAddHoliday}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e11d48]/30 px-3 text-xs font-black text-[#e11d48] transition-colors hover:bg-[#e11d48] hover:text-white"
+            >
+              <CalendarOff className="size-3.5" />
+              Festivo
+            </button>
+          )}
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {holidays.length > 0 && (
+        <div className="space-y-2">
+          {holidays.map((h) => (
+            <div
+              key={`h-${h.id}`}
+              className="tp-panel flex items-center gap-4 border-[#e11d48]/25 bg-[#e11d48]/[0.05] p-4"
+            >
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#e11d48]/15">
+                <CalendarOff className="size-5 text-[#be123c] dark:text-[#fda4af]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {holidayLabel(h)}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {h.startDate === h.endDate
+                    ? "Un día"
+                    : `Del ${h.startDate.split("-").reverse().join("/")} al ${h.endDate.split("-").reverse().join("/")}`}
+                  {h.authorName ? ` · ${h.authorName}` : ""}
+                </p>
+              </div>
+              <span className="rounded-full bg-[#e11d48]/15 px-3 py-1.5 text-xs font-black text-[#be123c] dark:text-[#fda4af]">
+                Festivo
+              </span>
+              {h.canEdit && onEditHoliday && (
+                <button
+                  type="button"
+                  onClick={() => onEditHoliday(h)}
+                  aria-label={`Editar ${h.title}`}
+                  title="Editar festivo"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Pencil className="size-4" />
+                </button>
+              )}
+              {h.canEdit && onDeleteHoliday && (
+                <button
+                  type="button"
+                  onClick={() => onDeleteHoliday(h)}
+                  disabled={deletingHolidayId === h.id}
+                  aria-label={`Eliminar ${h.title}`}
+                  title="Eliminar festivo"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                >
+                  {deletingHolidayId === h.id ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {items.length === 0 && holidays.length > 0 ? null : items.length === 0 ? (
         <div className="tp-panel border-dashed p-6 text-center">
           <p className="mb-3 text-sm text-muted-foreground">
             No hay sesiones ni eventos este día.
@@ -118,10 +204,19 @@ export function DayAgenda({
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/sessions/${item.session.id}`}
-                    className="block truncate text-sm font-medium text-foreground hover:text-brand"
+                    className={`block truncate text-sm font-medium text-foreground hover:text-brand ${
+                      isSessionNotTaught(item.session.id)
+                        ? "line-through opacity-60"
+                        : ""
+                    }`}
                   >
                     {item.session.title}
                   </Link>
+                  {isSessionNotTaught(item.session.id) && (
+                    <p className="mt-0.5 text-xs font-bold text-[#be123c] dark:text-[#fda4af]">
+                      No se imparte (festivo)
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Clock className="size-3" />
                     {item.session.durationMinutes} min
@@ -234,6 +329,9 @@ export function DayAgenda({
       )}
       {eventError && (
         <p className="text-sm font-medium text-destructive">{eventError}</p>
+      )}
+      {holidayError && (
+        <p className="text-sm font-medium text-destructive">{holidayError}</p>
       )}
     </div>
   );

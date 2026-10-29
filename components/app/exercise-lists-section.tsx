@@ -15,7 +15,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getYouTubeEmbedUrl } from "@/lib/video-embed";
+import { ExerciseQuickViewDialog } from "@/components/app/exercise-quick-view-dialog";
 import { AddToSessionDialog } from "@/components/app/add-to-session-dialog";
+import { AddToClassDialog } from "@/components/app/add-to-class-dialog";
+import {
+  AddExercisesToListDialog,
+  type ListableExercise,
+} from "@/components/app/add-exercises-to-list-dialog";
 
 interface ListedExercise {
   id: string;
@@ -24,6 +31,9 @@ interface ListedExercise {
   difficulty: string;
   durationMinutes: number;
   imageUrl: string | null;
+  description?: string | null;
+  objectives?: string | null;
+  videoUrl?: string | null;
 }
 
 interface ExerciseListWithItems {
@@ -88,19 +98,54 @@ function CollectionCard({
   onDelete,
   onRename,
   onRemoveItem,
+  onItemAdded,
+  onItemRemoved,
+  onReload,
   deletingId,
   removingKey,
+  sport,
+  autoOpen = false,
 }: {
   list: ExerciseListWithItems;
   index: number;
+  /** Abrir desplegada y hacer scroll hasta ella (llegada desde un enlace). */
+  autoOpen?: boolean;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onRemoveItem: (listId: string, exerciseId: string) => void;
+  onItemAdded: (listId: string, exercise: ListableExercise) => void;
+  onItemRemoved: (listId: string, exerciseId: string) => void;
+  onReload: () => void;
   deletingId: string | null;
   removingKey: string | null;
+  sport?: string | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoOpen);
+  const articleRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!autoOpen) return;
+    const t = window.setTimeout(
+      () =>
+        articleRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      150
+    );
+    return () => window.clearTimeout(t);
+  }, [autoOpen]);
   const [addToSessionOpen, setAddToSessionOpen] = useState(false);
+  const [addExercisesOpen, setAddExercisesOpen] = useState(false);
+  const [quickView, setQuickView] = useState<ListedExercise | null>(null);
+  /** Un ejercicio concreto que se añade a una sesión o clase desde la vista rápida. */
+  const [singleAdd, setSingleAdd] = useState<{
+    kind: "session" | "class";
+    id: string;
+    name: string;
+  } | null>(null);
+  /** Ejercicio que se añade a sesión o clase desde la tarjeta en la colección. */
+  const [singleExAdd, setSingleExAdd] = useState<{ kind: "session" | "class"; item: ListedExercise } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameVal, setRenameVal] = useState(list.name);
   const [renameSaving, setRenameSaving] = useState(false);
@@ -141,8 +186,9 @@ function CollectionCard({
 
   return (
     <article
+      ref={articleRef}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
+        "group relative scroll-mt-24 overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm shadow-black/5 transition-all duration-300",
         expanded
           ? "shadow-lg shadow-foreground/5"
           : "hover:border-foreground/20"
@@ -268,6 +314,21 @@ function CollectionCard({
           className="flex items-center gap-1 px-4 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
+          <button
+            type="button"
+            title="Añadir ejercicios a la colección"
+            onClick={() => setAddExercisesOpen(true)}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors hover:opacity-80",
+              accent.border,
+              accent.text,
+              accent.bg
+            )}
+          >
+            <Plus className="size-3" />
+            <span className="hidden sm:inline">Ejercicios</span>
+          </button>
+
           <Link
             href={sessionHref}
             title="Crear sesión"
@@ -325,9 +386,21 @@ function CollectionCard({
                 Colección vacía
               </p>
               <p className="mt-1 text-[13px] text-foreground/40">
-                Guarda ejercicios desde su ficha pulsando{" "}
+                Añade ejercicios aquí mismo o guárdalos desde su ficha pulsando{" "}
                 <Heart className="inline size-3 fill-current text-red-400/60" />
               </p>
+              <button
+                type="button"
+                onClick={() => setAddExercisesOpen(true)}
+                className={cn(
+                  "mt-4 inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors hover:opacity-80",
+                  accent.border,
+                  accent.text,
+                  accent.bg
+                )}
+              >
+                <Plus className="size-3.5" /> Añadir ejercicios
+              </button>
             </div>
           ) : (
             <>
@@ -339,44 +412,74 @@ function CollectionCard({
                       key={item.id}
                       className="group/item relative overflow-hidden bg-background hover:bg-foreground/[0.02] transition-colors"
                     >
-                      {/* Thumbnail */}
-                      <div className="relative h-24 w-full bg-foreground/5 overflow-hidden">
-                        {item.imageUrl ? (
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover/item:scale-105"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="font-heading italic text-2xl text-foreground/10">
-                              {CATEGORY_LABELS[item.category]?.[0] ?? "·"}
-                            </span>
+                      {/* Cabecera: vídeo embebido si lo hay; si no, imagen; si no, nada */}
+                      {(() => {
+                        const embedUrl = getYouTubeEmbedUrl(item.videoUrl);
+                        const hasMedia = !!embedUrl || !!item.imageUrl;
+                        return (
+                          <div
+                            className={cn(
+                              "relative w-full overflow-hidden",
+                              embedUrl
+                                ? "aspect-video bg-black"
+                                : hasMedia
+                                  ? "h-24 bg-foreground/5"
+                                  : "h-0"
+                            )}
+                          >
+                            {embedUrl ? (
+                              <iframe
+                                src={embedUrl}
+                                title={`Vídeo: ${item.name}`}
+                                className="absolute inset-0 size-full"
+                                loading="lazy"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                              />
+                            ) : item.imageUrl ? (
+                              <>
+                                <Image
+                                  src={item.imageUrl}
+                                  alt={item.name}
+                                  fill
+                                  className="object-cover transition-transform duration-500 group-hover/item:scale-105"
+                                />
+                                {/* Abrir vista rápida */}
+                                <button
+                                  type="button"
+                                  onClick={() => setQuickView(item)}
+                                  aria-label={`Ver ${item.name}`}
+                                  className="absolute inset-0 z-[1] cursor-pointer"
+                                />
+                              </>
+                            ) : null}
                           </div>
+                        );
+                      })()}
+                      {/* Quitar de la colección */}
+                      <button
+                        onClick={() => onRemoveItem(list.id, item.id)}
+                        disabled={removingKey === removeKey}
+                        title="Quitar de la colección"
+                        className="absolute top-1.5 right-1.5 z-[2] size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 sm:opacity-0 sm:group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
+                      >
+                        {removingKey === removeKey ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <X className="size-3" />
                         )}
-                        {/* Remove overlay */}
-                        <button
-                          onClick={() => onRemoveItem(list.id, item.id)}
-                          disabled={removingKey === removeKey}
-                          className="absolute top-1.5 right-1.5 size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 opacity-0 group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
-                        >
-                          {removingKey === removeKey ? (
-                            <Loader2 className="size-3 animate-spin" />
-                          ) : (
-                            <X className="size-3" />
-                          )}
-                        </button>
-                      </div>
+                      </button>
 
                       {/* Exercise info */}
                       <div className="px-3 py-2.5">
-                        <Link
-                          href={`/exercises/${item.id}`}
-                          className="block font-sans text-[12px] font-medium text-foreground hover:text-brand transition-colors leading-tight line-clamp-1"
+                        <button
+                          type="button"
+                          onClick={() => setQuickView(item)}
+                          className="block w-full break-words text-left font-sans text-[12px] font-medium text-foreground hover:text-brand transition-colors leading-tight"
                         >
                           {item.name}
-                        </Link>
+                        </button>
                         <div className="mt-1 flex items-center gap-1.5">
                           <span
                             className={cn(
@@ -391,6 +494,60 @@ function CollectionCard({
                             {item.durationMinutes}′
                           </span>
                         </div>
+                        {item.description?.trim() ? (
+                          <p className="mt-1.5 line-clamp-2 break-words text-[11px] leading-snug text-foreground/55">
+                            {item.description}
+                          </p>
+                        ) : null}
+                        <div className="mt-2 flex flex-col gap-2">
+                          <div className="flex items-center gap-3 text-[11px] font-semibold">
+                            <button
+                              type="button"
+                              onClick={() => setQuickView(item)}
+                              className="text-foreground/50 hover:text-foreground"
+                            >
+                              Vista rápida
+                            </button>
+                            <Link
+                              href={`/exercises/${item.id}?desdeLista=${list.id}`}
+                              className={cn(
+                                "inline-flex items-center gap-1",
+                                accent.text,
+                                "hover:opacity-70"
+                              )}
+                            >
+                              Ficha <ArrowRight className="size-3" />
+                            </Link>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSingleExAdd({
+                                  kind: "session",
+                                  item,
+                                  
+                                })
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
+                            >
+                              <Plus className="size-3" /> Sesión
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSingleExAdd({
+                                  kind: "class",
+                                  item,
+                                  
+                                })
+                              }
+                              className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
+                            >
+                              <Plus className="size-3" /> Clase
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -404,6 +561,17 @@ function CollectionCard({
                   en esta colección
                 </span>
                 <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setAddExercisesOpen(true)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-[11px] font-semibold transition-colors",
+                      accent.text,
+                      "hover:opacity-70"
+                    )}
+                  >
+                    Añadir ejercicios <Plus className="size-3" />
+                  </button>
                   {list.items.length > 0 && (
                     <button
                       type="button"
@@ -440,11 +608,82 @@ function CollectionCard({
           )}
         </div>
       )}
+      <AddToSessionDialog
+        open={singleExAdd?.kind === "session"}
+        onOpenChange={(open) => {
+          if (!open) setSingleExAdd(null);
+        }}
+        exerciseIds={singleExAdd?.kind === "session" ? [singleExAdd.item.id] : []}
+        label={singleExAdd?.item.name ?? ""}
+      />
+      <AddToClassDialog
+        open={singleExAdd?.kind === "class"}
+        onOpenChange={(open) => {
+          if (!open) setSingleExAdd(null);
+        }}
+        exerciseId={singleExAdd?.kind === "class" ? singleExAdd.item.id : ""}
+        label={singleExAdd?.item.name ?? ""}
+      />
+
+      <ExerciseQuickViewDialog
+        fromListId={list.id}
+        exercise={quickView}
+        open={quickView !== null}
+        onOpenChange={(open) => {
+          if (!open) setQuickView(null);
+        }}
+        onAddToSession={(ex) => {
+          setQuickView(null);
+          setSingleAdd({ kind: "session", id: ex.id, name: ex.name });
+        }}
+        onAddToClass={(ex) => {
+          setQuickView(null);
+          setSingleAdd({ kind: "class", id: ex.id, name: ex.name });
+        }}
+      />
+      <AddToSessionDialog
+        open={singleAdd?.kind === "session"}
+        onOpenChange={(open) => {
+          if (!open) setSingleAdd(null);
+        }}
+        exerciseIds={singleAdd?.kind === "session" ? [singleAdd.id] : []}
+        label={singleAdd?.name ?? ""}
+      />
+      <AddToClassDialog
+        open={singleAdd?.kind === "class"}
+        onOpenChange={(open) => {
+          if (!open) setSingleAdd(null);
+        }}
+        exerciseId={singleAdd?.kind === "class" ? singleAdd.id : ""}
+        label={singleAdd?.name ?? ""}
+      />
+      <AddExercisesToListDialog
+        open={addExercisesOpen}
+        onOpenChange={setAddExercisesOpen}
+        listId={list.id}
+        listName={list.name}
+        currentIds={list.items.map((i) => i.id)}
+        sport={sport}
+        onBulkAdded={onReload}
+        onAdded={(ex) => onItemAdded(list.id, ex)}
+        onRemoved={(exerciseId) => onItemRemoved(list.id, exerciseId)}
+      />
     </article>
   );
 }
 
-export function ExerciseListsSection() {
+export function ExerciseListsSection({
+  inClub = false,
+  sport,
+  openListId,
+}: {
+  /** Colección a mostrar desplegada al entrar (parámetro `lista`). */
+  openListId?: string | null;
+  /** Trabajando como un club: listas comunes de "Favoritos club". */
+  inClub?: boolean;
+  /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
+  sport?: string | null;
+} = {}) {
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -460,8 +699,8 @@ export function ExerciseListsSection() {
     [lists]
   );
 
-  async function loadLists() {
-    setLoading(true);
+  async function loadLists(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/exercise-lists?includeExercises=true", {
         cache: "no-store",
@@ -478,7 +717,7 @@ export function ExerciseListsSection() {
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void loadLists(), 0);
     const refresh = () => {
-      if (document.visibilityState !== "hidden") void loadLists();
+      if (document.visibilityState !== "hidden") void loadLists(true);
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
@@ -539,6 +778,47 @@ export function ExerciseListsSection() {
 
   function handleRename(listId: string, name: string) {
     setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, name } : l)));
+  }
+
+  function applyItemAdded(listId: string, exercise: ListableExercise) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId && !l.items.some((i) => i.id === exercise.id)
+          ? {
+              ...l,
+              itemsCount: l.itemsCount + 1,
+              items: [
+                ...l.items,
+                {
+                  id: exercise.id,
+                  name: exercise.name,
+                  category: exercise.category,
+                  difficulty: exercise.difficulty,
+                  durationMinutes: exercise.durationMinutes,
+                  imageUrl: exercise.imageUrl,
+                  description: exercise.description,
+                  objectives: exercise.objectives,
+                  videoUrl: exercise.videoUrl,
+                },
+              ],
+            }
+          : l
+      )
+    );
+  }
+
+  function applyItemRemoved(listId: string, exerciseId: string) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId
+          ? {
+              ...l,
+              itemsCount: Math.max(l.itemsCount - 1, 0),
+              items: l.items.filter((i) => i.id !== exerciseId),
+            }
+          : l
+      )
+    );
   }
 
   async function removeFromList(listId: string, exerciseId: string) {
@@ -620,7 +900,9 @@ export function ExerciseListsSection() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[0.28em] text-foreground/35 mb-1">
-            Método · Colecciones
+            {inClub
+              ? "Favoritos club · comunes a todo el club"
+              : "Método · Colecciones"}
           </p>
           <h2 className="font-heading italic text-[22px] leading-tight text-foreground">
             {lists.length === 1
@@ -696,8 +978,13 @@ export function ExerciseListsSection() {
             onDelete={(id) => setDeleteTarget(id)}
             onRename={handleRename}
             onRemoveItem={removeFromList}
+            onItemAdded={applyItemAdded}
+            onItemRemoved={applyItemRemoved}
+            onReload={() => void loadLists(true)}
             deletingId={deletingId}
             removingKey={removingKey}
+            sport={sport}
+            autoOpen={!!openListId && openListId === list.id}
           />
         ))}
       </div>

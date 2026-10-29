@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { and, desc, eq, inArray, isNull, type SQL } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import type { AnyColumn } from "drizzle-orm";
 import { db } from "@/db";
 import { clubInvites, clubMembers, clubs, users } from "@/db/schema";
@@ -32,6 +32,55 @@ export async function getOwnedClub(userId: string) {
 }
 
 /**
+ * Cuenta de club: la que es dueña de un club (se dio de alta como club, o es
+ * un administrador con club propio, p. ej. "Paniagua"). Trabaja siempre en su
+ * club — Modo <club> o Modo gestión —, sin Modo particular; un administrador
+ * además conserva el Modo administrador. Devuelve el id de su club o null.
+ * La cuenta de la plataforma no es una cuenta de club.
+ */
+export async function getClubAccountClubId(
+  userId: string
+): Promise<string | null> {
+  const [[row], owned] = await Promise.all([
+    db
+      .select({
+        isAdmin: users.isAdmin,
+        isPlatformAccount: users.isPlatformAccount,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    getOwnedClub(userId),
+  ]);
+  if (!owned || row?.isPlatformAccount) return null;
+  return owned.id;
+}
+
+/**
+ * ¿Puede esta cuenta crear un club? Un club se da de alta con su propia
+ * cuenta ("Como Club" al registrarse, que deja club_name en los metadatos);
+ * un monitor no crea clubes desde la suya — si quiere uno, usa otra cuenta.
+ * Los administradores de la plataforma sí pueden. Una cuenta, un club.
+ */
+export async function canUserCreateClub(
+  userId: string,
+  metadata: Record<string, unknown> | undefined
+): Promise<boolean> {
+  const [[row], owned] = await Promise.all([
+    db
+      .select({ isAdmin: users.isAdmin })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    getOwnedClub(userId),
+  ]);
+  if (owned) return false;
+  if (row?.isAdmin) return true;
+  const clubName = metadata?.club_name;
+  return typeof clubName === "string" && clubName.trim().length >= 2;
+}
+
+/**
  * Every club a user is linked to as an active coach (not counting one they
  * own), one row per club — with every sport they're linked for at that
  * club (club_members has one row per (club, user, sport), see schema.ts).
@@ -50,7 +99,10 @@ export async function getCoachMemberships(userId: string) {
     );
   const byClubId = new Map<
     string,
-    { club: (typeof rows)[number]["club"]; sports: (typeof rows)[number]["membership"]["sport"][] }
+    {
+      club: (typeof rows)[number]["club"];
+      sports: (typeof rows)[number]["membership"]["sport"][];
+    }
   >();
   for (const { club, membership } of rows) {
     const entry = byClubId.get(club.id) ?? { club, sports: [] };
@@ -153,14 +205,20 @@ export async function getActiveWorkClubId(
   userId: string
 ): Promise<string | null> {
   const [row] = await db
-    .select({ activeClubId: users.activeClubId })
+    .select({
+      activeClubId: users.activeClubId,
+      adminMode: users.adminMode,
+      isPlatformAccount: users.isPlatformAccount,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+  // En Modo administrador no se trabaja en ningún club.
+  if (row?.adminMode || row?.isPlatformAccount) return null;
   const clubId = row?.activeClubId ?? null;
-  if (!clubId) return null;
-  const stillActive = await canTagWithClub(userId, clubId);
-  return stillActive ? clubId : null;
+  if (clubId && (await canTagWithClub(userId, clubId))) return clubId;
+  // La cuenta de un club no tiene Modo particular: trabaja en su club.
+  return getClubAccountClubId(userId);
 }
 
 /**
@@ -174,9 +232,14 @@ export async function setActiveWorkClub(userId: string, clubId: string | null) {
   if (clubId && !(await canTagWithClub(userId, clubId))) {
     throw new Error("not_a_member");
   }
+  if (!clubId && (await getClubAccountClubId(userId))) {
+    throw new Error("club_account");
+  }
+  // Elegir club o particular sale del "Modo administrador" y del "Modo
+  // gestión" (lib/work-mode.ts).
   await db
     .update(users)
-    .set({ activeClubId: clubId })
+    .set({ activeClubId: clubId, adminMode: false, managementMode: false })
     .where(eq(users.id, userId));
 }
 
@@ -222,7 +285,13 @@ export async function listClubRoster(clubId: string) {
       })
       .from(clubMembers)
       .innerJoin(users, eq(users.id, clubMembers.userId))
-      .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.role, "coach")))
+      .where(
+        and(
+          eq(clubMembers.clubId, clubId),
+          eq(clubMembers.role, "coach"),
+          eq(clubMembers.status, "active")
+        )
+      )
       .orderBy(desc(clubMembers.createdAt)),
     db
       .select()
@@ -233,4 +302,47 @@ export async function listClubRoster(clubId: string) {
       .orderBy(desc(clubInvites.createdAt)),
   ]);
   return { members, invites };
+}
+
+/**
+ * Invitaciones de club pendientes (y vigentes) dirigidas al email del
+ * usuario, para avisarle dentro de la app sin depender del enlace. Excluye
+ * las de un club y deporte en los que ya es miembro activo.
+ */
+export async function getPendingInvitesForEmail(
+  userId: string,
+  email: string | null | undefined
+) {
+  if (!email) return [];
+  const rows = await db
+    .select({
+      id: clubInvites.id,
+      token: clubInvites.token,
+      sport: clubInvites.sport,
+      expiresAt: clubInvites.expiresAt,
+      clubId: clubs.id,
+      clubName: clubs.name,
+    })
+    .from(clubInvites)
+    .innerJoin(clubs, eq(clubs.id, clubInvites.clubId))
+    .where(
+      and(
+        sql`lower(${clubInvites.email}) = ${email.toLowerCase()}`,
+        eq(clubInvites.status, "pending"),
+        gt(clubInvites.expiresAt, new Date()),
+        sql`not exists (
+          select 1 from club_members cm
+          where cm.club_id = ${clubInvites.clubId} and cm.user_id = ${userId}
+            and cm.sport = ${clubInvites.sport} and cm.status = 'active')`
+      )
+    )
+    .orderBy(desc(clubInvites.createdAt));
+  // Una por club y deporte (si el club invitó dos veces, vale la más reciente)
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    const key = `${r.clubId}:${r.sport}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

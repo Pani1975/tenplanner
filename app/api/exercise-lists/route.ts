@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { exerciseListItems, exerciseLists, exercises } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { getExerciseListSpace } from "@/lib/exercises/lists";
 import { z } from "zod";
 
 export async function GET(request: NextRequest) {
@@ -12,6 +13,9 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Listas del espacio activo: particular, o las comunes del club.
+  const { condition: spaceWhere } = await getExerciseListSpace(user.id);
 
   const exerciseId = request.nextUrl.searchParams.get("exerciseId");
   const includeExercises =
@@ -27,7 +31,7 @@ export async function GET(request: NextRequest) {
         createdAt: exerciseLists.createdAt,
       })
       .from(exerciseLists)
-      .where(eq(exerciseLists.userId, user.id)),
+      .where(spaceWhere),
     db
       .select({
         listId: exerciseListItems.listId,
@@ -35,7 +39,7 @@ export async function GET(request: NextRequest) {
       })
       .from(exerciseListItems)
       .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-      .where(eq(exerciseLists.userId, user.id))
+      .where(spaceWhere)
       .groupBy(exerciseListItems.listId),
     exerciseId
       ? db
@@ -47,12 +51,7 @@ export async function GET(request: NextRequest) {
             exerciseLists,
             eq(exerciseLists.id, exerciseListItems.listId)
           )
-          .where(
-            and(
-              eq(exerciseLists.userId, user.id),
-              eq(exerciseListItems.exerciseId, exerciseId)
-            )
-          )
+          .where(and(spaceWhere, eq(exerciseListItems.exerciseId, exerciseId)))
       : Promise.resolve([] as Array<{ listId: string }>),
     includeExercises
       ? db
@@ -64,6 +63,9 @@ export async function GET(request: NextRequest) {
             difficulty: exercises.difficulty,
             durationMinutes: exercises.durationMinutes,
             imageUrl: exercises.imageUrl,
+            description: exercises.description,
+            objectives: exercises.objectives,
+            videoUrl: exercises.videoUrl,
           })
           .from(exerciseListItems)
           .innerJoin(
@@ -71,7 +73,7 @@ export async function GET(request: NextRequest) {
             eq(exerciseLists.id, exerciseListItems.listId)
           )
           .innerJoin(exercises, eq(exercises.id, exerciseListItems.exerciseId))
-          .where(eq(exerciseLists.userId, user.id))
+          .where(spaceWhere)
       : Promise.resolve(
           [] as Array<{
             listId: string;
@@ -81,6 +83,9 @@ export async function GET(request: NextRequest) {
             difficulty: string;
             durationMinutes: number;
             imageUrl: string | null;
+            description: string | null;
+            objectives: string | null;
+            videoUrl: string | null;
           }>
         ),
   ]);
@@ -98,6 +103,9 @@ export async function GET(request: NextRequest) {
       difficulty: string;
       durationMinutes: number;
       imageUrl: string | null;
+      description: string | null;
+      objectives: string | null;
+      videoUrl: string | null;
     }>
   >();
 
@@ -110,6 +118,9 @@ export async function GET(request: NextRequest) {
       difficulty: item.difficulty,
       durationMinutes: item.durationMinutes,
       imageUrl: item.imageUrl,
+      description: item.description,
+      objectives: item.objectives,
+      videoUrl: item.videoUrl,
     });
     itemsMap.set(item.listId, current);
   }
@@ -149,11 +160,14 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
-  // Check if this is the user's first list — if so, mark it as default
+  // La primera lista del espacio (particular o club) es la principal.
+  const { activeClubId, condition: spaceWhere } = await getExerciseListSpace(
+    user.id
+  );
   const [{ total }] = await db
     .select({ total: count() })
     .from(exerciseLists)
-    .where(eq(exerciseLists.userId, user.id));
+    .where(spaceWhere);
 
   const isFirstList = Number(total) === 0;
 
@@ -161,6 +175,7 @@ export async function POST(request: Request) {
     .insert(exerciseLists)
     .values({
       userId: user.id,
+      clubId: activeClubId,
       name: parsed.data.name,
       emoji: parsed.data.emoji ?? "📋",
       isDefault: isFirstList,

@@ -18,6 +18,7 @@ import {
   PELOTAS,
   PELOTAS_LEGACY,
   SITUACION_JUEGO,
+  TIPO_COMPETICION,
   showsTipoPelota,
   tipoEjercicioOptionLabel,
 } from "@/lib/exercise-taxonomy";
@@ -127,6 +128,7 @@ export interface ExerciseFiltersProps {
     fase: string[];
     caracter: string[];
     situacionJuego: string[];
+    tipoCompeticion: string[];
     autoria: string[];
   };
   sport?: string | null;
@@ -182,6 +184,11 @@ const SECONDARY_FILTERS: FilterDef[] = [
     label: "Situación del juego",
     options: SITUACION_JUEGO.map((s) => ({ ...s })),
   },
+  {
+    param: "tipoCompeticion",
+    label: "Competición",
+    options: TIPO_COMPETICION.map((c) => ({ ...c })),
+  },
   { param: "numJugadores", label: "Jugadores", options: JUGADORES },
   { param: "location", label: "Lugar", options: UBICACIONES },
   {
@@ -209,6 +216,7 @@ function valuesFromProps(
     fase: current.fase,
     caracter: current.caracter,
     situacionJuego: current.situacionJuego,
+    tipoCompeticion: current.tipoCompeticion,
     aspectoJuego: current.aspectoJuego,
     parametro: current.parametro,
     duracionRango: current.duracionRango,

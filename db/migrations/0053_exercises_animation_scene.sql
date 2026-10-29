@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN IF NOT EXISTS "animation_scene" varchar(24);

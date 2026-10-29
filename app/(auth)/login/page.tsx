@@ -84,7 +84,14 @@ function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    // Cada inicio de sesión empieza en el modo por defecto de la cuenta.
+    await fetch("/api/account/work-mode", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "default" }),
+    }).catch(() => {});
+
+    router.push(safeNext(searchParams.get("next")));
   }
 
   async function resendConfirmation() {
@@ -362,6 +369,13 @@ function LoginForm() {
       </div>
     </div>
   );
+}
+
+/** Destino tras iniciar sesión: solo rutas internas ("/…", no "//…"). */
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return "/dashboard";
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return "/dashboard";
+  return raw;
 }
 
 export default function LoginPage() {

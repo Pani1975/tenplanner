@@ -5,7 +5,19 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { sessionStudents, sessions, students } from "@/db/schema";
+import {
+  sessionStudents,
+  sessions,
+  studentObjectives,
+  students,
+  tennisObjectives,
+} from "@/db/schema";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  loadStudentObjectives,
+  loadStudentScopeContext,
+  objectiveScopeFor,
+} from "@/lib/objectives";
 
 export type SaveFeedbackInput = {
   sessionStudentId: string;
@@ -91,4 +103,168 @@ export async function generateProfileLink(studentId: string) {
     .where(eq(students.id, studentId));
 
   return { ok: true as const, token };
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Marca o desmarca un objetivo como conseguido para un alumno. Cualquier
+ * objetivo del catálogo se puede marcar a cualquier alumno (también los de
+ * otra bola). En un club, cualquier monitor del club puede hacerlo.
+ */
+export async function setStudentObjective(input: {
+  studentId: string;
+  objectiveId: string;
+  achieved: boolean;
+}) {
+  if (!UUID_RE.test(input.studentId) || !UUID_RE.test(input.objectiveId)) {
+    return { ok: false as const, error: "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+  if (!user) return { ok: false as const, error: "Unauthorized" };
+
+  const activeClubId = await getActiveWorkClubId(user.id);
+  const [student] = await db
+    .select({ id: students.id })
+    .from(students)
+    .where(
+      and(
+        eq(students.id, input.studentId),
+        sharedWithClubCondition(
+          students.coachId,
+          students.clubId,
+          user.id,
+          activeClubId
+        )
+      )
+    )
+    .limit(1);
+  if (!student) return { ok: false as const, error: "Forbidden" };
+
+  const [objective] = await db
+    .select({
+      id: tennisObjectives.id,
+      clubId: tennisObjectives.clubId,
+      coachId: tennisObjectives.coachId,
+      studentId: tennisObjectives.studentId,
+    })
+    .from(tennisObjectives)
+    .where(
+      and(
+        eq(tennisObjectives.id, input.objectiveId),
+        eq(tennisObjectives.isActive, true)
+      )
+    )
+    .limit(1);
+  // Solo se pueden marcar objetivos del catálogo base o propios de este alumno,
+  // su club o su monitor.
+  const ctx = await loadStudentScopeContext(input.studentId);
+  if (!objective || !ctx || !objectiveScopeFor(objective, ctx))
+    return { ok: false as const, error: "Not found" };
+
+  const now = new Date();
+  await db
+    .insert(studentObjectives)
+    .values({
+      studentId: input.studentId,
+      objectiveId: input.objectiveId,
+      achieved: input.achieved,
+      achievedAt: now,
+      markedBy: user.id,
+    })
+    .onConflictDoUpdate({
+      target: [studentObjectives.studentId, studentObjectives.objectiveId],
+      set: {
+        achieved: input.achieved,
+        achievedAt: now,
+        markedBy: user.id,
+        updatedAt: now,
+      },
+    });
+
+  revalidatePath(`/students/${input.studentId}`);
+  return { ok: true as const, achievedAt: now.toISOString() };
+}
+
+/**
+ * Marca o desmarca varios objetivos a la vez (p. ej. todo un nivel). Solo se
+ * aplican los que son visibles para el alumno; el resto se ignora.
+ */
+export async function setStudentObjectivesBulk(input: {
+  studentId: string;
+  objectiveIds: string[];
+  achieved: boolean;
+}) {
+  if (
+    !UUID_RE.test(input.studentId) ||
+    !Array.isArray(input.objectiveIds) ||
+    input.objectiveIds.length === 0 ||
+    input.objectiveIds.length > 500 ||
+    !input.objectiveIds.every((id) => UUID_RE.test(id))
+  ) {
+    return { ok: false as const, error: "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+  if (!user) return { ok: false as const, error: "Unauthorized" };
+
+  const activeClubId = await getActiveWorkClubId(user.id);
+  const [student] = await db
+    .select({ id: students.id })
+    .from(students)
+    .where(
+      and(
+        eq(students.id, input.studentId),
+        sharedWithClubCondition(
+          students.coachId,
+          students.clubId,
+          user.id,
+          activeClubId
+        )
+      )
+    )
+    .limit(1);
+  if (!student) return { ok: false as const, error: "Forbidden" };
+
+  // Solo objetivos visibles para este alumno (base, de su club/monitor, o suyos).
+  const visible = new Set(
+    (await loadStudentObjectives(input.studentId)).map((o) => o.id)
+  );
+  const ids = [...new Set(input.objectiveIds)].filter((id) => visible.has(id));
+  if (ids.length === 0) return { ok: false as const, error: "Not found" };
+
+  const now = new Date();
+  await db
+    .insert(studentObjectives)
+    .values(
+      ids.map((objectiveId) => ({
+        studentId: input.studentId,
+        objectiveId,
+        achieved: input.achieved,
+        achievedAt: now,
+        markedBy: user.id,
+      }))
+    )
+    .onConflictDoUpdate({
+      target: [studentObjectives.studentId, studentObjectives.objectiveId],
+      set: {
+        achieved: input.achieved,
+        achievedAt: now,
+        markedBy: user.id,
+        updatedAt: now,
+      },
+    });
+
+  revalidatePath(`/students/${input.studentId}`);
+  return { ok: true as const, count: ids.length };
 }

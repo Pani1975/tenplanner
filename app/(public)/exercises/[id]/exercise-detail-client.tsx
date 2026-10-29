@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
+import { cn } from "@/lib/utils";
+import { ExerciseDiagramAnimated } from "@/components/app/exercise-diagram-animated";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { useRouter } from "next/navigation";
 import {
@@ -25,6 +26,8 @@ import {
   StickyNote,
   Lock,
   ShieldAlert,
+  FileDown,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -39,13 +42,21 @@ import {
   nivelLabel,
   pelotaLabel,
   situacionJuegoLabel,
+  tipoCompeticionLabel,
   type TipoPelota,
   TIPO_ACTIVIDAD_LABELS,
 } from "@/lib/exercise-taxonomy";
 import { getYouTubeEmbedUrl } from "@/lib/video-embed";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
+import { AddToOpenEditorButton } from "@/components/app/add-to-open-editor-button";
 import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { LevelBalls } from "@/components/app/level-balls";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import {
+  CopyToSpaceButton,
+  type CopyTarget,
+} from "@/components/app/copy-to-space-button";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -84,6 +95,7 @@ export interface ExerciseData {
   tiposActividad: string[] | null;
   caracter: string[] | null;
   situacionJuego: string[] | null;
+  tipoCompeticion: string[] | null;
   golpes: string[] | null;
   efecto: string[] | null;
   nivel: string | null;
@@ -95,6 +107,7 @@ export interface ExerciseData {
   tipologia: string | null;
   duracionRango: string | null;
   phase: Phase | null;
+  fases?: string[] | null;
   intensity: number | null;
   isGlobal: boolean;
   autoria: string | null;
@@ -187,7 +200,10 @@ const EFECTO_LABELS: Record<string, string> = {
 export function ExerciseDetailClient({
   exercise,
   canEdit = false,
+  copyTargets = [],
+  inClub = false,
   isAdmin = false,
+  canPublish = false,
   userId = null,
   initialRating = null,
   ratingAvg = null,
@@ -197,10 +213,16 @@ export function ExerciseDetailClient({
   nextHref = null,
   navPosition = null,
   navTotal = null,
+  backToSearchHref = null,
+  backToListHref = null,
 }: {
   exercise: ExerciseData;
   canEdit?: boolean;
+  copyTargets?: CopyTarget[];
+  inClub?: boolean;
   isAdmin?: boolean;
+  /** Admin en Modo Ten Planner: puede tocar la Biblioteca pública. */
+  canPublish?: boolean;
   userId?: string | null;
   initialRating?: number | null;
   ratingAvg?: number | null;
@@ -210,6 +232,9 @@ export function ExerciseDetailClient({
   nextHref?: string | null;
   navPosition?: number | null;
   navTotal?: number | null;
+  backToSearchHref?: string | null;
+  /** Colección desde la que se llegó a la ficha. */
+  backToListHref?: string | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -219,6 +244,7 @@ export function ExerciseDetailClient({
   const [showListPicker, setShowListPicker] = useState(false);
   const [savedInLists, setSavedInLists] = useState<SavedListSummary[]>([]);
   const [loadingLists, setLoadingLists] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const cat = CATEGORY_META[exercise.category];
   const CategoryIcon = cat.icon;
@@ -264,6 +290,27 @@ export function ExerciseDetailClient({
     return () => window.clearTimeout(id);
   }, [refreshSavedLists]);
 
+  async function handleDownloadPdf() {
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/exercises/${exercise.id}/pdf`);
+      if (!res.ok) throw new Error("Error generando PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] ??
+        `ejercicio-${exercise.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silencioso — el botón vuelve a su estado normal
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
+
   async function handleDelete() {
     setDeleting(true);
     setDeleteError(null);
@@ -302,7 +349,7 @@ export function ExerciseDetailClient({
           <ExerciseForm
             mode="edit"
             exerciseId={exercise.id}
-            isAdmin={isAdmin}
+            isAdmin={canPublish}
             sport={exercise.sport}
             initialData={{
               name: exercise.name,
@@ -327,6 +374,7 @@ export function ExerciseDetailClient({
               tiposActividad: exercise.tiposActividad as never,
               caracter: exercise.caracter,
               situacionJuego: exercise.situacionJuego,
+              tipoCompeticion: exercise.tipoCompeticion,
               golpes: exercise.golpes,
               efecto: exercise.efecto,
               nivel: exercise.nivel as never,
@@ -338,6 +386,7 @@ export function ExerciseDetailClient({
               tipologia: exercise.tipologia as never,
               duracionRango: exercise.duracionRango as never,
               phase: exercise.phase,
+              fases: exercise.fases as Phase[] | null | undefined,
               intensity: exercise.intensity,
               isGlobal: exercise.isGlobal,
               autoria: exercise.autoria,
@@ -388,6 +437,7 @@ export function ExerciseDetailClient({
     tiposActividad.length > 0 ||
     (exercise.caracter?.length ?? 0) > 0 ||
     (exercise.situacionJuego?.length ?? 0) > 0 ||
+    (exercise.tipoCompeticion?.length ?? 0) > 0 ||
     exercise.duracionRango ||
     (exercise.golpes && exercise.golpes.length > 0) ||
     (exercise.efecto && exercise.efecto.length > 0);
@@ -397,50 +447,81 @@ export function ExerciseDetailClient({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.22),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.16),transparent_34%)]" />
       {/* Header */}
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Link
             href="/exercises"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#050505]/12 bg-white text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+            title="Volver a todos los ejercicios"
+            className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4" /> Volver a ejercicios
           </Link>
-          <p className="text-xs text-muted-foreground font-medium truncate">
-            Biblioteca de Ejercicios
-          </p>
+          {backToListHref ? (
+            <Link
+              href={backToListHref}
+              title="Volver a la colección"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#D6FF38] bg-[#D6FF38]/20 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-[#D6FF38]/40"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Volver a la colección</span>
+            </Link>
+          ) : null}
+          <BackToSearchLink href={backToSearchHref} />
           <PrevNextNav
             prevHref={prevHref}
             nextHref={nextHref}
             position={navPosition}
             total={navTotal}
-            className="ml-1"
           />
         </div>
-        {canEdit ? (
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
-            <button
-              onClick={() => setMode("edit")}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:flex-none"
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
+          {userId && <AddToOpenEditorButton exerciseId={exercise.id} />}
+          {userId && (
+            <Link
+              href={`/exercises/new?duplicar=${exercise.id}`}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:w-auto"
             >
-              <Pencil className="size-3.5" />
-              <span className="hidden sm:inline">Editar</span>
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-white px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.04] sm:flex-none"
-            >
-              <Trash2 className="size-3.5" />
-              <span className="hidden sm:inline">Eliminar</span>
-            </button>
-          </div>
-        ) : userId && exercise.isGlobal && !isAdmin ? (
-          <div className="flex w-full items-center gap-1.5 rounded-full border border-[#050505]/12 bg-white/70 px-3 py-2 text-[11px] text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:w-auto sm:shrink-0">
-            <ShieldAlert className="size-3.5 shrink-0" strokeWidth={1.6} />
-            <span className="hidden sm:inline">
-              Solo administradores pueden modificar ejercicios globales
-            </span>
-            <span className="sm:hidden">Solo admins</span>
-          </div>
-        ) : null}
+              <Copy className="size-3.5" />
+              Duplicar ejercicio
+            </Link>
+          )}
+          {canEdit ? (
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+              <button
+                onClick={() => setMode("edit")}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:flex-none"
+              >
+                <Pencil className="size-3.5" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-white px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.04] sm:flex-none"
+              >
+                <Trash2 className="size-3.5" />
+                <span className="hidden sm:inline">Eliminar</span>
+              </button>
+            </div>
+          ) : userId && exercise.isGlobal && !isAdmin ? (
+            <div className="flex w-full items-center gap-1.5 rounded-full border border-[#050505]/12 bg-white/70 px-3 py-2 text-[11px] text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:w-auto sm:shrink-0">
+              <ShieldAlert className="size-3.5 shrink-0" strokeWidth={1.6} />
+              <span className="hidden sm:inline">
+                Solo administradores pueden modificar ejercicios globales
+              </span>
+              <span className="sm:hidden">Solo admins</span>
+            </div>
+          ) : null}
+          {copyTargets.length > 0 && (
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+              <CopyToSpaceButton
+                kind="exercise"
+                id={exercise.id}
+                targets={copyTargets}
+                inClub={inClub}
+                className="flex-1 sm:flex-none"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main card */}
@@ -448,6 +529,11 @@ export function ExerciseDetailClient({
         {/* Category stripe */}
         <div className="border-b border-white/10 bg-[#050505] px-4 py-5 text-white sm:px-6">
           <div className="flex items-center gap-3">
+            <LevelBalls
+              niveles={niveles}
+              sport={exercise.sport}
+              className="order-last ml-auto"
+            />
             <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-[#D6FF38]/40 bg-[#D6FF38]">
               <CategoryIcon className="size-5 text-[#050505]" />
             </div>
@@ -515,6 +601,22 @@ export function ExerciseDetailClient({
               text={`Ejercicio: ${exercise.name}`}
               className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]"
             />
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-[#050505]",
+                downloadingPdf && "opacity-60"
+              )}
+            >
+              {downloadingPdf ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <FileDown className="size-4" strokeWidth={1.6} />
+              )}
+              PDF
+            </button>
             {userId && (
               <>
                 <button
@@ -581,21 +683,22 @@ export function ExerciseDetailClient({
                 <>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {savedInLists.map((list) => (
-                      <span
+                      <Link
                         key={list.id}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#050505]/10 bg-white px-3 py-2 text-sm text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+                        href={`/exercises?tab=favorites&lista=${list.id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#050505]/10 bg-white px-3 py-2 text-sm text-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38]/15 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-[#D6FF38]/10"
                       >
                         <span>{list.emoji ?? "📋"}</span>
                         <span>{list.name}</span>
                         <span className="text-xs text-muted-foreground">
                           {list.itemsCount ?? 0}
                         </span>
-                      </span>
+                      </Link>
                     ))}
                   </div>
                   <div className="mt-4">
                     <Link
-                      href="/exercises?view=lists"
+                      href="/exercises?tab=favorites"
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5E6F00] transition-colors hover:text-[#050505] dark:text-[#D6FF38] dark:hover:text-white"
                     >
                       Ver todas tus listas
@@ -684,6 +787,14 @@ export function ExerciseDetailClient({
                   Situación: {situacionJuegoLabel(sj)}
                 </span>
               ))}
+              {exercise.tipoCompeticion?.map((tc) => (
+                <span
+                  key={`competicion-${tc}`}
+                  className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
+                >
+                  Competición: {tipoCompeticionLabel(tc)}
+                </span>
+              ))}
               {exercise.golpes &&
                 exercise.golpes.map((g) => (
                   <span
@@ -708,9 +819,11 @@ export function ExerciseDetailClient({
           {exercise.objectives && (
             <div className="bg-brand/5 border border-brand/20 rounded-xl px-4 py-3">
               <p className="text-xs font-bold text-brand uppercase tracking-widest mb-1">
-                Objetivo
+                Objetivos
               </p>
-              <p className="text-sm text-foreground">{exercise.objectives}</p>
+              <p className="whitespace-pre-line text-sm text-foreground">
+                {exercise.objectives}
+              </p>
             </div>
           )}
 
@@ -725,7 +838,7 @@ export function ExerciseDetailClient({
             </div>
           )}
 
-          {diagram && <ExerciseDiagramView diagram={diagram} maxWidth={300} />}
+          {diagram && <ExerciseDiagramAnimated diagram={diagram} maxWidth={300} />}
 
           {exercise.steps && exercise.steps.length > 0 && (
             <div>

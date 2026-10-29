@@ -45,7 +45,7 @@ export function StepBasics({
 
   function bumpDuration(delta: number) {
     const next = Math.max(5, Math.min(600, state.durationMinutes + delta));
-    update({ durationMinutes: next });
+    update({ durationMinutes: next, durationManual: true });
   }
 
   return (
@@ -171,7 +171,8 @@ export function StepBasics({
               value={state.durationMinutes}
               onChange={(e) => {
                 const v = parseInt(e.target.value, 10);
-                if (!isNaN(v)) update({ durationMinutes: v });
+                if (!isNaN(v))
+                  update({ durationMinutes: v, durationManual: true });
               }}
               className="w-full h-11 text-center text-base font-bold bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground"
             />

@@ -16,6 +16,7 @@ import {
   ImageIcon,
   Phone,
   Clock,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,7 @@ const formSchema = z.object({
     .nullable(),
   phone: z.string().trim().max(32).optional().or(z.literal("")),
   preferredSchedule: z.string().trim().max(500).optional().nullable(),
+  locality: z.string().trim().max(120).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
   imageUrl: z.string().trim().max(1000).optional().or(z.literal("")),
 });
@@ -143,6 +145,7 @@ export interface StudentFormProps {
     yearStartedRacketSports?: number | null;
     phone?: string | null;
     preferredSchedule?: string | null;
+    locality?: string | null;
     notes?: string | null;
     imageUrl?: string | null;
   };
@@ -205,6 +208,7 @@ export function StudentForm({
         "",
       phone: initialData?.phone ?? "",
       preferredSchedule: initialData?.preferredSchedule ?? "",
+      locality: initialData?.locality ?? "",
       notes: initialData?.notes ?? "",
       imageUrl: initialData?.imageUrl ?? "",
     },
@@ -245,6 +249,7 @@ export function StudentForm({
           : Number(values.yearStartedTennis),
       phone: values.phone?.trim() || null,
       preferredSchedule: values.preferredSchedule?.trim() || null,
+      locality: values.locality?.trim() || null,
       notes: values.notes?.trim() || null,
       imageUrl: values.imageUrl?.trim() || null,
     };
@@ -660,6 +665,33 @@ export function StudentForm({
             {errors.preferredSchedule && (
               <p className="text-xs text-destructive">
                 {errors.preferredSchedule.message as string}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="locality"
+              className="block text-sm font-semibold text-foreground"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="size-3.5" /> Localidad
+              </span>
+              <span className="font-normal text-muted-foreground ml-1">
+                (opcional · para el mapa de procedencia del club)
+              </span>
+            </label>
+            <input
+              id="locality"
+              type="text"
+              maxLength={120}
+              placeholder="Ej: Santa Cruz de Tenerife"
+              {...register("locality")}
+              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+            />
+            {errors.locality && (
+              <p className="text-xs text-destructive">
+                {errors.locality.message as string}
               </p>
             )}
           </div>

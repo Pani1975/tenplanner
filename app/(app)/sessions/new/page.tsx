@@ -15,7 +15,10 @@ import {
   users,
 } from "@/db/schema";
 import { and, eq, asc } from "drizzle-orm";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import {
+  exerciseOwnOrClubCondition,
+  exerciseVisibleToUserCondition,
+} from "@/lib/exercise-access";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import type {
   TrainingPhase,
@@ -110,6 +113,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
       nivel: exercises.nivel,
       niveles: exercises.niveles,
       phase: exercises.phase,
+      fases: exercises.fases,
       aspectoJuego: exercises.aspectoJuego,
       aspectosJuego: exercises.aspectosJuego,
       golpes: exercises.golpes,
@@ -119,7 +123,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
       and(
         publicExercisesEnabled
           ? exerciseVisibleToUserCondition(user.id)
-          : eq(exercises.createdBy, user.id),
+          : exerciseOwnOrClubCondition(user.id),
         eq(exercises.sport, sport)
       )
     )
@@ -180,6 +184,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     objetivos: string | null;
     material: string | null;
     observations: string | null;
+    tags: string[] | null;
   } | null = null;
   const fromClassExercises: WizardExercise[] = [];
   let fromClassBlocks: WizardSessionBlock[] = [];
@@ -192,6 +197,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         objetivos: classes.objetivos,
         material: classes.material,
         observations: classes.aspectosImportantes,
+        tags: classes.tags,
         isLibrary: classes.isLibrary,
         createdBy: classes.createdBy,
         clubId: classes.clubId,
@@ -218,6 +224,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         objetivos: cls.objetivos,
         material: cls.material,
         observations: cls.observations,
+        tags: Array.isArray(cls.tags) ? cls.tags : null,
       };
       const items = await db
         .select({
@@ -364,6 +371,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   let fromSession: {
     title: string;
     objective: string | null;
+    material: string | null;
+    observations: string | null;
+    tags: string[];
     location: string | null;
   } | null = null;
   let fromExercises: WizardExercise[] = [];
@@ -374,6 +384,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         id: sessions.id,
         title: sessions.title,
         objective: sessions.objective,
+        material: sessions.material,
+        observations: sessions.observations,
+        tags: sessions.tags,
         location: sessions.location,
         userId: sessions.userId,
       })
@@ -385,6 +398,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
       fromSession = {
         title: sourceSession.title,
         objective: sourceSession.objective,
+        material: sourceSession.material,
+        observations: sourceSession.observations,
+        tags: Array.isArray(sourceSession.tags) ? sourceSession.tags : [],
         location: sourceSession.location,
       };
 
@@ -533,8 +549,15 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialObjective={
                 fromSession?.objective ?? fromClass?.objetivos ?? undefined
               }
-              initialMaterial={fromClass?.material ?? undefined}
-              initialObservations={fromClass?.observations ?? undefined}
+              initialMaterial={
+                fromSession?.material ?? fromClass?.material ?? undefined
+              }
+              initialObservations={
+                fromSession?.observations ??
+                fromClass?.observations ??
+                undefined
+              }
+              initialTags={fromSession?.tags ?? fromClass?.tags ?? undefined}
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
               initialLocation={fromSession?.location ?? undefined}

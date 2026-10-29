@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import { Suspense } from "react";
 import Link from "next/link";
 import { SessionsBulkList } from "./sessions-bulk-list";
@@ -280,8 +281,10 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                 <CalendarClock className="size-3.5 text-brand" />
                 Plan operativo
               </p>
-              <h1 className="font-heading text-3xl font-semibold text-foreground md:text-4xl">
-                Sesiones
+              <h1 className="break-words font-heading text-3xl font-semibold text-foreground md:text-4xl">
+                {user
+                  ? personalTitle("Sesiones", await getWorkMode(user.id))
+                  : "Sesiones"}
               </h1>
               <p className="mt-1.5 max-w-2xl text-[14px] text-foreground/60">
                 Entrenamientos agendados con fecha, hora, lugar y alumnos.

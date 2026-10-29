@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getWorkMode } from "@/lib/work-mode";
 import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -34,6 +35,8 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
+import { isFamilyOnlyUser } from "@/lib/family";
+import { isFamilyAccountType } from "@/lib/family-account";
 
 function formatDayMonth(date: Date) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
@@ -299,13 +302,13 @@ async function DashboardBody({
     },
     {
       href: "/exercises?tab=favorites",
-      label: "Ejercicios favoritos",
-      desc: "Tus marcados",
+      label: activeClubId ? "Favoritos club" : "Ejercicios favoritos",
+      desc: activeClubId ? "Ejercicios marcados" : "Tus marcados",
       icon: Heart,
     },
     {
       href: "/classes?tab=favorites",
-      label: "Clases favoritas",
+      label: activeClubId ? "Listas club" : "Clases favoritas",
       desc: "Plantillas listas",
       icon: GraduationCap,
     },
@@ -517,6 +520,20 @@ export default async function DashboardPage() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  // Las familias no usan el panel del entrenador: van a su panel
+  if (
+    await isFamilyOnlyUser(
+      user.id,
+      isFamilyAccountType(user.user_metadata)
+    ).catch(() => false)
+  ) {
+    redirect("/mi-familia/calendario");
+  }
+  // La cuenta de la plataforma no tiene sesiones ni alumnos: va a Informes.
+  // El Espacio gestión tampoco tiene panel de sesiones: va a su Informes.
+  const workMode = await getWorkMode(user.id);
+  if (workMode.kind === "tenplanner") redirect("/informes");
+  if (workMode.kind === "club" && workMode.management) redirect("/gestion");
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||
@@ -540,10 +557,17 @@ export default async function DashboardPage() {
               <p className="mb-2 inline-flex rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[12px] font-semibold text-foreground/60 dark:bg-[#050505]/70">
                 {formatLongDate(now)}
               </p>
-              <TimeGreeting
-                name={displayName}
-                initialGreeting={greetingForHour(now.getHours())}
-              />
+              {workMode.kind === "club" ? (
+                <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
+                  Espacio de{" "}
+                  <span className="text-brand">{workMode.clubName}</span>
+                </h1>
+              ) : (
+                <TimeGreeting
+                  name={displayName}
+                  initialGreeting={greetingForHour(now.getHours())}
+                />
+              )}
             </div>
             {sessionCreationEnabled ? (
               <Link

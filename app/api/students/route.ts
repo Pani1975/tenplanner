@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { students, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { geocodeLocality } from "@/lib/geo/geocode";
 import { createStudentSchema, zodValidationErrorResponse } from "./validation";
 
 function internalServerError() {
@@ -88,6 +89,9 @@ export async function POST(request: Request) {
     // el modo de trabajo activo del usuario (ver /api/account/work-mode).
     const clubId = await getActiveWorkClubId(user.id);
 
+    const locality = d.locality ? d.locality : null;
+    const geo = locality ? await geocodeLocality(locality) : null;
+
     const [created] = await db
       .insert(students)
       .values({
@@ -107,6 +111,9 @@ export async function POST(request: Request) {
           d.yearStartedRacketSports ?? d.yearStartedTennis ?? null,
         phone: d.phone ? d.phone : null,
         preferredSchedule: d.preferredSchedule ?? null,
+        locality,
+        localityLat: geo?.lat ?? null,
+        localityLng: geo?.lng ?? null,
         notes: d.notes ?? null,
         imageUrl: d.imageUrl ?? null,
         clubId,

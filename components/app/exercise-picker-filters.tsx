@@ -7,7 +7,9 @@ import {
   NIVEL_IDS,
   NIVEL_LEGACY_IDS,
   NIVELES,
+  nivelesForSport,
   nivelLabel,
+  resolveFases,
 } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ export interface PickerTaggedExercise {
   nivel?: string | null;
   niveles?: string[] | null;
   phase?: string | null;
+  fases?: string[] | null;
   aspectoJuego?: string | null;
   aspectosJuego?: string[] | null;
   golpes?: string[] | null;
@@ -72,7 +75,7 @@ export function matchesPickerFilters(
   filters: PickerFilters
 ): boolean {
   if (filters.nivel && !nivelesOf(ex).includes(filters.nivel)) return false;
-  if (filters.fase && ex.phase !== filters.fase) return false;
+  if (filters.fase && !resolveFases(ex).includes(filters.fase)) return false;
   if (filters.aspecto && !aspectosOf(ex).includes(filters.aspecto))
     return false;
   if (filters.golpe && !(ex.golpes ?? []).includes(filters.golpe)) return false;
@@ -102,25 +105,42 @@ export function ExercisePickerFilters({
   value,
   onChange,
   className,
+  showAllOptions = false,
+  sport,
 }: {
   exercises: PickerTaggedExercise[];
   value: PickerFilters;
   onChange: (next: PickerFilters) => void;
   className?: string;
+  /** Ofrece todos los valores posibles (en vez de solo los presentes en
+   * `exercises`): para buscadores que filtran en el servidor. */
+  showAllOptions?: boolean;
+  /** Deporte activo: limita los niveles ofrecidos en modo `showAllOptions`. */
+  sport?: string | null;
 }) {
-  const niveles = presentValues(
-    exercises.flatMap(nivelesOf),
-    NIVEL_IDS as readonly string[]
-  ).filter((id) => !NIVEL_LEGACY_IDS.includes(id));
-  const fases = FASES.filter((f) => exercises.some((ex) => ex.phase === f.id));
-  const aspectos = presentValues(
-    exercises.flatMap(aspectosOf),
-    Object.keys(ASPECTO_JUEGO_LABELS)
-  );
-  const golpes = presentValues(
-    exercises.flatMap((ex) => ex.golpes ?? []),
-    GOLPE_ORDER
-  );
+  const niveles = showAllOptions
+    ? nivelesForSport(sport).map((n) => n.id as string)
+    : presentValues(
+        exercises.flatMap(nivelesOf),
+        NIVEL_IDS as readonly string[]
+      ).filter((id) => !NIVEL_LEGACY_IDS.includes(id));
+  const fases = showAllOptions
+    ? FASES
+    : FASES.filter((f) =>
+        exercises.some((ex) => resolveFases(ex).includes(f.id))
+      );
+  const aspectos = showAllOptions
+    ? Object.keys(ASPECTO_JUEGO_LABELS)
+    : presentValues(
+        exercises.flatMap(aspectosOf),
+        Object.keys(ASPECTO_JUEGO_LABELS)
+      );
+  const golpes = showAllOptions
+    ? GOLPE_ORDER
+    : presentValues(
+        exercises.flatMap((ex) => ex.golpes ?? []),
+        GOLPE_ORDER
+      );
   const set = (patch: Partial<PickerFilters>) =>
     onChange({ ...value, ...patch });
 

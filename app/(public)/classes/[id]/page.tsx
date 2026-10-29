@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { notFound } from "next/navigation";
 import { and, asc, avg, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import {
@@ -9,29 +10,40 @@ import {
   Users,
   Target,
   Package,
+  Hash,
   GraduationCap,
+  Dumbbell,
 } from "lucide-react";
 import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
+import {
+  CopyToSpaceButton,
+  type CopyTarget,
+} from "@/components/app/copy-to-space-button";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
   classes,
   classBlocks,
   classBlockExercises,
-  classFavorites,
+  classListItems,
+  classLists,
   exercises,
   groups,
   sessions,
   sessionStudents,
-  users,
 } from "@/db/schema";
 import { ClassActions } from "./class-actions";
 import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
+import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { classNavQueryString, getFilteredClassIds } from "@/lib/nav/class-nav";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { classListSpaceCondition } from "@/lib/classes/lists";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
+import { hasClassAnimation } from "@/lib/classes/animation";
+import { LevelBalls } from "@/components/app/level-balls";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -45,6 +57,14 @@ function classValues(values: string[] | null, fallback: string | null) {
       ? [fallback]
       : [];
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  technique: "Técnica",
+  tactics: "Táctica",
+  fitness: "Físico",
+  "warm-up": "Calentamiento",
+  "trucos-tecnicos": "Trucos técnicos",
+};
 
 export default async function ClassDetailPage({
   params,
@@ -66,24 +86,37 @@ export default async function ClassDetailPage({
   if (!cls) notFound();
 
   const isOwner = !!user && cls.createdBy === user.id;
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
   let sharedViaClub = false;
   if (!cls.isLibrary && !isOwner && user && cls.clubId) {
-    const activeClubId = await getActiveWorkClubId(user.id);
-    sharedViaClub = cls.clubId === activeClubId;
+    sharedViaClub = cls.clubId === activeWorkClubId;
   }
   if (!cls.isLibrary && !isOwner && !sharedViaClub) notFound();
   if (!canSeeClassDraft(cls, user?.id)) notFound();
 
-  const authorName =
-    sharedViaClub && cls.createdBy
-      ? ((
-          await db
-            .select({ name: users.name })
-            .from(users)
-            .where(eq(users.id, cls.createdBy))
-            .limit(1)
-        )[0]?.name ?? null)
-      : null;
+  // Copiar a "Mis clases": de la Biblioteca al espacio activo; una clase que
+  // el propio monitor creó en el espacio de un club, a su espacio particular.
+  // En Modo administrador no hay espacio propio al que copiar.
+  const inTenPlanner = user ? await isTenPlannerMode(user.id) : false;
+  const copyTargets: CopyTarget[] = [];
+  if (user && !inTenPlanner && cls.isLibrary && cls.status === "published")
+    copyTargets.push("active");
+  // Para una clase de la Biblioteca ya existe "Copiar a Mis clases": el botón
+  // al espacio particular solo aplica a clases propias del club.
+  if (
+    user &&
+    !inTenPlanner &&
+    isOwner &&
+    !cls.isLibrary &&
+    cls.clubId &&
+    cls.status === "published"
+  )
+    copyTargets.push("particular");
+  // La Biblioteca pública solo se edita y se borra en Modo Ten Planner.
+  // (la de la plataforma la edita sea quien sea quien la creó).
+  const canEditClass = cls.isLibrary
+    ? !!user && inTenPlanner
+    : isOwner;
 
   const blocks = await db
     .select()
@@ -98,6 +131,7 @@ export default async function ClassDetailPage({
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           title: classBlockExercises.title,
+          notes: classBlockExercises.notes,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
@@ -114,15 +148,47 @@ export default async function ClassDetailPage({
         )
     : [];
 
+  // Ejercicios de la clase (también los de las estaciones), en el orden en
+  // que aparecen, con su ficha enlazada: igual que en la ficha de la sesión.
+  const linkedIds: string[] = [];
+  for (const block of blocks)
+    for (const it of items.filter((i) => i.blockId === block.id)) {
+      if (it.exerciseId) linkedIds.push(it.exerciseId);
+      for (const st of (it.stations as StationItemJson[] | null) ?? [])
+        if (st.kind === "exercise" && st.exerciseId)
+          linkedIds.push(st.exerciseId);
+    }
+  const uniqueLinkedIds = Array.from(new Set(linkedIds));
+  const linkedRows = uniqueLinkedIds.length
+    ? await db
+        .select({
+          id: exercises.id,
+          name: exercises.name,
+          description: exercises.description,
+          category: exercises.category,
+          materials: exercises.materials,
+          videoUrl: exercises.videoUrl,
+        })
+        .from(exercises)
+        .where(inArray(exercises.id, uniqueLinkedIds))
+    : [];
+  const linkedById = new Map(linkedRows.map((r) => [r.id, r]));
+  const classExercises = uniqueLinkedIds
+    .map((exId) => linkedById.get(exId))
+    .filter((r): r is (typeof linkedRows)[number] => !!r);
+
+  // Favorito = la clase está en al menos una de las listas del monitor
+  // (el corazón de la ficha abre ese selector; ver ClassFavoriteToggle).
   const isFav = user
     ? !!(
         await db
-          .select({ id: classFavorites.id })
-          .from(classFavorites)
+          .select({ id: classListItems.listId })
+          .from(classListItems)
+          .innerJoin(classLists, eq(classLists.id, classListItems.listId))
           .where(
             and(
-              eq(classFavorites.userId, user.id),
-              eq(classFavorites.classId, id)
+              classListSpaceCondition(user.id, activeWorkClubId),
+              eq(classListItems.classId, id)
             )
           )
           .limit(1)
@@ -212,17 +278,22 @@ export default async function ClassDetailPage({
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/classes/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/classes?${navQs}` : null;
 
   return (
     <div className="relative min-h-full overflow-hidden bg-[#F4F4F1] px-4 py-6 text-[#050505] dark:bg-[#050505] dark:text-[#F4F4F1] sm:px-6 md:px-10 lg:px-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.22),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.16),transparent_34%)]" />
-      <div className="relative flex items-center justify-between gap-3">
-        <Link
-          href="/classes"
-          className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
-        >
-          <ArrowLeft className="size-4" /> Volver a clases
-        </Link>
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/classes"
+            title="Volver a todas las clases"
+            className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <ArrowLeft className="size-4" /> Volver a clases
+          </Link>
+          <BackToSearchLink href={backToSearchHref} />
+        </div>
         <PrevNextNav
           prevHref={prevHref}
           nextHref={nextHref}
@@ -234,6 +305,11 @@ export default async function ClassDetailPage({
       <div className="relative mt-6 overflow-hidden rounded-lg bg-[#050505] text-white shadow-[0_24px_80px_rgba(5,5,5,0.18)]">
         <div className="p-5 sm:p-7 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <LevelBalls
+              niveles={classNiveles}
+              sport={cls.sport}
+              className="sm:order-last"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {cls.status === "draft" && (
@@ -271,11 +347,6 @@ export default async function ClassDetailPage({
               <h1 className="max-w-4xl font-heading text-4xl font-semibold leading-tight tracking-normal text-white sm:text-5xl">
                 {cls.name}
               </h1>
-              {authorName && (
-                <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-white/45">
-                  Clase de {authorName}
-                </p>
-              )}
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/68">
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="size-3.5" /> {cls.duracionMinutes} min
@@ -289,64 +360,48 @@ export default async function ClassDetailPage({
                   </span>
                 )}
               </div>
+              {hasClassAnimation(cls.id, cls.animationEnabled) && (
+                <ClassAnimationButton
+                  classId={cls.id}
+                  variant="hero"
+                  className="mt-5"
+                />
+              )}
             </div>
 
-            {user && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {isOwner && (
-                  <Link
-                    href={`/classes/${cls.id}/edit`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
-                  >
-                    {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
-                  </Link>
-                )}
-                <ClassActions
-                  classId={cls.id}
-                  initialFavorite={isFav}
-                  className={cls.name}
-                  canDelete={isOwner}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {canEditClass && (
+                <Link
+                  href={`/classes/${cls.id}/edit`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
+                >
+                  {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
+                </Link>
+              )}
+              <CopyToSpaceButton
+                kind="class"
+                id={cls.id}
+                targets={copyTargets}
+                tone="dark"
+                inClub={!!activeWorkClubId}
+              />
+              <ClassActions
+                classId={cls.id}
+                initialFavorite={isFav}
+                className={cls.name}
+                canDelete={canEditClass}
+                loggedIn={!!user}
+              />
+            </div>
           </div>
         </div>
         <div className="h-2 bg-[#D6FF38]" />
       </div>
 
-      {/* Objetivos / Material */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        {cls.objetivos && (
-          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="size-4 text-brand" />
-              <h2 className="font-heading text-base text-foreground">
-                Objetivos
-              </h2>
-            </div>
-            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-              {cls.objetivos}
-            </p>
-          </div>
-        )}
-        {cls.material && (
-          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center gap-2 mb-3">
-              <Package className="size-4 text-brand" />
-              <h2 className="font-heading text-base text-foreground">
-                Material
-              </h2>
-            </div>
-            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-              {cls.material}
-            </p>
-          </div>
-        )}
-      </div>
-
       {/* Uso en sesiones: cierra el círculo entre la plantilla y cómo le ha
           ido en la práctica. Solo con sesión iniciada, y siempre sobre las
-          propias sesiones del usuario (su feedback, no el de otros). */}
+          propias sesiones del usuario (su feedback, no el de otros). Va lo
+          primero: es lo que más se consulta al abrir una clase ya en uso. */}
       {user && (
         <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -414,6 +469,51 @@ export default async function ClassDetailPage({
           )}
         </div>
       )}
+
+      {/* Etiquetas */}
+      {Array.isArray(cls.tags) && cls.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {cls.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 rounded-full border border-brand/20 bg-brand/10 px-2.5 py-1 text-xs text-brand"
+            >
+              <Hash className="size-3" />
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Objetivos / Material */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {cls.objetivos && (
+          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="size-4 text-brand" />
+              <h2 className="font-heading text-base text-foreground">
+                Objetivos
+              </h2>
+            </div>
+            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
+              {cls.objetivos}
+            </p>
+          </div>
+        )}
+        {cls.material && (
+          <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-center gap-2 mb-3">
+              <Package className="size-4 text-brand" />
+              <h2 className="font-heading text-base text-foreground">
+                Material
+              </h2>
+            </div>
+            <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
+              {cls.material}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Resumen de bloques */}
       {blocks.length > 0 && (
@@ -485,7 +585,7 @@ export default async function ClassDetailPage({
                                             href={`/exercises/${st.exerciseId}?fromClass=${cls.id}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-foreground hover:text-brand"
+                                            className="font-medium text-foreground underline decoration-brand/50 underline-offset-2 hover:text-brand"
                                           >
                                             {st.exerciseName}
                                           </Link>
@@ -501,7 +601,7 @@ export default async function ClassDetailPage({
                                   href={`/exercises/${item.exerciseId}?fromClass=${cls.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="font-medium text-foreground hover:text-brand"
+                                  className="font-medium text-foreground underline decoration-brand/50 underline-offset-2 hover:text-brand"
                                 >
                                   {item.exerciseName}
                                 </Link>
@@ -519,9 +619,9 @@ export default async function ClassDetailPage({
                                 </span>
                               )}
                               {itemKind === "exercise" &&
-                                item.exerciseDescription && (
+                                (item.freeText || item.exerciseDescription) && (
                                   <span className="mt-1 block text-xs leading-5 text-muted-foreground line-clamp-2">
-                                    {item.exerciseDescription}
+                                    {item.freeText || item.exerciseDescription}
                                   </span>
                                 )}
                               {itemKind === "text" &&
@@ -531,6 +631,12 @@ export default async function ClassDetailPage({
                                     {item.freeText}
                                   </span>
                                 )}
+                              {item.notes && (
+                                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                                  <span className="font-semibold">Notas:</span>{" "}
+                                  {item.notes}
+                                </span>
+                              )}
                             </span>
                           </li>
                         );
@@ -545,6 +651,67 @@ export default async function ClassDetailPage({
                 </li>
               );
             })}
+          </ol>
+        </div>
+      )}
+
+      {classExercises.length > 0 && (
+        <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Dumbbell className="size-4 text-brand" />
+            <h2 className="font-heading text-xl text-foreground">Ejercicios</h2>
+            <span className="text-xs text-muted-foreground">
+              {classExercises.length}
+            </span>
+          </div>
+          <ol className="grid gap-3 sm:grid-cols-2">
+            {classExercises.map((ex, idx) => (
+              <li key={ex.id}>
+                <Link
+                  href={`/exercises/${ex.id}?fromClass=${cls.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3 shadow-sm transition-colors hover:border-brand/40"
+                >
+                  <span className="w-5 shrink-0 pt-0.5 text-right font-mono text-xs text-muted-foreground/60">
+                    {idx + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">
+                      {ex.name}
+                    </span>
+                    <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {CATEGORY_LABELS[ex.category] ?? ex.category}
+                      </span>
+                      {ex.videoUrl && (
+                        <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
+                          Vídeo
+                        </span>
+                      )}
+                    </span>
+                    {ex.description && (
+                      <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                        {ex.description}
+                      </span>
+                    )}
+                    {ex.materials && ex.materials.length > 0 && (
+                      <span className="mt-1.5 flex flex-wrap gap-1">
+                        {ex.materials.map((m) => (
+                          <span
+                            key={m}
+                            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                          >
+                            <Package className="size-2.5 opacity-60" />
+                            {m}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ol>
         </div>
       )}

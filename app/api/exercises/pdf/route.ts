@@ -23,6 +23,9 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveSport } from "@/lib/sports";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { spaceLabels } from "@/lib/space-labels";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { ExerciseListPdf, type PdfExercise } from "@/lib/exercises/pdf";
@@ -34,7 +37,9 @@ import {
   FASES,
   pelotaLabel,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   situacionJuegoLabel,
+  tipoCompeticionLabel,
   TIPO_PELOTA_VALUES,
   TIPO_ACTIVIDAD_LABELS,
   type TipoPelota,
@@ -48,7 +53,13 @@ import { EXERCISE_SORTS, type ExerciseSort } from "@/lib/nav/exercise-nav";
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
 
-const CATEGORIES = ["all", "technique", "tactics", "fitness", "warm-up"] as const;
+const CATEGORIES = [
+  "all",
+  "technique",
+  "tactics",
+  "fitness",
+  "warm-up",
+] as const;
 const DIFFICULTIES = ["all", "beginner", "intermediate", "advanced"] as const;
 const TABS = ["all", "global", "mine", "favorites"] as const;
 
@@ -200,6 +211,9 @@ export async function GET(request: Request) {
   const activeSituacionJuego = getStrings(params.situacionJuego).filter((v) =>
     (SITUACION_JUEGO_VALUES as readonly string[]).includes(v)
   );
+  const activeTipoCompeticion = getStrings(params.tipoCompeticion).filter((v) =>
+    (TIPO_COMPETICION_VALUES as readonly string[]).includes(v)
+  );
   const activeTipoActividad = uniqueStrings(
     getStrings(params.tipoActividad),
     getStrings(params.tipologia)
@@ -216,12 +230,26 @@ export async function GET(request: Request) {
 
   const sportWhere = eq(exercisesTable.sport, sport);
 
+  // Mismo espacio activo que la página /exercises ("Ejercicios club"…).
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
+  const mineWhere = user
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        user.id,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+
   const favRows = user
     ? await db
         .select({ exerciseId: exerciseListItems.exerciseId })
         .from(exerciseListItems)
-        .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-        .where(eq(exerciseLists.userId, user.id))
+        .innerJoin(
+          exerciseLists,
+          eq(exerciseLists.id, exerciseListItems.listId)
+        )
+        .where(exerciseListSpaceCondition(user.id, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
@@ -230,11 +258,8 @@ export async function GET(request: Request) {
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(
-            eq(exercisesTable.isGlobal, true),
-            eq(exercisesTable.createdBy, user.id)
-          ) ?? eq(exercisesTable.createdBy, user.id))
-        : eq(exercisesTable.createdBy, user.id)
+        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        : mineWhere
       : publicExercisesEnabled
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
@@ -247,7 +272,7 @@ export async function GET(request: Request) {
           publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
         )!
       : activeTab === "mine" && user
-        ? and(sportWhere, eq(exercisesTable.createdBy, user.id))!
+        ? and(sportWhere, mineWhere)!
         : allVisibleWhere;
 
   const conditions: SQL[] = [];
@@ -274,7 +299,9 @@ export async function GET(request: Request) {
     conditions.push(
       inArray(
         exercisesTable.formato,
-        activeFormato as Array<"individual" | "parejas" | "grupal" | "multigrupo">
+        activeFormato as Array<
+          "individual" | "parejas" | "grupal" | "multigrupo"
+        >
       )
     );
   if (activeNivel.length > 0) {
@@ -302,10 +329,17 @@ export async function GET(request: Request) {
     conditions.push(inArray(exercisesTable.duracionRango, activeDuracionRango));
   }
   if (activeFase.length > 0) {
-    conditions.push(inArray(exercisesTable.phase, activeFase));
+    const faseWhere = or(
+      inArray(exercisesTable.phase, activeFase),
+      jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+    );
+    if (faseWhere) conditions.push(faseWhere);
   }
   if (activeCaracter.length > 0) {
-    const caracterWhere = jsonbArrayHasAny(exercisesTable.caracter, activeCaracter);
+    const caracterWhere = jsonbArrayHasAny(
+      exercisesTable.caracter,
+      activeCaracter
+    );
     if (caracterWhere) conditions.push(caracterWhere);
   }
   if (activeSituacionJuego.length > 0) {
@@ -314,6 +348,13 @@ export async function GET(request: Request) {
       activeSituacionJuego
     );
     if (situacionWhere) conditions.push(situacionWhere);
+  }
+  if (activeTipoCompeticion.length > 0) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercisesTable.tipoCompeticion,
+      activeTipoCompeticion
+    );
+    if (competicionWhere) conditions.push(competicionWhere);
   }
   if (activeNumJugadores.length > 0)
     conditions.push(inArray(exercisesTable.numJugadores, activeNumJugadores));
@@ -339,14 +380,16 @@ export async function GET(request: Request) {
   }
   if (activeGolpes.length > 0) {
     const golpeConds = activeGolpes.map(
-      (g) => sql`${exercisesTable.golpes}::jsonb @> ${JSON.stringify([g])}::jsonb`
+      (g) =>
+        sql`${exercisesTable.golpes}::jsonb @> ${JSON.stringify([g])}::jsonb`
     );
     const combined = or(...golpeConds);
     if (combined) conditions.push(combined);
   }
   if (activeEfecto.length > 0) {
     const efectoConds = activeEfecto.map(
-      (e) => sql`${exercisesTable.efecto}::jsonb @> ${JSON.stringify([e])}::jsonb`
+      (e) =>
+        sql`${exercisesTable.efecto}::jsonb @> ${JSON.stringify([e])}::jsonb`
     );
     const combined = or(...efectoConds);
     if (combined) conditions.push(combined);
@@ -359,7 +402,10 @@ export async function GET(request: Request) {
   const where = and(...conditions);
 
   const [totalRows, rows] = await Promise.all([
-    db.select({ total: sql<number>`count(*)` }).from(exercisesTable).where(where),
+    db
+      .select({ total: sql<number>`count(*)` })
+      .from(exercisesTable)
+      .where(where),
     db
       .select({
         id: exercisesTable.id,
@@ -400,21 +446,30 @@ export async function GET(request: Request) {
   }));
 
   const summaryParts: string[] = [];
-  if (activeCategory !== "all") summaryParts.push(CATEGORY_LABEL[activeCategory]);
+  if (activeCategory !== "all")
+    summaryParts.push(CATEGORY_LABEL[activeCategory]);
   if (activeDifficulty !== "all")
     summaryParts.push(DIFFICULTY_LABEL[activeDifficulty]);
   if (searchTerm) summaryParts.push(`"${searchTerm}"`);
   if (activeTab !== "all")
     summaryParts.push(
-      activeTab === "global" ? "Biblioteca" : activeTab === "mine" ? "Mis ejercicios" : "Favoritos"
+      activeTab === "global"
+        ? "Biblioteca"
+        : activeTab === "mine"
+          ? spaceLabels(!!activeWorkClubId).exercises
+          : spaceLabels(!!activeWorkClubId).favorites
     );
-  for (const value of activeFormato) summaryParts.push(FORMATO_LABEL[value] ?? value);
+  for (const value of activeFormato)
+    summaryParts.push(FORMATO_LABEL[value] ?? value);
   for (const value of activeNivel) summaryParts.push(value.replace(/_/g, " "));
   for (const value of activeTipoPelota) summaryParts.push(pelotaLabel(value));
-  for (const value of activeTipoActividad) summaryParts.push(getTipoActividadLabel(value));
+  for (const value of activeTipoActividad)
+    summaryParts.push(getTipoActividadLabel(value));
   for (const value of activeCaracter) summaryParts.push(caracterLabel(value));
   for (const value of activeSituacionJuego)
     summaryParts.push(situacionJuegoLabel(value));
+  for (const value of activeTipoCompeticion)
+    summaryParts.push(tipoCompeticionLabel(value));
   for (const value of activeAutoria) summaryParts.push(autoriaLabel(value));
 
   const filtersSummary =
@@ -431,7 +486,9 @@ export async function GET(request: Request) {
       },
     }) as unknown as ReactElement<DocumentProps>;
     const stream = await renderToStream(element);
-    const buffer = await streamToBuffer(stream as unknown as NodeJS.ReadableStream);
+    const buffer = await streamToBuffer(
+      stream as unknown as NodeJS.ReadableStream
+    );
     return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",

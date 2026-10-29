@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getWorkMode, libraryHeading } from "@/lib/work-mode";
+import { LevelBalls } from "@/components/app/level-balls";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
@@ -18,11 +20,15 @@ import {
   type AnyColumn,
   type SQL,
 } from "drizzle-orm";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { spaceLabels } from "@/lib/space-labels";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { FavoriteToggle } from "@/components/app/favorite-toggle";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
 import { ExerciseFilters } from "@/components/app/exercise-filters";
 import { ExerciseListsSection } from "@/components/app/exercise-lists-section";
+import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { ExerciseDraftsPanel } from "@/components/app/exercise-drafts-panel";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -48,7 +54,9 @@ import {
   pelotaLabel,
   showsTipoPelota,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   situacionJuegoLabel,
+  tipoCompeticionLabel,
   TIPO_PELOTA_VALUES,
   type TipoPelota,
   TIPO_ACTIVIDAD_LABELS,
@@ -98,13 +106,18 @@ const DIFFICULTIES = ["all", "beginner", "intermediate", "advanced"] as const;
 const TABS = ["all", "global", "mine", "favorites", "drafts"] as const;
 type Tab = (typeof TABS)[number];
 
-const TAB_LABELS: Record<Tab, string> = {
-  all: "Ver todos",
-  global: "Biblioteca",
-  mine: "Mis ejercicios",
-  favorites: "Favoritos",
-  drafts: "Borradores",
-};
+// "Mis ejercicios"/"Favoritos" pasan a "Ejercicios club"/"Favoritos club"
+// trabajando como un club (ver lib/space-labels.ts).
+function tabLabelsFor(inClub: boolean): Record<Tab, string> {
+  const labels = spaceLabels(inClub);
+  return {
+    all: "Ver todos",
+    global: "Biblioteca",
+    mine: labels.exercises,
+    favorites: labels.favorites,
+    drafts: "Borradores",
+  };
+}
 
 const PAGE_SIZE = 30;
 
@@ -188,6 +201,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       : "all"
   ) as "all" | Difficulty;
 
+  // Modo administrador: trabaja sobre la Biblioteca pública, sin espacio
+  // propio, así que no tiene "Mis ejercicios".
+  const workMode = user ? await getWorkMode(user.id) : null;
+  const inTenPlanner = workMode?.kind === "tenplanner";
+
   // Tabs `mine`, `favorites`, `drafts` require auth — fall back to "all" if unauthenticated
   const requestedTab = TABS.includes(params.tab as Tab)
     ? (params.tab as Tab)
@@ -198,7 +216,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       requestedTab === "favorites" ||
       requestedTab === "drafts")
       ? "all"
-      : !publicExercisesEnabled && requestedTab === "global"
+      : inTenPlanner && requestedTab === "mine"
+        ? "global"
+        : !publicExercisesEnabled && requestedTab === "global"
         ? "mine"
         : requestedTab;
 
@@ -226,6 +246,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
   );
   const activeSituacionJuego = getStrings(params.situacionJuego).filter((v) =>
     (SITUACION_JUEGO_VALUES as readonly string[]).includes(v)
+  );
+  const activeTipoCompeticion = getStrings(params.tipoCompeticion).filter((v) =>
+    (TIPO_COMPETICION_VALUES as readonly string[]).includes(v)
   );
   const activeTipoActividad = uniqueStrings(
     getStrings(params.tipoActividad),
@@ -256,20 +279,39 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     activeFase.length > 0 ||
     activeCaracter.length > 0 ||
     activeSituacionJuego.length > 0 ||
+    activeTipoCompeticion.length > 0 ||
     activeAutoria.length > 0;
 
   const sportWhere = eq(exercisesTable.sport, sport);
+
+  // "Mis ejercicios" depende del espacio activo (modo de trabajo): en
+  // particular, solo los del usuario creados en particular; trabajando como
+  // un club, todos los del club (de cualquier monitor). Ver lib/clubs.ts.
+  const activeWorkClubId = user ? await getActiveWorkClubId(user.id) : null;
+  // Cabecera con el dueño: "Ejercicios Ten Planner" en la Biblioteca,
+  // "Ejercicios CT Tenerife" / "Ejercicios de David" en el espacio propio.
+  const heading = libraryHeading(
+    "Ejercicios",
+    workMode,
+    activeTab === "global"
+  );
+  const mineWhere = user
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        user.id,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+  const TAB_LABELS = tabLabelsFor(!!activeWorkClubId);
 
   // Unauthenticated users only see global exercises
   const allVisibleWhere = and(
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(
-            eq(exercisesTable.isGlobal, true),
-            eq(exercisesTable.createdBy, user.id)
-          ) ?? eq(exercisesTable.createdBy, user.id))
-        : eq(exercisesTable.createdBy, user.id)
+        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        : mineWhere
       : publicExercisesEnabled
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
@@ -282,7 +324,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
         )!
       : activeTab === "mine" && user
-        ? and(sportWhere, eq(exercisesTable.createdBy, user.id))!
+        ? and(sportWhere, mineWhere)!
         : allVisibleWhere;
 
   const listConditions: SQL[] = [];
@@ -295,7 +337,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           exerciseLists,
           eq(exerciseLists.id, exerciseListItems.listId)
         )
-        .where(eq(exerciseLists.userId, user.id))
+        .where(exerciseListSpaceCondition(user.id, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favoritedIds = new Set(favRows.map((f) => f.exerciseId));
@@ -360,7 +402,11 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       );
     }
     if (activeFase.length > 0) {
-      listConditions.push(inArray(exercisesTable.phase, activeFase));
+      const faseWhere = or(
+        inArray(exercisesTable.phase, activeFase),
+        jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+      );
+      if (faseWhere) listConditions.push(faseWhere);
     }
     if (activeCaracter.length > 0) {
       const caracterWhere = jsonbArrayHasAny(
@@ -375,6 +421,13 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
         activeSituacionJuego
       );
       if (situacionWhere) listConditions.push(situacionWhere);
+    }
+    if (activeTipoCompeticion.length > 0) {
+      const competicionWhere = jsonbArrayHasAny(
+        exercisesTable.tipoCompeticion,
+        activeTipoCompeticion
+      );
+      if (competicionWhere) listConditions.push(competicionWhere);
     }
     if (activeNumJugadores.length > 0)
       listConditions.push(
@@ -442,69 +495,78 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     : [{ total: 0 }];
   const draftCount = Number(draftCountRows[0]?.total ?? 0);
 
-  const [rowPage, allRows, globalRows, mineRows, categoryRows, fisicoAspectoRows] =
-    await Promise.all([
-      db
-        .select({
-          id: exercisesTable.id,
-          name: exercisesTable.name,
-          description: exercisesTable.description,
-          category: exercisesTable.category,
-          difficulty: exercisesTable.difficulty,
-          durationMinutes: exercisesTable.durationMinutes,
-          imageUrl: exercisesTable.imageUrl,
-          videoUrl: exercisesTable.videoUrl,
-          isAiGenerated: exercisesTable.isAiGenerated,
-          isGlobal: exercisesTable.isGlobal,
-          autoria: exercisesTable.autoria,
-          createdBy: exercisesTable.createdBy,
-          formato: exercisesTable.formato,
-          numJugadores: exercisesTable.numJugadores,
-          tipoActividad: exercisesTable.tipoActividad,
-          tiposActividad: exercisesTable.tiposActividad,
-          stepsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.steps}), 0)`,
-          materialsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.materials}), 0)`,
-        })
-        .from(exercisesTable)
-        .where(listWhere)
-        .orderBy(...exerciseOrderBy(activeSort))
-        .limit(PAGE_SIZE + 1)
-        .offset(offset),
-      db.select({ total: count() }).from(exercisesTable).where(allVisibleWhere),
-      publicExercisesEnabled
-        ? db
-            .select({ total: count() })
-            .from(exercisesTable)
-            .where(and(sportWhere, eq(exercisesTable.isGlobal, true)))
-        : Promise.resolve([{ total: 0 }]),
-      user
-        ? db
-            .select({ total: count() })
-            .from(exercisesTable)
-            .where(and(sportWhere, eq(exercisesTable.createdBy, user.id)))
-        : Promise.resolve([{ total: 0 }]),
-      db
-        .select({ category: exercisesTable.category, total: count() })
-        .from(exercisesTable)
-        .where(visibilityWhere)
-        .groupBy(exercisesTable.category),
-      // "Aspectos del juego" es una etiqueta multivalor (jsonb), no la
-      // categoría exclusiva de arriba: un ejercicio puede tener varios
-      // aspectos a la vez, así que este conteo no tiene por qué cuadrar
-      // con el total de ejercicios.
-      db
-        .select({ total: count() })
-        .from(exercisesTable)
-        .where(
-          and(
-            visibilityWhere,
-            or(
-              jsonbArrayHasAny(exercisesTable.aspectosJuego, ["fisico"])!,
-              inArray(exercisesTable.aspectoJuego, ["fisico"])
-            )
+  const [
+    rowPage,
+    allRows,
+    globalRows,
+    mineRows,
+    categoryRows,
+    fisicoAspectoRows,
+  ] = await Promise.all([
+    db
+      .select({
+        id: exercisesTable.id,
+        name: exercisesTable.name,
+        description: exercisesTable.description,
+        category: exercisesTable.category,
+        difficulty: exercisesTable.difficulty,
+        durationMinutes: exercisesTable.durationMinutes,
+        imageUrl: exercisesTable.imageUrl,
+        videoUrl: exercisesTable.videoUrl,
+        isAiGenerated: exercisesTable.isAiGenerated,
+        isGlobal: exercisesTable.isGlobal,
+        autoria: exercisesTable.autoria,
+        createdBy: exercisesTable.createdBy,
+        formato: exercisesTable.formato,
+        numJugadores: exercisesTable.numJugadores,
+        tipoActividad: exercisesTable.tipoActividad,
+        tiposActividad: exercisesTable.tiposActividad,
+        nivel: exercisesTable.nivel,
+        niveles: exercisesTable.niveles,
+        sport: exercisesTable.sport,
+        stepsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.steps}), 0)`,
+        materialsCount: sql<number>`COALESCE(json_array_length(${exercisesTable.materials}), 0)`,
+      })
+      .from(exercisesTable)
+      .where(listWhere)
+      .orderBy(...exerciseOrderBy(activeSort))
+      .limit(PAGE_SIZE + 1)
+      .offset(offset),
+    db.select({ total: count() }).from(exercisesTable).where(allVisibleWhere),
+    publicExercisesEnabled
+      ? db
+          .select({ total: count() })
+          .from(exercisesTable)
+          .where(and(sportWhere, eq(exercisesTable.isGlobal, true)))
+      : Promise.resolve([{ total: 0 }]),
+    user
+      ? db
+          .select({ total: count() })
+          .from(exercisesTable)
+          .where(and(sportWhere, mineWhere))
+      : Promise.resolve([{ total: 0 }]),
+    db
+      .select({ category: exercisesTable.category, total: count() })
+      .from(exercisesTable)
+      .where(visibilityWhere)
+      .groupBy(exercisesTable.category),
+    // "Aspectos del juego" es una etiqueta multivalor (jsonb), no la
+    // categoría exclusiva de arriba: un ejercicio puede tener varios
+    // aspectos a la vez, así que este conteo no tiene por qué cuadrar
+    // con el total de ejercicios.
+    db
+      .select({ total: count() })
+      .from(exercisesTable)
+      .where(
+        and(
+          visibilityWhere,
+          or(
+            jsonbArrayHasAny(exercisesTable.aspectosJuego, ["fisico"])!,
+            inArray(exercisesTable.aspectoJuego, ["fisico"])
           )
-        ),
-    ]);
+        )
+      ),
+  ]);
 
   const hasNextPage = rowPage.length > PAGE_SIZE;
   const filtered = hasNextPage ? rowPage.slice(0, PAGE_SIZE) : rowPage;
@@ -523,7 +585,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           )
           .where(
             and(
-              eq(exerciseLists.userId, user.id),
+              exerciseListSpaceCondition(user.id, activeWorkClubId),
               inArray(
                 exerciseListItems.exerciseId,
                 filtered.map((exercise) => exercise.id)
@@ -571,6 +633,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     caracter: activeCaracter.length > 0 ? activeCaracter : undefined,
     situacionJuego:
       activeSituacionJuego.length > 0 ? activeSituacionJuego : undefined,
+    tipoCompeticion:
+      activeTipoCompeticion.length > 0 ? activeTipoCompeticion : undefined,
     autoria: activeAutoria.length > 0 ? activeAutoria : undefined,
     sort: activeSort !== "alpha" ? activeSort : undefined,
   };
@@ -603,6 +667,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       "fase",
       "caracter",
       "situacionJuego",
+      "tipoCompeticion",
       "autoria",
     ]) {
       const value = merged[key];
@@ -684,12 +749,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-[#D6FF38]">
-                  Biblioteca pública
+                  {heading.kicker}
                 </p>
                 {!user && <SportChangePill sport={sport} />}
               </div>
-              <h1 className="mt-3 font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
-                Ejercicios
+              <h1 className="mt-3 break-words font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
+                {heading.title}
               </h1>
               <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/68">
                 Biblioteca de ejercicios sueltos, etiquetados por nivel,
@@ -759,6 +824,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               {TABS.map((t) => {
                 if (t === "global" && !publicExercisesEnabled) return null;
                 if (t === "drafts" && !user) return null;
+                if (t === "mine" && inTenPlanner) return null;
 
                 const isActive = activeTab === t;
                 const requiresAuth =
@@ -806,42 +872,48 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
             {activeTab === "drafts" && user ? (
               <ExerciseDraftsPanel showEmptyState />
             ) : activeTab === "favorites" && user ? (
-              <ExerciseListsSection />
+              <ExerciseListsSection
+                inClub={!!activeWorkClubId}
+                sport={sport}
+                openListId={getString(params.lista) || null}
+              />
             ) : (
               <>
                 {/* ─── Category strip ─── */}
                 {tabCounts[activeTab] > 0 && (
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    {statStrip.map(({ key, code, label, count, isActive, href }) => {
-                      return (
-                        <Link
-                          key={key}
-                          href={href}
-                          className={`group rounded-lg border px-5 py-5 transition-all ${
-                            isActive
-                              ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505] shadow-[0_18px_40px_rgba(214,255,56,0.24)]"
-                              : "border-[#050505]/10 bg-white/70 hover:border-[#050505]/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#D6FF38]/40"
-                          }`}
-                        >
-                          <div className="flex items-baseline justify-between">
-                            <p
-                              className={`font-sans text-[10px] uppercase tracking-[0.2em] ${isActive ? "text-[#050505]/70" : "text-foreground/45"}`}
-                            >
-                              {code} · {label}
+                    {statStrip.map(
+                      ({ key, code, label, count, isActive, href }) => {
+                        return (
+                          <Link
+                            key={key}
+                            href={href}
+                            className={`group rounded-lg border px-5 py-5 transition-all ${
+                              isActive
+                                ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505] shadow-[0_18px_40px_rgba(214,255,56,0.24)]"
+                                : "border-[#050505]/10 bg-white/70 hover:border-[#050505]/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-[#D6FF38]/40"
+                            }`}
+                          >
+                            <div className="flex items-baseline justify-between">
+                              <p
+                                className={`font-sans text-[10px] uppercase tracking-[0.2em] ${isActive ? "text-[#050505]/70" : "text-foreground/45"}`}
+                              >
+                                {code} · {label}
+                              </p>
+                              {isActive && (
+                                <span className="size-1.5 rounded-full bg-[#050505]" />
+                              )}
+                            </div>
+                            <p className="mt-2 font-heading text-3xl tabular-nums leading-none">
+                              {count}
                             </p>
-                            {isActive && (
-                              <span className="size-1.5 rounded-full bg-[#050505]" />
-                            )}
-                          </div>
-                          <p className="mt-2 font-heading text-3xl tabular-nums leading-none">
-                            {count}
-                          </p>
-                          <p className="mt-1.5 font-sans text-[10px] italic opacity-60">
-                            ejercicios
-                          </p>
-                        </Link>
-                      );
-                    })}
+                            <p className="mt-1.5 font-sans text-[10px] italic opacity-60">
+                              ejercicios
+                            </p>
+                          </Link>
+                        );
+                      }
+                    )}
                   </div>
                 )}
 
@@ -983,6 +1055,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                           value={value}
                         />
                       ))}
+                      {activeTipoCompeticion.map((value) => (
+                        <input
+                          key={`competicion-${value}`}
+                          type="hidden"
+                          name="tipoCompeticion"
+                          value={value}
+                        />
+                      ))}
                       {activeAutoria.map((value) => (
                         <input
                           key={`autoria-${value}`}
@@ -1102,6 +1182,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       fase: activeFase,
                       caracter: activeCaracter,
                       situacionJuego: activeSituacionJuego,
+                      tipoCompeticion: activeTipoCompeticion,
                       autoria: activeAutoria,
                     }}
                     preserved={{
@@ -1232,6 +1313,14 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                           Situación: {situacionJuegoLabel(value)}
                         </span>
                       ))}
+                      {activeTipoCompeticion.map((value) => (
+                        <span
+                          key={`competicion-${value}`}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-sans tracking-[0.08em] bg-brand/8 border border-brand/20 text-brand rounded"
+                        >
+                          Competición: {tipoCompeticionLabel(value)}
+                        </span>
+                      ))}
                       {activeAutoria.map((value) => (
                         <span
                           key={`autoria-${value}`}
@@ -1273,15 +1362,24 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       {resultCount} resultado
                       {resultCount !== 1 ? "s" : ""}
                     </p>
-                    <a
-                      href={`/api/exercises/pdf${navQs ? `?${navQs}` : ""}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#050505]/15 bg-white px-4 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/15 dark:bg-white/[0.04]"
-                    >
-                      <FileDown className="size-3.5" strokeWidth={1.8} />
-                      Generar PDF de los resultados
-                    </a>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {user && activeTab !== "drafts" ? (
+                        <SaveSearchToListButton
+                          kind="exercise"
+                          query={navQs}
+                          total={resultCount}
+                        />
+                      ) : null}
+                      <a
+                        href={`/api/exercises/pdf${navQs ? `?${navQs}` : ""}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[#050505]/15 bg-white px-4 text-[12px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/15 dark:bg-white/[0.04]"
+                      >
+                        <FileDown className="size-3.5" strokeWidth={1.8} />
+                        Generar PDF de los resultados
+                      </a>
+                    </div>
                   </div>
                 )}
 
@@ -1341,9 +1439,23 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                           className="flex flex-col overflow-hidden rounded-lg border border-[#050505]/10 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#D6FF38] hover:shadow-[0_24px_50px_rgba(5,5,5,0.12)] dark:border-white/10 dark:bg-white/[0.04]"
                         >
                           <div className="flex items-center justify-between bg-[#050505] px-4 py-3 text-white sm:px-5">
-                            <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11px] font-bold tabular-nums text-[#050505]">
-                              {exercise.durationMinutes} min
-                            </span>
+                            <div className="flex items-center gap-2.5">
+                              <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11px] font-bold tabular-nums text-[#050505]">
+                                {exercise.durationMinutes} min
+                              </span>
+                              <LevelBalls
+                                size="sm"
+                                sport={exercise.sport}
+                                niveles={
+                                  Array.isArray(exercise.niveles) &&
+                                  exercise.niveles.length > 0
+                                    ? (exercise.niveles as string[])
+                                    : exercise.nivel
+                                      ? [exercise.nivel]
+                                      : []
+                                }
+                              />
+                            </div>
                             <div className="flex items-center gap-2.5">
                               {owner && (
                                 <span

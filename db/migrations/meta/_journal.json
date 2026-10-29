@@ -337,6 +337,244 @@
       "when": 1791916531701,
       "tag": "0047_groups_weekly_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792089590653,
+      "tag": "0048_mis_listas_espacios",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1792092137160,
+      "tag": "0049_favoritos_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792222780313,
+      "tag": "0050_classes_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1792224303758,
+      "tag": "0051_classes_animation_enabled",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1792224580005,
+      "tag": "0052_class_block_items_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1792225589293,
+      "tag": "0053_exercises_animation_scene",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792243216032,
+      "tag": "0054_avisos_familias",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1792246370877,
+      "tag": "0055_mensajes_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1792273506396,
+      "tag": "0056_mensajes_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1792277106396,
+      "tag": "0057_calendar_holidays",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1792400000000,
+      "tag": "0058_objetivos_tenis",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792500000000,
+      "tag": "0059_objetivos_ampliacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1792600000000,
+      "tag": "0060_objetivos_empunaduras_integradas",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1792700000000,
+      "tag": "0061_objetivos_personalizables",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1792800000000,
+      "tag": "0062_objetivos_orden",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1792900000000,
+      "tag": "0063_exercise_fases",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0064_exercise_tipo_competicion",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1793100000000,
+      "tag": "0065_group_objetivos",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1793200000000,
+      "tag": "0066_user_ten_planner_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1793300000000,
+      "tag": "0067_platform_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1793400000000,
+      "tag": "0068_admin_mode_club_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1793500000000,
+      "tag": "0069_objective_override_group",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1793600000000,
+      "tag": "0070_objetivos_bola_roja_estructura",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1793700000000,
+      "tag": "0071_management_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1793800000000,
+      "tag": "0072_objetivos_con_golpe",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1793900000000,
+      "tag": "0073_objetivos_naranja_verde_estructura",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794000000000,
+      "tag": "0074_objetivos_etapas_amarillas",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1794100000000,
+      "tag": "0075_calendar_events_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1794200000000,
+      "tag": "0076_club_contact_invitee_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1794300000000,
+      "tag": "0077_group_student_coaches",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1794400000000,
+      "tag": "0078_club_coach_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1794500000000,
+      "tag": "0079_session_coach_comments",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1794600000000,
+      "tag": "0080_session_voice_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1794700000000,
+      "tag": "0081_student_locality",
+      "breakpoints": true
     }
   ]
 }

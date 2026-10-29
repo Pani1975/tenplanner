@@ -277,6 +277,12 @@ export default function PrivacidadPage() {
             "Alemania (UE).",
             "No recibe datos personales: solo consultas de búsqueda.",
           ],
+          [
+            "OpenStreetMap Foundation",
+            "Geocodificación de la localidad (Nominatim) y mapas (OpenStreetMap) en las estadísticas de alumnos.",
+            "Reino Unido.",
+            "No recibe datos de alumnos: solo el nombre de la localidad y, al ver el mapa, la IP del navegador.",
+          ],
         ]}
       />
 

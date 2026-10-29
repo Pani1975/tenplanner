@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
+  BarChart3,
   BookMarked,
   BookOpen,
   Building2,
@@ -13,17 +14,22 @@ import {
   ClipboardList,
   Dumbbell,
   FileText,
+  Globe2,
   GraduationCap,
   Heart,
   LayoutDashboard,
+  LifeBuoy,
   Lock,
   LogOut,
   MapPin,
   Menu,
+  MessageSquare,
   NotebookPen,
   Plus,
   ShieldCheck,
+  Target,
   UserCircle,
+  UserRound,
   Users,
   Users2,
   X,
@@ -33,7 +39,9 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 import { WorkModeBadge } from "./work-mode-badge";
+import { spaceLabels } from "@/lib/space-labels";
 import { SportBadge } from "./sport-badge";
+import { formatUnread, useUnreadMessages } from "./use-unread-messages";
 import type { ClubOption } from "./club-context-select";
 import type { Sport } from "@/lib/sport-constants";
 
@@ -74,7 +82,7 @@ const navItems: NavItem[] = [
     publicAccess: true,
     allLabel: "Ver todos",
     submenu: [
-      { href: "/exercises", label: "Biblioteca", icon: BookOpen },
+      { href: "/exercises?tab=global", label: "Biblioteca", icon: BookOpen },
       { href: "/exercises?tab=mine", label: "Mis ejercicios", icon: Dumbbell },
       { href: "/exercises?tab=favorites", label: "Favoritos", icon: Heart },
       { href: "/exercises?tab=drafts", label: "Borradores", icon: FileText },
@@ -93,9 +101,9 @@ const navItems: NavItem[] = [
     publicAccess: true,
     allLabel: "Ver todas",
     submenu: [
-      { href: "/classes", label: "Biblioteca", icon: BookOpen },
+      { href: "/classes?tab=library", label: "Biblioteca", icon: BookOpen },
       { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
-      { href: "/classes?tab=favorites", label: "Listas", icon: Heart },
+      { href: "/classes?tab=favorites", label: "Mis listas", icon: Heart },
       { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
       { href: "/classes/new", label: "Nueva clase", icon: Plus },
     ],
@@ -133,16 +141,181 @@ const navItems: NavItem[] = [
       { href: "/groups", label: "Grupos", icon: Users2, feature: "groups" },
     ],
   },
+  // Catálogo de objetivos del modo de trabajo (Ten Planner, club o particular).
+  { href: "/objetivos", label: "Objetivos", icon: Target },
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/places", label: "Lugares", icon: MapPin },
   { href: "/resources", label: "Mis recursos", icon: BookMarked },
   { href: "/club", label: "Mi club", icon: Building2 },
   { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
+
+// Vista simplificada para familias (ver lib/family.ts): solo lo que usan.
+// Modo administrador (y cuenta de la plataforma): solo lo común de la
+// plataforma (Biblioteca de ejercicios y clases, catálogo de objetivos) y los
+// Informes. Sin sesiones, alumnos, calendario ni club; el modo se cambia en
+// el selector de la barra lateral.
+const platformNavItems: NavItem[] = [
+  { href: "/informes", label: "Informes", icon: BarChart3 },
+  {
+    href: "/exercises",
+    label: "Ejercicios",
+    icon: Dumbbell,
+    allLabel: "Ver todos",
+    submenu: [
+      { href: "/exercises?tab=global", label: "Biblioteca", icon: BookOpen },
+      { href: "/exercises?tab=drafts", label: "Borradores", icon: FileText },
+      {
+        href: "/exercises/new",
+        label: "Nuevo ejercicio",
+        icon: Plus,
+        accent: true,
+        feature: "exerciseCreation",
+      },
+    ],
+  },
+  {
+    href: "/classes",
+    label: "Clases",
+    icon: GraduationCap,
+    allLabel: "Ver todas",
+    submenu: [
+      { href: "/classes?tab=library", label: "Biblioteca", icon: BookOpen },
+      { href: "/classes?tab=drafts", label: "Borradores", icon: FileText },
+      { href: "/classes/new", label: "Nueva clase", icon: Plus },
+    ],
+  },
+  { href: "/objetivos", label: "Objetivos", icon: Target },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
+// Espacio gestión (solo la cuenta de un club): informes y estadísticas, sus
+// monitores, el calendario y los alumnos del club (por ahora los mismos datos
+// que en el modo del club) y los mensajes privados del gestor. Sin ejercicios,
+// clases, sesiones, objetivos, club ni lugares: para eso se cambia al modo
+// del club en el selector.
+const managementNavItems: NavItem[] = [
+  { href: "/gestion", label: "Informes", icon: BarChart3 },
+  { href: "/gestion/monitores", label: "Monitores", icon: Users2 },
+  {
+    href: "/calendar",
+    label: "Calendario",
+    icon: CalendarDays,
+    feature: "calendar",
+  },
+  { href: "/students", label: "Alumnos", icon: Users },
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
+  { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
+/** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
+function PlatformBadge() {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-brand/50 bg-brand/10 px-3 py-2 text-[12px] font-bold text-foreground">
+      <Globe2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} />
+      <span className="min-w-0 flex-1 truncate">
+        <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
+          Modo
+        </span>
+        Administrador · público
+      </span>
+    </div>
+  );
+}
+
+const familyNavItems: NavItem[] = [
+  { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
+  { href: "/mi-familia/jugador", label: "Jugador", icon: UserRound },
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
+  { href: "/profile", label: "Perfil", icon: UserCircle },
+  { href: "/mi-familia/informes", label: "Informes", icon: FileText },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
+
+// En modo club, los apartados propios se nombran como del club ("Clases
+// club"…) en vez de "Mis…" — ver lib/space-labels.ts.
+function navItemsForSpace(inClub: boolean): NavItem[] {
+  const labels = spaceLabels(inClub);
+  const bySubHref: Record<string, string> = {
+    "/exercises?tab=mine": labels.exercises,
+    "/exercises?tab=favorites": labels.favorites,
+    "/classes?tab=mine": labels.classes,
+    "/classes?tab=favorites": labels.lists,
+  };
+  return navItems.map((item) =>
+    item.submenu
+      ? {
+          ...item,
+          submenu: item.submenu.map((sub) =>
+            bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
+          ),
+        }
+      : item
+  );
+}
+
+/**
+ * Qué enlace del submenú está activo: solo uno. Cuenta la ruta y los
+ * parámetros (?tab=…, ?filter=…), no solo la ruta — si no, "Ver todas" y
+ * "Biblioteca" (misma ruta, otra pestaña) se marcaban a la vez. Gana el más
+ * específico; en empate, el elemento del submenú gana a "Ver todas".
+ * Devuelve -1 para "Ver todas", el índice del submenú, o null si ninguno.
+ */
+function activeSubmenuIndex(
+  allHref: string,
+  submenu: SubItem[],
+  pathname: string,
+  params: URLSearchParams
+): number | null {
+  function score(href: string, isAll: boolean): number {
+    const [path, query] = href.split("?");
+    const exact = pathname === path;
+    if (!exact && !pathname.startsWith(path + "/")) return -1;
+    let value = exact ? 2 : 1;
+    if (query) {
+      if (!exact) return -1;
+      for (const [key, expected] of new URLSearchParams(query)) {
+        if (params.get(key) !== expected) return -1;
+        value += 10;
+      }
+    }
+    return isAll ? value - 0.5 : value;
+  }
+  let best: number | null = null;
+  let bestScore = -1;
+  const allScore = score(allHref, true);
+  if (allScore > bestScore) {
+    best = -1;
+    bestScore = allScore;
+  }
+  submenu.forEach((sub, index) => {
+    const value = score(sub.href, false);
+    if (value > bestScore) {
+      best = index;
+      bestScore = value;
+    }
+  });
+  return best;
+}
 
 interface WorkModeProps {
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
+  /** Modo administrador activo (cuenta de la plataforma o admin que lo elige). */
+  tenPlannerMode?: boolean;
+  /** Cuenta de la plataforma: siempre en Modo administrador, sin selector. */
+  platformAccount?: boolean;
+  /** Cuenta de un club: su club (Modo <club> + Modo gestión). */
+  clubAccountClubId?: string | null;
+  /** Modo gestión activo (solo la cuenta de un club). */
+  managementMode?: boolean;
   activeSport?: Sport;
+  /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
+  familyOnly?: boolean;
+  /** Mensajes recibidos sin leer (contador junto a "Mensajes") */
+  unreadMessages?: number;
 }
 
 interface SidebarNavProps extends WorkModeProps {
@@ -172,6 +345,7 @@ function BrandMark({ className }: { className?: string }) {
 
 function NavContent({
   pathname,
+  search,
   onNavigate,
   user,
   avatarUrl,
@@ -181,9 +355,17 @@ function NavContent({
   appName,
   workModeClubs = [],
   activeWorkClubId = null,
+  tenPlannerMode = false,
+  platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
+  familyOnly = false,
+  unreadMessages = 0,
 }: {
   pathname: string;
+  /** Query string actual (sin "?"), para marcar la pestaña activa. */
+  search: string;
   onNavigate?: () => void;
   user: SidebarNavProps["user"];
   avatarUrl?: string | null;
@@ -192,6 +374,13 @@ function NavContent({
   onSignOut: () => void;
   appName?: string;
 } & WorkModeProps) {
+  const items = familyOnly
+    ? familyNavItems
+    : tenPlannerMode
+      ? platformNavItems
+      : managementMode
+        ? managementNavItems
+        : navItemsForSpace(!!activeWorkClubId);
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName
@@ -205,7 +394,7 @@ function NavContent({
     () => {
       if (!user) return {};
       const initial: Record<string, boolean> = {};
-      for (const item of navItems) {
+      for (const item of items) {
         if (item.submenu && pathname.startsWith(item.href)) {
           initial[item.href] = true;
         }
@@ -222,7 +411,15 @@ function NavContent({
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-4 py-4">
         <Link
-          href="/dashboard"
+          href={
+            familyOnly
+              ? "/mi-familia/calendario"
+              : tenPlannerMode
+                ? "/informes"
+                : managementMode
+                  ? "/gestion"
+                  : "/dashboard"
+          }
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
           onClick={onNavigate}
         >
@@ -235,21 +432,30 @@ function NavContent({
         </Link>
       </div>
 
-      {user && (
+      {user && !familyOnly && (
         <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
           <SportBadge activeSport={activeSport} />
-          {workModeClubs.length > 0 && (
-            <WorkModeBadge
-              clubs={workModeClubs}
-              activeClubId={activeWorkClubId}
-            />
+          {platformAccount ? (
+            <PlatformBadge />
+          ) : (
+            (workModeClubs.length > 0 || isAdmin) && (
+              <WorkModeBadge
+                key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
+                clubs={workModeClubs}
+                activeClubId={activeWorkClubId}
+                canUseTenPlanner={isAdmin}
+                tenPlannerActive={tenPlannerMode}
+                clubAccountClubId={clubAccountClubId}
+                managementActive={managementMode}
+              />
+            )
           )}
         </div>
       )}
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {navItems.map(
+          {items.map(
             ({
               href,
               label,
@@ -261,6 +467,14 @@ function NavContent({
             }) => {
               const isActive =
                 pathname === href || pathname.startsWith(href + "/");
+              const activeIdx = submenu
+                ? activeSubmenuIndex(
+                    href,
+                    submenu,
+                    pathname,
+                    new URLSearchParams(search)
+                  )
+                : null;
               const isOpen = !!submenuOpen[href];
               const isLocked = !user && !publicAccess;
               const featureLocked = feature ? !features[feature] : false;
@@ -348,7 +562,7 @@ function NavContent({
                             onClick={onNavigate}
                             className={cn(
                               "block rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors",
-                              pathname === href
+                              activeIdx === -1
                                 ? "bg-brand text-brand-foreground"
                                 : "text-sidebar-foreground/58 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                             )}
@@ -357,16 +571,17 @@ function NavContent({
                           </Link>
                         </li>
                         {submenu.map(
-                          ({
-                            href: subHref,
-                            label: subLabel,
-                            accent,
-                            feature,
-                            icon: SubIcon,
-                          }) => {
-                            const isSubActive =
-                              pathname === subHref ||
-                              pathname.startsWith(subHref + "/");
+                          (
+                            {
+                              href: subHref,
+                              label: subLabel,
+                              accent,
+                              feature,
+                              icon: SubIcon,
+                            },
+                            subIndex
+                          ) => {
+                            const isSubActive = activeIdx === subIndex;
                             const featureLocked = feature
                               ? !features[feature]
                               : false;
@@ -443,6 +658,14 @@ function NavContent({
                     >
                       {label}
                     </span>
+                    {href === "/mensajes" && unreadMessages > 0 && (
+                      <span
+                        className="grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums leading-none text-white"
+                        aria-label={`${unreadMessages} mensajes nuevos`}
+                      >
+                        {formatUnread(unreadMessages)}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
@@ -535,7 +758,25 @@ function NavContent({
   );
 }
 
-export function SidebarNav({
+/**
+ * useSearchParams exige un límite de Suspense en páginas que se
+ * prerenderizan; el fallback pinta el mismo menú sin parámetros, así que no
+ * hay parpadeo ni menú vacío.
+ */
+export function SidebarNav(props: SidebarNavProps) {
+  return (
+    <Suspense fallback={<SidebarNavInner {...props} search="" />}>
+      <SidebarNavWithSearch {...props} />
+    </Suspense>
+  );
+}
+
+function SidebarNavWithSearch(props: SidebarNavProps) {
+  const search = useSearchParams().toString();
+  return <SidebarNavInner {...props} search={search} />;
+}
+
+function SidebarNavInner({
   user,
   avatarUrl,
   isAdmin = false,
@@ -544,8 +785,16 @@ export function SidebarNav({
   appName,
   workModeClubs = [],
   activeWorkClubId = null,
+  tenPlannerMode = false,
+  platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
-}: SidebarNavProps) {
+  familyOnly = false,
+  unreadMessages: initialUnread = 0,
+  search,
+}: SidebarNavProps & { search: string }) {
+  const unreadMessages = useUnreadMessages(initialUnread, !!user);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -621,6 +870,7 @@ export function SidebarNav({
       <aside className="sticky top-0 hidden h-dvh w-[18.5rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <NavContent
           pathname={pathname}
+          search={search}
           user={user}
           avatarUrl={avatarUrl}
           isAdmin={isAdmin}
@@ -629,7 +879,13 @@ export function SidebarNav({
           appName={appName}
           workModeClubs={workModeClubs}
           activeWorkClubId={activeWorkClubId}
+          tenPlannerMode={tenPlannerMode}
+          platformAccount={platformAccount}
+          clubAccountClubId={clubAccountClubId}
+          managementMode={managementMode}
           activeSport={activeSport}
+          familyOnly={familyOnly}
+          unreadMessages={unreadMessages}
         />
       </aside>
 
@@ -637,7 +893,15 @@ export function SidebarNav({
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href="/dashboard"
+              href={
+                familyOnly
+                  ? "/mi-familia/calendario"
+                  : tenPlannerMode
+                    ? "/informes"
+                    : managementMode
+                      ? "/gestion"
+                      : "/dashboard"
+              }
               className="flex min-w-0 shrink items-center gap-2.5"
             >
               <BrandMark className="size-9" />
@@ -658,23 +922,40 @@ export function SidebarNav({
               ref={triggerRef}
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
               aria-label="Abrir menú"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav-drawer"
             >
               <Menu className="size-5" strokeWidth={1.8} />
+              {unreadMessages > 0 && (
+                <span
+                  className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-600 px-1 text-[10px] font-black tabular-nums leading-none text-white"
+                  aria-label={`${unreadMessages} mensajes nuevos`}
+                >
+                  {formatUnread(unreadMessages)}
+                </span>
+              )}
             </button>
           </div>
         </div>
-        {user && (
+        {user && !familyOnly && (
           <div className="px-4 pb-3 space-y-2">
             <SportBadge activeSport={activeSport} />
-            {workModeClubs.length > 0 && (
-              <WorkModeBadge
-                clubs={workModeClubs}
-                activeClubId={activeWorkClubId}
-              />
+            {platformAccount ? (
+              <PlatformBadge />
+            ) : (
+              (workModeClubs.length > 0 || isAdmin) && (
+                <WorkModeBadge
+                  key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
+                  clubs={workModeClubs}
+                  activeClubId={activeWorkClubId}
+                  canUseTenPlanner={isAdmin}
+                  tenPlannerActive={tenPlannerMode}
+                  clubAccountClubId={clubAccountClubId}
+                  managementActive={managementMode}
+                />
+              )
             )}
           </div>
         )}
@@ -710,6 +991,7 @@ export function SidebarNav({
             </div>
             <NavContent
               pathname={pathname}
+              search={search}
               onNavigate={() => setMobileOpen(false)}
               user={user}
               avatarUrl={avatarUrl}
@@ -719,7 +1001,13 @@ export function SidebarNav({
               appName={appName}
               workModeClubs={workModeClubs}
               activeWorkClubId={activeWorkClubId}
+              tenPlannerMode={tenPlannerMode}
+              platformAccount={platformAccount}
+              clubAccountClubId={clubAccountClubId}
+              managementMode={managementMode}
               activeSport={activeSport}
+              familyOnly={familyOnly}
+              unreadMessages={unreadMessages}
             />
           </aside>
         </div>

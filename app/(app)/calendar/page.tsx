@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
   sessions as sessionsTable,
   calendarEvents as calendarEventsTable,
+  calendarHolidays as calendarHolidaysTable,
+  groups as groupsTable,
   users as usersTable,
 } from "@/db/schema";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
@@ -14,8 +17,13 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import {
   getActiveWorkClubId,
   getClubMembersDirectory,
+  getOwnedClub,
   sharedWithClubCondition,
 } from "@/lib/clubs";
+import {
+  calendarEventsVisibility,
+  isManagementWorkMode,
+} from "@/lib/calendar-events";
 import { CalendarDays, Download, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,11 +77,10 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     user.id,
     activeClubId
   );
-  const eventsVisibility = sharedWithClubCondition(
-    calendarEventsTable.userId,
-    calendarEventsTable.clubId,
+  const eventsVisibility = calendarEventsVisibility(
     user.id,
-    activeClubId
+    activeClubId,
+    await isManagementWorkMode(user.id)
   );
 
   const sessions = await db
@@ -84,6 +91,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
       durationMinutes: sessionsTable.durationMinutes,
       status: sessionsTable.status,
       userId: sessionsTable.userId,
+      groupId: sessionsTable.groupId,
       authorName: usersTable.name,
     })
     .from(sessionsTable)
@@ -125,6 +133,59 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     .orderBy(asc(calendarEventsTable.startAt))
     .limit(MAX_SESSIONS);
 
+  const holidaysVisibility = sharedWithClubCondition(
+    calendarHolidaysTable.userId,
+    calendarHolidaysTable.clubId,
+    user.id,
+    activeClubId
+  );
+  const toDateStr = (d: Date) => d.toISOString().slice(0, 10);
+  const [holidays, ownedClub, spaceGroups] = await Promise.all([
+    db
+      .select({
+        id: calendarHolidaysTable.id,
+        title: calendarHolidaysTable.title,
+        description: calendarHolidaysTable.description,
+        startDate: calendarHolidaysTable.startDate,
+        endDate: calendarHolidaysTable.endDate,
+        groupId: calendarHolidaysTable.groupId,
+        clubId: calendarHolidaysTable.clubId,
+        userId: calendarHolidaysTable.userId,
+        authorName: usersTable.name,
+      })
+      .from(calendarHolidaysTable)
+      .leftJoin(usersTable, eq(usersTable.id, calendarHolidaysTable.userId))
+      .where(
+        and(
+          holidaysVisibility,
+          gte(calendarHolidaysTable.endDate, toDateStr(windowStart)),
+          lte(calendarHolidaysTable.startDate, toDateStr(windowEnd))
+        )
+      )
+      .orderBy(asc(calendarHolidaysTable.startDate))
+      .limit(MAX_SESSIONS),
+    getOwnedClub(user.id),
+    db
+      .select({ id: groupsTable.id, name: groupsTable.name })
+      .from(groupsTable)
+      .where(
+        sharedWithClubCondition(
+          groupsTable.coachId,
+          groupsTable.clubId,
+          user.id,
+          activeClubId
+        )
+      )
+      .orderBy(asc(groupsTable.name)),
+  ]);
+
+  const serializedHolidays = holidays.map((h) => ({
+    ...h,
+    authorName: h.userId !== user.id ? (h.authorName ?? null) : null,
+    // Lo edita quien lo creó o el dueño del club al que pertenece.
+    canEdit: h.userId === user.id || (!!h.clubId && ownedClub?.id === h.clubId),
+  }));
+
   const serialized = sessions.map((s) => ({
     ...s,
     scheduledAt: s.scheduledAt.toISOString(),
@@ -140,6 +201,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
 
   const total = serialized.length;
   const totalEvents = serializedEvents.length;
+  const totalHolidays = serializedHolidays.length;
 
   return (
     <div className="tp-page">
@@ -150,8 +212,8 @@ export default async function CalendarPage({ searchParams }: PageProps) {
               <CalendarDays className="size-3.5" />
               Agenda operativa
             </div>
-            <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-              Calendario
+            <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
+              {personalTitle("Calendario", await getWorkMode(user.id))}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {total} sesión{total !== 1 ? "es" : ""} planificada
@@ -214,7 +276,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
             ))}
           </div>
         )}
-        {total === 0 && totalEvents === 0 ? (
+        {total === 0 && totalEvents === 0 && totalHolidays === 0 ? (
           <div className="tp-panel flex flex-col items-center justify-center gap-4 border-dashed py-20 text-center">
             <p className="max-w-xs text-sm leading-6 text-foreground/55">
               Aún no tienes sesiones ni eventos planificados. Crea el primero
@@ -232,6 +294,8 @@ export default async function CalendarPage({ searchParams }: PageProps) {
           <CalendarClient
             sessions={serialized}
             events={serializedEvents}
+            holidays={serializedHolidays}
+            groups={spaceGroups}
             currentUserId={user.id}
           />
         )}

@@ -13,11 +13,16 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { after } from "next/server";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import {
+  exerciseOwnOrClubCondition,
+  exerciseVisibleToUserCondition,
+} from "@/lib/exercise-access";
+import { getActiveWorkClubId } from "@/lib/clubs";
 import { embedExercise } from "@/lib/ai/semantic-search";
 import { getBooleanSetting } from "@/lib/app-settings";
 import {
@@ -80,6 +85,7 @@ export async function GET(request: NextRequest) {
     duracionRango: getAllParam(searchParams, "duracionRango"),
     caracter: getAllParam(searchParams, "caracter"),
     situacionJuego: getAllParam(searchParams, "situacionJuego"),
+    tipoCompeticion: getAllParam(searchParams, "tipoCompeticion"),
   });
 
   if (!parsedQuery.success) {
@@ -109,6 +115,7 @@ export async function GET(request: NextRequest) {
     duracionRango,
     caracter,
     situacionJuego,
+    tipoCompeticion,
   } = parsedQuery.data;
   const activeTipoActividad = Array.from(
     new Set([...(tipoActividad ?? []), ...(tipologia ?? [])])
@@ -120,7 +127,7 @@ export async function GET(request: NextRequest) {
   const visibilityCondition = publicExercisesEnabled
     ? exerciseVisibleToUserCondition(user?.id)
     : user
-      ? eq(exercises.createdBy, user.id)
+      ? exerciseOwnOrClubCondition(user.id)
       : undefined;
 
   if (!visibilityCondition) {
@@ -186,7 +193,13 @@ export async function GET(request: NextRequest) {
   }
   if (location?.length)
     whereConditions.push(inArray(exercises.location, location));
-  if (phase) whereConditions.push(eq(exercises.phase, phase));
+  if (phase) {
+    const phaseWhere = or(
+      eq(exercises.phase, phase),
+      jsonbArrayHasAny(exercises.fases, [phase])!
+    );
+    if (phaseWhere) whereConditions.push(phaseWhere);
+  }
   if (intensity != null)
     whereConditions.push(eq(exercises.intensity, intensity));
   if (nivel?.length) {
@@ -224,6 +237,13 @@ export async function GET(request: NextRequest) {
     );
     if (situacionWhere) whereConditions.push(situacionWhere);
   }
+  if (tipoCompeticion?.length) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercises.tipoCompeticion,
+      tipoCompeticion
+    );
+    if (competicionWhere) whereConditions.push(competicionWhere);
+  }
 
   const whereClause =
     whereConditions.length > 0 ? and(...whereConditions) : undefined;
@@ -256,6 +276,8 @@ export async function GET(request: NextRequest) {
         imageUrls: exercises.imageUrls,
         nivel: exercises.nivel,
         niveles: exercises.niveles,
+        phase: exercises.phase,
+        fases: exercises.fases,
         aspectoJuego: exercises.aspectoJuego,
         aspectosJuego: exercises.aspectosJuego,
         parametro: exercises.parametro,
@@ -263,6 +285,7 @@ export async function GET(request: NextRequest) {
         duracionRango: exercises.duracionRango,
         caracter: exercises.caracter,
         situacionJuego: exercises.situacionJuego,
+        tipoCompeticion: exercises.tipoCompeticion,
         createdBy: exercises.createdBy,
         createdAt: exercises.createdAt,
         updatedAt: exercises.updatedAt,
@@ -371,20 +394,28 @@ export async function POST(request: Request) {
       .onConflictDoNothing();
 
     const [dbUser] = await db
-      .select({ isAdmin: users.isAdmin })
+      .select({ id: users.id })
       .from(users)
       .where(eq(users.id, user.id))
       .limit(1);
-    const isAdmin = !!dbUser?.isAdmin;
-    const sport = await getActiveSport(user.id);
+    // Solo en Modo administrador se publica en la Biblioteca.
+    const isAdmin = !!dbUser && (await isTenPlannerMode(user.id));
+    const [sport, activeClubId] = await Promise.all([
+      getActiveSport(user.id),
+      getActiveWorkClubId(user.id),
+    ]);
 
     const {
       isGlobal: requestedIsGlobal,
       autoria: requestedAutoria,
       ...rest
     } = parsedBody.data;
+    const isGlobal = isAdmin && requestedIsGlobal === true;
     const niveles = normalizeMultiValue(
       rest.niveles ?? (rest.nivel ? [rest.nivel] : null)
+    );
+    const fases = normalizeMultiValue(
+      rest.fases ?? (rest.phase ? [rest.phase] : null)
     );
     const aspectosJuego = normalizeMultiValue(
       rest.aspectosJuego ?? (rest.aspectoJuego ? [rest.aspectoJuego] : null)
@@ -428,7 +459,8 @@ export async function POST(request: Request) {
         tips: rest.tips ?? null,
         location: rest.location ?? null,
         videoUrl: rest.videoUrl ?? null,
-        phase: rest.phase ?? null,
+        phase: fases?.[0] ?? null,
+        fases,
         intensity: rest.intensity ?? null,
         formato: rest.formato ?? null,
         numJugadores: rest.numJugadores ?? null,
@@ -452,9 +484,13 @@ export async function POST(request: Request) {
         duracionRango: rest.duracionRango ?? null,
         caracter: normalizeMultiValue(rest.caracter),
         situacionJuego: normalizeMultiValue(rest.situacionJuego),
-        isGlobal: isAdmin && requestedIsGlobal === true,
-        autoria: isAdmin && requestedAutoria ? requestedAutoria : "libre",
+        tipoCompeticion: normalizeMultiValue(rest.tipoCompeticion),
+        isGlobal,
+        autoria: isAdmin ? (requestedAutoria ?? "ten_planner") : "libre",
         createdBy: user.id,
+        // Creado trabajando como un club → compartido en "Mis ejercicios"
+        // del espacio de ese club. Los globales (biblioteca) no son de club.
+        clubId: isGlobal ? null : activeClubId,
         sport,
       })
       .returning();

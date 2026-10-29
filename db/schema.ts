@@ -11,14 +11,19 @@ import {
   date,
   index,
   numeric,
+  doublePrecision,
   vector,
   uniqueIndex,
   jsonb,
+  primaryKey,
+  check,
+  unique,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -141,6 +146,19 @@ export const users = pgTable(
       (): AnyPgColumn => clubs.id,
       { onDelete: "set null" }
     ),
+    // Cuenta de la plataforma (p. ej. admin@tenplanner.es): trabaja siempre
+    // en "Modo Ten Planner": lo que crea o edita es de la plataforma
+    // (Biblioteca pública, catálogo base de objetivos) y ve los Informes. No
+    // tiene sesiones, alumnos ni club. Ver lib/work-mode.ts.
+    isPlatformAccount: boolean("is_platform_account").default(false).notNull(),
+    // "Modo administrador" (solo administradores, elegible en el selector de
+    // modo): como la cuenta de la plataforma, lo que crea o edita es público.
+    // Excluye el modo club (activeClubId queda a null).
+    adminMode: boolean("admin_mode").default(false).notNull(),
+    // "Modo gestión" (solo la cuenta del club, su dueño): informes y
+    // estadísticas de monitores y alumnos del club, y gestión de monitores.
+    // Solo consulta; activeClubId sigue apuntando a su club.
+    managementMode: boolean("management_mode").default(false).notNull(),
     // Deporte activo: el contexto que filtra todo lo que el usuario ve y
     // crea (sesiones, biblioteca, grupos...). Se elige y cambia desde el
     // selector de deporte, no por elemento. Independiente de activeClubId:
@@ -169,6 +187,10 @@ export const exercises = pgTable(
     difficulty: difficultyEnum("difficulty").notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
     objectives: text("objectives"),
+    // Organización que muestra la animación de clase para este ejercicio
+    // (una AnimationScene de lib/classes/animation.ts). Null = se deduce
+    // del texto.
+    animationScene: varchar("animation_scene", { length: 24 }),
     steps: json("steps").$type<Array<{ title: string; description: string }>>(),
     materials: json("materials").$type<string[]>(),
     imageUrl: text("image_url"),
@@ -176,6 +198,9 @@ export const exercises = pgTable(
     videoUrl: text("video_url"),
     tips: text("tips"),
     phase: trainingPhaseEnum("phase"),
+    // Un ejercicio puede servir en varias fases (p. ej. calentamiento y vuelta
+    // a la calma). `phase` guarda la primera para compatibilidad.
+    fases: jsonb("fases").$type<string[]>(),
     intensity: integer("intensity"), // 1-5, app-validated
     formato: ejercicioFormatoEnum("formato"),
     numJugadores: integer("num_jugadores"),
@@ -198,12 +223,20 @@ export const exercises = pgTable(
     tiposActividad: jsonb("tipos_actividad").$type<string[]>(),
     caracter: jsonb("caracter").$type<string[]>(),
     situacionJuego: jsonb("situacion_juego").$type<string[]>(),
+    tipoCompeticion: jsonb("tipo_competicion").$type<string[]>(), // individual|dobles
     // Autoría del ejercicio/clase: "ten_planner" | "libre" | el id de un
     // monitor/academia dado de alta (p. ej. "academia_christian_larsen").
     // Texto libre (no enum) para poder añadir nuevas autorías sin migración.
     autoria: varchar("autoria", { length: 64 }).default("libre"),
     isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
     isGlobal: boolean("is_global").default(false).notNull(),
+    // null = ejercicio del espacio particular de su autor. Se asigna cuando
+    // el monitor lo crea trabajando como un club (modo de trabajo): queda
+    // compartido con todos los miembros activos de ese club ("Mis
+    // ejercicios" del espacio del club). Mismo criterio que classes.clubId.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
     // Deporte al que pertenece el ejercicio. Default "tenis" para que todo
     // el contenido existente quede migrado sin tocar datos.
     sport: sportEnum("sport").default("tenis").notNull(),
@@ -226,6 +259,7 @@ export const exercises = pgTable(
     index("exercises_name_idx").on(t.name),
     index("exercises_autoria_idx").on(t.autoria),
     index("exercises_sport_idx").on(t.sport),
+    index("exercises_club_id_idx").on(t.clubId),
   ]
 );
 
@@ -293,6 +327,13 @@ export const sessions = pgTable(
     sport: sportEnum("sport").default("tenis").notNull(),
     status: sessionStatusEnum("status").notNull().default("scheduled"),
     statusNote: text("status_note"), // notas de completada / motivo de cancelada
+    // Comentario libre del monitor sobre la sesión en general; se puede
+    // escribir antes o después de marcarla como completada.
+    coachComment: text("coach_comment"),
+    // Nota de voz del monitor sobre la sesión en general: ruta del archivo
+    // en el bucket privado "session-audio" y duración en segundos.
+    coachAudioPath: text("coach_audio_path"),
+    coachAudioSeconds: integer("coach_audio_seconds"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -393,6 +434,12 @@ export const sessionBlockItems = pgTable(
     // una ficha completa. Null para ejercicios de biblioteca (su aspecto
     // sale de exercises.aspecto_juego) y para items sin clasificar.
     aspectoJuego: varchar("aspecto_juego", { length: 16 }),
+    // Comentario del monitor sobre este ejercicio/actividad de la sesión
+    // (antes o después de darla). Se conserva al editar el plan.
+    coachComment: text("coach_comment"),
+    // Nota de voz sobre este ejercicio/actividad (bucket "session-audio").
+    coachAudioPath: text("coach_audio_path"),
+    coachAudioSeconds: integer("coach_audio_seconds"),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),
@@ -422,6 +469,12 @@ export const students = pgTable(
     yearStartedRacketSports: integer("year_started_racket_sports"),
     phone: varchar("phone", { length: 32 }),
     preferredSchedule: text("preferred_schedule"),
+    // Localidad de procedencia (texto libre) y sus coordenadas aproximadas
+    // (centro de la localidad, no una dirección). Se usan solo para el mapa
+    // de procedencia de las estadísticas del club.
+    locality: varchar("locality", { length: 120 }),
+    localityLat: doublePrecision("locality_lat"),
+    localityLng: doublePrecision("locality_lng"),
     notes: text("notes"),
     imageUrl: text("image_url"),
     profileToken: varchar("profile_token", { length: 128 }).unique(),
@@ -447,6 +500,153 @@ export const students = pgTable(
     index("students_coach_id_idx").on(t.coachId),
     index("students_coach_name_idx").on(t.coachId, t.name),
     index("students_club_id_idx").on(t.clubId),
+  ]
+);
+
+// Catálogo de objetivos por etapa (bola roja / naranja / verde y las cuatro
+// etapas de pelota amarilla) y aspecto del
+// juego. Basado en tenisXetapas (RFET): `source` indica si el objetivo recoge
+// un punto de la RFET ("rfet"), es un desglose propuesto ("desglose") o lo ha
+// creado un monitor ("propio").
+export const tennisObjectives = pgTable(
+  "tennis_objectives",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: text("code").notNull().unique(),
+    sport: text("sport").default("tenis").notNull(),
+    ball: text("ball").notNull(), // "roja" | "naranja" | "verde" | etapa amarilla (especializacion, precompeticion, competicion, rendimiento)
+    stage: text("stage").notNull(),
+    ageRange: text("age_range").notNull(),
+    aspect: text("aspect").notNull(), // "tecnico" | "tactico" | "mental" | "fisico"
+    block: text("block").notNull(),
+    title: text("title").notNull(),
+    criterion: text("criterion"),
+    source: text("source").default("desglose").notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    // Objetivo final de su subcategoría (se muestra al final y destacado).
+    isFinal: boolean("is_final").default(false).notNull(),
+    // Ámbito: los tres a null = catálogo base de Ten Planner. Un objetivo propio
+    // pertenece a UN solo ámbito: un club (todos sus alumnos), un monitor (sus
+    // alumnos particulares, sin club) o un alumno concreto.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "cascade",
+    }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("tennis_objectives_ball_aspect_idx").on(
+      t.ball,
+      t.aspect,
+      t.sortOrder
+    ),
+    index("tennis_objectives_club_id_idx").on(t.clubId),
+    index("tennis_objectives_coach_id_idx").on(t.coachId),
+    index("tennis_objectives_student_id_idx").on(t.studentId),
+    check(
+      "tennis_objectives_single_scope_chk",
+      sql`num_nonnulls(${t.clubId}, ${t.coachId}, ${t.studentId}) <= 1`
+    ),
+  ]
+);
+
+// Ajustes sobre un objetivo (base o propio) para un club, un monitor o un
+// alumno. Cada campo a null = "sin cambio": gana el ajuste más específico
+// (alumno > club/monitor > original). Borrar la fila restaura el original.
+export const objectiveOverrides = pgTable(
+  "objective_overrides",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    objectiveId: uuid("objective_id")
+      .references(() => tennisObjectives.id, { onDelete: "cascade" })
+      .notNull(),
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "cascade",
+    }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
+    hidden: boolean("hidden"),
+    title: text("title"),
+    criterion: text("criterion"),
+    // Posición de este objetivo dentro de su grupo para este ámbito.
+    sortOrder: integer("sort_order"),
+    // Grupo al que se ha arrastrado el objetivo en este ámbito (bola, aspecto
+    // y bloque van siempre juntos; null = el grupo original).
+    ball: text("ball"),
+    aspect: text("aspect"),
+    block: text("block"),
+    updatedBy: uuid("updated_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("objective_overrides_club_uniq")
+      .on(t.objectiveId, t.clubId)
+      .where(sql`${t.clubId} is not null`),
+    uniqueIndex("objective_overrides_coach_uniq")
+      .on(t.objectiveId, t.coachId)
+      .where(sql`${t.coachId} is not null`),
+    uniqueIndex("objective_overrides_student_uniq")
+      .on(t.objectiveId, t.studentId)
+      .where(sql`${t.studentId} is not null`),
+    index("objective_overrides_student_idx").on(t.studentId),
+    check(
+      "objective_overrides_single_scope_chk",
+      sql`num_nonnulls(${t.clubId}, ${t.coachId}, ${t.studentId}) = 1`
+    ),
+  ]
+);
+
+// Objetivos marcados como conseguidos por alumno. Cualquier alumno puede tener
+// marcado cualquier objetivo, sea de su bola o de otra.
+export const studentObjectives = pgTable(
+  "student_objectives",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    objectiveId: uuid("objective_id")
+      .references(() => tennisObjectives.id, { onDelete: "cascade" })
+      .notNull(),
+    achieved: boolean("achieved").default(true).notNull(),
+    achievedAt: timestamp("achieved_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    markedBy: uuid("marked_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    unique("student_objectives_student_id_objective_id_key").on(
+      t.studentId,
+      t.objectiveId
+    ),
+    index("student_objectives_student_idx").on(t.studentId),
   ]
 );
 
@@ -498,6 +698,9 @@ export const groups = pgTable(
     // Días de la semana (y hora) en que el grupo tiene clase habitualmente;
     // ver lib/groups/schedule.ts. Null/[] = sin horario fijo configurado.
     weeklySchedule: jsonb("weekly_schedule").$type<GroupScheduleEntry[]>(),
+    // Objetivos de trabajo del grupo: texto libre, uno por línea. Se pueden
+    // cargar del catálogo de Objetivos o escribir a mano.
+    objetivos: text("objetivos"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -617,11 +820,20 @@ export const exerciseLists = pgTable(
     name: varchar("name", { length: 100 }).notNull(),
     emoji: varchar("emoji", { length: 10 }).default("📋"),
     isDefault: boolean("is_default").default(false).notNull(),
+    // Espacio de la lista de favoritos: null = particular (solo su autor);
+    // un club = "Favoritos club", compartidas y editables por todos los
+    // miembros activos del club. Ver lib/exercises/lists.ts.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
-  (t) => [index("exercise_lists_user_id_idx").on(t.userId)]
+  (t) => [
+    index("exercise_lists_user_id_idx").on(t.userId),
+    index("exercise_lists_club_id_idx").on(t.clubId),
+  ]
 );
 
 // Exercise list items (exercises in a list)
@@ -805,6 +1017,11 @@ export const classes = pgTable(
     niveles: jsonb("niveles").$type<string[]>(),
     aspectosJuego: jsonb("aspectos_juego").$type<string[]>(),
     golpes: json("golpes").$type<string[]>(),
+    // Etiquetas libres (las mismas que en las sesiones).
+    tags: jsonb("tags").$type<string[]>(),
+    // Animación de la clase activada (p. ej. al guardarla desde una sesión
+    // que la tenía). Se genera siempre a partir de sus bloques actuales.
+    animationEnabled: boolean("animation_enabled").default(false).notNull(),
     isLibrary: boolean("is_library").default(false).notNull(),
     // Autoría de la clase: "ten_planner" | "libre" | el id de un
     // monitor/academia dado de alta (p. ej. "academia_christian_larsen").
@@ -876,6 +1093,8 @@ export const classBlockExercises = pgTable(
     title: varchar("title", { length: 120 }),
     orderIndex: integer("order_index").notNull(),
     durationMinutes: integer("duration_minutes"),
+    // Notas del monitor sobre este elemento (las mismas que en la sesión).
+    notes: text("notes"),
     // "exercise"|"text"|"warmup"|"stations"; null = legacy (infer from
     // exerciseId/freeText).
     kind: varchar("kind", { length: 16 }),
@@ -925,11 +1144,25 @@ export const classLists = pgTable(
     name: varchar("name", { length: 100 }).notNull(),
     emoji: varchar("emoji", { length: 10 }).default("CL"),
     isDefault: boolean("is_default").default(false).notNull(),
+    // Espacio de la lista ("Mis listas"): null = espacio particular (solo la
+    // ve su autor); un club = compartida con los miembros activos de ese
+    // club mientras trabajan en su modo. Ver sharedWithClubCondition.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
+    // Lista pública de la biblioteca (p. ej. "Lista clases bola roja"):
+    // solo un admin puede marcarla. Cualquiera puede verla y copiarla a su
+    // espacio desde la Biblioteca.
+    isPublic: boolean("is_public").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
-  (t) => [index("class_lists_user_id_idx").on(t.userId)]
+  (t) => [
+    index("class_lists_user_id_idx").on(t.userId),
+    index("class_lists_club_id_idx").on(t.clubId),
+    index("class_lists_is_public_idx").on(t.isPublic),
+  ]
 );
 
 export const classListItems = pgTable(
@@ -989,6 +1222,9 @@ export const calendarEvents = pgTable(
     clubId: uuid("club_id").references(() => clubs.id, {
       onDelete: "set null",
     }),
+    // Creado desde el Espacio gestión: solo lo ve el gestor (su dueño), en ese
+    // modo; ni los monitores ni él mismo en el modo del club.
+    management: boolean("management").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1002,6 +1238,43 @@ export const calendarEvents = pgTable(
     index("calendar_events_start_at_idx").on(t.startAt),
     index("calendar_events_user_start_at_idx").on(t.userId, t.startAt),
     index("calendar_events_club_id_idx").on(t.clubId),
+  ]
+);
+
+// Festivos del calendario (rango de fechas sin hora). Los crea el club o un
+// monitor. groupId null = todo el espacio (club o particular); con groupId,
+// solo ese grupo. Una sesión que cae en festivo se marca "no se imparte" en
+// la vista, sin borrarla.
+export const calendarHolidays = pgTable(
+  "calendar_holidays",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    startDate: date("start_date", { mode: "string" }).notNull(),
+    endDate: date("end_date", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("calendar_holidays_user_id_idx").on(t.userId),
+    index("calendar_holidays_club_dates_idx").on(t.clubId, t.startDate),
+    index("calendar_holidays_group_id_idx").on(t.groupId),
+    check("calendar_holidays_range_chk", sql`${t.endDate} >= ${t.startDate}`),
   ]
 );
 
@@ -1546,6 +1819,15 @@ export const clubs = pgTable(
       .notNull(),
     // Informational only for now — no seat billing/enforcement.
     plannedCoachSeats: integer("planned_coach_seats"),
+    // Ficha de identificación del club (Perfil, en modo club).
+    fullName: varchar("full_name", { length: 255 }),
+    address: text("address"),
+    // Contacto del club, pedido en el registro ("Como Club").
+    phone: varchar("phone", { length: 50 }),
+    website: varchar("website", { length: 255 }),
+    // Número de pistas por tipo de superficie; ver lib/club-identity.ts.
+    courts: jsonb("courts").$type<Partial<Record<string, number>>>(),
+    foundedYear: integer("founded_year"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1605,6 +1887,8 @@ export const clubInvites = pgTable(
       .references(() => clubs.id, { onDelete: "cascade" })
       .notNull(),
     email: varchar("email", { length: 255 }).notNull(),
+    // Nombre del monitor tal como lo escribe el director al invitarlo.
+    inviteeName: varchar("invitee_name", { length: 255 }),
     token: varchar("token", { length: 128 }).notNull().unique(),
     status: clubInviteStatusEnum("status").notNull().default("pending"),
     // El deporte para el que se invita al monitor — una invitación es para
@@ -1627,6 +1911,101 @@ export const clubInvites = pgTable(
   ]
 );
 
+// Monitores asignados por el gestor del club a un grupo o a un alumno del club.
+// Es una relación muchos-a-muchos (un grupo puede tener varios monitores y un
+// monitor varios grupos). Solo asigna el dueño del club, y solo entre los
+// monitores activos del propio club; ver lib/club-coaches.ts.
+export const groupCoaches = pgTable(
+  "group_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
+      .references(() => groups.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("group_coaches_group_user_uniq").on(t.groupId, t.userId),
+    index("group_coaches_group_id_idx").on(t.groupId),
+    index("group_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+export const studentCoaches = pgTable(
+  "student_coaches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    assignedByUserId: uuid("assigned_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("student_coaches_student_user_uniq").on(t.studentId, t.userId),
+    index("student_coaches_student_id_idx").on(t.studentId),
+    index("student_coaches_user_id_idx").on(t.userId),
+  ]
+);
+
+// Ficha de un monitor del club (Gestión → Monitores). La rellena el gestor
+// directamente o el propio monitor desde un enlace con token de un solo uso;
+// hasta que la rellena, `status` es "pending" y `phone` puede estar vacío.
+// Se relaciona con una cuenta de Ten Planner por el email, no por clave.
+export const clubCoachProfiles = pgTable(
+  "club_coach_profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    fullName: varchar("full_name", { length: 255 }).notNull(),
+    // Siempre en minúsculas: una ficha por email dentro de cada club.
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 32 }),
+    academicTraining: text("academic_training"),
+    tennisTraining: text("tennis_training"),
+    // { lunes: ["manana", "tarde"], ... }; ver lib/coach-profile.ts.
+    availability: jsonb("availability").$type<Availability>(),
+    startedTeachingYear: integer("started_teaching_year"),
+    experience: jsonb("experience").$type<ExperienceEntry[]>(),
+    status: varchar("status", { length: 10 }).default("complete").notNull(),
+    // Enlace para que el monitor rellene su ficha; se anula al enviarla.
+    profileToken: varchar("profile_token", { length: 128 }).unique(),
+    profileTokenExpiresAt: timestamp("profile_token_expires_at", {
+      withTimezone: true,
+    }),
+    // Solo si la rellenó el propio monitor, al aceptar el tratamiento de datos.
+    consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("club_coach_profiles_club_email_uniq").on(t.clubId, t.email),
+    index("club_coach_profiles_club_id_idx").on(t.clubId),
+  ]
+);
+
 export const clubsRelations = relations(clubs, ({ many }) => ({
   members: many(clubMembers),
   invites: many(clubInvites),
@@ -1640,3 +2019,238 @@ export const clubMembersRelations = relations(clubMembers, ({ one }) => ({
 export const clubInvitesRelations = relations(clubInvites, ({ one }) => ({
   club: one(clubs, { fields: [clubInvites.clubId], references: [clubs.id] }),
 }));
+
+// ─── Avisos club → familias (fase 1 de la comunicación del club) ──────────────
+// Las políticas RLS, funciones y triggers viven en la migración SQL
+// 0054_avisos_familias.sql; aquí solo el esquema de tablas.
+
+// Tutores / familias de un alumno. Hoy los alumnos no tienen cuenta: cada
+// tutor activa la suya con un enlace (inviteToken) y a partir de ahí
+// userId = su usuario. Un alumno adulto puede ser su propio "tutor".
+export const studentGuardians = pgTable(
+  "student_guardians",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    name: varchar("name", { length: 120 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 32 }),
+    // "madre" | "padre" | "tutor_legal" | "alumno"
+    relationship: varchar("relationship", { length: 30 }),
+    inviteToken: varchar("invite_token", { length: 128 }).unique(),
+    inviteExpiresAt: timestamp("invite_expires_at", { withTimezone: true }),
+    // Consentimiento RGPD para recibir avisos del club
+    consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
+    consentVersion: varchar("consent_version", { length: 20 }),
+    // Baja: deja de ver avisos y respuestas
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("student_guardians_student_id_idx").on(t.studentId),
+    index("student_guardians_user_id_idx").on(t.userId),
+  ]
+);
+
+// A quién va un mensaje del club:
+// - "club": familias de todos los alumnos del club
+// - "group": familias de un grupo (groupId)
+// - "student": tutores de un alumno, o el propio alumno si es mayor (studentId)
+// - "coaches": todos los monitores del club (del deporte `sport` si se indica)
+// - "coach": un monitor concreto (recipientUserId)
+export const announcementAudienceEnum = pgEnum("announcement_audience", [
+  "club",
+  "group",
+  "student",
+  "coaches",
+  "coach",
+]);
+
+// Mensajes del club. Quién puede enviar y quién puede leer cada tipo lo
+// deciden las políticas RLS de las migraciones 0054 y 0055.
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    audience: announcementAudienceEnum("audience").default("group").notNull(),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "cascade",
+    }),
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "cascade",
+    }),
+    recipientUserId: uuid("recipient_user_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    // Solo para audience "coaches": limita a los monitores de ese deporte
+    sport: sportEnum("sport"),
+    // Opcional: liga el aviso a una sesión de ese grupo
+    sessionId: uuid("session_id").references(() => sessions.id, {
+      onDelete: "set null",
+    }),
+    authorId: uuid("author_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 140 }).notNull(),
+    body: text("body").notNull(),
+    allowReplies: boolean("allow_replies").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+    // Borrado lógico
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("announcements_club_created_idx").on(t.clubId, t.createdAt),
+    index("announcements_group_created_idx").on(t.groupId, t.createdAt),
+    index("announcements_student_created_idx").on(t.studentId, t.createdAt),
+    index("announcements_recipient_created_idx").on(
+      t.recipientUserId,
+      t.createdAt
+    ),
+    check("announcements_body_len", sql`char_length(${t.body}) <= 4000`),
+    check(
+      "announcements_audience_target",
+      sql`(${t.audience} = 'club' and ${t.groupId} is null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'group' and ${t.groupId} is not null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'student' and ${t.studentId} is not null and ${t.groupId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'coaches' and ${t.groupId} is null and ${t.studentId} is null and ${t.recipientUserId} is null)
+       or (${t.audience} = 'coach' and ${t.recipientUserId} is not null and ${t.groupId} is null and ${t.studentId} is null)`
+    ),
+  ]
+);
+
+// Respuestas: un hilo privado por familia dentro de cada aviso
+// (threadGuardianId). Las demás familias nunca lo ven.
+export const announcementReplies = pgTable(
+  "announcement_replies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    announcementId: uuid("announcement_id")
+      .references(() => announcements.id, { onDelete: "cascade" })
+      .notNull(),
+    threadGuardianId: uuid("thread_guardian_id")
+      .references(() => studentGuardians.id, { onDelete: "cascade" })
+      .notNull(),
+    authorId: uuid("author_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("announcement_replies_thread_idx").on(
+      t.announcementId,
+      t.threadGuardianId,
+      t.createdAt
+    ),
+    check("announcement_replies_body_len", sql`char_length(${t.body}) <= 2000`),
+  ]
+);
+
+// Confirmaciones de lectura ("leído por 12 de 15")
+export const announcementReads = pgTable(
+  "announcement_reads",
+  {
+    announcementId: uuid("announcement_id")
+      .references(() => announcements.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.announcementId, t.userId] })]
+);
+
+export const studentGuardiansRelations = relations(
+  studentGuardians,
+  ({ one, many }) => ({
+    student: one(students, {
+      fields: [studentGuardians.studentId],
+      references: [students.id],
+    }),
+    user: one(users, {
+      fields: [studentGuardians.userId],
+      references: [users.id],
+    }),
+    replies: many(announcementReplies),
+  })
+);
+
+export const announcementsRelations = relations(
+  announcements,
+  ({ one, many }) => ({
+    club: one(clubs, {
+      fields: [announcements.clubId],
+      references: [clubs.id],
+    }),
+    group: one(groups, {
+      fields: [announcements.groupId],
+      references: [groups.id],
+    }),
+    session: one(sessions, {
+      fields: [announcements.sessionId],
+      references: [sessions.id],
+    }),
+    author: one(users, {
+      fields: [announcements.authorId],
+      references: [users.id],
+    }),
+    replies: many(announcementReplies),
+    reads: many(announcementReads),
+  })
+);
+
+export const announcementRepliesRelations = relations(
+  announcementReplies,
+  ({ one }) => ({
+    announcement: one(announcements, {
+      fields: [announcementReplies.announcementId],
+      references: [announcements.id],
+    }),
+    thread: one(studentGuardians, {
+      fields: [announcementReplies.threadGuardianId],
+      references: [studentGuardians.id],
+    }),
+    author: one(users, {
+      fields: [announcementReplies.authorId],
+      references: [users.id],
+    }),
+  })
+);
+
+export const announcementReadsRelations = relations(
+  announcementReads,
+  ({ one }) => ({
+    announcement: one(announcements, {
+      fields: [announcementReads.announcementId],
+      references: [announcements.id],
+    }),
+    user: one(users, {
+      fields: [announcementReads.userId],
+      references: [users.id],
+    }),
+  })
+);

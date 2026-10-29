@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import { redirect } from "next/navigation";
 import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm";
 import { Plus, Search, ArrowLeft, ArrowUpRight, Users } from "lucide-react";
@@ -11,6 +12,8 @@ import {
   sharedWithClubCondition,
 } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
+import { loadStudentsStats } from "@/lib/students/load-stats";
+import { StudentsStatsSection } from "@/components/app/students/students-stats-section";
 
 const PAGE_SIZE = 30;
 
@@ -89,7 +92,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
   const listWhere = and(...conditions);
   const baseWhere = and(...baseConditions);
 
-  const [rowPage, totalRows, levelRows] = await Promise.all([
+  const [rowPage, totalRows, stats] = await Promise.all([
     db
       .select({
         student: studentsTable,
@@ -102,11 +105,11 @@ export default async function StudentsPage({ searchParams }: PageProps) {
       .limit(PAGE_SIZE + 1)
       .offset(offset),
     db.select({ total: count() }).from(studentsTable).where(baseWhere),
-    db
-      .select({ level: studentsTable.playerLevel, total: count() })
-      .from(studentsTable)
-      .where(baseWhere)
-      .groupBy(studentsTable.playerLevel),
+    loadStudentsStats({
+      userId: user.id,
+      activeClubId,
+      monitorFilter,
+    }),
   ]);
 
   const hasNextPage = rowPage.length > PAGE_SIZE;
@@ -124,15 +127,6 @@ export default async function StudentsPage({ searchParams }: PageProps) {
     const s = p.toString();
     return `/students${s ? `?${s}` : ""}`;
   }
-
-  const levelCounts = levelRows.reduce<Record<PlayerLevel, number>>(
-    (acc, r) => {
-      const lvl = r.level as PlayerLevel | null;
-      if (lvl) acc[lvl] = Number(r.total);
-      return acc;
-    },
-    { beginner: 0, amateur: 0, intermediate: 0, advanced: 0, competitive: 0 }
-  );
 
   function buildHref(params: { q?: string; page?: string }) {
     const p = new URLSearchParams();
@@ -152,8 +146,10 @@ export default async function StudentsPage({ searchParams }: PageProps) {
               <Users className="size-3.5" />
               Cartera
             </p>
-            <h1 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-              Alumnos
+            <h1 className="break-words text-4xl font-black leading-tight text-white sm:text-5xl">
+              {user
+                ? personalTitle("Alumnos", await getWorkMode(user.id))
+                : "Alumnos"}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {totalStudents} alumno{totalStudents !== 1 ? "s" : ""} registrado
@@ -204,23 +200,12 @@ export default async function StudentsPage({ searchParams }: PageProps) {
           </div>
         )}
 
-        {/* Level strip */}
+        {/* Estadísticas: niveles, edades, grupos y procedencia */}
         {totalStudents > 0 && (
-          <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 sm:grid-cols-3 lg:grid-cols-5">
-            {(Object.keys(LEVEL_LABEL) as PlayerLevel[]).map((lvl) => (
-              <div
-                key={lvl}
-                className="border-t border-[#050505]/10 px-3 py-4 first:border-t-0 dark:border-white/10 sm:px-4 sm:py-5 sm:[&:nth-child(-n+3)]:border-t-0 lg:border-l lg:border-t-0 lg:first:border-l-0"
-              >
-                <p className="mb-1.5 text-[9px] font-black uppercase text-foreground/45">
-                  {LEVEL_CODE[lvl]} · {LEVEL_LABEL[lvl]}
-                </p>
-                <p className="text-3xl font-black tabular-nums leading-none text-foreground">
-                  {levelCounts[lvl]}
-                </p>
-              </div>
-            ))}
-          </section>
+          <StudentsStatsSection
+            stats={stats}
+            reportHref={`/api/students/stats/pdf${monitorFilter ? `?monitor=${monitorFilter}` : ""}`}
+          />
         )}
 
         {/* Search rail */}

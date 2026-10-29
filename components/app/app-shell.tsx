@@ -3,6 +3,10 @@ import { MaintenanceBanner } from "./maintenance-banner";
 import { SidebarNav } from "./sidebar-nav";
 import type { ClubOption } from "./club-context-select";
 import type { Sport } from "@/lib/sport-constants";
+import {
+  PendingClubInvites,
+  type PendingClubInvite,
+} from "./pending-club-invites";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -20,7 +24,21 @@ interface AppShellProps {
   appName?: string;
   workModeClubs?: ClubOption[];
   activeWorkClubId?: string | null;
+  /** Modo administrador activo. */
+  tenPlannerMode?: boolean;
+  /** Cuenta de la plataforma (siempre en Modo administrador). */
+  platformAccount?: boolean;
+  /** Cuenta de un club: su club (Modo <club> + Modo gestión). */
+  clubAccountClubId?: string | null;
+  /** Modo gestión activo (solo la cuenta de un club). */
+  managementMode?: boolean;
   activeSport?: Sport;
+  /** Vista simplificada para familias: solo Mensajes (ver lib/family.ts) */
+  familyOnly?: boolean;
+  /** Invitaciones de club pendientes para el email del usuario */
+  pendingInvites?: PendingClubInvite[];
+  /** Mensajes recibidos sin leer */
+  unreadMessages?: number;
 }
 
 export default function AppShell({
@@ -34,7 +52,14 @@ export default function AppShell({
   appName,
   workModeClubs = [],
   activeWorkClubId = null,
+  tenPlannerMode = false,
+  platformAccount = false,
+  clubAccountClubId = null,
+  managementMode = false,
   activeSport = "tenis",
+  familyOnly = false,
+  pendingInvites = [],
+  unreadMessages = 0,
 }: AppShellProps) {
   return (
     <div className="app-shell relative flex h-dvh flex-col overflow-hidden bg-background text-foreground md:flex-row">
@@ -51,7 +76,13 @@ export default function AppShell({
         appName={appName}
         workModeClubs={workModeClubs}
         activeWorkClubId={activeWorkClubId}
+        tenPlannerMode={tenPlannerMode}
+        platformAccount={platformAccount}
+        clubAccountClubId={clubAccountClubId}
+        managementMode={managementMode}
         activeSport={activeSport}
+        familyOnly={familyOnly}
+        unreadMessages={unreadMessages}
       />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <div
@@ -68,6 +99,9 @@ export default function AppShell({
           id="main"
           className="relative min-w-0 flex-1 overflow-y-auto w-full"
         >
+          {pendingInvites.length > 0 && (
+            <PendingClubInvites invites={pendingInvites} />
+          )}
           {children}
         </main>
       </div>

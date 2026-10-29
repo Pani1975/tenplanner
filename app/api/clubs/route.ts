@@ -3,11 +3,19 @@ import { z } from "zod";
 import { db } from "@/db";
 import { clubMembers, clubs } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { getOwnedClub, getCoachMemberships } from "@/lib/clubs";
+import {
+  canUserCreateClub,
+  getOwnedClub,
+  getCoachMemberships,
+} from "@/lib/clubs";
+import { cleanOptionalText, normalizeWebsite } from "@/lib/club-identity";
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(255),
   plannedCoachSeats: z.number().int().min(0).max(999).optional().nullable(),
+  address: z.string().max(500).optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  website: z.string().max(255).optional().nullable(),
 });
 
 export async function GET() {
@@ -71,6 +79,15 @@ export async function POST(request: Request) {
       { status: 409 }
     );
   }
+  if (!(await canUserCreateClub(user.id, user.user_metadata))) {
+    return NextResponse.json(
+      {
+        error:
+          "Un club se da de alta con su propia cuenta: crea una cuenta nueva eligiendo «Como Club».",
+      },
+      { status: 403 }
+    );
+  }
 
   const club = await db.transaction(async (tx) => {
     const [club] = await tx
@@ -79,6 +96,9 @@ export async function POST(request: Request) {
         name: parsed.data.name,
         ownerId: user.id,
         plannedCoachSeats: parsed.data.plannedCoachSeats ?? null,
+        address: cleanOptionalText(parsed.data.address, 500),
+        phone: cleanOptionalText(parsed.data.phone, 50),
+        website: normalizeWebsite(parsed.data.website),
       })
       .returning();
 

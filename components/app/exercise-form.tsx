@@ -47,6 +47,9 @@ import {
   type ExerciseDraftPayload,
 } from "@/lib/drafts";
 import { cn } from "@/lib/utils";
+import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
+import { appendObjectiveLines } from "@/lib/objectives-text";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import {
   ASPECTO_JUEGO_LABELS,
   AUTORIAS,
@@ -63,6 +66,7 @@ import {
   pelotaLabel,
   showsTipoPelota,
   SITUACION_JUEGO,
+  TIPO_COMPETICION,
   TIPO_PELOTA_VALUES,
   type TipoPelota,
   NUEVOS_TIPOS_ACTIVIDAD,
@@ -76,6 +80,7 @@ type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
 type Location = "pista" | "pared" | "playa" | "casa";
 type Phase = "activation" | "main" | "cooldown";
+const PHASE_ORDER: Phase[] = ["activation", "main", "cooldown"];
 type ExerciseFormMode = "quick" | "full";
 type AccordionSectionId = "essential" | "pedagogical" | "params" | "media";
 type Formato = "individual" | "parejas" | "grupal" | "multigrupo";
@@ -321,7 +326,10 @@ const PRESET_MATERIALS = [
 export interface ExerciseFormProps {
   mode: "create" | "edit";
   exerciseId?: string;
+  /** Muestra las opciones de Biblioteca pública (admin en Modo Ten Planner). */
   isAdmin?: boolean;
+  /** Modo Ten Planner: lo nuevo nace en la Biblioteca pública, autoría Ten Planner. */
+  publishToLibrary?: boolean;
   initialFormMode?: ExerciseFormMode;
   enableDrafts?: boolean;
   draftQueryParam?: string;
@@ -340,6 +348,7 @@ export interface ExerciseFormProps {
     materials?: string[] | null;
     imageUrl?: string | null;
     phase?: Phase | null;
+    fases?: Phase[] | null;
     intensity?: number | null;
     formato?: Formato | null;
     numJugadores?: number | null;
@@ -348,6 +357,7 @@ export interface ExerciseFormProps {
     tiposActividad?: TipoActividad[] | null;
     caracter?: string[] | null;
     situacionJuego?: string[] | null;
+    tipoCompeticion?: string[] | null;
     golpes?: string[] | null;
     efecto?: string[] | null;
     variantes?: string | null;
@@ -526,6 +536,7 @@ export function ExerciseForm({
   mode,
   exerciseId,
   isAdmin = false,
+  publishToLibrary = false,
   initialFormMode,
   enableDrafts = false,
   draftQueryParam = "draft",
@@ -568,6 +579,15 @@ export function ExerciseForm({
     initialData?.materials ?? []
   );
   const [materialInput, setMaterialInput] = useState("");
+  const [fases, setFases] = useState<Set<Phase>>(
+    new Set(
+      initialData?.fases && initialData.fases.length > 0
+        ? initialData.fases
+        : initialData?.phase
+          ? [initialData.phase]
+          : []
+    )
+  );
   const [niveles, setNiveles] = useState<Set<NivelPmv>>(
     new Set(
       initialData?.niveles ?? (initialData?.nivel ? [initialData.nivel] : [])
@@ -593,6 +613,9 @@ export function ExerciseForm({
   );
   const [situacionJuego, setSituacionJuego] = useState<Set<string>>(
     new Set(initialData?.situacionJuego ?? [])
+  );
+  const [tipoCompeticion, setTipoCompeticion] = useState<Set<string>>(
+    new Set(initialData?.tipoCompeticion ?? [])
   );
   const [efecto, setEfecto] = useState<Set<string>>(
     new Set(initialData?.efecto ?? [])
@@ -628,8 +651,10 @@ export function ExerciseForm({
       numJugadores: initialData?.numJugadores ?? null,
       tipoPelota: initialData?.tipoPelota ?? null,
       tipoActividad: null,
-      isGlobal: initialData?.isGlobal ?? false,
-      autoria: (initialData?.autoria as FormValues["autoria"]) ?? "libre",
+      isGlobal: initialData?.isGlobal ?? publishToLibrary,
+      autoria:
+        (initialData?.autoria as FormValues["autoria"]) ??
+        (publishToLibrary ? "ten_planner" : "libre"),
       nivel: initialData?.niveles?.[0] ?? initialData?.nivel ?? null,
       aspectoJuegoPmv: resolveAspectosJuegoValues(initialData)[0] ?? null,
       parametro: initialData?.parametros?.[0] ?? initialData?.parametro ?? null,
@@ -711,6 +736,12 @@ export function ExerciseForm({
       setFormMode(draft.payload.formMode);
       setSteps(draft.payload.steps);
       setMaterials(draft.payload.materials);
+      setFases(
+        new Set(
+          (draft.payload.fases ??
+            (draft.payload.phase ? [draft.payload.phase] : [])) as Phase[]
+        )
+      );
       setNiveles(
         new Set(
           (draft.payload.niveles ??
@@ -737,6 +768,7 @@ export function ExerciseForm({
       setGolpes(new Set(draft.payload.golpes));
       setCaracter(new Set(draft.payload.caracter ?? []));
       setSituacionJuego(new Set(draft.payload.situacionJuego ?? []));
+      setTipoCompeticion(new Set(draft.payload.tipoCompeticion ?? []));
       setEfecto(new Set(draft.payload.efecto));
       hydrationTimeout = window.setTimeout(() => {
         draftHydratedRef.current = true;
@@ -859,7 +891,8 @@ export function ExerciseForm({
     durationMinutes: watchedValues.durationMinutes ?? undefined,
     location: watchedValues.location ?? null,
     videoUrl: watchedValues.videoUrl ?? "",
-    phase: watchedValues.phase ?? null,
+    phase: PHASE_ORDER.find((p) => fases.has(p)) ?? null,
+    fases: PHASE_ORDER.filter((p) => fases.has(p)),
     intensity: watchedValues.intensity ?? null,
     formato: watchedValues.formato ?? null,
     numJugadores: watchedValues.numJugadores ?? null,
@@ -874,6 +907,7 @@ export function ExerciseForm({
     tiposActividad: Array.from(tiposActividad),
     caracter: Array.from(caracter),
     situacionJuego: Array.from(situacionJuego),
+    tipoCompeticion: Array.from(tipoCompeticion),
     duracionRango: watchedValues.duracionRango ?? null,
     isGlobal: watchedValues.isGlobal ?? false,
     autoria: watchedValues.autoria ?? "libre",
@@ -978,6 +1012,7 @@ export function ExerciseForm({
       mode === "create" ? "/api/exercises" : `/api/exercises/${exerciseId}`;
     const method = mode === "create" ? "POST" : "PUT";
 
+    const selectedFases = PHASE_ORDER.filter((p) => fases.has(p));
     const selectedNiveles = Array.from(niveles);
     const selectedAspectosJuego = Array.from(aspectosJuego);
     const selectedParametros = Array.from(parametros);
@@ -1001,7 +1036,8 @@ export function ExerciseForm({
       objectives: values.objectives?.trim() || null,
       tips: values.tips?.trim() || null,
       videoUrl: values.videoUrl?.trim() || null,
-      phase: values.phase ?? null,
+      phase: selectedFases[0] ?? null,
+      fases: selectedFases.length > 0 ? selectedFases : null,
       intensity: values.intensity ?? null,
       isGlobal: isAdmin ? (values.isGlobal ?? false) : undefined,
       autoria: isAdmin ? (values.autoria ?? "libre") : undefined,
@@ -1016,6 +1052,8 @@ export function ExerciseForm({
       caracter: caracter.size > 0 ? Array.from(caracter) : null,
       situacionJuego:
         situacionJuego.size > 0 ? Array.from(situacionJuego) : null,
+      tipoCompeticion:
+        tipoCompeticion.size > 0 ? Array.from(tipoCompeticion) : null,
       variantes: values.variantes?.trim() || null,
       observaciones: values.observaciones?.trim() || null,
       steps: steps
@@ -1321,40 +1359,37 @@ export function ExerciseForm({
                   (opcional)
                 </span>
               </label>
-              <Controller
-                name="phase"
-                control={control}
-                render={({ field }) => {
-                  const PHASES: { id: Phase | null; label: string }[] = [
-                    { id: null, label: "Sin asignar" },
+              <p className="text-xs text-muted-foreground">
+                Puedes marcar varias: un ejercicio puede servir, por ejemplo,
+                como calentamiento y como vuelta a la calma.
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {(
+                  [
                     { id: "activation", label: "Calentamiento" },
                     { id: "main", label: "Parte principal" },
                     { id: "cooldown", label: "Vuelta a la calma" },
-                  ];
+                  ] as { id: Phase; label: string }[]
+                ).map(({ id, label }) => {
+                  const isSelected = fases.has(id);
                   return (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {PHASES.map(({ id, label }) => {
-                        const isSelected = (field.value ?? null) === id;
-                        return (
-                          <button
-                            key={label}
-                            type="button"
-                            onClick={() => field.onChange(id)}
-                            className={cn(
-                              "rounded-xl border px-3 py-2.5 text-xs font-medium transition-all duration-150",
-                              isSelected
-                                ? "bg-brand/10 border-brand text-brand"
-                                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleSetValue(setFases, fases, id)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2.5 text-xs font-medium transition-all duration-150",
+                        isSelected
+                          ? "bg-brand/10 border-brand text-brand"
+                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
                   );
-                }}
-              />
+                })}
+              </div>
             </div>
 
             {/* Intensidad eliminada del UI según PMV 260506 — se mantiene en BD */}
@@ -1696,6 +1731,37 @@ export function ExerciseForm({
               })}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-foreground">
+              Tipo de competición{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional, puedes elegir las dos)
+              </span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TIPO_COMPETICION.map(({ id, label }) => {
+                const isSelected = tipoCompeticion.has(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      toggleSetValue(setTipoCompeticion, tipoCompeticion, id)
+                    }
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
+                      isSelected
+                        ? "bg-brand/10 border-brand text-brand"
+                        : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -1817,21 +1883,39 @@ export function ExerciseForm({
       />
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label
-            htmlFor="objectives"
-            className="block text-sm font-semibold text-foreground"
-          >
-            Objetivo{" "}
-            <span className="font-normal text-muted-foreground">
-              (opcional)
-            </span>
-          </label>
-          <input
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label
+              htmlFor="objectives"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Objetivos{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional · uno por línea)
+              </span>
+            </label>
+            <ObjectivesPicker
+              currentText={watchedValues.objectives}
+              infinitive
+              defaultBall={ballFromLevels(niveles, watchedValues.tipoPelota)}
+              onAdd={(titles) =>
+                setValue(
+                  "objectives",
+                  appendObjectiveLines(watchedValues.objectives, titles).slice(
+                    0,
+                    1000
+                  ),
+                  { shouldDirty: true }
+                )
+              }
+            />
+          </div>
+          <textarea
             id="objectives"
-            type="text"
+            rows={3}
+            maxLength={1000}
             placeholder="Ej: Mejorar la consistencia del globo defensivo"
             {...register("objectives")}
-            className="w-full h-10 px-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
+            className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-y leading-relaxed"
           />
         </div>
         <div className="space-y-1.5">

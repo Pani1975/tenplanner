@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Heart, Plus } from "lucide-react";
+import { Check, FileDown, Heart, Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { AddClassesToListDialog } from "@/components/app/add-classes-to-list-dialog";
+import { ClassAnimationButton } from "@/components/app/class-animation-player";
+import { hasClassAnimation } from "@/lib/classes/animation";
+import { LevelBalls } from "@/components/app/level-balls";
 
 export interface ClassGridItem {
   id: string;
@@ -14,6 +18,7 @@ export interface ClassGridItem {
   alumnosTipo: string | null;
   numAlumnos: number | null;
   objetivos: string | null;
+  animationEnabled?: boolean;
   nivel: string | null;
   niveles: string[] | null;
   aspectoJuego: string | null;
@@ -21,7 +26,6 @@ export interface ClassGridItem {
   isLibrary: boolean;
   autoria: string | null;
   status: string | null;
-  authorName: string | null;
   favorited: boolean;
 }
 
@@ -45,6 +49,7 @@ export function ClassesGrid({
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -63,6 +68,31 @@ export function ClassesGrid({
   const allIds = items.map((i) => i.id);
   const allSelected = allIds.length > 0 && selected.size === allIds.length;
   const count = selected.size;
+
+  // Descarga un único PDF con las clases seleccionadas, en el mismo orden
+  // en que aparecen en el listado filtrado.
+  async function downloadPdf() {
+    const ids = allIds.filter((id) => selected.has(id));
+    if (ids.length === 0 || downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/classes/pdf?ids=${ids.join(",")}`);
+      if (!res.ok) throw new Error("Error generando el PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] ??
+        "clases.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("No se pudo generar el PDF. Inténtalo de nuevo.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -101,6 +131,21 @@ export function ClassesGrid({
                 </button>
                 <button
                   type="button"
+                  disabled={count === 0 || downloading}
+                  onClick={downloadPdf}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-4 py-2 text-[13px] font-bold text-foreground transition-colors hover:border-[#D6FF38]/70 disabled:opacity-40 dark:bg-white/[0.035]"
+                >
+                  {downloading ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <FileDown className="size-3.5" />
+                  )}
+                  {downloading
+                    ? "Generando…"
+                    : `PDF${count > 0 ? ` (${count})` : ""}`}
+                </button>
+                <button
+                  type="button"
                   disabled={count === 0}
                   onClick={() => setDialogOpen(true)}
                   className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-4 py-2 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8f52e] disabled:opacity-40"
@@ -129,13 +174,20 @@ export function ClassesGrid({
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((cls) => {
           const isSelected = selected.has(cls.id);
+          const animated = hasClassAnimation(cls.id, cls.animationEnabled);
           const cardBody = (
             <>
               <div>
                 <div className="mb-4 flex items-start justify-between gap-3 bg-[#050505] px-5 py-3 text-white">
-                  <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11.5px] font-bold tabular-nums text-[#050505]">
-                    {cls.duracionMinutes} min
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="rounded-full bg-[#D6FF38] px-2.5 py-1 text-[11.5px] font-bold tabular-nums text-[#050505]">
+                      {cls.duracionMinutes} min
+                    </span>
+                    <LevelBalls
+                      size="sm"
+                      niveles={classValues(cls.niveles, cls.nivel)}
+                    />
+                  </div>
                   <div className="flex items-center gap-1.5">
                     {cls.status === "draft" && (
                       <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">
@@ -164,11 +216,6 @@ export function ClassesGrid({
                   <h3 className="line-clamp-3 font-heading text-[19px] font-semibold leading-snug text-foreground transition-colors group-hover:text-[#6D7F00] dark:group-hover:text-[#D6FF38]">
                     {cls.name}
                   </h3>
-                  {cls.authorName && (
-                    <span className="mt-1.5 inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase text-foreground/50">
-                      {cls.authorName}
-                    </span>
-                  )}
                   {cls.objetivos && (
                     <p className="mt-3 line-clamp-3 text-[13px] leading-5 text-muted-foreground">
                       {cls.objetivos}
@@ -176,7 +223,12 @@ export function ClassesGrid({
                   )}
                 </div>
               </div>
-              <div className="mx-5 mb-5 mt-5 flex flex-wrap gap-1.5 border-t border-border pt-4">
+              <div
+                className={cn(
+                  "mx-5 mb-5 mt-5 flex flex-wrap gap-1.5 border-t border-border pt-4",
+                  animated && "pr-12"
+                )}
+              >
                 <span className="rounded-full border border-border px-2 py-1 text-[10.5px] text-foreground/60">
                   {cls.numAlumnos
                     ? `${cls.numAlumnos} alumnos`
@@ -244,6 +296,12 @@ export function ClassesGrid({
                 >
                   {cardBody}
                 </Link>
+              )}
+              {animated && !selecting && (
+                <ClassAnimationButton
+                  classId={cls.id}
+                  className="absolute bottom-4 right-4 z-10"
+                />
               )}
             </li>
           );

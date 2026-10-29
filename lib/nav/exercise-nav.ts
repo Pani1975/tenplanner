@@ -21,9 +21,12 @@ import {
   CARACTER_VALUES,
   FASES,
   SITUACION_JUEGO_VALUES,
+  TIPO_COMPETICION_VALUES,
   TIPO_PELOTA_VALUES,
   type TipoPelota,
 } from "@/lib/exercise-taxonomy";
+import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -153,6 +156,9 @@ export async function getFilteredExerciseIds(
   const activeSituacionJuego = getStrings(params.situacionJuego).filter((v) =>
     (SITUACION_JUEGO_VALUES as readonly string[]).includes(v)
   );
+  const activeTipoCompeticion = getStrings(params.tipoCompeticion).filter((v) =>
+    (TIPO_COMPETICION_VALUES as readonly string[]).includes(v)
+  );
   const activeTipoActividad = uniqueStrings(
     getStrings(params.tipoActividad),
     getStrings(params.tipologia)
@@ -167,6 +173,7 @@ export async function getFilteredExerciseIds(
     (AUTORIA_VALUES as readonly string[]).includes(v)
   );
 
+  const activeWorkClubId = userId ? await getActiveWorkClubId(userId) : null;
   const favRows = userId
     ? await db
         .select({ exerciseId: exerciseListItems.exerciseId })
@@ -175,18 +182,26 @@ export async function getFilteredExerciseIds(
           exerciseLists,
           eq(exerciseLists.id, exerciseListItems.listId)
         )
-        .where(eq(exerciseLists.userId, userId))
+        .where(exerciseListSpaceCondition(userId, activeWorkClubId))
         .catch(() => [] as { exerciseId: string }[])
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
 
+  // "Mis ejercicios" según el espacio activo — mantener igual que en
+  // app/(public)/exercises/page.tsx.
+  const mineWhere = userId
+    ? sharedWithClubCondition(
+        exercisesTable.createdBy,
+        exercisesTable.clubId,
+        userId,
+        activeWorkClubId
+      )
+    : sql`1=0`;
+
   const allVisibleWhere = userId
     ? publicExercisesEnabled
-      ? (or(
-          eq(exercisesTable.isGlobal, true),
-          eq(exercisesTable.createdBy, userId)
-        ) ?? eq(exercisesTable.createdBy, userId))
-      : eq(exercisesTable.createdBy, userId)
+      ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+      : mineWhere
     : publicExercisesEnabled
       ? eq(exercisesTable.isGlobal, true)
       : sql`1=0`;
@@ -197,7 +212,7 @@ export async function getFilteredExerciseIds(
         ? eq(exercisesTable.isGlobal, true)
         : sql`1=0`
       : activeTab === "mine" && userId
-        ? eq(exercisesTable.createdBy, userId)
+        ? mineWhere
         : allVisibleWhere;
 
   const conditions: SQL[] = [];
@@ -253,7 +268,11 @@ export async function getFilteredExerciseIds(
     conditions.push(inArray(exercisesTable.duracionRango, activeDuracionRango));
   }
   if (activeFase.length > 0) {
-    conditions.push(inArray(exercisesTable.phase, activeFase));
+    const faseWhere = or(
+      inArray(exercisesTable.phase, activeFase),
+      jsonbArrayHasAny(exercisesTable.fases, activeFase)!
+    );
+    if (faseWhere) conditions.push(faseWhere);
   }
   if (activeCaracter.length > 0) {
     const caracterWhere = jsonbArrayHasAny(
@@ -268,6 +287,13 @@ export async function getFilteredExerciseIds(
       activeSituacionJuego
     );
     if (situacionWhere) conditions.push(situacionWhere);
+  }
+  if (activeTipoCompeticion.length > 0) {
+    const competicionWhere = jsonbArrayHasAny(
+      exercisesTable.tipoCompeticion,
+      activeTipoCompeticion
+    );
+    if (competicionWhere) conditions.push(competicionWhere);
   }
   if (activeNumJugadores.length > 0)
     conditions.push(inArray(exercisesTable.numJugadores, activeNumJugadores));
@@ -346,6 +372,7 @@ const NAV_QUERY_KEYS = [
   "fase",
   "caracter",
   "situacionJuego",
+  "tipoCompeticion",
   "autoria",
 ];
 

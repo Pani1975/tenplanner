@@ -5,13 +5,17 @@ import {
   sessions as sessionsTable,
   exercises as exercisesTable,
   users as usersTable,
+  clubs,
+  clubMembers,
 } from "@/db/schema";
-import { eq, count, or, sql } from "drizzle-orm";
+import { and, eq, count, or, sql } from "drizzle-orm";
 import { ProfileClient } from "./profile-client";
 import { WorkModeSwitcher } from "@/components/app/work-mode-switcher";
+import { ClubIdentityForm } from "@/components/app/club-identity-form";
 import { SportSwitcher } from "@/components/app/sport-switcher";
 import {
   getActiveWorkClubId,
+  getClubAccountClubId,
   getClubOptionsForUser,
   sharedWithClubCondition,
 } from "@/lib/clubs";
@@ -58,11 +62,40 @@ export default async function ProfilePage() {
         )
       ),
     db
-      .select({ image: usersTable.image })
+      .select({
+        image: usersTable.image,
+        isAdmin: usersTable.isAdmin,
+        isPlatformAccount: usersTable.isPlatformAccount,
+        adminMode: usersTable.adminMode,
+        managementMode: usersTable.managementMode,
+      })
       .from(usersTable)
       .where(eq(usersTable.id, user.id))
       .limit(1),
   ]);
+
+  const clubAccountClubId = await getClubAccountClubId(user.id);
+
+  // Ficha de identificación del club con el que se trabaja (modo club).
+  const [activeClub] = activeClubId
+    ? await db.select().from(clubs).where(eq(clubs.id, activeClubId)).limit(1)
+    : [];
+  const activeClubIsOwner = activeClub
+    ? (
+        await db
+          .select({ id: clubMembers.id })
+          .from(clubMembers)
+          .where(
+            and(
+              eq(clubMembers.clubId, activeClub.id),
+              eq(clubMembers.userId, user.id),
+              eq(clubMembers.role, "owner"),
+              eq(clubMembers.status, "active")
+            )
+          )
+          .limit(1)
+      ).length > 0
+    : false;
 
   const sessionStats = sessionStatsRows[0];
   const totalSessions = Number(sessionStats?.totalSessions ?? 0);
@@ -87,7 +120,40 @@ export default async function ProfilePage() {
 
         <SportSwitcher activeSport={activeSport} />
 
-        <WorkModeSwitcher clubs={clubOptions} activeClubId={activeClubId} />
+        {!dbUser[0]?.isPlatformAccount && (
+          <WorkModeSwitcher
+            key={
+              dbUser[0]?.isAdmin && dbUser[0]?.adminMode
+                ? "admin"
+                : clubAccountClubId && dbUser[0]?.managementMode
+                  ? "gestion"
+                  : (activeClubId ?? "particular")
+            }
+            clubs={clubOptions}
+            activeClubId={activeClubId}
+            canUseTenPlanner={!!dbUser[0]?.isAdmin}
+            tenPlannerActive={!!dbUser[0]?.isAdmin && !!dbUser[0]?.adminMode}
+            clubAccountClubId={clubAccountClubId}
+            managementActive={!!dbUser[0]?.managementMode}
+          />
+        )}
+
+        {/* La ficha del club es del modo del club; el Espacio gestión solo
+            muestra los datos de la persona gestora. */}
+        {activeClub && !(clubAccountClubId && dbUser[0]?.managementMode) && (
+          <ClubIdentityForm
+            key={activeClub.updatedAt.toISOString()}
+            clubId={activeClub.id}
+            canEdit={activeClubIsOwner}
+            initial={{
+              name: activeClub.name,
+              fullName: activeClub.fullName,
+              address: activeClub.address,
+              courts: activeClub.courts ?? null,
+              foundedYear: activeClub.foundedYear,
+            }}
+          />
+        )}
 
         <ProfileClient
           user={{

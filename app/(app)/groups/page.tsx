@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -14,6 +15,7 @@ import {
   sharedWithClubCondition,
 } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
+import { listCoachesByGroupIds } from "@/lib/club-coaches";
 
 interface PageProps {
   searchParams: Promise<{ monitor?: string }>;
@@ -81,8 +83,20 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         }[]
     );
 
+  // Monitores asignados por el gestor (solo en el espacio de un club).
+  const coachesByGroup = activeClubId
+    ? await listCoachesByGroupIds(allRows.map((r) => r.id)).catch(
+        () => new Map<string, { id: string; name: string }[]>()
+      )
+    : new Map<string, { id: string; name: string }[]>();
+
+  // El filtro por monitor incluye los grupos que creó y los que tiene asignados.
   const rows = monitorFilter
-    ? allRows.filter((r) => r.coachId === monitorFilter)
+    ? allRows.filter(
+        (r) =>
+          r.coachId === monitorFilter ||
+          (coachesByGroup.get(r.id) ?? []).some((c) => c.id === monitorFilter)
+      )
     : allRows;
 
   return (
@@ -94,8 +108,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
               <Users className="size-3.5" />
               Cohortes
             </div>
-            <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-              Grupos
+            <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
+              {personalTitle("Grupos", await getWorkMode(user.id))}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {rows.length} {rows.length === 1 ? "grupo" : "grupos"} para
@@ -210,6 +224,15 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                         </p>
                       )}
                     </div>
+
+                    {(coachesByGroup.get(g.id) ?? []).length > 0 && (
+                      <p className="truncate text-[11px] font-semibold text-foreground/55">
+                        Monitores:{" "}
+                        {(coachesByGroup.get(g.id) ?? [])
+                          .map((c) => c.name)
+                          .join(", ")}
+                      </p>
+                    )}
 
                     {/* CTA arrow */}
                     <div className="flex items-center justify-between border-t border-[#050505]/10 pt-3 dark:border-white/10">

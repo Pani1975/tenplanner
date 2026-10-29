@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,7 @@ interface SessionWizardProps {
   initialObjective?: string;
   initialMaterial?: string;
   initialObservations?: string;
+  initialTags?: string[];
   initialSourceClassId?: string | null;
   initialBlocks?: WizardSessionBlock[];
   initialLocation?: string;
@@ -151,6 +152,7 @@ function createInitialState({
   initialObjective,
   initialMaterial,
   initialObservations,
+  initialTags,
   initialSourceClassId,
   initialBlocks,
   initialLocation,
@@ -166,6 +168,7 @@ function createInitialState({
   | "initialObjective"
   | "initialMaterial"
   | "initialObservations"
+  | "initialTags"
   | "initialSourceClassId"
   | "initialBlocks"
   | "initialLocation"
@@ -183,7 +186,7 @@ function createInitialState({
   return {
     title: useCodeTitle
       ? sessionCode(new Date(scheduledAt), initialGroupName ?? "")
-      : initialTitle ?? "",
+      : (initialTitle ?? ""),
     scheduledAt,
     durationMinutes: 60,
     location: initialLocation ?? "",
@@ -193,7 +196,7 @@ function createInitialState({
     observations: initialObservations ?? "",
     sourceClassId: initialSourceClassId ?? null,
     intensity: null,
-    tags: [],
+    tags: initialTags ?? [],
     studentIds: initialStudentIds ?? [],
     exercises: [
       ...(initialExercises ?? []),
@@ -208,6 +211,7 @@ function createInitialState({
       mode: "until",
     },
     groupId: initialGroupId ?? null,
+    selectedGroupIds: initialGroupId ? [initialGroupId] : [],
     groupName: initialGroupName,
     useCodeTitle,
   };
@@ -316,6 +320,7 @@ export function SessionWizard({
   initialObjective,
   initialMaterial,
   initialObservations,
+  initialTags,
   initialSourceClassId,
   initialBlocks,
   initialLocation,
@@ -330,14 +335,15 @@ export function SessionWizard({
   edit,
 }: SessionWizardProps) {
   const isEdit = !!edit;
-  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawStep = parseInt(searchParams.get("step") ?? "1", 10);
-  const step =
-    Number.isFinite(rawStep) && rawStep >= 1 && rawStep <= TOTAL_STEPS
-      ? rawStep
-      : 1;
+  // El paso vive en el estado del asistente (y se refleja en la URL sin
+  // navegar): cambiar de paso con el router podía volver a montar el
+  // asistente y perder lo escrito en el paso 1 (objetivo, lugar, duración…).
+  const [step, setStep] = useState(() => {
+    const raw = parseInt(searchParams.get("step") ?? "1", 10);
+    return Number.isFinite(raw) && raw >= 1 && raw <= TOTAL_STEPS ? raw : 1;
+  });
   const [baselineState] = useState<WizardState>(() => {
     const base = createInitialState({
       initialExercises,
@@ -345,6 +351,7 @@ export function SessionWizard({
       initialObjective,
       initialMaterial,
       initialObservations,
+      initialTags,
       initialSourceClassId,
       initialBlocks,
       initialLocation,
@@ -354,7 +361,16 @@ export function SessionWizard({
       initialStudentIds,
       initialScheduledAt,
     });
-    return edit ? { ...base, ...edit.initialState } : base;
+    if (!edit) return base;
+    const merged = { ...base, ...edit.initialState };
+    // Una duración guardada distinta de la del plan se fijó a mano.
+    const planMinutes = hasPlanContent(merged)
+      ? computeTimelineDuration(merged)
+      : 0;
+    return {
+      ...merged,
+      durationManual: planMinutes > 0 && planMinutes !== merged.durationMinutes,
+    };
   });
 
   const [state, setState] = useState<WizardState>(baselineState);
@@ -366,7 +382,7 @@ export function SessionWizard({
   // ej. antes de llegar al paso 2, o una sesión por recurrencia sin plan
   // propio) se deja el valor manual tal cual.
   useEffect(() => {
-    if (!hasPlanContent(state)) return;
+    if (state.durationManual || !hasPlanContent(state)) return;
     const computed = computeTimelineDuration(state);
     if (computed > 0 && computed !== state.durationMinutes) {
       setState((prev) => ({ ...prev, durationMinutes: computed }));
@@ -400,6 +416,8 @@ export function SessionWizard({
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const draftReadyRef = useRef(false);
   const draftIdRef = useRef<string | null>(null);
+  // Tras crear la sesión no se debe volver a guardar el borrador.
+  const submittedRef = useRef(false);
   const baselinePayloadRef = useRef<SessionDraftPayload>(
     toDraftPayload(baselineState)
   );
@@ -470,7 +488,7 @@ export function SessionWizard({
   }
 
   async function handleSaveDraft() {
-    if (!draftReadyRef.current) return;
+    if (!draftReadyRef.current || submittedRef.current) return;
 
     if (!hasMeaningfulSessionDraft(draftPayload, baselinePayloadRef.current)) {
       if (draftIdRef.current) {
@@ -524,12 +542,46 @@ export function SessionWizard({
     }
   }
 
+  // Autoguardado del borrador: así, si el móvil recarga la página o se sale a
+  // ver un ejercicio y se vuelve atrás, la sesión que se estaba creando sigue ahí.
+  const saveDraftRef = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
+    saveDraftRef.current = handleSaveDraft;
+  });
+
+  useEffect(() => {
+    if (isEdit || !draftReadyRef.current) return;
+    const timer = window.setTimeout(() => void saveDraftRef.current(), 1200);
+    return () => window.clearTimeout(timer);
+  }, [draftPayload, isEdit]);
+
+  useEffect(() => {
+    if (isEdit) return;
+    function flush() {
+      if (document.visibilityState === "hidden") void saveDraftRef.current();
+    }
+    function flushOnHide() {
+      void saveDraftRef.current();
+    }
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flushOnHide);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flushOnHide);
+    };
+  }, [isEdit]);
+
   function goToStep(next: number) {
     const clamped = Math.max(1, Math.min(TOTAL_STEPS, next));
     // Read from window.location.search so the draft param set via history.replaceState is preserved
     const params = new URLSearchParams(window.location.search);
     params.set("step", String(clamped));
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}?${params.toString()}`
+    );
+    setStep(clamped);
     setShowErrors(false);
   }
 
@@ -575,9 +627,11 @@ export function SessionWizard({
       // Por si el efecto de sincronización aún no ha corrido (p. ej. se
       // envía justo tras el último cambio): recalcula aquí también, para
       // que lo guardado siempre sea el contenido real del plan.
-      const durationMinutes = hasPlanContent(state)
-        ? computeTimelineDuration(state)
-        : state.durationMinutes;
+      // La duración marcada a mano se respeta; si no, la del plan.
+      const durationMinutes =
+        !state.durationManual && hasPlanContent(state)
+          ? computeTimelineDuration(state)
+          : state.durationMinutes;
 
       if (edit) {
         const res = await fetch(`/api/sessions/${edit.sessionId}`, {
@@ -587,6 +641,7 @@ export function SessionWizard({
             title: state.title.trim(),
             scheduledAt: scheduledIso,
             durationMinutes,
+            durationManual: !!state.durationManual,
             objective: state.objective.trim() || null,
             material: state.material.trim() || null,
             observations: state.observations.trim() || null,
@@ -632,6 +687,7 @@ export function SessionWizard({
             description: null,
             scheduledAt: date.toISOString(),
             durationMinutes,
+            durationManual: !!state.durationManual,
             objective: state.objective.trim() || null,
             material: state.material.trim() || null,
             observations: state.observations.trim() || null,
@@ -696,13 +752,18 @@ export function SessionWizard({
         return;
       }
 
+      submittedRef.current = true;
       if (draftIdRef.current) {
         void removeSessionDraft(draftIdRef.current);
         draftIdRef.current = null;
         setHasDraft(false);
       }
 
-      router.push("/sessions");
+      // Si la sesión queda vinculada a un grupo, volvemos a su
+      // planificación (y no a /sessions) para que se vea de inmediato: de
+      // paso evita que la ficha de grupo se quede con el listado de
+      // sesiones cacheado por el router de Next de antes de crearla.
+      router.push(state.groupId ? `/groups/${state.groupId}` : "/sessions");
       router.refresh();
     } catch {
       setServerError("Error de red. Inténtalo de nuevo.");
@@ -771,6 +832,7 @@ export function SessionWizard({
             state={state}
             update={update}
             availableExercises={availableExercises}
+            onBeforeLeave={() => void saveDraftRef.current()}
           />
         )}
       </div>
@@ -816,20 +878,39 @@ export function SessionWizard({
         )}
 
         {step < TOTAL_STEPS ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2.5 text-sm font-bold text-brand-foreground transition-colors",
-              "rounded-full bg-[#D6FF38] text-[#050505]",
-              canProceed
-                ? "hover:bg-[#c8ef2f]"
-                : "opacity-55 cursor-not-allowed"
+          <div className="flex items-center gap-2">
+            {isEdit && (
+              <button
+                type="button"
+                onClick={onSubmit}
+                disabled={
+                  submitting ||
+                  (!hasPlanContent(state) && !state.recurrence.enabled)
+                }
+                className="inline-flex items-center gap-2 rounded-full border border-foreground/15 px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-foreground/30 disabled:opacity-55"
+              >
+                {submitting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                <span className="sm:hidden">Guardar</span>
+                <span className="hidden sm:inline">Guardar cambios</span>
+              </button>
             )}
-          >
-            Siguiente
-            <ChevronRight className="size-4" />
-          </button>
+            <button
+              type="button"
+              onClick={onNext}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-2.5 text-sm font-bold text-brand-foreground transition-colors",
+                "rounded-full bg-[#D6FF38] text-[#050505]",
+                canProceed
+                  ? "hover:bg-[#c8ef2f]"
+                  : "opacity-55 cursor-not-allowed"
+              )}
+            >
+              Siguiente
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             {state.exercises.length > 0 && (

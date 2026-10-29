@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { db } from "@/db";
 import { exercises, users, exerciseRatings } from "@/db/schema";
 import { and, eq, avg, count } from "drizzle-orm";
@@ -6,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ExerciseDetailClient } from "./exercise-detail-client";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { getBooleanSetting } from "@/lib/app-settings";
+import { canAccessExercise } from "@/lib/exercise-access";
+import { getActiveWorkClubId } from "@/lib/clubs";
 import {
   exerciseNavQueryString,
   getFilteredExerciseIds,
@@ -79,15 +82,26 @@ export default async function ExercisePage({
 
   if (!exercise) notFound();
 
-  const canAccess =
-    exercise.isGlobal ||
-    exercise.createdBy === null ||
-    exercise.createdBy === user?.id;
+  const canAccess = await canAccessExercise(exercise, user?.id);
   if (!canAccess) notFound();
 
   const isAdmin = !!dbUser?.isAdmin;
   const isOwner = exercise.createdBy === user?.id;
-  const canEdit = !!user && (isAdmin || (!exercise.isGlobal && isOwner));
+  const inClub = user ? !!(await getActiveWorkClubId(user.id)) : false;
+  const inTenPlanner = user ? await isTenPlannerMode(user.id) : false;
+  // La Biblioteca pública solo se edita en Modo Ten Planner.
+  const canEdit =
+    !!user && (exercise.isGlobal ? inTenPlanner : isOwner || isAdmin);
+
+  // Copiar a "Mis ejercicios": un ejercicio de la biblioteca se copia al
+  // espacio activo (particular o club); uno que el propio monitor creó en
+  // el espacio de un club se puede copiar a su espacio particular.
+  const isPublicExercise = exercise.isGlobal || exercise.createdBy === null;
+  const copyTargets: Array<"active" | "particular"> = [];
+  // En Modo administrador no hay espacio propio al que copiar.
+  if (user && !inTenPlanner && isPublicExercise) copyTargets.push("active");
+  if (user && !inTenPlanner && isOwner && exercise.clubId)
+    copyTargets.push("particular");
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"
@@ -97,21 +111,28 @@ export default async function ExercisePage({
     publicExercisesEnabled,
   });
   const navIdx = navIds.indexOf(id);
-  const navSuffix = (() => {
-    const qs = exerciseNavQueryString(navParams);
-    return qs ? `?${qs}` : "";
-  })();
+  const navQs = exerciseNavQueryString(navParams);
+  const navSuffix = navQs ? `?${navQs}` : "";
   const prevHref =
     navIdx > 0 ? `/exercises/${navIds[navIdx - 1]}${navSuffix}` : null;
   const nextHref =
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/exercises/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/exercises?${navQs}` : null;
+  const fromListRaw = navParams.desdeLista;
+  const fromListId = typeof fromListRaw === "string" ? fromListRaw : "";
+  const backToListHref = /^[0-9a-f-]{36}$/i.test(fromListId)
+    ? `/exercises?tab=favorites&lista=${fromListId}`
+    : null;
 
   return (
     <ExerciseDetailClient
       canEdit={canEdit}
+      copyTargets={copyTargets}
+      inClub={inClub}
       isAdmin={isAdmin}
+      canPublish={inTenPlanner}
       userId={user?.id ?? null}
       initialRating={userRating}
       ratingAvg={ratingData.avg}
@@ -120,6 +141,8 @@ export default async function ExercisePage({
       nextHref={nextHref}
       navPosition={navIdx >= 0 ? navIdx + 1 : null}
       navTotal={navIds.length > 0 ? navIds.length : null}
+      backToSearchHref={backToSearchHref}
+      backToListHref={backToListHref}
       diagram={getExerciseDiagram(exercise.id)}
       exercise={{
         id: exercise.id,
@@ -165,6 +188,7 @@ export default async function ExercisePage({
         tiposActividad: (exercise.tiposActividad as string[] | null) ?? null,
         caracter: (exercise.caracter as string[] | null) ?? null,
         situacionJuego: (exercise.situacionJuego as string[] | null) ?? null,
+        tipoCompeticion: (exercise.tipoCompeticion as string[] | null) ?? null,
         golpes: (exercise.golpes as string[] | null) ?? null,
         efecto: (exercise.efecto as string[] | null) ?? null,
         nivel: exercise.nivel ?? null,
@@ -176,6 +200,7 @@ export default async function ExercisePage({
         tipologia: exercise.tipologia ?? null,
         duracionRango: exercise.duracionRango ?? null,
         phase: exercise.phase ?? null,
+        fases: (exercise.fases as string[] | null) ?? null,
         intensity: exercise.intensity ?? null,
         isGlobal: exercise.isGlobal,
         autoria: exercise.autoria ?? null,

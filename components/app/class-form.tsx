@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import { TagInput } from "@/components/app/tag-input";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
 import {
@@ -17,6 +18,11 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
+import {
+  pickExerciseHref,
+  useExercisePickListener,
+} from "@/lib/exercise-pick-bridge";
 import {
   EMPTY_PICKER_FILTERS,
   ExercisePickerFilters,
@@ -32,6 +38,9 @@ import {
 } from "@/lib/block-items";
 import { AUTORIAS, nivelesForSport } from "@/lib/exercise-taxonomy";
 import { SessionExerciseLists } from "@/components/app/session-exercise-lists";
+import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
+import { appendObjectiveLines } from "@/lib/objectives-text";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import {
   ExerciseForm,
   type ExerciseFormResult,
@@ -68,7 +77,7 @@ const GOLPES = [
   { id: "globo", label: "Globo" },
 ];
 
-const DURACIONES = [30, 45, 60, 75, 90, 120];
+const DURACIONES = [30, 45, 55, 60, 75, 90, 120];
 
 const BLOCK_TITLES = [
   { idx: 1, label: "Bloque inicial" },
@@ -89,12 +98,16 @@ type BlockItem =
       exerciseId: string;
       name: string;
       durationMinutes: number | null;
+      /** Descripción propia de la clase (si no, la de la biblioteca). */
+      freeText?: string;
+      notes?: string;
     }
   | {
       kind: "text";
       freeText: string;
       title: string;
       durationMinutes: number | null;
+      notes?: string;
     }
   | { kind: "warmup"; durationMinutes: number | null }
   | {
@@ -112,6 +125,29 @@ interface BlockState {
   items: BlockItem[];
 }
 
+const CLASS_AUTOSAVE_KEY = "tp-class-form-new-v1";
+const CLASS_AUTOSAVE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+interface ClassAutosave {
+  v: 1;
+  savedAt: number;
+  name: string;
+  duracionMinutes: number;
+  alumnosTipo: "individual" | "grupal" | "";
+  numAlumnos: number | "";
+  niveles: string[];
+  aspectosJuego: string[];
+  golpes: string[];
+  objetivos: string;
+  material: string;
+  tags: string[];
+  videoUrl: string;
+  aspectosImportantes: string;
+  isLibrary: boolean;
+  autoria: string;
+  blocks: BlockState[];
+}
+
 export interface ClassInitialData {
   name: string;
   duracionMinutes: number;
@@ -122,6 +158,7 @@ export interface ClassInitialData {
   aspectoJuego: string | null;
   aspectosJuego: string[] | null;
   golpes: string[] | null;
+  tags?: string[] | null;
   objetivos: string | null;
   material: string | null;
   videoUrl: string | null;
@@ -141,7 +178,10 @@ export interface ClassFormProps {
   mode: "create" | "edit";
   classId?: string;
   availableExercises: AvailableExercise[];
+  /** Muestra las opciones de Biblioteca pública (admin en Modo Ten Planner). */
   isAdmin?: boolean;
+  /** Modo Ten Planner: la clase nueva nace en la Biblioteca pública. */
+  publishToLibrary?: boolean;
   initialData?: ClassInitialData;
   sport?: string | null;
 }
@@ -151,6 +191,7 @@ export function ClassForm({
   classId,
   availableExercises,
   isAdmin = false,
+  publishToLibrary = false,
   initialData,
   sport,
 }: ClassFormProps) {
@@ -183,12 +224,17 @@ export function ClassForm({
   const [golpes, setGolpes] = useState<string[]>(initialData?.golpes ?? []);
   const [objetivos, setObjetivos] = useState(initialData?.objetivos ?? "");
   const [material, setMaterial] = useState(initialData?.material ?? "");
+  const [tags, setTags] = useState<string[]>(initialData?.tags ?? []);
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl ?? "");
   const [aspectosImportantes, setAspectosImportantes] = useState(
     initialData?.aspectosImportantes ?? ""
   );
-  const [isLibrary, setIsLibrary] = useState(initialData?.isLibrary ?? false);
-  const [autoria, setAutoria] = useState(initialData?.autoria ?? "libre");
+  const [isLibrary, setIsLibrary] = useState(
+    initialData?.isLibrary ?? publishToLibrary
+  );
+  const [autoria, setAutoria] = useState(
+    initialData?.autoria ?? (publishToLibrary ? "ten_planner" : "libre")
+  );
   const isDraft = initialData?.status === "draft";
 
   const [blocks, setBlocks] = useState<BlockState[]>(() => {
@@ -216,6 +262,122 @@ export function ClassForm({
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // ── Autoguardado de la clase que se está creando ──────────────────────
+  // Se guarda en la sesión del navegador (esta pestaña): si se sale a ver la
+  // ficha de un ejercicio y se vuelve atrás (o el móvil recarga la página),
+  // la clase en curso se recupera tal cual.
+  const autosaveEnabled = mode === "create" && !initialData;
+  const autosaveReadyRef = useRef(false);
+  const autosaveDoneRef = useRef(false);
+  const [recoveredDraft, setRecoveredDraft] = useState(false);
+
+  useEffect(() => {
+    if (!autosaveEnabled) return;
+    try {
+      const raw = window.sessionStorage.getItem(CLASS_AUTOSAVE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Partial<ClassAutosave> | null;
+        if (
+          saved &&
+          saved.v === 1 &&
+          typeof saved.savedAt === "number" &&
+          Date.now() - saved.savedAt < CLASS_AUTOSAVE_MAX_AGE_MS
+        ) {
+          if (typeof saved.name === "string") setName(saved.name);
+          if (typeof saved.duracionMinutes === "number")
+            setDuracionMinutes(saved.duracionMinutes);
+          if (
+            saved.alumnosTipo === "individual" ||
+            saved.alumnosTipo === "grupal"
+          )
+            setAlumnosTipo(saved.alumnosTipo);
+          if (typeof saved.numAlumnos === "number" || saved.numAlumnos === "")
+            setNumAlumnos(saved.numAlumnos);
+          if (Array.isArray(saved.niveles)) setNiveles(saved.niveles);
+          if (Array.isArray(saved.aspectosJuego))
+            setAspectosJuego(saved.aspectosJuego);
+          if (Array.isArray(saved.golpes)) setGolpes(saved.golpes);
+          if (typeof saved.objetivos === "string")
+            setObjetivos(saved.objetivos);
+          if (typeof saved.material === "string") setMaterial(saved.material);
+          if (Array.isArray(saved.tags)) setTags(saved.tags);
+          if (typeof saved.videoUrl === "string") setVideoUrl(saved.videoUrl);
+          if (typeof saved.aspectosImportantes === "string")
+            setAspectosImportantes(saved.aspectosImportantes);
+          if (typeof saved.isLibrary === "boolean")
+            setIsLibrary(saved.isLibrary);
+          if (typeof saved.autoria === "string") setAutoria(saved.autoria);
+          if (Array.isArray(saved.blocks) && saved.blocks.length > 0)
+            setBlocks(saved.blocks);
+          setRecoveredDraft(true);
+        }
+      }
+    } catch {
+      // sessionStorage no disponible o contenido dañado: se empieza en blanco.
+    }
+    // Hasta que se restaure no se guarda, para no pisar lo recuperado.
+    const t = window.setTimeout(() => {
+      autosaveReadyRef.current = true;
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!autosaveEnabled || !autosaveReadyRef.current) return;
+    if (autosaveDoneRef.current) return;
+    const meaningful =
+      name.trim() ||
+      objetivos.trim() ||
+      material.trim() ||
+      aspectosImportantes.trim() ||
+      tags.length > 0 ||
+      niveles.length > 0 ||
+      aspectosJuego.length > 0 ||
+      golpes.length > 0 ||
+      blocks.some((b) => b.items.length > 0 || b.notes.trim());
+    try {
+      if (!meaningful) {
+        window.sessionStorage.removeItem(CLASS_AUTOSAVE_KEY);
+        return;
+      }
+      const snapshot: ClassAutosave = {
+        v: 1,
+        savedAt: Date.now(),
+        name,
+        duracionMinutes,
+        alumnosTipo,
+        numAlumnos,
+        niveles,
+        aspectosJuego,
+        golpes,
+        objetivos,
+        material,
+        tags,
+        videoUrl,
+        aspectosImportantes,
+        isLibrary,
+        autoria,
+        blocks,
+      };
+      window.sessionStorage.setItem(
+        CLASS_AUTOSAVE_KEY,
+        JSON.stringify(snapshot)
+      );
+    } catch {
+      // Sin almacenamiento: no pasa nada, solo no hay autoguardado.
+    }
+  });
+
+  function clearAutosave() {
+    autosaveDoneRef.current = true;
+    try {
+      window.sessionStorage.removeItem(CLASS_AUTOSAVE_KEY);
+    } catch {
+      // ignorar
+    }
+  }
   const [pickerOpen, setPickerOpen] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [pickerFilters, setPickerFilters] =
@@ -399,6 +561,58 @@ export function ClassForm({
     setSearch("");
   }
 
+  /**
+   * Destino recordado al abrir la ficha de un ejercicio en otra pestaña
+   * (el bloque o la estación desde la que se abrió), para que "Añadir a la
+   * clase que estás creando" lo ponga ahí.
+   */
+  const pickTargetRef = useRef<
+    | { kind: "block"; blockIdx: number }
+    | { kind: "station"; blockIdx: number; itemIdx: number; stationIdx: number }
+    | null
+  >(null);
+
+  const pickerId = useExercisePickListener((exerciseId) => {
+    const ex = libraryExercises.find((e) => e.id === exerciseId);
+    if (!ex) {
+      return {
+        ok: false,
+        message: "Este ejercicio no está disponible para esta clase.",
+      };
+    }
+    const target = pickTargetRef.current;
+    if (!target || !blocks[target.blockIdx]) {
+      return {
+        ok: false,
+        message:
+          "Vuelve a la clase y abre el ejercicio desde el bloque donde lo quieres.",
+      };
+    }
+    const blockName =
+      blocks[target.blockIdx].title || `Bloque ${target.blockIdx + 1}`;
+    if (target.kind === "station") {
+      const item = blocks[target.blockIdx].items[target.itemIdx];
+      if (item?.kind === "stations") {
+        setStationExercise(
+          target.blockIdx,
+          target.itemIdx,
+          target.stationIdx,
+          ex
+        );
+        pickTargetRef.current = null;
+        return {
+          ok: true,
+          message: `Añadido a la estación (${blockName}). Ya puedes cerrar esta pestaña.`,
+        };
+      }
+    }
+    addExerciseToBlock(target.blockIdx, ex);
+    return {
+      ok: true,
+      message: `Añadido a ${blockName}. Ya puedes cerrar esta pestaña.`,
+    };
+  });
+
   function removeItem(blockIdx: number, itemIdx: number) {
     setBlocks((prev) =>
       prev.map((b, i) =>
@@ -539,6 +753,7 @@ export function ClassForm({
       aspectoJuego: aspectosJuego[0] ?? null,
       aspectosJuego: aspectosJuego.length > 0 ? aspectosJuego : null,
       golpes: golpes.length > 0 ? golpes : null,
+      tags: tags.length > 0 ? tags : null,
       isLibrary: isAdmin ? isLibrary : false,
       autoria: isAdmin ? autoria : undefined,
       status,
@@ -553,7 +768,8 @@ export function ClassForm({
               return {
                 kind: "exercise" as const,
                 exerciseId: item.exerciseId,
-                freeText: null,
+                freeText: item.freeText?.trim() || null,
+                notes: item.notes?.trim() || null,
                 durationMinutes: item.durationMinutes,
               };
             }
@@ -593,6 +809,7 @@ export function ClassForm({
               exerciseId: null,
               freeText: item.freeText.trim() || null,
               title: item.title.trim() || null,
+              notes: item.notes?.trim() || null,
               durationMinutes: item.durationMinutes,
             };
           }),
@@ -622,6 +839,7 @@ export function ClassForm({
       return;
     }
 
+    clearAutosave();
     if (mode === "edit") {
       router.push(`/classes/${classId}`);
     } else {
@@ -706,6 +924,21 @@ export function ClassForm({
       </Dialog>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {recoveredDraft ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/30 bg-brand/10 px-4 py-2.5 text-sm text-foreground">
+            <span>Hemos recuperado la clase que estabas creando.</span>
+            <button
+              type="button"
+              onClick={() => {
+                clearAutosave();
+                window.location.reload();
+              }}
+              className="text-xs font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              Empezar de nuevo
+            </button>
+          </div>
+        ) : null}
         {/* Identidad */}
         <section className="space-y-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
           <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
@@ -884,6 +1117,50 @@ export function ClassForm({
               })}
             </div>
           </div>
+          {isAdmin && (
+            <label className="flex items-center gap-2 text-sm pt-2 border-t border-foreground/10">
+              <input
+                type="checkbox"
+                checked={isLibrary}
+                onChange={(e) => setIsLibrary(e.target.checked)}
+                className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
+              />
+              <span className="text-foreground/80">
+                Marcar como Biblioteca Ten Planner (visible para todos)
+              </span>
+            </label>
+          )}
+
+          {isAdmin && (
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-sm font-semibold text-foreground">
+                Autoría
+              </label>
+              <p className="text-xs text-muted-foreground">
+                De quién es esta clase dentro de la biblioteca pública.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {AUTORIAS.map(({ id, label }) => {
+                  const isSelected = (autoria ?? "libre") === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setAutoria(id)}
+                      className={cn(
+                        "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
+                        isSelected
+                          ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
+                          : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Objetivos / Material / Vídeo */}
@@ -893,15 +1170,29 @@ export function ClassForm({
           </p>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="objetivos"
-              className="block text-sm font-semibold text-foreground"
-            >
-              Objetivos{" "}
-              <span className="font-normal text-muted-foreground">
-                (numera con 1) 2)…)
-              </span>
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label
+                htmlFor="objetivos"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Objetivos{" "}
+                <span className="font-normal text-muted-foreground">
+                  (numera con 1) 2)…)
+                </span>
+              </label>
+              <ObjectivesPicker
+                currentText={objetivos}
+                infinitive
+                defaultBall={ballFromLevels(niveles)}
+                onAdd={(titles) =>
+                  setObjetivos((prev) =>
+                    appendObjectiveLines(prev, titles, {
+                      numbered: true,
+                    }).slice(0, 4000)
+                  )
+                }
+              />
+            </div>
             <textarea
               id="objetivos"
               rows={4}
@@ -955,6 +1246,19 @@ export function ClassForm({
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="class-tags"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Etiquetas{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional)
+              </span>
+            </label>
+            <TagInput id="class-tags" value={tags} onChange={setTags} />
           </div>
         </section>
 
@@ -1035,11 +1339,43 @@ export function ClassForm({
                         </span>
                         <div className="flex-1 min-w-0">
                           {item.kind === "exercise" ? (
-                            <div className="flex items-center gap-2">
-                              <Dumbbell className="size-3.5 text-brand shrink-0" />
-                              <span className="text-sm text-foreground truncate">
-                                {item.name}
-                              </span>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <Dumbbell className="size-3.5 text-brand shrink-0" />
+                                <span className="text-sm text-foreground truncate">
+                                  {item.name}
+                                </span>
+                              </div>
+                              <details
+                                className="group"
+                                open={!!(item.freeText || item.notes)}
+                              >
+                                <summary className="cursor-pointer text-[11px] font-semibold text-muted-foreground hover:text-foreground">
+                                  Descripción y notas de la clase
+                                </summary>
+                                <textarea
+                                  rows={2}
+                                  value={item.freeText ?? ""}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      freeText: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  placeholder="Cómo se hace en esta clase (si se deja vacío, la de la biblioteca)…"
+                                  className="mt-1.5 w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
+                                />
+                                <textarea
+                                  rows={1}
+                                  value={item.notes ?? ""}
+                                  onChange={(e) =>
+                                    updateItem(blockIdx, itemIdx, {
+                                      notes: e.target.value,
+                                    } as Partial<BlockItem>)
+                                  }
+                                  placeholder="Notas (opcional)…"
+                                  className="mt-1 w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
+                                />
+                              </details>
                             </div>
                           ) : item.kind === "text" ? (
                             <div className="flex items-start gap-2">
@@ -1311,7 +1647,7 @@ export function ClassForm({
                       .map((ex) => (
                         <li
                           key={ex.id}
-                          className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                          className="flex flex-wrap items-start gap-1 rounded-lg hover:bg-brand/10"
                         >
                           <button
                             type="button"
@@ -1325,25 +1661,30 @@ export function ClassForm({
                             }
                             className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
                           >
-                            <span className="block truncate font-medium">
+                            <span className="block break-words font-medium">
                               {ex.name}
                             </span>
-                            {ex.description && (
-                              <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                                {ex.description}
-                              </span>
-                            )}
                           </button>
                           <NextLink
-                            href={`/exercises/${ex.id}`}
+                            href={pickExerciseHref(ex.id, pickerId, "clase")}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              pickTargetRef.current = {
+                                kind: "station",
+                                ...stationPickerTarget,
+                              };
+                            }}
                             title="Ver ficha completa del ejercicio"
                             className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
                           >
                             <ExternalLink className="size-3.5" />
                           </NextLink>
+                          <ExerciseQuickDescription
+                            text={ex.description}
+                            className="basis-full px-3 pb-2"
+                          />
                         </li>
                       ))}
                     {filteredExercises(search).length === 0 && (
@@ -1446,32 +1787,41 @@ export function ClassForm({
                           .map((ex) => (
                             <li
                               key={ex.id}
-                              className="flex items-start gap-1 rounded-lg hover:bg-brand/10"
+                              className="flex flex-wrap items-start gap-1 rounded-lg hover:bg-brand/10"
                             >
                               <button
                                 type="button"
                                 onClick={() => addExerciseToBlock(blockIdx, ex)}
                                 className="min-w-0 flex-1 text-left px-3 py-2 text-sm transition-colors hover:text-brand text-foreground/80"
                               >
-                                <span className="block truncate font-medium">
+                                <span className="block break-words font-medium">
                                   {ex.name}
                                 </span>
-                                {ex.description && (
-                                  <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
-                                    {ex.description}
-                                  </span>
-                                )}
                               </button>
                               <NextLink
-                                href={`/exercises/${ex.id}`}
+                                href={pickExerciseHref(
+                                  ex.id,
+                                  pickerId,
+                                  "clase"
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  pickTargetRef.current = {
+                                    kind: "block",
+                                    blockIdx,
+                                  };
+                                }}
                                 title="Ver ficha completa del ejercicio"
                                 className="mt-2 mr-2 shrink-0 text-muted-foreground hover:text-brand"
                               >
                                 <ExternalLink className="size-3.5" />
                               </NextLink>
+                              <ExerciseQuickDescription
+                                text={ex.description}
+                                className="basis-full px-3 pb-2"
+                              />
                             </li>
                           ))}
                         {filteredExercises(search).length === 0 && (
@@ -1594,51 +1944,6 @@ export function ClassForm({
             placeholder="Información extra valiosa para quien imparta esta clase…"
             className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
           />
-
-          {isAdmin && (
-            <label className="flex items-center gap-2 text-sm pt-2">
-              <input
-                type="checkbox"
-                checked={isLibrary}
-                onChange={(e) => setIsLibrary(e.target.checked)}
-                className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
-              />
-              <span className="text-foreground/80">
-                Marcar como Biblioteca Ten Planner (visible para todos)
-              </span>
-            </label>
-          )}
-
-          {isAdmin && (
-            <div className="space-y-1.5 pt-1">
-              <label className="block text-sm font-semibold text-foreground">
-                Autoría
-              </label>
-              <p className="text-xs text-muted-foreground">
-                De quién es esta clase dentro de la biblioteca pública.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {AUTORIAS.map(({ id, label }) => {
-                  const isSelected = (autoria ?? "libre") === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setAutoria(id)}
-                      className={cn(
-                        "rounded-xl border px-3 py-2 text-xs font-medium transition-all duration-150",
-                        isSelected
-                          ? "border-[#D6FF38] bg-[#D6FF38]/10 text-[#6D7F00]"
-                          : "border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </section>
 
         {error && (
@@ -1647,7 +1952,14 @@ export function ClassForm({
           </div>
         )}
 
-        <div className="flex items-center gap-3 border-t border-foreground/10 pt-4">
+        {/* En edición la barra de guardar queda siempre a mano. */}
+        <div
+          className={cn(
+            "flex items-center gap-3 border-t border-foreground/10 pt-4",
+            mode === "edit" &&
+              "sticky bottom-0 z-30 -mx-4 bg-background/95 px-4 pb-4 backdrop-blur sm:mx-0 sm:px-0"
+          )}
+        >
           {/* El primer botón es el que usa Enter: en clases nuevas o en
             borrador, guarda como borrador para no publicar por accidente. */}
           {(mode === "create" || isDraft) && (

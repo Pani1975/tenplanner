@@ -16,6 +16,7 @@ export interface ExerciseDraftPayload {
   location?: string | null;
   videoUrl?: string;
   phase?: string | null;
+  fases?: string[];
   intensity?: number | null;
   formato?: string | null;
   numJugadores?: number | null;
@@ -30,6 +31,7 @@ export interface ExerciseDraftPayload {
   tiposActividad?: string[];
   caracter?: string[];
   situacionJuego?: string[];
+  tipoCompeticion?: string[];
   duracionRango?: string | null;
   isGlobal?: boolean;
   autoria?: string | null;
@@ -170,6 +172,8 @@ export async function getSessionDraft(
 export async function upsertSessionDraft(draft: SessionDraft): Promise<void> {
   await fetch("/api/session-drafts", {
     method: "POST",
+    // keepalive: que el guardado termine aunque la página se cierre o navegue.
+    keepalive: true,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: draft.id, payload: draft.payload }),
   });
@@ -268,6 +272,7 @@ export function hasMeaningfulExerciseDraft(payload: ExerciseDraftPayload) {
     payload.location ||
     payload.videoUrl?.trim() ||
     payload.phase ||
+    (payload.fases?.length ?? 0) > 0 ||
     payload.intensity != null ||
     payload.formato ||
     payload.numJugadores != null ||
@@ -282,6 +287,7 @@ export function hasMeaningfulExerciseDraft(payload: ExerciseDraftPayload) {
     (payload.tiposActividad?.length ?? 0) > 0 ||
     (payload.caracter?.length ?? 0) > 0 ||
     (payload.situacionJuego?.length ?? 0) > 0 ||
+    (payload.tipoCompeticion?.length ?? 0) > 0 ||
     payload.duracionRango ||
     payload.isGlobal ||
     payload.steps.some(

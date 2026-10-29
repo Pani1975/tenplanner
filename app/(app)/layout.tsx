@@ -5,8 +5,16 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import AppShell from "@/components/app/app-shell";
 import { getAppSettings, type SettingKey } from "@/lib/app-settings";
-import { getActiveWorkClubId, getClubOptionsForUser } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getClubAccountClubId,
+  getClubOptionsForUser,
+  getPendingInvitesForEmail,
+} from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import { isFamilyOnlyUser } from "@/lib/family";
+import { isFamilyAccountType } from "@/lib/family-account";
+import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
   "feature.dr_planner_enabled",
@@ -46,18 +54,43 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  const [[row], appSettings, workModeClubs, activeWorkClubId, activeSport] =
-    await Promise.all([
-      db
-        .select({ isAdmin: users.isAdmin, image: users.image })
-        .from(users)
-        .where(eq(users.id, user.id))
-        .limit(1),
-      getAppSettings(APP_LAYOUT_SETTING_KEYS),
-      getClubOptionsForUser(user.id),
-      getActiveWorkClubId(user.id),
-      getActiveSport(user.id),
-    ]);
+  const [
+    [row],
+    appSettings,
+    workModeClubs,
+    activeWorkClubId,
+    activeSport,
+    familyOnly,
+    pendingInvites,
+    unreadMessages,
+    clubAccountClubId,
+  ] = await Promise.all([
+    db
+      .select({
+        isAdmin: users.isAdmin,
+        image: users.image,
+        isPlatformAccount: users.isPlatformAccount,
+        adminMode: users.adminMode,
+        managementMode: users.managementMode,
+      })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1),
+    getAppSettings(APP_LAYOUT_SETTING_KEYS),
+    getClubOptionsForUser(user.id),
+    getActiveWorkClubId(user.id),
+    getActiveSport(user.id),
+    // Si falla (p. ej. sin tablas de mensajes), se muestra la app completa
+    isFamilyOnlyUser(user.id, isFamilyAccountType(user.user_metadata)).catch(
+      () => false
+    ),
+    // Invitaciones de club a su email: se avisan dentro de la app
+    getPendingInvitesForEmail(user.id, user.email).catch(() => []),
+    // Contador de mensajes nuevos junto a "Mensajes"
+    countUnreadMessages(user.id).catch(() => 0),
+    // Cuenta de un club: Modo <club> + Modo gestión, sin Modo particular
+    getClubAccountClubId(user.id),
+  ]);
 
   const isAdmin = row?.isAdmin ?? false;
   const avatarUrl =
@@ -100,7 +133,14 @@ export default async function AppLayout({
       appName={appName}
       workModeClubs={workModeClubs}
       activeWorkClubId={activeWorkClubId}
+      tenPlannerMode={!!row?.isPlatformAccount || (isAdmin && !!row?.adminMode)}
+      platformAccount={!!row?.isPlatformAccount}
+      clubAccountClubId={clubAccountClubId}
+      managementMode={!!clubAccountClubId && !!row?.managementMode}
       activeSport={activeSport}
+      familyOnly={familyOnly}
+      pendingInvites={pendingInvites}
+      unreadMessages={unreadMessages}
     >
       {children}
     </AppShell>

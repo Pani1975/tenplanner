@@ -1,0 +1,1 @@
+ALTER TABLE "class_block_exercises" ADD COLUMN IF NOT EXISTS "notes" text;

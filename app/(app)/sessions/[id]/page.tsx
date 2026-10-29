@@ -11,11 +11,14 @@ import {
   students,
   exerciseListItems,
   exerciseLists,
+  places,
   users,
 } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import { SessionDetailClient } from "./session-detail-client";
+import { signSessionAudioUrls } from "@/lib/session-audio";
 import { getExerciseDiagrams } from "@/lib/exercise-diagrams";
 import {
   computeSessionAnalytics,
@@ -118,7 +121,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       .select({ exerciseId: exerciseListItems.exerciseId })
       .from(exerciseListItems)
       .innerJoin(exerciseLists, eq(exerciseLists.id, exerciseListItems.listId))
-      .where(eq(exerciseLists.userId, user.id)),
+      .where(
+        exerciseListSpaceCondition(user.id, await getActiveWorkClubId(user.id))
+      ),
     db
       .select({
         blockId: sessionBlocks.id,
@@ -137,6 +142,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         itemKind: sessionBlockItems.kind,
         itemStations: sessionBlockItems.stations,
         itemAspectoJuego: sessionBlockItems.aspectoJuego,
+        itemCoachComment: sessionBlockItems.coachComment,
+        itemCoachAudioPath: sessionBlockItems.coachAudioPath,
+        itemCoachAudioSeconds: sessionBlockItems.coachAudioSeconds,
       })
       .from(sessionBlocks)
       .leftJoin(
@@ -153,6 +161,13 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
   const session = sessionRow;
   if (!session) notFound();
   const isOwner = session.userId === user.id;
+  const [placeRow] = session.placeId
+    ? await db
+        .select({ name: places.name })
+        .from(places)
+        .where(eq(places.id, session.placeId))
+        .limit(1)
+    : [];
   if (!isOwner) {
     const activeClubId = session.clubId
       ? await getActiveWorkClubId(user.id)
@@ -234,6 +249,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         kind: "exercise" | "text" | "warmup" | "stations";
         stations: StationItemJson[];
         aspectoJuego: string | null;
+        coachComment: string | null;
+        coachAudioPath: string | null;
+        coachAudioSeconds: number | null;
       }>;
     }>
   >((blocks, row) => {
@@ -266,6 +284,9 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         }),
         stations: (row.itemStations as StationItemJson[] | null) ?? [],
         aspectoJuego: row.itemAspectoJuego,
+        coachComment: row.itemCoachComment,
+        coachAudioPath: row.itemCoachAudioPath,
+        coachAudioSeconds: row.itemCoachAudioSeconds,
       });
     }
     return blocks;
@@ -360,6 +381,30 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/sessions/${navIds[navIdx + 1]}${navSuffix}`
       : null;
+  const backToSearchHref = navQs ? `/sessions?${navQs}` : null;
+
+  // Notas de voz: solo las oye el monitor dueño de la sesión (hay voces de
+  // alumnos); el resto del club ve el texto, no el audio. Las URLs son
+  // firmadas y caducan.
+  const audioUrls = isOwner
+    ? await signSessionAudioUrls([
+        ...(session.coachAudioPath ? [session.coachAudioPath] : []),
+        ...sessionBlocksData.flatMap((block) =>
+          block.items.flatMap((item) =>
+            item.coachAudioPath ? [item.coachAudioPath] : []
+          )
+        ),
+      ])
+    : new Map<string, string>();
+  const sessionBlocksForClient = sessionBlocksData.map((block) => ({
+    ...block,
+    items: block.items.map(({ coachAudioPath, ...item }) => ({
+      ...item,
+      coachAudioUrl: coachAudioPath
+        ? (audioUrls.get(coachAudioPath) ?? null)
+        : null,
+    })),
+  }));
 
   return (
     <SessionDetailClient
@@ -367,6 +412,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       nextHref={nextHref}
       navPosition={navIdx >= 0 ? navIdx + 1 : null}
       navTotal={navIds.length > 0 ? navIds.length : null}
+      backToSearchHref={backToSearchHref}
       isOwner={isOwner}
       authorName={authorName}
       session={{
@@ -381,10 +427,16 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         objective: session.objective,
         material: session.material,
         observations: session.observations,
+        coachComment: session.coachComment,
+        coachAudioUrl: session.coachAudioPath
+          ? (audioUrls.get(session.coachAudioPath) ?? null)
+          : null,
+        coachAudioSeconds: session.coachAudioSeconds,
         sourceClassId: session.sourceClassId,
         intensity: session.intensity,
         tags,
         location: session.location,
+        placeName: placeRow?.name ?? null,
         status: session.status,
       }}
       sessionExercises={resolvedExercises}
@@ -393,7 +445,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       analytics={analytics}
       students={studentRows}
       favoritedExerciseIds={Array.from(favoritedIds)}
-      sessionBlocks={sessionBlocksData}
+      sessionBlocks={sessionBlocksForClient}
       isFavorite={favoritedSessionIds.has(session.id)}
     />
   );

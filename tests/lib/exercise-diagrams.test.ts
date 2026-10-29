@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import diagrams from "@/lib/exercise-diagrams/diagrams.json";
+import base from "@/lib/exercise-diagrams/diagrams.json";
+import animated from "@/lib/exercise-diagrams/diagrams-animated.json";
+
+const diagrams = { ...base, ...animated };
 import { diagramMapSchema } from "@/lib/exercise-diagrams/schema";
 import { buildScene } from "@/lib/exercise-diagrams/scene";
 

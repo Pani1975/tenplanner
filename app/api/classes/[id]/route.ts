@@ -1,3 +1,5 @@
+import { normalizeTags } from "@/lib/tags";
+import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextResponse } from "next/server";
 import { and, eq, asc, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -19,6 +21,7 @@ import {
 import { AUTORIA_VALUES } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { CLASS_STATUSES, canSeeClassDraft } from "@/lib/classes/visibility";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -40,6 +43,7 @@ const blockExerciseSchema = z
     exerciseId: z.string().uuid().optional().nullable(),
     freeText: z.string().trim().max(2000).optional().nullable(),
     title: z.string().trim().max(120).optional().nullable(),
+    notes: z.string().trim().max(2000).optional().nullable(),
     durationMinutes: z.number().int().min(1).max(300).optional().nullable(),
     stations: z
       .array(stationItemSchema)
@@ -87,6 +91,7 @@ const updateSchema = z.object({
   aspectoJuego: z.string().trim().max(16).nullable().optional(),
   aspectosJuego: z.array(z.string().trim().max(16)).nullable().optional(),
   golpes: z.array(z.string().max(32)).nullable().optional(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).nullable().optional(),
   isLibrary: z.boolean().optional(),
   autoria: z.enum(AUTORIA_VALUES).nullable().optional(),
   blocks: z.array(blockSchema).max(3).optional(),
@@ -150,12 +155,16 @@ export async function GET(_req: Request, ctx: Ctx) {
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           title: classBlockExercises.title,
+          notes: classBlockExercises.notes,
           orderIndex: classBlockExercises.orderIndex,
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
           stations: classBlockExercises.stations,
           exerciseName: exercises.name,
           exerciseCategory: exercises.category,
+          exerciseDescription: exercises.description,
+          exerciseObjectives: exercises.objectives,
+          animationScene: exercises.animationScene,
         })
         .from(classBlockExercises)
         .leftJoin(exercises, eq(exercises.id, classBlockExercises.exerciseId))
@@ -201,21 +210,30 @@ export async function PATCH(request: Request, ctx: Ctx) {
     );
 
   const [existing] = await db
-    .select({ createdBy: classes.createdBy })
+    .select({ createdBy: classes.createdBy, isLibrary: classes.isLibrary })
     .from(classes)
     .where(eq(classes.id, id))
     .limit(1);
   if (!existing)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.createdBy !== user.id)
+  // La Biblioteca pública solo la edita la cuenta de la plataforma (sea quien
+  // sea quien la creó); el resto de clases, quien las creó.
+  const inTenPlanner = await isTenPlannerMode(user.id);
+  if (!existing.isLibrary && existing.createdBy !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (existing.isLibrary && !inTenPlanner)
+    return NextResponse.json(
+      { error: "La Biblioteca pública solo se edita en Modo Ten Planner" },
+      { status: 403 }
+    );
 
   const [dbUser] = await db
     .select({ isAdmin: users.isAdmin })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
-  const isAdmin = !!dbUser?.isAdmin;
+  // Publicar o retirar de la Biblioteca solo en Modo Ten Planner.
+  const isAdmin = !!dbUser?.isAdmin && (await isTenPlannerMode(user.id));
 
   const d = parsed.data;
 
@@ -243,7 +261,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
               exerciseIds.map((eid) => sql`${eid}::uuid`),
               sql`, `
             )})`,
-            or(eq(exercises.isGlobal, true), eq(exercises.createdBy, user.id))!
+            or(
+              eq(exercises.isGlobal, true),
+              exerciseOwnOrClubCondition(user.id)
+            )!
           )
         );
       if (accessible.length !== exerciseIds.length) {
@@ -297,6 +318,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         updateValues.aspectoJuego = aspectosJuego?.[0] ?? null;
       }
       if (d.golpes !== undefined) updateValues.golpes = d.golpes;
+      if (d.tags !== undefined) updateValues.tags = normalizeTags(d.tags);
       if (d.isLibrary !== undefined)
         updateValues.isLibrary = isAdmin && d.isLibrary === true;
       if (isAdmin && d.autoria !== undefined)
@@ -327,6 +349,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
                 exerciseId: item.exerciseId ?? null,
                 freeText: item.freeText ?? null,
                 title: item.title ?? null,
+                notes: item.notes ?? null,
                 orderIndex: idx,
                 durationMinutes: item.durationMinutes ?? null,
                 kind: item.kind ?? null,
@@ -357,9 +380,26 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const [target] = await db
+    .select({ isLibrary: classes.isLibrary, createdBy: classes.createdBy })
+    .from(classes)
+    .where(eq(classes.id, id))
+    .limit(1);
+  if (!target)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // La Biblioteca pública solo la borra la cuenta de la plataforma; el resto
+  // de clases, quien las creó.
+  if (target.isLibrary && !(await isTenPlannerMode(user.id)))
+    return NextResponse.json(
+      { error: "La Biblioteca pública solo se borra en Modo Ten Planner" },
+      { status: 403 }
+    );
+  if (!target.isLibrary && target.createdBy !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const [deleted] = await db
     .delete(classes)
-    .where(and(eq(classes.id, id), eq(classes.createdBy, user.id)))
+    .where(eq(classes.id, id))
     .returning({ id: classes.id });
   if (!deleted)
     return NextResponse.json({ error: "Not found" }, { status: 404 });

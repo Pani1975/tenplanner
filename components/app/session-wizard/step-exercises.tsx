@@ -25,6 +25,7 @@ import {
   type ExerciseFormResult,
 } from "@/components/app/exercise-form";
 import { SessionExerciseLists } from "@/components/app/session-exercise-lists";
+import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,10 @@ import {
   type StationDraftItem,
 } from "@/lib/block-items";
 import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
+import {
+  pickExerciseHref,
+  useExercisePickListener,
+} from "@/lib/exercise-pick-bridge";
 import {
   PHASE_LABELS,
   type AvailableExercise,
@@ -103,6 +108,8 @@ interface StepExercisesProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
   availableExercises: AvailableExercise[];
+  /** Se llama justo antes de abrir la ficha de un ejercicio (guardar borrador). */
+  onBeforeLeave?: () => void;
 }
 
 function formatMinutes(minutes: number) {
@@ -139,6 +146,7 @@ export function StepExercises({
   state,
   update,
   availableExercises,
+  onBeforeLeave,
 }: StepExercisesProps) {
   const [libraryExercises, setLibraryExercises] = useState(availableExercises);
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
@@ -415,6 +423,60 @@ export function StepExercises({
     setPickingStation(null);
     setPickerPhase(null);
   }
+
+  /**
+   * Destino recordado al abrir la ficha de un ejercicio en otra pestaña:
+   * el bloque (o la estación) desde el que se abrió. Así, al pulsar
+   * "Añadir a la sesión que estás creando" en la ficha, el ejercicio cae
+   * donde el monitor estaba eligiendo aunque luego haya cerrado el buscador.
+   */
+  const pickTargetRef = useRef<{
+    phase: TrainingPhase;
+    station: { itemIdx: number; stationIdx: number } | null;
+  } | null>(null);
+
+  function rememberPickTarget() {
+    pickTargetRef.current = {
+      phase: activeAddPhase,
+      station: pickingStation,
+    };
+    // Guarda el borrador antes de abrir la ficha: en el móvil la ficha puede
+    // abrirse en la misma ventana y, al volver, hay que recuperar la sesión.
+    onBeforeLeave?.();
+  }
+
+  const pickerId = useExercisePickListener((exerciseId) => {
+    const ex = libraryExercises.find((e) => e.id === exerciseId);
+    if (!ex) {
+      return {
+        ok: false,
+        message: "Este ejercicio no está disponible para esta sesión.",
+      };
+    }
+    const target = pickTargetRef.current ?? {
+      phase: activeAddPhase,
+      station: pickingStation,
+    };
+    const stationItem = target.station
+      ? selected[target.station.itemIdx]
+      : undefined;
+    if (target.station && stationItem && isStationsItem(stationItem)) {
+      setStationExercise(target.station.itemIdx, target.station.stationIdx, ex);
+      pickTargetRef.current = null;
+      return {
+        ok: true,
+        message: "Añadido a la estación. Ya puedes cerrar esta pestaña.",
+      };
+    }
+    if (selectedIds.has(ex.id)) {
+      return { ok: false, message: "Este ejercicio ya está en la sesión." };
+    }
+    addExercise(ex, target.phase);
+    return {
+      ok: true,
+      message: `Añadido a ${PHASE_LABELS[target.phase]}. Ya puedes cerrar esta pestaña.`,
+    };
+  });
 
   function removeExercise(id: string) {
     setExercises(selected.filter((e) => e.exerciseId !== id));
@@ -753,8 +815,7 @@ export function StepExercises({
         <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
           <LayoutGrid className="size-3.5 text-brand shrink-0" />
           <span className="text-xs font-semibold text-foreground">
-            Elige un ejercicio para la estación{" "}
-            {pickingStation.stationIdx + 1}
+            Elige un ejercicio para la estación {pickingStation.stationIdx + 1}
           </span>
           <button
             type="button"
@@ -773,9 +834,7 @@ export function StepExercises({
         <div className="flex-1 overflow-y-auto max-h-80">
           <SessionExerciseLists
             selectedExerciseIds={Array.from(selectedIds)}
-            onApplyList={(items) =>
-              addExercisesFromList(items, activeAddPhase)
-            }
+            onApplyList={(items) => addExercisesFromList(items, activeAddPhase)}
           />
         </div>
       ) : (
@@ -804,9 +863,7 @@ export function StepExercises({
                       : "bg-muted text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {cat === "all"
-                    ? "Todos"
-                    : (CATEGORY_LABELS[cat] ?? cat)}
+                  {cat === "all" ? "Todos" : (CATEGORY_LABELS[cat] ?? cat)}
                 </button>
               ))}
             </div>
@@ -823,8 +880,8 @@ export function StepExercises({
                 <Filter className="size-6 text-muted-foreground mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
                   {search ||
-                libCategoryFilter !== "all" ||
-                hasPickerFilters(pickerFilters)
+                  libCategoryFilter !== "all" ||
+                  hasPickerFilters(pickerFilters)
                     ? "Sin resultados para ese filtro"
                     : libraryExercises.length === 0
                       ? "No hay ejercicios en la biblioteca"
@@ -863,24 +920,21 @@ export function StepExercises({
                   />
                   <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
                   <div className="flex-1 min-w-0">
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
+                    <p className="flex items-start gap-1.5 text-sm font-medium text-foreground leading-snug">
                       <NextLink
-                        href={`/exercises/${ex.id}`}
+                        href={pickExerciseHref(ex.id, pickerId, "sesion")}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={rememberPickTarget}
                         draggable={false}
                         title="Ver la ficha del ejercicio"
-                        className="min-w-0 truncate hover:text-brand hover:underline"
+                        className="min-w-0 break-words hover:text-brand hover:underline"
                       >
                         {ex.name}
                       </NextLink>
-                      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+                      <ExternalLink className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
                     </p>
-                    {ex.description && (
-                      <p className="truncate text-[11px] text-muted-foreground leading-snug">
-                        {ex.description}
-                      </p>
-                    )}
+                    <ExerciseQuickDescription text={ex.description} />
                     <span
                       className={cn(
                         "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
@@ -896,10 +950,13 @@ export function StepExercises({
                     {ex.durationMinutes} min
                   </span>
                   <NextLink
-                    href={`/exercises/${ex.id}`}
+                    href={pickExerciseHref(ex.id, pickerId, "sesion")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      rememberPickTarget();
+                    }}
                     title="Ver ficha completa del ejercicio"
                     className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
                   >
@@ -936,8 +993,8 @@ export function StepExercises({
           </div>
           {filteredAvailable.length > VISIBLE_RESULTS && (
             <p className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
-              Mostrando {VISIBLE_RESULTS} de {filteredAvailable.length}.
-              Escribe en el buscador para encontrar el resto.
+              Mostrando {VISIBLE_RESULTS} de {filteredAvailable.length}. Escribe
+              en el buscador para encontrar el resto.
             </p>
           )}
         </>
@@ -949,7 +1006,9 @@ export function StepExercises({
     <>
       <Dialog
         open={showQuickCreate}
-        onOpenChange={(open) => (open ? setShowQuickCreate(true) : closeQuickCreate())}
+        onOpenChange={(open) =>
+          open ? setShowQuickCreate(true) : closeQuickCreate()
+        }
       >
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -1561,9 +1620,7 @@ export function StepExercises({
                                               onClick={() =>
                                                 patchItem(flatIdx, {
                                                   aspecto:
-                                                    ex.aspecto === a
-                                                      ? null
-                                                      : a,
+                                                    ex.aspecto === a ? null : a,
                                                 })
                                               }
                                               className={cn(

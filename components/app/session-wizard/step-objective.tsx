@@ -2,6 +2,8 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
+import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
+import { appendObjectiveLines } from "@/lib/objectives-text";
 import type { WizardState } from "./types";
 
 interface StepObjectiveProps {
@@ -44,23 +46,37 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <label
-          htmlFor="objective"
-          className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
-        >
-          Objetivo{" "}
-          <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-            opcional
-          </span>
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label
+            htmlFor="objective"
+            className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
+          >
+            Objetivos{" "}
+            <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
+              opcional · uno por línea
+            </span>
+          </label>
+          <ObjectivesPicker
+            currentText={state.objective}
+            infinitive
+            onAdd={(titles) =>
+              update({
+                objective: appendObjectiveLines(state.objective, titles).slice(
+                  0,
+                  2000
+                ),
+              })
+            }
+          />
+        </div>
         <textarea
           id="objective"
           value={state.objective}
           onChange={(e) => update({ objective: e.target.value })}
           placeholder="Qué debe mejorar el alumno o grupo en esta sesión."
-          rows={3}
+          rows={4}
           maxLength={2000}
-          className="w-full px-4 py-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed"
+          className="w-full px-4 py-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground/50 resize-y leading-relaxed"
         />
       </div>
 

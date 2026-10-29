@@ -101,6 +101,8 @@ export function legacyTipologiaFrom(values: string[] | null | undefined) {
 }
 
 // Niveles (etapas) con edad y color para que se identifiquen de un vistazo.
+// El color es el de la pelota de cada etapa: roja, naranja, verde y, de 10
+// a 18 años, amarilla.
 export const NIVELES = [
   {
     id: "descubrimiento",
@@ -125,19 +127,19 @@ export const NIVELES = [
     id: "precompeticion",
     label: "Precompetición",
     edad: "12-14 años",
-    color: "#FFC400",
+    color: "#FFE600",
   },
   {
     id: "competicion",
     label: "Competición",
     edad: "14-16 años",
-    color: "#FFA000",
+    color: "#FFE600",
   },
   {
     id: "rendimiento",
     label: "Rendimiento",
     edad: "14-18 años",
-    color: "#E68A00",
+    color: "#FFE600",
   },
 ] as const;
 
@@ -191,6 +193,11 @@ export function nivelesForSport(sport?: string | null) {
   return sport === "padel" ? PADEL_NIVELES : NIVELES;
 }
 
+/** Color de pelota de un nivel de tenis (null si el nivel no tiene). */
+export function nivelBallColor(id: string): string | null {
+  return NIVELES.find((n) => n.id === id)?.color ?? null;
+}
+
 export function nivelLabel(id: string) {
   return (
     NIVELES.find((n) => n.id === id)?.label ??
@@ -207,6 +214,15 @@ export const FASES = [
   { id: "cooldown", label: "Vuelta a la calma" },
 ] as const;
 
+/** Fases en las que sirve un ejercicio (multi-selección; cae a `phase`). */
+export function resolveFases(ex: {
+  fases?: string[] | null;
+  phase?: string | null;
+}): string[] {
+  if (ex.fases && ex.fases.length > 0) return ex.fases;
+  return ex.phase ? [ex.phase] : [];
+}
+
 // Pelota: se ofrecen las de color; las antiguas se siguen aceptando.
 export const PELOTAS = [
   { id: "gomaespuma", label: "Gomaespuma", color: "#F5E6C8" },
@@ -214,13 +230,13 @@ export const PELOTAS = [
   { id: "naranja", label: "Naranja", color: "#FB8C00" },
   { id: "verde", label: "Verde", color: "#43A047" },
   { id: "amarilla", label: "Amarilla", color: "#D4E157" },
+  { id: "sin_pelota", label: "Sin pelota" },
 ] as const;
 
 export const PELOTAS_LEGACY = [
   { id: "normal", label: "Normal" },
   { id: "lenta", label: "Lenta" },
   { id: "rapida", label: "Rápida" },
-  { id: "sin_pelota", label: "Sin pelota" },
 ] as const;
 
 export const TIPO_PELOTA_VALUES = [
@@ -276,6 +292,18 @@ export function situacionJuegoLabel(id: string) {
   return SITUACION_JUEGO.find((c) => c.id === id)?.label ?? id;
 }
 
+// Tipo de competición (varias opciones): individual y/o dobles.
+export const TIPO_COMPETICION = [
+  { id: "individual", label: "Individual" },
+  { id: "dobles", label: "Dobles" },
+] as const;
+
+export const TIPO_COMPETICION_VALUES = ["individual", "dobles"] as const;
+
+export function tipoCompeticionLabel(id: string) {
+  return TIPO_COMPETICION.find((c) => c.id === id)?.label ?? id;
+}
+
 // Autoría del ejercicio/clase: de quién es el contenido.
 // "libre" es el valor por defecto (sin autoría asignada / uso libre).
 // Según los monitores vayan proponiendo ejercicios públicos, se añaden
@@ -286,6 +314,8 @@ export const AUTORIAS = [
   { id: "guia_latinoamericana", label: "Guía latinoamericana" },
   { id: "rfet", label: "RFET" },
   { id: "itf", label: "ITF" },
+  { id: "usta", label: "USTA" },
+  { id: "tennis_canada", label: "Tennis Canada" },
   { id: "begreatattennis", label: "Be Gr8 at Tennis (Rob Cherry)" },
   { id: "libre", label: "Libre" },
 ] as const;

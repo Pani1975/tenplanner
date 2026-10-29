@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
+import { loadGroupTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -24,9 +26,17 @@ import { GroupDetailClient } from "./group-detail-client";
 import { GroupEditDetails } from "./group-edit-details";
 import { AssignClassToGroupButton } from "@/components/app/assign-class-to-group-button";
 import { GroupScheduleEditor } from "./group-schedule-editor";
+import { GroupObjectivesEditor } from "./group-objectives-editor";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getOwnedClub,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
+import { AssignedCoachesPanel } from "@/components/app/assigned-coaches-panel";
+import { getAssignableCoaches, listGroupCoaches } from "@/lib/club-coaches";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -214,6 +224,21 @@ export default async function GroupDetailPage({ params }: PageProps) {
     .filter((s) => s.status !== "completed" && s.scheduledAt >= now)
     .reverse();
 
+  const trainingStats = await loadGroupTrainingStats(id);
+
+  // Monitores asignados por el gestor (solo grupos de un club). Los ve todo
+  // el club; solo el gestor, dueño del club, puede cambiarlos.
+  const ownedClub = group.clubId ? await getOwnedClub(user.id) : null;
+  const canAssignCoaches = !!group.clubId && ownedClub?.id === group.clubId;
+  const [assignedCoaches, coachOptions] = group.clubId
+    ? await Promise.all([
+        listGroupCoaches(id),
+        canAssignCoaches
+          ? getAssignableCoaches(group.clubId, group.sport)
+          : Promise.resolve([]),
+      ])
+    : [[], []];
+
   const availableStudents = await db
     .select({
       id: students.id,
@@ -289,6 +314,27 @@ export default async function GroupDetailPage({ params }: PageProps) {
           isOwner={isOwner}
         />
 
+        {group.clubId && (
+          <AssignedCoachesPanel
+            key={assignedCoaches.map((c) => c.id).join(",")}
+            endpoint={`/api/groups/${id}/coaches`}
+            assigned={assignedCoaches}
+            options={coachOptions}
+            canEdit={canAssignCoaches}
+            subject="este grupo"
+          />
+        )}
+
+        <GroupObjectivesEditor
+          key={group.objetivos ?? ""}
+          groupId={id}
+          initialObjetivos={group.objetivos}
+          defaultBall={ballFromLevels(
+            memberRows.map((m) => m.playerLevel ?? "")
+          )}
+          canEdit={isOwner}
+        />
+
         {/* Planificación: la secuencia de sesiones del grupo en el tiempo,
             con la clase (plantilla) de la que viene cada una. Esto es "el
             plan del grupo", no solo un listado suelto. */}
@@ -338,6 +384,12 @@ export default async function GroupDetailPage({ params }: PageProps) {
             />
           </div>
         </section>
+
+        <TrainingStatsPanel
+          stats={trainingStats.stats}
+          studentHours={trainingStats.studentHours}
+          title={`Estadística de ${group.name}`}
+        />
       </div>
     </div>
   );

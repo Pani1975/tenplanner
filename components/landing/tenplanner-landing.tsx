@@ -379,6 +379,26 @@ function HowSection() {
           </RevealItem>
         ))}
       </RevealStagger>
+
+      <Reveal className="mx-auto mt-16 flex max-w-[1100px] flex-col items-center gap-4 text-center">
+        <p className="text-sm font-semibold text-[#66665d]">
+          ¿Prefieres leerlo paso a paso?
+        </p>
+        <div className="flex flex-col gap-3 min-[440px]:flex-row">
+          <Link
+            href="/ayuda?nivel=rapida"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-[#050505] px-6 text-sm font-bold text-[#050505] transition hover:bg-[#050505] hover:text-white"
+          >
+            Ver guía rápida
+          </Link>
+          <Link
+            href="/ayuda?nivel=completa"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-[#050505] px-6 text-sm font-bold text-[#050505] transition hover:bg-[#050505] hover:text-white"
+          >
+            Ver guía completa
+          </Link>
+        </div>
+      </Reveal>
     </section>
   );
 }
