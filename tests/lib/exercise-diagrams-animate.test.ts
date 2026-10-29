@@ -57,7 +57,12 @@ describe("animación de esquemas", () => {
   it("todos los pilotos tienen pasos que duran algo y jugadores dentro de la pista", () => {
     for (const [id, d] of Object.entries(maps)) {
       const tl = buildTimeline(d);
-      expect(tl.steps.length, id).toBeGreaterThan(0);
+      if (tl.steps.length === 0) {
+        // Esquema estático: no debe tener flechas ni coreografía que animar.
+        expect(d.choreo, id).toBeUndefined();
+        expect(d.elements.some((e) => e.t === "shot" || e.t === "move"), id).toBe(false);
+        continue;
+      }
       expect(tl.duration, id).toBeGreaterThan(2);
       for (let t = 0; t <= tl.duration; t += 0.25) {
         const s = sampleTimeline(tl, t);
