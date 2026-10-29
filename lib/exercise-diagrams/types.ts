@@ -66,6 +66,8 @@ export type ChoreoStep = {
   ball?: { path: Pt[]; bounces?: number[] };
   /** Jugador que golpea al empezar el paso (anillo de impacto). */
   swing?: number;
+  /** Conos (nº en orden de aparición, desde 0) que derriba la pelota al acabar el paso. */
+  knock?: number[];
 };
 
 export type Choreo = { steps: ChoreoStep[] };
