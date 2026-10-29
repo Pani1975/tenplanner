@@ -46,16 +46,17 @@ export function DiagramClip({
   const text = timeline.premium && step?.text ? step.text : diagram.caption;
 
   return (
-    <figure className="m-0 flex flex-col items-center p-3">
+    <figure className="m-0 p-3">
       <DiagramFrame
         diagram={diagram}
         timeline={timeline}
         scene={scene}
         time={local}
-        maxWidth={240}
+        maxWidth={520}
+        landscape={diagram.court !== "libre"}
       />
       {text && (
-        <figcaption className="mt-2 min-h-[2.4em] max-w-xs text-center text-xs font-medium leading-snug text-white/80">
+        <figcaption className="mt-2 min-h-[2.4em] text-center text-xs font-medium leading-snug text-white/80">
           {text}
         </figcaption>
       )}
