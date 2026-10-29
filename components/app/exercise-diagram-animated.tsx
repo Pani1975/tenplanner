@@ -23,7 +23,7 @@ import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 const STATIC_KINDS = new Set(["player", "ball", "move", "shot"]);
 const R = 5.2;
 
-function renderPrim(p: Prim, i: number) {
+function renderPrim(p: Prim, i: number, upright = false) {
   switch (p.k) {
     case "rect":
       return (
@@ -96,6 +96,7 @@ function renderPrim(p: Prim, i: number) {
           key={i}
           x={p.x}
           y={p.y}
+          transform={upright ? `rotate(90 ${p.x} ${p.y})` : undefined}
           fontSize={p.size}
           fill={p.fill}
           textAnchor={p.anchor ?? "start"}
@@ -115,12 +116,15 @@ export function DiagramFrame({
   scene,
   time,
   maxWidth,
+  landscape = false,
 }: {
   diagram: Diagram;
   timeline: Timeline;
   scene: Scene;
   time: number;
   maxWidth: number;
+  /** Gira la pista 90° (net en vertical) dejando los textos rectos. */
+  landscape?: boolean;
 }) {
   const P = projector(diagram.court).point;
   const sample = sampleTimeline(timeline, time);
@@ -132,12 +136,21 @@ export function DiagramFrame({
   const cones = diagram.elements.flatMap((e) => (e.t === "cone" ? [e.at] : []));
   return (
     <svg
-      viewBox={`0 0 ${scene.width} ${scene.height}`}
+      viewBox={
+        landscape
+          ? `0 0 ${scene.height} ${scene.width}`
+          : `0 0 ${scene.width} ${scene.height}`
+      }
       role="img"
       aria-label={diagram.caption ?? "Animación del ejercicio"}
       style={{ width: "100%", maxWidth, height: "auto", display: "block" }}
     >
-      {scene.prims.map(renderPrim)}
+      <g
+        transform={
+          landscape ? `translate(0 ${scene.width}) rotate(-90)` : undefined
+        }
+      >
+      {scene.prims.map((p, i) => renderPrim(p, i, landscape))}
 
       {/* Conos que se pueden derribar */}
       {cones.map((at, i) => {
@@ -243,6 +256,7 @@ export function DiagramFrame({
               <text
                 x={x}
                 y={y + 2.4}
+                transform={landscape ? `rotate(90 ${x} ${y + 2.4})` : undefined}
                 fontSize={6.5}
                 fill="#fff"
                 textAnchor="middle"
@@ -295,6 +309,7 @@ export function DiagramFrame({
             </g>
           );
         })()}
+      </g>
     </svg>
   );
 }
