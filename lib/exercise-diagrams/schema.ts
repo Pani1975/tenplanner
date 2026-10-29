@@ -46,6 +46,7 @@ const choreoStep = z.object({
     })
     .optional(),
   swing: z.number().int().min(0).max(11).optional(),
+  knock: z.array(z.number().int().min(0).max(59)).max(20).optional(),
 });
 
 export const diagramSchema = z.object({

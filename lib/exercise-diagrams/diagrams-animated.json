@@ -153,6 +153,91 @@
               ]
             }
           ]
+        },
+        {
+          "text": "Otra pelota: lanza de nuevo muy cerca",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  52,
+                  92
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                60,
+                80
+              ],
+              [
+                54,
+                88
+              ],
+              [
+                52,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Mismo gesto: contacto tras el bote y al otro campo",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                52,
+                92
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                52,
+                20
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve a su sitio",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  52,
+                  92
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
@@ -328,7 +413,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "A golpea suave tras el bote para derribar los bolos",
+          "text": "A golpea suave tras el bote y derriba los bolos del centro",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -341,37 +427,71 @@
               ],
               [
                 50,
-                63
+                62
+              ],
+              [
+                50,
+                46
               ]
             ],
             "bounces": [
               1
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            5
+          ]
         },
         {
-          "text": "Ahora B, con otra pelota",
+          "text": "Ahora B, con otra pelota, derriba los de los lados",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  40,
+                  88
+                ]
+              ]
+            }
+          ],
           "ball": {
             "path": [
               [
-                36,
-                90
+                40,
+                88
               ],
               [
-                44,
+                42,
                 76
               ],
               [
-                46,
+                44,
                 62
+              ],
+              [
+                46,
+                46
               ]
             ],
             "bounces": [
               1
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            0,
+            2,
+            4
+          ]
         },
         {
           "text": "Cuentan los bolos derribados y cambian de turno",
@@ -382,7 +502,7 @@
               "path": [
                 [
                   50,
-                  94
+                  92
                 ],
                 [
                   36,
@@ -394,12 +514,12 @@
               "who": 1,
               "path": [
                 [
-                  36,
-                  90
+                  40,
+                  88
                 ],
                 [
                   50,
-                  94
+                  92
                 ]
               ]
             }
@@ -2104,6 +2224,91 @@
               ]
             }
           ]
+        },
+        {
+          "text": "Otra pelota: de nuevo de lado a la red",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea con el hombro hacia la red",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                54,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
@@ -2653,6 +2858,91 @@
               ]
             }
           ]
+        },
+        {
+          "text": "Otra pelota: el monitor vuelve a lanzar",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Misma empuñadura, mismo golpe",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                54,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
@@ -2792,6 +3082,91 @@
         {
           "text": "3. Terminación: raqueta sobre el hombro opuesto",
           "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Otra vez: preparación, golpe y terminación",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpe y terminación sobre el hombro",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
           "moves": [
             {
               "who": 0,
@@ -2961,6 +3336,91 @@
               ]
             }
           ]
+        },
+        {
+          "text": "Otra pelota: de lado a la red otra vez",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpe de revés con el hombro hacia la red",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                44,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
@@ -3093,6 +3553,91 @@
               ],
               [
                 48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Otra pelota fácil al revés",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Dos manos y contacto delante del cuerpo",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                44,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
                 8
               ]
             ],
@@ -3448,6 +3993,91 @@
               ]
             }
           ]
+        },
+        {
+          "text": "Otra pelota al revés",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Mantiene la empuñadura en todo el golpe",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                44,
+                50
+              ],
+              [
+                52,
+                18
+              ],
+              [
+                52,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
@@ -3629,6 +4259,7 @@
       "steps": [
         {
           "text": "El monitor lanza de frente, con bote",
+          "dur": 1.3,
           "ball": {
             "path": [
               [
@@ -3661,7 +4292,7 @@
               ],
               [
                 51,
-                95
+                96
               ]
             ]
           },
@@ -3669,6 +4300,51 @@
         },
         {
           "text": "La pelota queda muerta: ¡control!",
+          "dur": 1.4
+        },
+        {
+          "text": "Otra pelota: el monitor lanza de nuevo",
+          "dur": 1.3,
+          "ball": {
+            "path": [
+              [
+                54,
+                78
+              ],
+              [
+                53,
+                86
+              ],
+              [
+                50,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "De nuevo la para con el centro de la raqueta",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                50,
+                92
+              ],
+              [
+                50,
+                96
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "¡Pelota muerta otra vez!",
           "dur": 1.4
         }
       ]
@@ -4023,6 +4699,7 @@
       "steps": [
         {
           "text": "Lanza la pelota arriba, a su punto de contacto",
+          "dur": 1.4,
           "ball": {
             "path": [
               [
@@ -4031,7 +4708,7 @@
               ],
               [
                 53,
-                60
+                62
               ],
               [
                 56,
@@ -4045,12 +4722,52 @@
           "swing": 0
         },
         {
-          "text": "Debe caer en el aro, delante de su pie adelantado",
-          "dur": 1.8
+          "text": "Debe caer dentro del aro, delante de su pie adelantado",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                54,
+                64
+              ],
+              [
+                56,
+                94
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
         },
         {
-          "text": "Repite hasta que caiga siempre en el aro",
-          "dur": 1.6
+          "text": "Repite hasta que caiga siempre dentro del aro",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                55,
+                62
+              ],
+              [
+                56,
+                94
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
         }
       ]
     }
@@ -4722,7 +5439,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "A lanza por encima de la cabeza a su castillo",
+          "text": "A lanza por encima de la cabeza contra su castillo",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -4742,10 +5460,16 @@
               2
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            0,
+            1,
+            2
+          ]
         },
         {
           "text": "B hace lo mismo contra el otro castillo",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -4765,7 +5489,12 @@
               2
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            3,
+            4,
+            5
+          ]
         },
         {
           "text": "Si cae un castillo, lo reconstruyen y repiten",
@@ -5540,8 +6269,8 @@
       {
         "t": "player",
         "at": [
-          50,
-          76
+          86,
+          84
         ],
         "role": "monitor",
         "label": "M"
@@ -5550,54 +6279,41 @@
         "t": "hoop",
         "at": [
           34,
-          86
+          66
         ]
       },
       {
         "t": "hoop",
         "at": [
           50,
-          86
+          66
         ]
       },
       {
         "t": "hoop",
         "at": [
           66,
-          86
+          66
         ]
       },
       {
         "t": "text",
         "at": [
           50,
-          102
+          56
         ],
         "text": "Raquetas al suelo"
       },
       {
-        "t": "shot",
+        "t": "move",
         "points": [
           [
-            50,
-            76
+            30,
+            94
           ],
           [
-            52,
-            88
-          ]
-        ]
-      },
-      {
-        "t": "shot",
-        "points": [
-          [
-            50,
-            90
-          ],
-          [
-            48,
-            14
+            34,
+            66
           ]
         ]
       },
@@ -5610,7 +6326,20 @@
           ],
           [
             50,
-            88
+            66
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            70,
+            94
+          ],
+          [
+            66,
+            66
           ]
         ]
       }
@@ -5625,6 +6354,7 @@
         },
         {
           "text": "A la señal corren a por su raqueta",
+          "dur": 2.4,
           "moves": [
             {
               "who": 0,
@@ -5635,7 +6365,7 @@
                 ],
                 [
                   34,
-                  86
+                  66
                 ]
               ]
             },
@@ -5648,7 +6378,7 @@
                 ],
                 [
                   50,
-                  86
+                  66
                 ]
               ]
             },
@@ -5661,22 +6391,26 @@
                 ],
                 [
                   66,
-                  86
+                  66
                 ]
               ]
             }
           ]
         },
         {
-          "text": "La cogen con «apretón de manos» y vuelven a la línea",
-          "dur": 2.2,
+          "text": "La cogen con «apretón de manos»: ¡el saludo del tenista!",
+          "dur": 2
+        },
+        {
+          "text": "Y vuelven corriendo a la línea para repetir",
+          "dur": 2.4,
           "moves": [
             {
               "who": 0,
               "path": [
                 [
                   34,
-                  86
+                  66
                 ],
                 [
                   30,
@@ -5689,7 +6423,7 @@
               "path": [
                 [
                   50,
-                  86
+                  66
                 ],
                 [
                   50,
@@ -5702,7 +6436,7 @@
               "path": [
                 [
                   66,
-                  86
+                  66
                 ],
                 [
                   70,
@@ -7251,7 +7985,7 @@
         },
         {
           "text": "A, de lado, golpea de revés y derriba los conos",
-          "dur": 1.6,
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -7264,18 +7998,23 @@
               ],
               [
                 46,
-                20
+                24
               ],
               [
                 46,
-                10
+                12
               ]
             ],
             "bounces": [
               2
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            4
+          ]
         },
         {
           "text": "Cuentan los conos derribados y cambian",
@@ -7584,7 +8323,7 @@
       "steps": [
         {
           "text": "Con los ojos cerrados, el monitor esconde la pelota bajo un cono",
-          "dur": 2.2,
+          "dur": 2.6,
           "moves": [
             {
               "who": 3,
@@ -7606,17 +8345,42 @@
                   32
                 ],
                 [
-                  50,
-                  18
+                  30,
+                  34
                 ]
               ]
             }
-          ]
+          ],
+          "ball": {
+            "path": [
+              [
+                50,
+                18
+              ],
+              [
+                30,
+                38
+              ]
+            ]
+          }
         },
         {
           "text": "¡Abren los ojos y cada uno señala dónde cree que está!",
           "dur": 2.4,
           "moves": [
+            {
+              "who": 3,
+              "path": [
+                [
+                  30,
+                  34
+                ],
+                [
+                  50,
+                  18
+                ]
+              ]
+            },
             {
               "who": 0,
               "path": [
@@ -7656,6 +8420,13 @@
                 ]
               ]
             }
+          ]
+        },
+        {
+          "text": "Se levanta el cono: ¡ahí estaba la pelota!",
+          "dur": 1.8,
+          "knock": [
+            0
           ]
         }
       ]
@@ -8023,7 +8794,8 @@
     "choreo": {
       "steps": [
         {
-          "text": "De rodillas, A rueda la pelota para derribar los bolos",
+          "text": "De rodillas, A rueda la pelota y derriba los bolos del centro",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -8032,14 +8804,24 @@
               ],
               [
                 50,
-                64
+                62
+              ],
+              [
+                50,
+                46
               ]
             ]
           },
-          "swing": 0
+          "swing": 0,
+          "knock": [
+            1,
+            3,
+            5
+          ]
         },
         {
-          "text": "Ahora B, con otra pelota",
+          "text": "Ahora B rueda la suya contra los de los lados",
+          "dur": 1.8,
           "ball": {
             "path": [
               [
@@ -8047,12 +8829,25 @@
                 90
               ],
               [
-                46,
-                64
+                40,
+                76
+              ],
+              [
+                42,
+                61
+              ],
+              [
+                44,
+                46
               ]
             ]
           },
-          "swing": 1
+          "swing": 1,
+          "knock": [
+            0,
+            2,
+            4
+          ]
         },
         {
           "text": "Cuentan los bolos derribados y cambian",
@@ -11356,7 +12151,7 @@
             "path": [
               [
                 50,
-                66
+                68
               ],
               [
                 49,
@@ -11372,6 +12167,83 @@
             ]
           },
           "swing": 0
+        },
+        {
+          "text": "Siguen golpeando con la mano",
+          "ball": {
+            "path": [
+              [
+                48,
+                36
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                50,
+                64
+              ],
+              [
+                50,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "A la red, siempre por encima",
+          "ball": {
+            "path": [
+              [
+                50,
+                68
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                48,
+                38
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Sigue el peloteo cooperativo",
+          "ball": {
+            "path": [
+              [
+                48,
+                36
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                50,
+                64
+              ],
+              [
+                50,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
         },
         {
           "text": "¡Gana la pareja con el peloteo más largo!",
@@ -34017,55 +34889,113 @@
     "choreo": {
       "steps": [
         {
-          "text": "Toque de derecha hacia arriba, por encima de la cabeza",
+          "text": "Toque 1: derecha hacia arriba, por encima de la cabeza",
+          "dur": 1.1,
           "ball": {
             "path": [
               [
                 30,
-                70
+                84
               ],
               [
                 30,
-                40
+                66
               ],
               [
                 30,
-                86
+                84
               ]
-            ],
-            "bounces": [
-              2
             ]
           },
           "swing": 0
         },
         {
-          "text": "La pelota bota una vez sobre la diana y vuelve a subirla",
-          "dur": 1.6,
+          "text": "Toque 2: bota en la diana y vuelve a subirla",
+          "dur": 1.1,
           "ball": {
             "path": [
               [
                 30,
-                86
+                84
               ],
               [
                 30,
-                52
+                66
               ],
               [
                 30,
-                86
+                84
               ]
-            ],
-            "bounces": [
-              2
             ]
           },
           "swing": 0
         },
         {
-          "text": "Cinco seguidos suman un punto; después, por el revés",
-          "dur": 2.2
+          "text": "Toque 3",
+          "dur": 1.1,
+          "ball": {
+            "path": [
+              [
+                30,
+                84
+              ],
+              [
+                30,
+                66
+              ],
+              [
+                30,
+                84
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Toque 4",
+          "dur": 1.1,
+          "ball": {
+            "path": [
+              [
+                30,
+                84
+              ],
+              [
+                30,
+                66
+              ],
+              [
+                30,
+                84
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Toque 5: ¡cinco seguidos suman un punto!",
+          "dur": 1.1,
+          "ball": {
+            "path": [
+              [
+                30,
+                84
+              ],
+              [
+                30,
+                66
+              ],
+              [
+                30,
+                84
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Después, lo mismo por el lado del revés",
+          "dur": 1.8
         }
       ]
     }
@@ -34861,7 +35791,7 @@
       "steps": [
         {
           "text": "La jirafa: brazos estirados hacia arriba",
-          "dur": 2.2,
+          "dur": 2.4,
           "moves": [
             {
               "who": 0,
@@ -34872,7 +35802,7 @@
                 ],
                 [
                   30,
-                  64
+                  60
                 ],
                 [
                   30,
@@ -34889,7 +35819,7 @@
                 ],
                 [
                   50,
-                  64
+                  60
                 ],
                 [
                   50,
@@ -34906,31 +35836,384 @@
                 ],
                 [
                   70,
-                  64
+                  60
                 ],
                 [
                   70,
                   70
                 ]
               ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  40,
+                  24
+                ],
+                [
+                  60,
+                  24
+                ],
+                [
+                  50,
+                  24
+                ]
+              ]
             }
           ]
         },
         {
-          "text": "El gato: espalda redonda",
-          "dur": 2.2
+          "text": "El gato: espalda redonda, balanceándose",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  25,
+                  70
+                ],
+                [
+                  35,
+                  70
+                ],
+                [
+                  30,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  70
+                ],
+                [
+                  45,
+                  70
+                ],
+                [
+                  55,
+                  70
+                ],
+                [
+                  50,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  65,
+                  70
+                ],
+                [
+                  75,
+                  70
+                ],
+                [
+                  70,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  40,
+                  24
+                ],
+                [
+                  60,
+                  24
+                ],
+                [
+                  50,
+                  24
+                ]
+              ]
+            }
+          ]
         },
         {
           "text": "El flamenco: equilibrio sobre un pie",
-          "dur": 2.2
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  30,
+                  66
+                ],
+                [
+                  30,
+                  70
+                ],
+                [
+                  30,
+                  66
+                ],
+                [
+                  30,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  70
+                ],
+                [
+                  50,
+                  66
+                ],
+                [
+                  50,
+                  70
+                ],
+                [
+                  50,
+                  66
+                ],
+                [
+                  50,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  70,
+                  66
+                ],
+                [
+                  70,
+                  70
+                ],
+                [
+                  70,
+                  66
+                ],
+                [
+                  70,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  40,
+                  24
+                ],
+                [
+                  60,
+                  24
+                ],
+                [
+                  50,
+                  24
+                ]
+              ]
+            }
+          ]
         },
         {
           "text": "La tortuga: sentados abrazando las rodillas",
-          "dur": 2.2
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  30,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  70
+                ],
+                [
+                  50,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  70,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  40,
+                  24
+                ],
+                [
+                  60,
+                  24
+                ],
+                [
+                  50,
+                  24
+                ]
+              ]
+            }
+          ]
         },
         {
           "text": "La mariposa: piernas en mariposa, respirando",
-          "dur": 2.2
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  80
+                ],
+                [
+                  26,
+                  82
+                ],
+                [
+                  34,
+                  82
+                ],
+                [
+                  30,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  80
+                ],
+                [
+                  46,
+                  82
+                ],
+                [
+                  54,
+                  82
+                ],
+                [
+                  50,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  80
+                ],
+                [
+                  66,
+                  82
+                ],
+                [
+                  74,
+                  82
+                ],
+                [
+                  70,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  40,
+                  24
+                ],
+                [
+                  60,
+                  24
+                ],
+                [
+                  50,
+                  24
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
