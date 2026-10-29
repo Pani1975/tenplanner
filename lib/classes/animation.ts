@@ -10,6 +10,7 @@
 // para extenderla a todas las clases cuando se valide el piloto: basta con
 // ampliar `hasClassAnimation`.
 
+import type { Diagram } from "@/lib/exercise-diagrams/types";
 import {
   DEFAULT_BLOCK_ITEM_DURATION,
   resolveItemKind,
@@ -97,6 +98,8 @@ export interface AnimationInputItem {
   notes?: string | null;
   /** Escena fijada en la ficha del ejercicio (manda sobre la deducida). */
   animationScene?: string | null;
+  /** Esquema animado del ejercicio de biblioteca (si tiene). */
+  diagram?: Diagram | null;
 }
 
 export interface AnimationInputBlock {
@@ -124,6 +127,8 @@ export interface AnimationStep {
   minutes: number;
   /** Minuto de la clase en el que empieza la actividad. */
   classStartMin: number;
+  /** Esquema animado del ejercicio: sustituye a la escena genérica. */
+  diagram?: Diagram;
   /** Segundo de la animación en el que empieza / acaba. */
   start: number;
   end: number;
@@ -406,6 +411,7 @@ export function buildAnimationTimeline(
               ),
         minutes,
         classStartMin: classMin,
+        ...(!isRest && item.diagram ? { diagram: item.diagram } : {}),
       });
       classMin += minutes;
     }
