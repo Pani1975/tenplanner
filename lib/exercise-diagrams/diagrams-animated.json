@@ -66,7 +66,96 @@
         ]
       }
     ],
-    "caption": "El monitor lanza muy cerca; el alumno contacta tras el bote y la envía al otro campo"
+    "caption": "El monitor lanza muy cerca; el alumno contacta tras el bote y la envía al otro campo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza muy cerca del alumno, con bote",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  51,
+                  92
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                60,
+                80
+              ],
+              [
+                53,
+                88
+              ],
+              [
+                51,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Contacta tras el bote y la envía al otro campo",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                51,
+                92
+              ],
+              [
+                49.5,
+                50
+              ],
+              [
+                48,
+                18
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve a su sitio y repite",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  51,
+                  92
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "820c6f3c-4b08-5e55-a02c-d744e4097e48": {
     "court": "mini",
@@ -235,7 +324,89 @@
         ]
       }
     ],
-    "caption": "Seis conos hacen de bolos: golpe suave de derecha tras el bote para derribarlos"
+    "caption": "Seis conos hacen de bolos: golpe suave de derecha tras el bote para derribarlos",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A golpea suave tras el bote para derribar los bolos",
+          "ball": {
+            "path": [
+              [
+                50,
+                92
+              ],
+              [
+                50,
+                78
+              ],
+              [
+                50,
+                63
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Ahora B, con otra pelota",
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                44,
+                76
+              ],
+              [
+                46,
+                62
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Cuentan los bolos derribados y cambian de turno",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "c5c7a32a-a1ec-58b3-82a3-67a87f5d0ad3": {
     "court": "tenis",
@@ -1846,7 +2017,96 @@
         ]
       }
     ],
-    "caption": "Antes de que bote, el alumno se coloca de lado respecto a la red"
+    "caption": "Antes de que bote, el alumno se coloca de lado respecto a la red",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza; antes del bote se coloca de lado",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea de derecha con el cuerpo de lado a la red",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                48,
+                16
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "cd8b2c67-3b46-5395-8db6-7e601bdfc19d": {
     "court": "mini",
@@ -2301,7 +2561,101 @@
         ]
       }
     ],
-    "caption": "Antes de cada golpe, el alumno «da la mano» a la raqueta y el monitor revisa la empuñadura"
+    "caption": "Antes de cada golpe, el alumno «da la mano» a la raqueta y el monitor revisa la empuñadura",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Primero «da la mano» a la raqueta: empuñadura de derecha",
+          "dur": 2.2,
+          "swing": 0
+        },
+        {
+          "text": "El monitor lanza una pelota fácil con bote",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea con la empuñadura de apretón de manos",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                48,
+                16
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro y repite",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "01a76aec-f801-50ea-9c42-05dcbf89830c": {
     "court": "mini",
@@ -2366,7 +2720,96 @@
         ]
       }
     ],
-    "caption": "Marca los tres momentos del gesto: preparación atrás, golpe y terminación sobre el hombro"
+    "caption": "Marca los tres momentos del gesto: preparación atrás, golpe y terminación sobre el hombro",
+    "choreo": {
+      "steps": [
+        {
+          "text": "1. Preparación: raqueta atrás antes del bote",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  56,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                86
+              ],
+              [
+                56,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "2. Golpe: contacta delante del cuerpo",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                56,
+                90
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                48,
+                18
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "3. Terminación: raqueta sobre el hombro opuesto",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  56,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "f477258b-d856-58c8-9b98-28599db93658": {
     "court": "mini",
@@ -2431,7 +2874,96 @@
         ]
       }
     ],
-    "caption": "De lado a la red, con el hombro dominante hacia la red, antes de golpear de revés"
+    "caption": "De lado a la red, con el hombro dominante hacia la red, antes de golpear de revés",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza al revés; se coloca de lado a la red",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea de revés con el hombro hacia la red",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                42,
+                50
+              ],
+              [
+                48,
+                16
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "c1b1495a-b81a-5352-bba8-17cd8997ae51": {
     "court": "mini",
@@ -2496,7 +3028,101 @@
         ]
       }
     ],
-    "caption": "Primera cesta de revés: dos manos en la raqueta y lanzamiento muy fácil del monitor"
+    "caption": "Primera cesta de revés: dos manos en la raqueta y lanzamiento muy fácil del monitor",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Coloca las dos manos en la raqueta",
+          "dur": 2.2,
+          "swing": 0
+        },
+        {
+          "text": "El monitor lanza muy fácil a su lado del revés",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea de revés con las dos manos en la raqueta",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                42,
+                50
+              ],
+              [
+                48,
+                16
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "c6fe3bdd-c78f-524f-93b8-a6a5d9e603a0": {
     "court": "mini",
@@ -2730,7 +3356,101 @@
         ]
       }
     ],
-    "caption": "Empuñadura del revés a dos manos: continental en la dominante y este en la otra"
+    "caption": "Empuñadura del revés a dos manos: continental en la dominante y este en la otra",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Revisa las manos: continental y este",
+          "dur": 2.2,
+          "swing": 0
+        },
+        {
+          "text": "El monitor lanza a su lado del revés",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  36,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                38,
+                86
+              ],
+              [
+                36,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea de revés con la empuñadura correcta",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                42,
+                50
+              ],
+              [
+                48,
+                16
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro y repite",
+          "dur": 1.3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  90
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "70fa7508-b570-551a-8b68-916f3f8d951f": {
     "court": "mini",
@@ -2904,7 +3624,55 @@
         "text": "Paro y dejo muerta"
       }
     ],
-    "caption": "El monitor lanza de frente y el alumno la para con el centro de la raqueta, sin swing"
+    "caption": "El monitor lanza de frente y el alumno la para con el centro de la raqueta, sin swing",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza de frente, con bote",
+          "ball": {
+            "path": [
+              [
+                54,
+                78
+              ],
+              [
+                55,
+                86
+              ],
+              [
+                52,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Para la pelota con el centro de la raqueta, sin swing",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                52,
+                92
+              ],
+              [
+                51,
+                95
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "La pelota queda muerta: ¡control!",
+          "dur": 1.4
+        }
+      ]
+    }
   },
   "cfe00950-fb8e-5741-9934-113ab71a0eed": {
     "court": "mini",
@@ -3250,7 +4018,42 @@
         ]
       }
     ],
-    "caption": "El alumno lanza la pelota arriba y la deja caer sobre un aro delante de su pie adelantado"
+    "caption": "El alumno lanza la pelota arriba y la deja caer sobre un aro delante de su pie adelantado",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Lanza la pelota arriba, a su punto de contacto",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                53,
+                60
+              ],
+              [
+                56,
+                94
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Debe caer en el aro, delante de su pie adelantado",
+          "dur": 1.8
+        },
+        {
+          "text": "Repite hasta que caiga siempre en el aro",
+          "dur": 1.6
+        }
+      ]
+    }
   },
   "1b4e95d7-6f17-5df4-86ce-58102e26fb52": {
     "court": "mini",
@@ -3329,7 +4132,80 @@
         ]
       }
     ],
-    "caption": "Sin raqueta: lanzan pelotas por encima de la cabeza, con el gesto del saque"
+    "caption": "Sin raqueta: lanzan pelotas por encima de la cabeza, con el gesto del saque",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por encima de la cabeza, con el gesto del saque",
+          "ball": {
+            "path": [
+              [
+                24,
+                96
+              ],
+              [
+                24,
+                55
+              ],
+              [
+                24,
+                12
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Ahora B lanza al otro campo",
+          "ball": {
+            "path": [
+              [
+                50,
+                96
+              ],
+              [
+                50,
+                55
+              ],
+              [
+                50,
+                10
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Y C: ¡sin raqueta, solo el gesto!",
+          "ball": {
+            "path": [
+              [
+                76,
+                96
+              ],
+              [
+                76,
+                55
+              ],
+              [
+                76,
+                12
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 2
+        }
+      ]
+    }
   },
   "367cff9f-dd9b-51d6-95d7-a6c62e052f76": {
     "court": "mini",
@@ -3673,7 +4549,84 @@
         ]
       }
     ],
-    "caption": "El compañero lanza las «estrellas»; el alumno las para con el centro de la raqueta y las"
+    "caption": "El compañero lanza las «estrellas»; el alumno las para con el centro de la raqueta y las",
+    "choreo": {
+      "steps": [
+        {
+          "text": "B lanza una «estrella» a su compañero",
+          "ball": {
+            "path": [
+              [
+                52,
+                70
+              ],
+              [
+                52,
+                82
+              ],
+              [
+                52,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "A la para con el centro de la raqueta y la lleva al cubo",
+          "dur": 2,
+          "ball": {
+            "path": [
+              [
+                52,
+                90
+              ],
+              [
+                24,
+                92
+              ]
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  52,
+                  92
+                ],
+                [
+                  24,
+                  92
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Vuelve a su sitio a por la siguiente",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  92
+                ],
+                [
+                  52,
+                  92
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "a5f74c3f-78f8-528a-a6b7-274e83dd66ba": {
     "court": "mini",
@@ -3765,7 +4718,61 @@
         ]
       }
     ],
-    "caption": "Castillos de conos en el otro campo: lanzan por encima de la cabeza, como un saque"
+    "caption": "Castillos de conos en el otro campo: lanzan por encima de la cabeza, como un saque",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por encima de la cabeza a su castillo",
+          "ball": {
+            "path": [
+              [
+                34,
+                92
+              ],
+              [
+                34,
+                50
+              ],
+              [
+                33,
+                12
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B hace lo mismo contra el otro castillo",
+          "ball": {
+            "path": [
+              [
+                66,
+                92
+              ],
+              [
+                67,
+                50
+              ],
+              [
+                69,
+                12
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Si cae un castillo, lo reconstruyen y repiten",
+          "dur": 2
+        }
+      ]
+    }
   },
   "d5e2772c-e223-54da-93d0-5f7946f2083c": {
     "court": "mini",
@@ -4608,7 +5615,105 @@
         ]
       }
     ],
-    "caption": "Raquetas en el suelo: a la señal corren a por ella, «apretón de manos»"
+    "caption": "Raquetas en el suelo: a la señal corren a por ella, «apretón de manos»",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor da la señal: ¡raquetas al suelo!",
+          "dur": 1.8,
+          "swing": 3
+        },
+        {
+          "text": "A la señal corren a por su raqueta",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  94
+                ],
+                [
+                  34,
+                  86
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  50,
+                  86
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  94
+                ],
+                [
+                  66,
+                  86
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "La cogen con «apretón de manos» y vuelven a la línea",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  34,
+                  86
+                ],
+                [
+                  30,
+                  94
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  66,
+                  86
+                ],
+                [
+                  70,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "0df3c594-b8a3-5c87-a436-7aac867626f1": {
     "court": "mini",
@@ -5266,7 +6371,109 @@
         ]
       }
     ],
-    "caption": "Por parejas: uno lanza suave y el otro golpea de revés con dos manos a un aro"
+    "caption": "Por parejas: uno lanza suave y el otro golpea de revés con dos manos a un aro",
+    "choreo": {
+      "steps": [
+        {
+          "text": "B lanza suave y con bote",
+          "ball": {
+            "path": [
+              [
+                44,
+                72
+              ],
+              [
+                42,
+                86
+              ],
+              [
+                40,
+                92
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  44,
+                  94
+                ],
+                [
+                  40,
+                  92
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "A golpea de revés con dos manos al aro",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                40,
+                92
+              ],
+              [
+                41,
+                50
+              ],
+              [
+                40,
+                16
+              ],
+              [
+                40,
+                10
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Cada cinco golpes cambian de papel",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  92
+                ],
+                [
+                  44,
+                  72
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  44,
+                  72
+                ],
+                [
+                  44,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "49932353-fe2b-5063-a289-91049d0a9f8b": {
     "court": "mini",
@@ -5330,7 +6537,61 @@
         ]
       }
     ],
-    "caption": "Se lanzan la pelota arriba con una mano e intentan que caiga dentro de un cubo delante"
+    "caption": "Se lanzan la pelota arriba con una mano e intentan que caiga dentro de un cubo delante",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza la pelota arriba con una mano",
+          "ball": {
+            "path": [
+              [
+                30,
+                90
+              ],
+              [
+                32,
+                66
+              ],
+              [
+                36,
+                86
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B hace lo mismo hacia su cubo",
+          "ball": {
+            "path": [
+              [
+                70,
+                90
+              ],
+              [
+                68,
+                66
+              ],
+              [
+                64,
+                86
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Gana quien la deja caer dentro más veces",
+          "dur": 2
+        }
+      ]
+    }
   },
   "e7cae672-8c11-538c-a117-b7bc3172620a": {
     "court": "mini",
@@ -5947,7 +7208,96 @@
         ]
       }
     ],
-    "caption": "Un compañero lanza al revés y el alumno, de lado"
+    "caption": "Un compañero lanza al revés y el alumno, de lado",
+    "choreo": {
+      "steps": [
+        {
+          "text": "B lanza al lado del revés",
+          "ball": {
+            "path": [
+              [
+                44,
+                72
+              ],
+              [
+                41,
+                86
+              ],
+              [
+                40,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  44,
+                  94
+                ],
+                [
+                  40,
+                  90
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "A, de lado, golpea de revés y derriba los conos",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                40,
+                90
+              ],
+              [
+                43,
+                50
+              ],
+              [
+                46,
+                20
+              ],
+              [
+                46,
+                10
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Cuentan los conos derribados y cambian",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  90
+                ],
+                [
+                  44,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "5a12293e-f995-55f3-8046-dee3b54329cc": {
     "court": "mini",
@@ -6229,7 +7579,87 @@
         "text": "Ojos cerrados"
       }
     ],
-    "caption": "Un cono esconde la pelota de otro color y el monitor los mueve; al abrir los ojos"
+    "caption": "Un cono esconde la pelota de otro color y el monitor los mueve; al abrir los ojos",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Con los ojos cerrados, el monitor esconde la pelota bajo un cono",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  18
+                ],
+                [
+                  30,
+                  32
+                ],
+                [
+                  50,
+                  32
+                ],
+                [
+                  70,
+                  32
+                ],
+                [
+                  50,
+                  18
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "¡Abren los ojos y cada uno señala dónde cree que está!",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  80
+                ],
+                [
+                  30,
+                  52
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  80
+                ],
+                [
+                  50,
+                  52
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  80
+                ],
+                [
+                  70,
+                  52
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "8be660df-7bd2-566d-858d-f7636bf0a01d": {
     "court": "libre",
@@ -6379,7 +7809,125 @@
         ]
       }
     ],
-    "caption": "El monitor lanza muchas pelotas altas desde la red y cada alumno atrapa el mayor número"
+    "caption": "El monitor lanza muchas pelotas altas desde la red y cada alumno atrapa el mayor número",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza una pelota alta al 1",
+          "ball": {
+            "path": [
+              [
+                56,
+                52
+              ],
+              [
+                40,
+                40
+              ],
+              [
+                30,
+                84
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  86
+                ],
+                [
+                  30,
+                  82
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Ahora al 2: ¡atrápala!",
+          "ball": {
+            "path": [
+              [
+                56,
+                52
+              ],
+              [
+                52,
+                40
+              ],
+              [
+                50,
+                88
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 3,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  90
+                ],
+                [
+                  50,
+                  86
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Y al 3: gana quien atrapa más",
+          "ball": {
+            "path": [
+              [
+                56,
+                52
+              ],
+              [
+                64,
+                40
+              ],
+              [
+                70,
+                84
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 3,
+          "moves": [
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  86
+                ],
+                [
+                  70,
+                  82
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   },
   "2cbd7acc-94e7-58ba-a46d-bca542da05cb": {
     "court": "mini",
@@ -6471,7 +8019,47 @@
         ]
       }
     ],
-    "caption": "Seis conos como bolos a 3 m: de rodillas, ruedan la pelota para derribar el mayor número"
+    "caption": "Seis conos como bolos a 3 m: de rodillas, ruedan la pelota para derribar el mayor número",
+    "choreo": {
+      "steps": [
+        {
+          "text": "De rodillas, A rueda la pelota para derribar los bolos",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                50,
+                64
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Ahora B, con otra pelota",
+          "ball": {
+            "path": [
+              [
+                36,
+                90
+              ],
+              [
+                46,
+                64
+              ]
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Cuentan los bolos derribados y cambian",
+          "dur": 1.8
+        }
+      ]
+    }
   },
   "f8f16232-0096-5b14-bdf4-3d18b8d429a7": {
     "court": "mini",
@@ -8555,7 +10143,71 @@
         ]
       }
     ],
-    "caption": "Cubos y aros a 2, 3 y 4 m: lanzan por abajo, con una mano y con las dos; cuanto más lejos"
+    "caption": "Cubos y aros a 2, 3 y 4 m: lanzan por abajo, con una mano y con las dos; cuanto más lejos",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Primer cubo, a 2 m: 1 punto",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                50,
+                80
+              ],
+              [
+                50,
+                70
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Segundo cubo, a 3 m: 2 puntos",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                50,
+                70
+              ],
+              [
+                50,
+                52
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Tercer cubo, a 4 m: ¡3 puntos!",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                50,
+                60
+              ],
+              [
+                50,
+                34
+              ]
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
   },
   "3d659a0c-a71e-5890-870b-430254952ace": {
     "court": "libre",
@@ -9153,7 +10805,95 @@
         "label": "6"
       }
     ],
-    "caption": "Sentados en círculo se pasan la pelota despacio con música suave; al parar"
+    "caption": "Sentados en círculo se pasan la pelota despacio con música suave; al parar",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Sentados en círculo se pasan la pelota despacio",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                50,
+                20
+              ],
+              [
+                76,
+                35
+              ]
+            ]
+          }
+        },
+        {
+          "text": "El 2 la pasa al 3",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                76,
+                35
+              ],
+              [
+                76,
+                65
+              ]
+            ]
+          }
+        },
+        {
+          "text": "El 3 al 4",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                76,
+                65
+              ],
+              [
+                50,
+                80
+              ]
+            ]
+          }
+        },
+        {
+          "text": "El 4 al 5",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                50,
+                80
+              ],
+              [
+                24,
+                65
+              ]
+            ]
+          }
+        },
+        {
+          "text": "El 5 al 6",
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                24,
+                65
+              ],
+              [
+                24,
+                35
+              ]
+            ]
+          }
+        },
+        {
+          "text": "Al parar la música, quien la tenga responde una pregunta",
+          "dur": 2.4
+        }
+      ]
+    }
   },
   "5fbc09aa-78ce-577b-ab92-fe56e64aaf83": {
     "court": "libre",
@@ -9345,7 +11085,97 @@
         "label": "D"
       }
     ],
-    "caption": "En equipos construyen la torre más alta con conos y una pelota en lo alto"
+    "caption": "En equipos construyen la torre más alta con conos y una pelota en lo alto",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Cada equipo se coloca frente a sus conos",
+          "dur": 1.6
+        },
+        {
+          "text": "Salen A y C a carrera a llevar un cono a su torre",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  78
+                ],
+                [
+                  30,
+                  52
+                ],
+                [
+                  24,
+                  78
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  60,
+                  78
+                ],
+                [
+                  70,
+                  52
+                ],
+                [
+                  60,
+                  78
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Ahora B y D: la torre crece cono a cono",
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  40,
+                  78
+                ],
+                [
+                  30,
+                  48
+                ],
+                [
+                  40,
+                  78
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  76,
+                  78
+                ],
+                [
+                  70,
+                  48
+                ],
+                [
+                  76,
+                  78
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Gana el equipo con la torre más alta y la pelota arriba",
+          "dur": 2.2
+        }
+      ]
+    }
   },
   "f5fa760a-b130-539f-90a5-35a8c1132ba4": {
     "court": "libre",
@@ -9467,7 +11297,88 @@
         ]
       }
     ],
-    "caption": "Por parejas a cada lado de la red de minitenis"
+    "caption": "Por parejas a cada lado de la red de minitenis",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A saca con la mano por encima de la red",
+          "ball": {
+            "path": [
+              [
+                50,
+                68
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                48,
+                38
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B la devuelve con la mano",
+          "ball": {
+            "path": [
+              [
+                48,
+                36
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                50,
+                64
+              ],
+              [
+                50,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Peloteo cooperativo: sin dejar que bote dos veces",
+          "ball": {
+            "path": [
+              [
+                50,
+                66
+              ],
+              [
+                49,
+                50
+              ],
+              [
+                48,
+                38
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "¡Gana la pareja con el peloteo más largo!",
+          "dur": 2
+        }
+      ]
+    }
   },
   "fbaad5db-b20c-5b91-abf5-9bbc6e11e11a": {
     "court": "mini",
@@ -14825,7 +16736,7 @@
         },
         {
           "text": "Lanza la pelota",
-          "dur": 1.0,
+          "dur": 1,
           "ball": {
             "path": [
               [
@@ -18614,7 +20525,7 @@
         },
         {
           "text": "El portero se desliza y la para sin bote",
-          "dur": 1.0,
+          "dur": 1,
           "moves": [
             {
               "who": 0,
@@ -31397,5 +33308,1747 @@
       }
     ],
     "caption": "Uno lanza y el otro volea intentando que la pelota caiga dentro de un cubo del otro campo"
+  },
+  "627b0b48-f4cc-423e-a4d6-5b827874f1e0": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          78
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          22
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "cone",
+        "at": [
+          20,
+          50
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          80,
+          50
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Cooperativo"
+      }
+    ],
+    "caption": "Por parejas se lanzan la pelota por abajo, en cruzado y en paralelo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por abajo en cruzado",
+          "ball": {
+            "path": [
+              [
+                36,
+                76
+              ],
+              [
+                50,
+                52
+              ],
+              [
+                64,
+                32
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  22
+                ],
+                [
+                  64,
+                  32
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "B la atrapa tras el bote y la devuelve en cruzado",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                64,
+                32
+              ],
+              [
+                50,
+                52
+              ],
+              [
+                36,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  78
+                ],
+                [
+                  36,
+                  70
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "Ahora en paralelo: se colocan en el mismo lado",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  70
+                ],
+                [
+                  36,
+                  78
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  32
+                ],
+                [
+                  36,
+                  22
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Gana la pareja con el peloteo más largo",
+          "ball": {
+            "path": [
+              [
+                36,
+                76
+              ],
+              [
+                36,
+                52
+              ],
+              [
+                36,
+                30
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
+  },
+  "69d7d046-1099-4efc-83b8-8e92171bef4b": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          78
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          22
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "cone",
+        "at": [
+          70,
+          70
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Misma esquina"
+      }
+    ],
+    "caption": "Uno alterna cruzado y paralelo; el otro devuelve siempre a la misma esquina",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por abajo en cruzado",
+          "ball": {
+            "path": [
+              [
+                50,
+                76
+              ],
+              [
+                58,
+                52
+              ],
+              [
+                64,
+                30
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  22
+                ],
+                [
+                  64,
+                  30
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "B devuelve siempre a la misma esquina de A",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                64,
+                30
+              ],
+              [
+                68,
+                52
+              ],
+              [
+                70,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  78
+                ],
+                [
+                  70,
+                  72
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "A recupera su sitio y lanza ahora en paralelo",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  70,
+                  72
+                ],
+                [
+                  64,
+                  78
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                64,
+                76
+              ],
+              [
+                64,
+                52
+              ],
+              [
+                64,
+                30
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B vuelve a mandarla a la esquina: A se mueve",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                64,
+                30
+              ],
+              [
+                68,
+                52
+              ],
+              [
+                70,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  64,
+                  78
+                ],
+                [
+                  70,
+                  72
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        }
+      ]
+    }
+  },
+  "6f108a3f-31a9-4e40-bc18-27d3604a1669": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          28
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "cone",
+        "at": [
+          32,
+          86
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Vuelve al centro"
+      }
+    ],
+    "caption": "Empujan la pelota por el suelo; el rival la devuelve siempre a la misma esquina",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A empuja la pelota por el suelo en cruzado",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                58,
+                60
+              ],
+              [
+                66,
+                32
+              ]
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  28
+                ],
+                [
+                  66,
+                  32
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "B la para y la devuelve siempre a la misma esquina",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                66,
+                32
+              ],
+              [
+                48,
+                60
+              ],
+              [
+                32,
+                86
+              ]
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  92
+                ],
+                [
+                  32,
+                  88
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "A recupera su posición base y empuja en paralelo",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  32,
+                  88
+                ],
+                [
+                  50,
+                  92
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  66,
+                  32
+                ],
+                [
+                  50,
+                  28
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Gana la pareja con el peloteo más largo",
+          "dur": 2
+        }
+      ]
+    }
+  },
+  "7ff0652b-6448-4ec4-abe6-5f64b2e23500": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          6,
+          56
+        ],
+        "to": [
+          46,
+          98
+        ],
+        "label": "Campo A"
+      },
+      {
+        "t": "zone",
+        "from": [
+          54,
+          56
+        ],
+        "to": [
+          94,
+          98
+        ],
+        "label": "Campo B"
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          90
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          90
+        ],
+        "role": "rival",
+        "label": "B"
+      }
+    ],
+    "caption": "Tenis sin que la pelota bote: se empuja por el suelo con la raqueta",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A saca: empuja la pelota por el suelo al campo de B",
+          "ball": {
+            "path": [
+              [
+                26,
+                88
+              ],
+              [
+                50,
+                78
+              ],
+              [
+                72,
+                74
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B la para con la raqueta",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  74,
+                  90
+                ],
+                [
+                  72,
+                  76
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "B la devuelve empujándola por el suelo a cualquier zona",
+          "ball": {
+            "path": [
+              [
+                72,
+                76
+              ],
+              [
+                50,
+                66
+              ],
+              [
+                28,
+                64
+              ]
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  26,
+                  90
+                ],
+                [
+                  28,
+                  66
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "Si bota o sale, el punto es del rival",
+          "dur": 2
+        }
+      ]
+    }
+  },
+  "77530eae-cc8a-4bad-b795-84736ef5f729": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          70
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          70
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          86
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          86
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          100
+        ],
+        "text": "5 = 1 punto"
+      }
+    ],
+    "caption": "Se dan toques de derecha hacia arriba y la pelota bota sobre una diana",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Toque de derecha hacia arriba, por encima de la cabeza",
+          "ball": {
+            "path": [
+              [
+                30,
+                70
+              ],
+              [
+                30,
+                40
+              ],
+              [
+                30,
+                86
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "La pelota bota una vez sobre la diana y vuelve a subirla",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                30,
+                86
+              ],
+              [
+                30,
+                52
+              ],
+              [
+                30,
+                86
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Cinco seguidos suman un punto; después, por el revés",
+          "dur": 2.2
+        }
+      ]
+    }
+  },
+  "da7941f6-075f-40f7-932a-a12ef505bd9a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          78
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          22
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "cone",
+        "at": [
+          20,
+          50
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          80,
+          50
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Por arriba"
+      }
+    ],
+    "caption": "Se lanzan la pelota por encima de la cabeza, en cruzado y en paralelo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por encima de la cabeza, en cruzado",
+          "ball": {
+            "path": [
+              [
+                36,
+                76
+              ],
+              [
+                56,
+                36
+              ],
+              [
+                64,
+                30
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  22
+                ],
+                [
+                  64,
+                  30
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "B la atrapa tras el bote y la devuelve por arriba",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                64,
+                30
+              ],
+              [
+                44,
+                52
+              ],
+              [
+                36,
+                70
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  78
+                ],
+                [
+                  36,
+                  70
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "Ahora en paralelo, por el mismo lado",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  70
+                ],
+                [
+                  36,
+                  78
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  30
+                ],
+                [
+                  36,
+                  22
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                36,
+                76
+              ],
+              [
+                36,
+                50
+              ],
+              [
+                36,
+                30
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Gana la pareja con el peloteo más largo",
+          "dur": 2
+        }
+      ]
+    }
+  },
+  "96324e27-2cf0-428f-aeeb-a63fad781d44": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          28,
+          96
+        ],
+        "role": "alumno",
+        "label": "L"
+      },
+      {
+        "t": "player",
+        "at": [
+          42,
+          86
+        ],
+        "role": "alumno",
+        "label": "G"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          24
+        ],
+        "role": "rival",
+        "label": "R"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Lanza·Golpea"
+      }
+    ],
+    "caption": "Tríos: el lanzador pasa, el golpeador la juega y el receptor la atrapa",
+    "choreo": {
+      "steps": [
+        {
+          "text": "L da un pase suave por abajo a G",
+          "ball": {
+            "path": [
+              [
+                28,
+                94
+              ],
+              [
+                35,
+                90
+              ],
+              [
+                42,
+                86
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "G golpea de derecha al campo del receptor",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                42,
+                86
+              ],
+              [
+                52,
+                50
+              ],
+              [
+                60,
+                32
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 2,
+              "path": [
+                [
+                  60,
+                  24
+                ],
+                [
+                  60,
+                  32
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "R la atrapa tras un bote: ¡punto!",
+          "dur": 1.6
+        },
+        {
+          "text": "Rotan los papeles y vuelven a empezar",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  28,
+                  96
+                ],
+                [
+                  42,
+                  86
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  42,
+                  86
+                ],
+                [
+                  28,
+                  96
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "89cd5b4b-15ac-479c-afae-d07e33a477f7": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          28
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Tenis sin raqueta"
+      }
+    ],
+    "caption": "Tenis sin raqueta: se saca lanzando por arriba y se devuelve por abajo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A saca: lanza por arriba a cualquier zona",
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                44,
+                60
+              ],
+              [
+                36,
+                34
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  28
+                ],
+                [
+                  36,
+                  34
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "B atrapa tras un bote y lanza por abajo",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                36,
+                34
+              ],
+              [
+                46,
+                52
+              ],
+              [
+                58,
+                76
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  92
+                ],
+                [
+                  58,
+                  78
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "Hay que mover al rival: A lo lanza a la otra esquina",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                58,
+                78
+              ],
+              [
+                52,
+                52
+              ],
+              [
+                66,
+                32
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  36,
+                  34
+                ],
+                [
+                  66,
+                  32
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "Puntuación como en tenis: quien falla, pierde el punto",
+          "dur": 2
+        }
+      ]
+    }
+  },
+  "b9d88921-30f1-4a27-bdfb-1bd8536c810c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          2,
+          10
+        ],
+        "to": [
+          20,
+          92
+        ],
+        "label": "Pasillo"
+      },
+      {
+        "t": "player",
+        "at": [
+          11,
+          88
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          11,
+          12
+        ],
+        "role": "alumno",
+        "label": "B"
+      }
+    ],
+    "caption": "Se empujan la pelota por el suelo a lo largo del pasillo de dobles",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A empuja la pelota por el suelo por el pasillo",
+          "ball": {
+            "path": [
+              [
+                11,
+                86
+              ],
+              [
+                11,
+                50
+              ],
+              [
+                11,
+                16
+              ]
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B la para antes de devolverla",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  11,
+                  12
+                ],
+                [
+                  11,
+                  16
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "B la devuelve por el pasillo sin que salga",
+          "ball": {
+            "path": [
+              [
+                11,
+                16
+              ],
+              [
+                11,
+                50
+              ],
+              [
+                11,
+                84
+              ]
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Un punto si va por el suelo y no sale; también de revés",
+          "dur": 2.2
+        }
+      ]
+    }
+  },
+  "3d57eba2-fd17-4304-93a1-8f6d552e8b91": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          28
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Lanzo y pelotea"
+      }
+    ],
+    "caption": "Uno lanza por abajo, el otro golpea de derecha y el lanzador atrapa",
+    "choreo": {
+      "steps": [
+        {
+          "text": "A lanza por abajo a B",
+          "ball": {
+            "path": [
+              [
+                50,
+                68
+              ],
+              [
+                50,
+                50
+              ],
+              [
+                50,
+                36
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "B golpea de derecha de vuelta al lanzador",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                50,
+                34
+              ],
+              [
+                50,
+                50
+              ],
+              [
+                48,
+                66
+              ],
+              [
+                48,
+                72
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  28
+                ],
+                [
+                  50,
+                  34
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        },
+        {
+          "text": "Cada pelota que atrapa A es un punto",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  70
+                ],
+                [
+                  48,
+                  68
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Se alternan los papeles",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  48,
+                  68
+                ],
+                [
+                  50,
+                  28
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  34
+                ],
+                [
+                  50,
+                  70
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "865a4e27-370f-500c-8e7e-826817558024": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          70
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          70
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          24
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "Cuento de animales"
+      }
+    ],
+    "caption": "El monitor cuenta un cuento y los alumnos imitan a cada animal",
+    "choreo": {
+      "steps": [
+        {
+          "text": "La jirafa: brazos estirados hacia arriba",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  30,
+                  64
+                ],
+                [
+                  30,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  70
+                ],
+                [
+                  50,
+                  64
+                ],
+                [
+                  50,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  70,
+                  64
+                ],
+                [
+                  70,
+                  70
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "El gato: espalda redonda",
+          "dur": 2.2
+        },
+        {
+          "text": "El flamenco: equilibrio sobre un pie",
+          "dur": 2.2
+        },
+        {
+          "text": "La tortuga: sentados abrazando las rodillas",
+          "dur": 2.2
+        },
+        {
+          "text": "La mariposa: piernas en mariposa, respirando",
+          "dur": 2.2
+        }
+      ]
+    }
+  },
+  "cbc2f619-cae7-52d1-b38e-d5cd21ec9ac8": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          20,
+          72
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          72
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          72
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          80,
+          72
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          28
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          40
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "La corona"
+      }
+    ],
+    "caption": "Sentados, responden preguntas del monitor; quien acierta lleva la corona",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor pregunta: ¿dónde se pone el pie para la derecha?",
+          "dur": 2.4
+        },
+        {
+          "text": "El 2 acierta y se pone la corona (el cono)",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  40,
+                  72
+                ],
+                [
+                  50,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Ahora el 2 hace la siguiente pregunta al grupo",
+          "dur": 2.2
+        },
+        {
+          "text": "El 2 vuelve a su sitio y otro compañero contesta",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  44
+                ],
+                [
+                  40,
+                  72
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 }
