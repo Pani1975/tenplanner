@@ -18,6 +18,7 @@ import {
 } from "@/lib/exercise-diagrams/scene";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { cn } from "@/lib/utils";
+import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 
 const STATIC_KINDS = new Set(["player", "ball", "move", "shot"]);
 const R = 5.2;
@@ -282,7 +283,7 @@ export function DiagramFrame({
  * sombra, anillo en cada golpe y estela. Si el esquema trae coreografía
  * ("currado"), añade una frase por paso y curvas suaves.
  */
-export function ExerciseDiagramAnimated({
+function AnimatedPlayer({
   diagram,
   className,
   maxWidth = 260,
@@ -411,5 +412,25 @@ export function ExerciseDiagramAnimated({
         <span className="block opacity-70">Animación orientativa</span>
       </figcaption>
     </figure>
+  );
+}
+
+/**
+ * Esquema animado; si el esquema no tiene nada que mover (sin flechas ni
+ * coreografía), se muestra el esquema estático en lugar de un reproductor.
+ */
+export function ExerciseDiagramAnimated(props: {
+  diagram: Diagram;
+  className?: string;
+  maxWidth?: number;
+}) {
+  const animated = useMemo(
+    () => buildTimeline(props.diagram).steps.length > 0,
+    [props.diagram]
+  );
+  return animated ? (
+    <AnimatedPlayer {...props} />
+  ) : (
+    <ExerciseDiagramView {...props} />
   );
 }
