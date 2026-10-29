@@ -10767,5 +10767,5821 @@
         }
       ]
     }
+  },
+  "f3f86c7b-deba-5459-80ac-b9375c20e920": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "¿Derecha o revés?"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            52,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            46,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor lanza al azar; el jugador grita derecha o revés y cambia la empuñadura antes"
+  },
+  "15e8a435-b303-5547-ba5e-95e0dbd0c44c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          6
+        ],
+        "to": [
+          36,
+          34
+        ],
+        "label": "Izquierda"
+      },
+      {
+        "t": "zone",
+        "from": [
+          64,
+          6
+        ],
+        "to": [
+          92,
+          34
+        ],
+        "label": "Derecha"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            22,
+            16
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            78,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Dirige la pelota a un lado u otro del campo contrario según indica el monitor"
+  },
+  "bd6f7190-696f-5423-9475-b44efe86f2a8": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          4,
+          10
+        ],
+        "to": [
+          24,
+          40
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          76,
+          10
+        ],
+        "to": [
+          96,
+          40
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            12,
+            24
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            88,
+            24
+          ]
+        ]
+      }
+    ],
+    "caption": "Usa la anchura de la pista para abrir ángulos a demanda"
+  },
+  "cfbe3019-36de-52e2-89ec-a1227cafd8f2": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "En movimiento"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            66,
+            92
+          ],
+          [
+            50,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor lanza a los dos lados y el alumno se desplaza y golpea"
+  },
+  "e4925a7b-a460-5a52-a7b9-ea1c1ebfbdd2": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Paso cruzado"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            72,
+            90
+          ],
+          [
+            56,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "Pelotas abiertas: recupera con paso cruzado tras el golpe"
+  },
+  "222fcb26-16ea-59bc-84a0-93e185314e5d": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          24,
+          2
+        ],
+        "to": [
+          76,
+          16
+        ],
+        "label": "Profunda"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            50,
+            6
+          ]
+        ]
+      }
+    ],
+    "caption": "Pelota profunda usando altura y efecto"
+  },
+  "34c5544f-0104-5b63-8b97-1ce94e141fed": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          96
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            62,
+            92
+          ],
+          [
+            50,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "Recupera la posición central tras cada golpe"
+  },
+  "5ba0c0ed-2517-5638-a50c-7af1c0684af0": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          16,
+          6
+        ],
+        "to": [
+          44,
+          32
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          56,
+          6
+        ],
+        "to": [
+          84,
+          32
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "cone",
+        "at": [
+          30,
+          8
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          70,
+          8
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            30,
+            16
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            70,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Dirige la derecha con control de dirección y altura hacia zonas marcadas"
+  },
+  "b9bcbf80-09f8-59d7-a763-6e2b9427c049": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "De abajo arriba"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            10
+          ]
+        ]
+      }
+    ],
+    "caption": "Introduce el efecto liftado subiendo la raqueta de abajo arriba"
+  },
+  "f73d51d2-c424-55b4-a340-962173f54640": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Peso adelante"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            50,
+            90
+          ]
+        ]
+      }
+    ],
+    "caption": "Transfiere el peso del pie de atrás al de delante durante la derecha"
+  },
+  "d8aa2db5-edb7-521c-8aa3-3d7bad6413d7": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Swing completo"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Preparación, impacto y terminación con la empuñadura «este suave»"
+  },
+  "9f9c8665-70f6-5421-8691-21470c4f268b": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "cone",
+        "at": [
+          56,
+          89
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Golpea por delante del cuerpo y a la altura de la cintura"
+  },
+  "4e77cb5f-ffa9-52ba-8a93-5fafaf8b94ae": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          30,
+          6
+        ],
+        "to": [
+          70,
+          34
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            64,
+            92
+          ],
+          [
+            50,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "Derechas liftadas tras desplazamiento, dirigidas a la zona y recuperando tras cada golpe"
+  },
+  "383bb162-65ac-5bdc-9d13-ea83ee276ee5": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Alta repetición"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Alta repetición manteniendo la técnica: el monitor alimenta seguido"
+  },
+  "4c9062a5-d4fa-56df-9304-40ea7109cffd": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Hombros primero"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Giro de hombros y raqueta atrás antes de que bote la pelota"
+  },
+  "9d0ed42e-9be9-52fd-ade1-4982e9fa8d81": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          26,
+          8
+        ],
+        "to": [
+          74,
+          34
+        ],
+        "label": "Objetivo"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          64
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          66
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            64
+          ],
+          [
+            54,
+            50
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            50,
+            20
+          ]
+        ]
+      }
+    ],
+    "caption": "Gesto completo con empuñadura continental dirigiendo el remate al campo contrario"
+  },
+  "573c8b46-20ef-55d0-a28b-6421d751191d": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          64
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          66
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "Señalo la pelota"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            64
+          ],
+          [
+            54,
+            50
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      }
+    ],
+    "caption": "De lado, con la raqueta atrás señalando la pelota con la mano no dominante"
+  },
+  "d62bc618-0899-5aa4-aef4-8576063d9693": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          64
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          66
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            64
+          ],
+          [
+            54,
+            50
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            50,
+            22
+          ]
+        ]
+      }
+    ],
+    "caption": "Golpea por encima de la cabeza una pelota alta lanzada por el monitor"
+  },
+  "26b5f1ea-5a5c-53bb-b5ef-21ec993faf20": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Cambio empuñadura"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Cambia a tiempo de la empuñadura de derecha a la de revés"
+  },
+  "cba878de-284d-5ac8-86c4-515185e95737": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "De arriba abajo"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Revés cortado: golpe de arriba abajo con empuñadura continental"
+  },
+  "7f3589ca-86e7-597d-bbc7-5d9f84f845d0": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          16,
+          6
+        ],
+        "to": [
+          44,
+          32
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          56,
+          6
+        ],
+        "to": [
+          84,
+          32
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            30,
+            16
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            70,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Dirige el revés con control sobre la red hacia zonas marcadas"
+  },
+  "a0213a28-9b23-5744-83d7-273c51613398": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Defensivo"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            50,
+            8
+          ]
+        ]
+      }
+    ],
+    "caption": "Revés cortado defensivo para mantener la pelota en juego desde situaciones difíciles"
+  },
+  "9b1dd7e1-25c5-532c-add7-0fd16904f333": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "De abajo arriba"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Introduce el efecto liftado en el revés subiendo la raqueta de abajo arriba"
+  },
+  "b0486a9d-56fd-5741-af88-a170e849bb8d": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Dos manos"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Controla el swing completo de revés a dos manos con las manos bien colocadas"
+  },
+  "dd098cc2-8fc7-5d41-9d62-1a8fb7f2bfc7": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          30,
+          6
+        ],
+        "to": [
+          70,
+          34
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            94
+          ],
+          [
+            36,
+            92
+          ],
+          [
+            50,
+            94
+          ]
+        ]
+      }
+    ],
+    "caption": "Reveses liftados tras desplazamiento, dirigidos a la zona y recuperando tras cada golpe"
+  },
+  "c6316db5-e85a-5aae-8654-0d0cbaf4cabf": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "cone",
+        "at": [
+          44,
+          89
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Golpea el revés por delante del cuerpo y a la altura de la cintura"
+  },
+  "61fa6adb-b8e0-56b2-bd92-debac72e50a9": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Alta repetición"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Alta repetición de reveses manteniendo la técnica"
+  },
+  "33546d6a-aac4-53d6-a957-9bfdd9382d64": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Giro de hombros"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            38,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            90
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Gira los hombros con las dos manos en la raqueta al preparar el revés"
+  },
+  "fa3d3d25-8336-5627-9602-b85b7bfab693": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          56,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          52,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            92
+          ],
+          [
+            56,
+            92
+          ],
+          [
+            56,
+            92
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Lanzamiento"
+      }
+    ],
+    "caption": "Centrada en el lanzamiento: pelota por el lado del cuerpo y cuerpo que crece hacia arriba"
+  },
+  "447c1eda-a9c6-5020-a8d9-18263df20c9c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          26
+        ],
+        "to": [
+          50,
+          50
+        ],
+        "label": "Cuadro"
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            96
+          ],
+          [
+            28,
+            38
+          ]
+        ]
+      }
+    ],
+    "caption": "Saque con el patrón de movimiento completo y empuñadura continental"
+  },
+  "065b4a0a-4268-5058-98ae-622e036f45d8": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          60,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Pies y peso firmes"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            94
+          ],
+          [
+            60,
+            92
+          ],
+          [
+            60,
+            92
+          ]
+        ]
+      }
+    ],
+    "caption": "Preparación estable: pies colocados, peso equilibrado y brazos que suben juntos"
+  },
+  "0a297e57-c29a-5296-a3e3-255b12044bf2": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          26
+        ],
+        "to": [
+          50,
+          50
+        ],
+        "label": "Ventaja"
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          26
+        ],
+        "to": [
+          92,
+          50
+        ],
+        "label": "Iguales"
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            96
+          ],
+          [
+            70,
+            38
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            96
+          ],
+          [
+            28,
+            38
+          ]
+        ]
+      }
+    ],
+    "caption": "Saque por arriba alternando el cuadro de iguales y el de ventaja"
+  },
+  "e372414d-5663-5945-aba1-bca303a9919c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          60,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Brazo estirado"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            94
+          ],
+          [
+            52,
+            50
+          ],
+          [
+            30,
+            36
+          ]
+        ]
+      }
+    ],
+    "caption": "Golpea la pelota en el punto más alto posible con el brazo estirado"
+  },
+  "cce21965-0a65-5aae-a9ea-6b78ae5ddf5f": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          72,
+          74
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          58
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          58,
+          74
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            74
+          ],
+          [
+            60,
+            62
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            58
+          ],
+          [
+            26,
+            22
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            74
+          ],
+          [
+            40,
+            62
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            58
+          ],
+          [
+            74,
+            22
+          ]
+        ]
+      }
+    ],
+    "caption": "Volea de derecha y de revés con empuñadura continental y movimiento corto, lejos del rival"
+  },
+  "331f5d05-ec37-575d-8e2f-b14457f26ad4": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          72
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          58,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            72
+          ],
+          [
+            51,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            56
+          ],
+          [
+            48,
+            36
+          ]
+        ]
+      }
+    ],
+    "caption": "Toca la pelota sin bote cerca de la red con la raqueta por delante"
+  },
+  "bdf03b7c-ae3c-5a71-b35a-6d8c8efb31f4": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          -4,
+          44
+        ],
+        "to": [
+          104,
+          44
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          40
+        ],
+        "text": "Puente"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            92
+          ],
+          [
+            48,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Una cuerda sobre la red es el puente: el revés cortado pasa por debajo"
+  },
+  "31ec2495-40b7-5305-aa5b-1a3ec04f42e3": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          6,
+          2
+        ],
+        "to": [
+          94,
+          14
+        ],
+        "label": "Fondo del mar"
+      },
+      {
+        "t": "cone",
+        "at": [
+          30,
+          8
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          60,
+          6
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            30,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            60,
+            6
+          ]
+        ]
+      }
+    ],
+    "caption": "Una zona profunda del otro campo es el fondo del mar"
+  },
+  "1fe6896c-ddd6-5a96-a496-f9df421e6994": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          4,
+          14
+        ],
+        "to": [
+          26,
+          36
+        ],
+        "label": "x2"
+      },
+      {
+        "t": "zone",
+        "from": [
+          74,
+          14
+        ],
+        "to": [
+          96,
+          36
+        ],
+        "label": "x2"
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            14,
+            26
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            86,
+            26
+          ]
+        ]
+      }
+    ],
+    "caption": "Dos zonas laterales cortas en el otro campo: cada golpe que bota en ellas cuenta doble"
+  },
+  "2ea43adc-8086-5053-b78a-3f7d38c9058f": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          24,
+          90
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          90
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          76,
+          90
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          30,
+          8
+        ],
+        "to": [
+          70,
+          34
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          90
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          90
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          90
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          62,
+          76
+        ]
+      }
+    ],
+    "caption": "Giran por tres posiciones marcadas y en cada una golpean de revés hacia una zona",
+    "choreo": {
+      "steps": [
+        {
+          "text": "En cada posición, revés a la zona",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                52,
+                76
+              ],
+              [
+                26,
+                88
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 3
+        },
+        {
+          "dur": 1.5,
+          "ball": {
+            "path": [
+              [
+                26,
+                88
+              ],
+              [
+                44,
+                50
+              ],
+              [
+                48,
+                20
+              ],
+              [
+                50,
+                12
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Al terminar el golpe, giran a la siguiente posición",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  90
+                ],
+                [
+                  50,
+                  90
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  90
+                ],
+                [
+                  76,
+                  90
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  76,
+                  90
+                ],
+                [
+                  24,
+                  90
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Al acabar la vuelta, cuentan las pelotas dentro",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "860a530a-45ea-52dc-9b6d-8b8ab1b9ecf0": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          96
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          70
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "El monitor lanza pelotas abiertas; el alumno las caza",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza una pelota abierta",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  94
+                ],
+                [
+                  62,
+                  92
+                ],
+                [
+                  72,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                52,
+                70
+              ],
+              [
+                70,
+                84
+              ],
+              [
+                80,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "El alumno la caza y golpea",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                80,
+                90
+              ],
+              [
+                56,
+                50
+              ],
+              [
+                50,
+                18
+              ],
+              [
+                50,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve al centro con paso cruzado",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  72,
+                  90
+                ],
+                [
+                  60,
+                  94
+                ],
+                [
+                  50,
+                  96
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "af5ee0c1-4ab4-532b-8c21-c21dde7d0673": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          60,
+          70
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            70
+          ],
+          [
+            24,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            26,
+            90
+          ],
+          [
+            50,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            70
+          ],
+          [
+            80,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            78,
+            90
+          ],
+          [
+            50,
+            10
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor envía pelotas difíciles y abiertas; el alumno las salva con un revés cortado"
+  },
+  "d3cb0d62-508f-569f-a4db-016bf29fa5e3": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          28,
+          14
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          72,
+          18
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          10
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            60,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            28,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            60,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            72,
+            18
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor cambia de sitio un aro tras cada golpe y el alumno, tras desplazarse"
+  },
+  "73fd279e-9f5c-5e7e-8e33-e582ab7ccf6f": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          42,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          58,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          46,
+          8
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          8
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            46,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            54,
+            10
+          ]
+        ]
+      }
+    ],
+    "caption": "Conos-bolo en el otro campo: preparan con giro de hombros y golpean de derecha para"
+  },
+  "48eb11c3-529f-5da1-a780-e225760daa6a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          40
+        ],
+        "to": [
+          92,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          8
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            10
+          ],
+          [
+            40,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            90
+          ],
+          [
+            54,
+            24
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor saca suave y los alumnos restan para devolver la pelota dentro"
+  },
+  "d849a422-18a5-539a-8878-23e511d66091": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          60,
+          6
+        ],
+        "to": [
+          94,
+          30
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          94
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Poderes"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            92
+          ],
+          [
+            76,
+            18
+          ]
+        ]
+      }
+    ],
+    "caption": "Cada alumno elige un superhéroe y su revés tiene un poder: pasar alto"
+  },
+  "757e8db4-6ec0-5889-ae0b-e830cd8fe54f": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          12
+        ]
+      },
+      {
+        "t": "line",
+        "from": [
+          0,
+          30
+        ],
+        "to": [
+          100,
+          30
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          36
+        ],
+        "text": "Línea de saque"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            60,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            50,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Un cono grande es la montaña: cada derecha con el peso hacia delante que bota más allá"
+  },
+  "96b2603c-30c2-55d0-ae3d-54ae64beaf0c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          90
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          90
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          90
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          12
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Estrellas fugaces"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            14
+          ],
+          [
+            34,
+            50
+          ],
+          [
+            30,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            14
+          ],
+          [
+            48,
+            50
+          ],
+          [
+            50,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            14
+          ],
+          [
+            66,
+            50
+          ],
+          [
+            70,
+            88
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor lanza pelotas muy altas y los alumnos, de lado"
+  },
+  "23443b1b-95fd-55f4-af14-ee7547e16e11": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          30
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Globo y remate"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            92
+          ],
+          [
+            56,
+            50
+          ],
+          [
+            46,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            30
+          ],
+          [
+            46,
+            48
+          ],
+          [
+            44,
+            86
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas: uno hace un globo y el otro remata"
+  },
+  "54e20b95-f29a-52ed-be1d-9b8c9c20a2b0": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          22,
+          10
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          78,
+          10
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          20
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "text",
+        "at": [
+          78,
+          20
+        ],
+        "text": "Azul"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            58,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            22,
+            12
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor levanta un cono rojo o azul antes de lanzar: rojo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor levanta un cono: ¡azul!",
+          "dur": 1.3
+        },
+        {
+          "text": "Lanza la pelota",
+          "dur": 1.0,
+          "ball": {
+            "path": [
+              [
+                56,
+                80
+              ],
+              [
+                58,
+                88
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Azul: el golpe va a la derecha del rival",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                58,
+                92
+              ],
+              [
+                66,
+                50
+              ],
+              [
+                78,
+                16
+              ],
+              [
+                78,
+                10
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "¡Acierto! Punto para su equipo",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "7fa2d53a-5d33-5393-a513-694984471a1a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          94
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          62,
+          78
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "¡Foto!"
+      }
+    ],
+    "caption": "Tras cada derecha, el alumno se queda congelado en la terminación y el monitor hace la",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Golpea de derecha",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                50,
+                76
+              ],
+              [
+                42,
+                88
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 2
+        },
+        {
+          "dur": 1.5,
+          "ball": {
+            "path": [
+              [
+                42,
+                88
+              ],
+              [
+                46,
+                50
+              ],
+              [
+                48,
+                16
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Se queda congelado en la terminación",
+          "dur": 1.4
+        },
+        {
+          "text": "El monitor hace la foto y da punto si es completa",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "dcdd505e-516d-5427-98e8-976235417f97": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          -4,
+          40
+        ],
+        "to": [
+          104,
+          40
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          36
+        ],
+        "text": "Montaña rusa"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            60,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            48,
+            8
+          ]
+        ]
+      }
+    ],
+    "caption": "Una cuerda alta sobre la red es la montaña rusa"
+  },
+  "5f00ecc3-4691-5d1a-8ae0-c15c90eeedd2": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          36,
+          88
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          64,
+          88
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            92
+          ],
+          [
+            36,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            92
+          ],
+          [
+            64,
+            88
+          ]
+        ]
+      }
+    ],
+    "caption": "Se lanzan la pelota arriba con la mano de lanzamiento para que caiga dentro de un aro"
+  },
+  "2c7e98b8-ad09-546d-8742-f0abd5602599": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          36,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          10
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          64,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          43,
+          22
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          57,
+          22
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          56
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          58
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            56
+          ],
+          [
+            54,
+            50
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            44,
+            22
+          ]
+        ]
+      }
+    ],
+    "caption": "Pelotas altas del monitor: remate corto, como un martillo"
+  },
+  "e2598030-1d81-58e8-9540-955423f89e95": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          34,
+          88
+        ],
+        "to": [
+          66,
+          88
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          84
+        ],
+        "text": "Cintura"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            60,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            92
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Una cuerda marca la altura de la cintura: solo valen los golpes con impacto por debajo de"
+  },
+  "f86e3e1e-262b-57be-aed6-6a7e8095e959": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          92
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          92
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          24
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "¡Batir el récord!"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            26
+          ],
+          [
+            34,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            32,
+            90
+          ],
+          [
+            48,
+            28
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            26
+          ],
+          [
+            52,
+            88
+          ]
+        ]
+      }
+    ],
+    "caption": "Peloteo de derecha uno a uno con el monitor"
+  },
+  "e3653976-1eac-55da-b283-98be9d856e09": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          46,
+          10
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          10
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          6
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          14
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            48,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            52,
+            10
+          ]
+        ]
+      }
+    ],
+    "caption": "Un castillo de conos en el otro campo: golpean de revés dirigido para derribarlo"
+  },
+  "3bbc9b01-d9c0-5364-acb6-1c06effe73b9": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          54,
+          6
+        ],
+        "to": [
+          96,
+          40
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "zone",
+        "from": [
+          4,
+          60
+        ],
+        "to": [
+          46,
+          94
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          10
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            90
+          ],
+          [
+            70,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            12
+          ],
+          [
+            30,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            90
+          ],
+          [
+            70,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas en diagonal, peloteo de revés cruzado"
+  },
+  "ae7df2be-3254-5722-91e8-1c3a86fcdf76": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          25,
+          14
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          14
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          75,
+          14
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          25,
+          24
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          24
+        ],
+        "text": "Azul"
+      },
+      {
+        "t": "text",
+        "at": [
+          75,
+          24
+        ],
+        "text": "Verde"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            92
+          ],
+          [
+            50,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor dice un color y el alumno, con las dos manos, golpea de revés hacia ese aro"
+  },
+  "397807ae-1b20-516c-bc63-a3f41b614bbd": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          24
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Rachas de reveses"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            26
+          ],
+          [
+            40,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            90
+          ],
+          [
+            48,
+            28
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            26
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      }
+    ],
+    "caption": "Tandas de reveses por equipos: un punto por cada revés seguido que pasa la red; si falla"
+  },
+  "0e50ec5e-af11-5744-851f-c2013e48c8de": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          -4,
+          40
+        ],
+        "to": [
+          104,
+          40
+        ],
+        "dashed": true
+      },
+      {
+        "t": "line",
+        "from": [
+          -4,
+          47
+        ],
+        "to": [
+          104,
+          47
+        ],
+        "dashed": true
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          36
+        ],
+        "text": "Ventana"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          80
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          82
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            80
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            92
+          ],
+          [
+            48,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Dos cuerdas forman una ventana sobre la red: el revés tiene que pasar por la ventana"
+  },
+  "a7197659-10c6-5b23-b142-3bf39f1a5a19": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          26
+        ],
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          26
+        ],
+        "to": [
+          92,
+          50
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          12,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          30
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            96
+          ],
+          [
+            54,
+            32
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            96
+          ],
+          [
+            12,
+            32
+          ]
+        ]
+      }
+    ],
+    "caption": "Un cono marca el lado del revés del rival en cada cuadro"
+  },
+  "033e58ad-2a42-51b1-a92d-6ed785a72abe": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          26
+        ],
+        "to": [
+          50,
+          50
+        ],
+        "label": "Casilla"
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          26
+        ],
+        "to": [
+          92,
+          50
+        ],
+        "label": "Casilla"
+      },
+      {
+        "t": "cone",
+        "at": [
+          30,
+          38
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          98
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            96
+          ],
+          [
+            30,
+            38
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            96
+          ],
+          [
+            70,
+            38
+          ]
+        ]
+      }
+    ],
+    "caption": "Los cuadros de saque son casillas: cada saque que entra coloca un cono del equipo en esa"
+  },
+  "0c8f47af-4b8e-51b2-9ba9-6a36e693ab3a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          30,
+          16
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          36,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          33,
+          10
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          66,
+          16
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          72,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          69,
+          10
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          76
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          76
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            74
+          ],
+          [
+            33,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            74
+          ],
+          [
+            69,
+            12
+          ]
+        ]
+      }
+    ],
+    "caption": "Castillos de conos en el otro campo: sacan desde la mitad de la pista para derribarlos"
+  },
+  "7e66eb2f-0235-5cb3-a71b-37aa7b195a7e": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          86
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          62,
+          78
+        ],
+        "text": "Techo"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            96
+          ],
+          [
+            56,
+            70
+          ],
+          [
+            58,
+            34
+          ]
+        ]
+      }
+    ],
+    "caption": "Cada alumno saca intentando golpear lo más alto posible"
+  },
+  "ca8d00a2-d350-5945-afef-51d679915e77": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          10
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          22
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          34
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          34
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          34
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          94
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            30,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            70,
+            34
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            50,
+            22
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            30,
+            34
+          ]
+        ]
+      }
+    ],
+    "caption": "Nueve aros en el otro campo: cada pelota que bota en un aro libre lo gana con un cono de"
+  },
+  "79a08c5d-0183-55cf-8076-af21e82f2b39": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          8,
+          8
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          92,
+          8
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          8,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          92,
+          30
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          58,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          72,
+          74
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            72
+          ],
+          [
+            54,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            56
+          ],
+          [
+            8,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            72
+          ],
+          [
+            44,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            56
+          ],
+          [
+            92,
+            10
+          ]
+        ]
+      }
+    ],
+    "caption": "Conos en las esquinas del campo contrario: desde la red volean hacia los rincones"
+  },
+  "b35bf8cf-5de4-5bb9-8438-aad35049e743": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          56
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          44
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Batir la marca"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            54
+          ],
+          [
+            58,
+            46
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            46
+          ],
+          [
+            42,
+            54
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            54
+          ],
+          [
+            58,
+            46
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas junto a la red, se pasan la pelota con toques de volea sin que bote"
+  },
+  "873030e5-d55b-56b4-b7ea-e13eb7ba35a5": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          60,
+          72
+        ]
+      }
+    ],
+    "caption": "Un cono central es la casa: tras cada golpe",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza una pelota",
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  92
+                ],
+                [
+                  60,
+                  90
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                52,
+                72
+              ],
+              [
+                58,
+                82
+              ],
+              [
+                62,
+                88
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "Golpea y empieza la cuenta: ¡uno, dos, tres!",
+          "dur": 1.5,
+          "ball": {
+            "path": [
+              [
+                62,
+                88
+              ],
+              [
+                54,
+                50
+              ],
+              [
+                50,
+                18
+              ],
+              [
+                48,
+                8
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Vuelve a casa antes del tres",
+          "dur": 1.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  60,
+                  90
+                ],
+                [
+                  54,
+                  90
+                ],
+                [
+                  50,
+                  92
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "¡Si llega, punto para su equipo!",
+          "dur": 1.2
+        }
+      ]
+    }
   }
 }
