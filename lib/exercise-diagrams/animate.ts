@@ -14,6 +14,8 @@ export type TimelineStep = {
   ball?: { path: Pt[]; bounces: number[] };
   /** Jugador que golpea al empezar el paso. */
   swing?: number;
+  /** Conos que derriba la pelota al acabar el paso (nº de cono). */
+  knock?: number[];
 };
 
 export type Timeline = {
@@ -36,6 +38,8 @@ export type Sample = {
   ball: { at: Pt; height: number } | null;
   /** Anillo de golpe: posición y progreso 0-1. */
   hit: { at: Pt; progress: number; who: number } | null;
+  /** Conos derribados: nº de cono → progreso de la caída (0-1). */
+  fallen: Record<number, number>;
 };
 
 const HOLD_END = 1.2;
@@ -171,6 +175,7 @@ export function buildTimeline(diagram: Diagram): Timeline {
           s.swing !== undefined && s.swing < players.length
             ? s.swing
             : undefined,
+        knock: s.knock,
       }))
     : autoSteps(diagram, starts);
 
@@ -187,6 +192,7 @@ export function buildTimeline(diagram: Diagram): Timeline {
       moves: s.moves,
       ball: s.ball,
       swing: s.swing,
+      knock: s.knock,
     };
     t += dur;
     return step;
@@ -236,6 +242,7 @@ export function sampleTimeline(tl: Timeline, time: number): Sample {
     ? { at: tl.ballStart, height: 0 }
     : null;
   let hit: Sample["hit"] = null;
+  const fallen: Sample["fallen"] = {};
 
   tl.steps.forEach((s, i) => {
     const done = finished || i < idx;
@@ -253,6 +260,11 @@ export function sampleTimeline(tl: Timeline, time: number): Sample {
         height: done ? 0 : flightHeight(path, s.ball.bounces, u),
       };
     }
+    for (const cone of s.knock ?? []) {
+      // Caen cuando la pelota llega al final de su recorrido.
+      const k = done ? 1 : Math.max(0, Math.min(1, (u - 0.75) / 0.25));
+      fallen[cone] = Math.max(fallen[cone] ?? 0, k);
+    }
     if (active && s.swing !== undefined && t - s.t0 < HIT_SECONDS) {
       hit = {
         at: players[s.swing],
@@ -262,7 +274,7 @@ export function sampleTimeline(tl: Timeline, time: number): Sample {
     }
   });
 
-  return { stepIndex: idx, players, ball, hit };
+  return { stepIndex: idx, players, ball, hit, fallen };
 }
 
 /** Posiciones recientes de la pelota (para dibujar la estela), de más a menos nueva. */
