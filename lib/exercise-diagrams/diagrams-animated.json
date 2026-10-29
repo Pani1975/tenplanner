@@ -7338,7 +7338,7 @@
           50,
           98
         ],
-        "text": "15 · 30 · 40 · jue"
+        "text": "15 · 30 · 40"
       }
     ],
     "caption": "En círculo se pasan la pelota con un bote y cuentan como en un partido: quince, treinta"
@@ -10516,7 +10516,7 @@
           50,
           100
         ],
-        "text": "Verde · Amarillo ·"
+        "text": "Semáforo"
       }
     ],
     "caption": "Verde: corren; amarillo: caminan; rojo: quietos en posición de preparado",
@@ -16580,6 +16580,4778 @@
         {
           "text": "¡Si llega, punto para su equipo!",
           "dur": 1.2
+        }
+      ]
+    }
+  },
+  "f6ebba70-97cb-509f-b12f-71edfb4202b3": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          70,
+          70
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          58,
+          66
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Circuito: derecha desde el centro, carrera a la red",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Derecha desde el centro de la pista",
+          "dur": 1.3,
+          "ball": {
+            "path": [
+              [
+                58,
+                66
+              ],
+              [
+                52,
+                84
+              ],
+              [
+                50,
+                90
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "dur": 1.4,
+          "ball": {
+            "path": [
+              [
+                50,
+                90
+              ],
+              [
+                48,
+                50
+              ],
+              [
+                48,
+                14
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Carrera a la red",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  92
+                ],
+                [
+                  50,
+                  56
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Volea y remate de la pelota alta del monitor",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                58,
+                66
+              ],
+              [
+                54,
+                56
+              ],
+              [
+                50,
+                52
+              ]
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                50,
+                54
+              ],
+              [
+                46,
+                30
+              ],
+              [
+                44,
+                14
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
+  },
+  "2cefe2f8-b344-5154-a9c7-cf0ba5740ceb": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          44,
+          56
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          40
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Mano y raqueta"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            42
+          ],
+          [
+            46,
+            54
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            54
+          ],
+          [
+            56,
+            42
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas junto a la red, uno lanza suave y el otro atrapa sin bote, delante del cuerpo"
+  },
+  "a476175c-64db-5ea8-add6-0b80f1986444": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          92
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          92
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          40
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Avanzan hacia la red con pasos de ataque; cuando el monitor levanta la raqueta",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Avanzan desde el fondo con pasos de ataque",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  92
+                ],
+                [
+                  38,
+                  70
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  92
+                ],
+                [
+                  62,
+                  70
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "El monitor levanta la raqueta: ¡split step!",
+          "dur": 1.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  38,
+                  70
+                ],
+                [
+                  38,
+                  66
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  62,
+                  70
+                ],
+                [
+                  62,
+                  66
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Paran una pelota sin bote que les lanza",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                50,
+                42
+              ],
+              [
+                40,
+                62
+              ]
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
+  },
+  "973c6dbf-fa5d-55e6-9c62-b76cd15fb923": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          28
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          70
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          70
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "¡Bingo!"
+      }
+    ],
+    "caption": "El monitor dice un golpe y lo hacen de sombra a cámara lenta"
+  },
+  "421d14f0-0c55-5331-b5aa-e2215af2b8f8": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          14,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          86,
+          14
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          14,
+          86
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          86,
+          86
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          86
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          86
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          86
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          56
+        ],
+        "text": "Números 1 a 6"
+      }
+    ],
+    "caption": "Trotan alrededor de la pista; al gritar un número del 1 al 6",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Trotan alrededor de la pista",
+          "dur": 3.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  86
+                ],
+                [
+                  14,
+                  70
+                ],
+                [
+                  14,
+                  14
+                ],
+                [
+                  50,
+                  14
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  30,
+                  86
+                ],
+                [
+                  14,
+                  60
+                ],
+                [
+                  14,
+                  30
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  86
+                ],
+                [
+                  50,
+                  86
+                ],
+                [
+                  30,
+                  86
+                ],
+                [
+                  14,
+                  70
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "El monitor grita un número: ¡todos hacen ese ejercicio!",
+          "dur": 1.6
+        },
+        {
+          "text": "Y siguen trotando",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  14
+                ],
+                [
+                  86,
+                  14
+                ],
+                [
+                  86,
+                  50
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  14,
+                  30
+                ],
+                [
+                  14,
+                  14
+                ],
+                [
+                  40,
+                  14
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  14,
+                  70
+                ],
+                [
+                  14,
+                  50
+                ],
+                [
+                  14,
+                  30
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "f007c9f8-4002-52ca-b753-eab6a22223b9": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          24,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          40,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          56,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          72,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          72,
+          40
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          72,
+          30
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          18,
+          86
+        ],
+        "role": "alumno",
+        "label": "A"
+      }
+    ],
+    "caption": "Circuito: pasos laterales entre conos, carrera hacia delante y vuelta hacia atrás",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Pasos laterales entre los conos",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  18,
+                  86
+                ],
+                [
+                  80,
+                  86
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Carrera hacia delante",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  80,
+                  86
+                ],
+                [
+                  80,
+                  30
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Y vuelta hacia atrás, con la pelota sobre la raqueta",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  80,
+                  30
+                ],
+                [
+                  80,
+                  86
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "221cc166-c3a9-53f6-a7ba-59eee3c256de": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          20,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          86
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          100
+        ],
+        "text": "Cubo"
+      }
+    ],
+    "caption": "Pelotas altas del monitor: las paran con la raqueta antes del segundo bote y las llevan a",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor lanza pelotas altas al aire",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  58,
+                  84
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                50,
+                52
+              ],
+              [
+                56,
+                70
+              ],
+              [
+                60,
+                84
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "La paran con la raqueta antes del segundo bote",
+          "dur": 0.9
+        },
+        {
+          "text": "Y las llevan a su cubo: ¡más mariposas!",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  58,
+                  84
+                ],
+                [
+                  26,
+                  90
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "737c3f30-7e67-573a-80fd-6c9d1fe19373": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          60
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          40
+        ],
+        "role": "rival",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          10
+        ],
+        "role": "rival",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            90
+          ],
+          [
+            70,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            12
+          ],
+          [
+            30,
+            88
+          ]
+        ]
+      }
+    ],
+    "caption": "Peloteo en dobles por la mitad de la pista: tras cada golpe",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Peloteo en dobles por media pista",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                30,
+                90
+              ],
+              [
+                60,
+                50
+              ],
+              [
+                70,
+                16
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Tras el golpe, cambia de posición con su compañero",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  92
+                ],
+                [
+                  30,
+                  62
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  30,
+                  60
+                ],
+                [
+                  30,
+                  90
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Los cuatro mantienen la pelota en juego",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                70,
+                16
+              ],
+              [
+                50,
+                50
+              ],
+              [
+                30,
+                86
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 3
+        }
+      ]
+    }
+  },
+  "bbedafc7-1b1d-51bf-821e-afaf6de3426a": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          10,
+          50
+        ],
+        "to": [
+          90,
+          50
+        ],
+        "dashed": false
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            68
+          ],
+          [
+            50,
+            56
+          ],
+          [
+            50,
+            44
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            32
+          ],
+          [
+            50,
+            44
+          ],
+          [
+            50,
+            56
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas frente a frente, con una línea en medio"
+  },
+  "bce01521-85b7-53ed-a772-3384ba193a23": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          20
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          35
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          65
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          80
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          65
+        ],
+        "role": "alumno",
+        "label": "5"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          35
+        ],
+        "role": "alumno",
+        "label": "6"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          98
+        ],
+        "text": "Algo bien hecho"
+      }
+    ],
+    "caption": "En círculo, cada alumno da la mano al de su derecha y le dice algo que ha hecho bien"
+  },
+  "c5ae6580-366d-5e91-b412-22a776b0776f": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          20
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          36
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          52
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          68
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          84
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          98
+        ],
+        "text": "Pásalo al oído"
+      }
+    ],
+    "caption": "En fila, el monitor dice al oído una consigna técnica y se va pasando hasta el último"
+  },
+  "be64b78c-9798-5abc-9e73-7a9623c3fdde": {
+    "court": "medio",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          10
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            92
+          ],
+          [
+            60,
+            14
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            12
+          ],
+          [
+            40,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            92
+          ],
+          [
+            62,
+            16
+          ]
+        ]
+      }
+    ],
+    "caption": "Mini-puntos de calentamiento en media pista, empezando con saque por abajo"
+  },
+  "edf6602d-c2e8-56f0-bdd2-e3335dc72045": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          80
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          70
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          46,
+          56
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          96
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "Semáforo"
+      }
+    ],
+    "caption": "Se desplazan botando la pelota con la raqueta: verde avanzan, amarillo botan sin moverse",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Verde: avanzan botando la pelota con la raqueta",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  80
+                ],
+                [
+                  30,
+                  36
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  70
+                ],
+                [
+                  60,
+                  26
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  46,
+                  56
+                ],
+                [
+                  46,
+                  16
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Amarillo: botan sin moverse",
+          "dur": 1.4
+        },
+        {
+          "text": "Rojo: paran la pelota sobre el cordaje",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "78706474-a236-5917-988c-2fa28a12bcaa": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          24,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          76,
+          30
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          24,
+          22
+        ],
+        "text": "Verde"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          22
+        ],
+        "text": "Amarillo"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          22
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          70
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          70
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Al final, cada alumno se coloca junto a un cono verde",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Cada alumno se coloca junto al cono de su esfuerzo",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  30,
+                  36
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  76
+                ],
+                [
+                  50,
+                  36
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  30,
+                  36
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Y explica por qué",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "019a5bc4-ba89-562c-939a-a5f2b4ef9007": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          20,
+          20
+        ],
+        "to": [
+          20,
+          80
+        ],
+        "dashed": false
+      },
+      {
+        "t": "hoop",
+        "at": [
+          50,
+          50
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          74,
+          50
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          20,
+          86
+        ],
+        "role": "alumno",
+        "label": "A"
+      }
+    ],
+    "caption": "Circuito de equilibrio: caminar por una línea con la pelota en la raqueta",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Camina sobre una línea con la pelota en la raqueta",
+          "dur": 2.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  20,
+                  86
+                ],
+                [
+                  20,
+                  24
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Aguanta sobre un pie haciendo el gesto de derecha",
+          "dur": 1.6
+        },
+        {
+          "text": "Y salta a un aro aterrizando quieto",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  20,
+                  24
+                ],
+                [
+                  50,
+                  50
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "2eed645d-095a-55f8-b441-cbd5bf742526": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          56
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          66
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          76
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          86
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          96
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          58
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          30
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            56
+          ],
+          [
+            30,
+            34
+          ]
+        ]
+      }
+    ],
+    "caption": "Escalera de conos de la red al fondo: saca desde el primer escalón y, si entra",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Saca por arriba desde el primer escalón",
+          "dur": 1.5,
+          "ball": {
+            "path": [
+              [
+                50,
+                56
+              ],
+              [
+                40,
+                44
+              ],
+              [
+                32,
+                32
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "Si la pelota pasa la red y bota, sube un escalón hacia atrás",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  58
+                ],
+                [
+                  50,
+                  68
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Y vuelve a sacar",
+          "dur": 1.5,
+          "ball": {
+            "path": [
+              [
+                50,
+                66
+              ],
+              [
+                42,
+                46
+              ],
+              [
+                34,
+                32
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        }
+      ]
+    }
+  },
+  "dd318c43-90db-504d-ada5-3c9406d2a783": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          70
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          40
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          70
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          40
+        ],
+        "role": "alumno",
+        "label": "D"
+      }
+    ],
+    "caption": "Por parejas: uno hace gestos de tenis a cámara lenta y el otro los copia como un espejo",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Uno hace gestos de tenis a cámara lenta",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  70
+                ],
+                [
+                  30,
+                  68
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  64,
+                  70
+                ],
+                [
+                  70,
+                  68
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "El otro los copia como un espejo",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  36,
+                  40
+                ],
+                [
+                  42,
+                  42
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  64,
+                  40
+                ],
+                [
+                  58,
+                  42
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        }
+      ]
+    }
+  },
+  "3bdfa2ef-5fd2-5908-a3ef-36e5222bda5c": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          54
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          54
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          62,
+          78
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            36,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            66,
+            60
+          ]
+        ]
+      }
+    ],
+    "caption": "Junto a la red, como gatos atentos: el monitor lanza a un lado u otro y paran la pelota"
+  },
+  "cec53688-8227-59cb-9ef9-a7ccd4524ef2": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          50,
+          10
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          20
+        ],
+        "text": "Cubo"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          60
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            62
+          ],
+          [
+            44,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            92
+          ],
+          [
+            56,
+            48
+          ],
+          [
+            50,
+            12
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas: uno lanza suave y el otro devuelve con un globo para que caiga en un cubo"
+  },
+  "efdd876a-58a8-5d05-b023-b8547fe490de": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          34,
+          56
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          66,
+          56
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "alumno",
+        "label": "P"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            40,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            76
+          ],
+          [
+            60,
+            58
+          ]
+        ]
+      }
+    ],
+    "caption": "Juego de porteros en la red: un alumno es portero entre dos conos y para con la raqueta",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El compañero lanza a la portería",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                50,
+                76
+              ],
+              [
+                42,
+                66
+              ],
+              [
+                38,
+                58
+              ]
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "El portero se desliza y la para sin bote",
+          "dur": 1.0,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  56
+                ],
+                [
+                  40,
+                  56
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Otra pelota al otro lado",
+          "dur": 1.2,
+          "ball": {
+            "path": [
+              [
+                50,
+                76
+              ],
+              [
+                58,
+                66
+              ],
+              [
+                62,
+                58
+              ]
+            ]
+          },
+          "swing": 1
+        },
+        {
+          "text": "¡Parada! Cada una cuenta un punto",
+          "dur": 1.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  56
+                ],
+                [
+                  62,
+                  56
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "68ebf62f-173a-570b-8636-29c1b5515ac7": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          6,
+          40
+        ],
+        "to": [
+          94,
+          40
+        ],
+        "dashed": false
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          92
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          92
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          92
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          74
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          102
+        ],
+        "text": "¿Buena o fuera?"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            74
+          ],
+          [
+            40,
+            50
+          ],
+          [
+            40,
+            38
+          ]
+        ]
+      }
+    ],
+    "caption": "El monitor lanza pelotas cerca de la línea y cantan si es «buena» o «fuera»; si hay duda"
+  },
+  "7408856b-481b-5d70-9be4-22ae01c050ca": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          60
+        ],
+        "role": "rival",
+        "label": "P"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          40
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          70
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          84
+        ],
+        "role": "alumno",
+        "label": "3"
+      }
+    ],
+    "caption": "Uno la queda; al pillar a alguien se dan la mano y forman una cadena que sigue pillando",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Uno la queda y persigue a los demás",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  60
+                ],
+                [
+                  54,
+                  46
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Al pillar a alguien, se dan la mano",
+          "dur": 1.2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  40
+                ],
+                [
+                  58,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "La cadena sigue pillando: solo los extremos pillan",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  54,
+                  46
+                ],
+                [
+                  64,
+                  64
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  58,
+                  44
+                ],
+                [
+                  68,
+                  66
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "9f8cf4e6-d764-5a6f-a02d-1d626a4b32b6": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          70
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          70
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Caminan despacio por la pista y, al dar una palmada",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Caminan despacio por la pista",
+          "dur": 3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  70
+                ],
+                [
+                  36,
+                  56
+                ],
+                [
+                  26,
+                  44
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  76
+                ],
+                [
+                  52,
+                  60
+                ],
+                [
+                  60,
+                  48
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  70
+                ],
+                [
+                  64,
+                  56
+                ],
+                [
+                  74,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Palmada: se quedan quietos en equilibrio sobre un pie",
+          "dur": 1.6
+        }
+      ]
+    }
+  },
+  "7ee9dec4-93a2-509d-8b9d-b9a5deca4b7d": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          20
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          35
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          65
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          80
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          65
+        ],
+        "role": "alumno",
+        "label": "5"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          35
+        ],
+        "role": "alumno",
+        "label": "6"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            20
+          ],
+          [
+            80,
+            35
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            80,
+            35
+          ],
+          [
+            50,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            80
+          ],
+          [
+            20,
+            35
+          ]
+        ]
+      }
+    ],
+    "caption": "Sentados en círculo se pasan la pelota rodando por el suelo diciendo algo que han hecho"
+  },
+  "5bb0685b-1264-57b4-b611-59b8883f6002": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          60
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          70
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          80
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          86
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            58
+          ],
+          [
+            50,
+            84
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas: uno lanza la pelota alta, como en el saque, y el otro la atrapa tras un bote",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Uno lanza la pelota alta, como en el saque",
+          "dur": 1.6,
+          "ball": {
+            "path": [
+              [
+                50,
+                58
+              ],
+              [
+                50,
+                74
+              ],
+              [
+                50,
+                84
+              ]
+            ],
+            "bounces": [
+              1
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "El otro la atrapa tras un bote",
+          "dur": 0.9,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  50,
+                  84
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Cada vez que se atrapa, un paso atrás",
+          "dur": 1.2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  84
+                ],
+                [
+                  50,
+                  94
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "eeb94c4f-e95d-53ad-9f61-43582f16f2e4": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          12,
+          12
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          88,
+          12
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          12,
+          88
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          88,
+          88
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          12,
+          6
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "text",
+        "at": [
+          88,
+          6
+        ],
+        "text": "Azul"
+      },
+      {
+        "t": "text",
+        "at": [
+          12,
+          98
+        ],
+        "text": "Verde"
+      },
+      {
+        "t": "text",
+        "at": [
+          88,
+          98
+        ],
+        "text": "Amarillo"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          60
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          60
+        ],
+        "role": "alumno",
+        "label": "2"
+      }
+    ],
+    "caption": "Cuatro esquinas con conos de colores: el monitor nombra un color y corren a esa esquina",
+    "choreo": {
+      "steps": [
+        {
+          "text": "El monitor dice un color: ¡Azul!",
+          "dur": 1.4
+        },
+        {
+          "text": "Corren a esa esquina",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  40,
+                  60
+                ],
+                [
+                  84,
+                  16
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  60,
+                  60
+                ],
+                [
+                  80,
+                  20
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "El último hace una derecha de sombra",
+          "dur": 1.4,
+          "swing": 1
+        }
+      ]
+    }
+  },
+  "56f9d7ba-7662-5d32-859c-df308b0d3f44": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          10,
+          80
+        ],
+        "to": [
+          90,
+          80
+        ],
+        "dashed": false
+      },
+      {
+        "t": "player",
+        "at": [
+          14,
+          80
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          14,
+          70
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "Como ninjas"
+      }
+    ],
+    "caption": "Saltan a pies juntos por la línea de fondo sin hacer ruido al aterrizar, como ninjas",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Saltan a pies juntos por la línea de fondo",
+          "dur": 3.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  14,
+                  80
+                ],
+                [
+                  50,
+                  80
+                ],
+                [
+                  86,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  14,
+                  70
+                ],
+                [
+                  40,
+                  76
+                ],
+                [
+                  70,
+                  80
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Sin hacer ruido al aterrizar",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "e5a64283-adb4-56e2-aa1b-2d3362dd434d": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          50,
+          50
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          50,
+          48
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          90
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          10
+        ],
+        "role": "rival",
+        "label": "3"
+      }
+    ],
+    "caption": "Dos equipos en las líneas de fondo: dicen un número y los dos corren al centro a por la",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Dicen un número: sus dos alumnos corren al centro",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  90
+                ],
+                [
+                  48,
+                  56
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  70,
+                  10
+                ],
+                [
+                  52,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Cogen la pelota con la raqueta y vuelven a su línea",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  48,
+                  56
+                ],
+                [
+                  30,
+                  90
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  52,
+                  44
+                ],
+                [
+                  70,
+                  10
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "7c34ee4a-1882-5f39-86b7-375dfdf38068": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          22
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          36
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          64
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          78
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          64
+        ],
+        "role": "alumno",
+        "label": "5"
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          36
+        ],
+        "role": "alumno",
+        "label": "6"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          98
+        ],
+        "text": "Una a la derecha"
+      }
+    ],
+    "caption": "En círculo, cada uno deja su raqueta con la pelota encima y corre a la del compañero de",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Dejan su raqueta en el suelo con la pelota encima",
+          "dur": 1.4
+        },
+        {
+          "text": "Y corren a la del compañero de su derecha",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  20
+                ],
+                [
+                  77,
+                  35
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  77,
+                  35
+                ],
+                [
+                  77,
+                  65
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  77,
+                  65
+                ],
+                [
+                  50,
+                  80
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  80
+                ],
+                [
+                  23,
+                  65
+                ]
+              ]
+            },
+            {
+              "who": 4,
+              "path": [
+                [
+                  23,
+                  65
+                ],
+                [
+                  23,
+                  35
+                ]
+              ]
+            },
+            {
+              "who": 5,
+              "path": [
+                [
+                  23,
+                  35
+                ],
+                [
+                  50,
+                  20
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "709ac797-3128-527a-9a5a-caec4ea13603": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          20
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          35
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          76,
+          65
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          80
+        ],
+        "role": "alumno",
+        "label": "4"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          65
+        ],
+        "role": "alumno",
+        "label": "5"
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          35
+        ],
+        "role": "alumno",
+        "label": "6"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            20
+          ],
+          [
+            77,
+            35
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            77,
+            35
+          ],
+          [
+            77,
+            65
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            77,
+            65
+          ],
+          [
+            50,
+            80
+          ]
+        ]
+      }
+    ],
+    "caption": "En círculo se pasan la pelota con un toque de raqueta sin dejarla caer, como si quemara"
+  },
+  "98ef817a-9f1c-5836-830b-e430e2efccb5": {
+    "court": "medio",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          26,
+          12
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          12
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          74,
+          12
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          26,
+          22
+        ],
+        "text": "Rojo"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          22
+        ],
+        "text": "Azul"
+      },
+      {
+        "t": "text",
+        "at": [
+          74,
+          22
+        ],
+        "text": "Verde"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            92
+          ],
+          [
+            50,
+            34
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            32
+          ],
+          [
+            48,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            92
+          ],
+          [
+            74,
+            14
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas, peloteo suave en media pista"
+  },
+  "037f1aaa-d785-5a46-ae70-98bc6e99ad4d": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          26,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          74,
+          30
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          26,
+          70
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          74,
+          70
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          50
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          40
+        ],
+        "role": "rival",
+        "label": "P"
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          32
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          60
+        ],
+        "role": "alumno",
+        "label": "2"
+      }
+    ],
+    "caption": "Los demás se libran si tocan un cono con la raqueta, pero solo 3 segundos en cada uno",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Quien la queda persigue a los demás",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  40
+                ],
+                [
+                  60,
+                  54
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  70,
+                  60
+                ],
+                [
+                  74,
+                  68
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Se libran tocando un cono con la raqueta, solo 3 segundos",
+          "dur": 1.4
+        },
+        {
+          "text": "Cambian de cono, de dirección y de ritmo",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 2,
+              "path": [
+                [
+                  74,
+                  68
+                ],
+                [
+                  50,
+                  52
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  26,
+                  32
+                ],
+                [
+                  26,
+                  66
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "452402b8-bd19-5561-a45e-780d83064dd4": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          50,
+          94
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          24,
+          30
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          70,
+          40
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          40,
+          60
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          64,
+          70
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          86
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          86
+        ],
+        "role": "alumno",
+        "label": "2"
+      }
+    ],
+    "caption": "Recogen las pelotas de su zona usando la raqueta como pala y las llevan en equilibrio a",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Recogen las pelotas de su zona con la raqueta como pala",
+          "dur": 3.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  36,
+                  86
+                ],
+                [
+                  40,
+                  62
+                ],
+                [
+                  24,
+                  32
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  64,
+                  86
+                ],
+                [
+                  64,
+                  72
+                ],
+                [
+                  70,
+                  42
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Las llevan en equilibrio a la cesta",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  32
+                ],
+                [
+                  46,
+                  90
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  70,
+                  42
+                ],
+                [
+                  54,
+                  90
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Y chocan las raquetas",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "52546445-db2e-57cf-914c-3b05b4788ac0": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          50
+        ],
+        "role": "alumno",
+        "label": "L"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          50
+        ],
+        "role": "alumno",
+        "label": "L"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          24
+        ],
+        "role": "rival",
+        "label": "P"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          80
+        ],
+        "role": "rival",
+        "label": "P"
+      }
+    ],
+    "caption": "Los ladrones llevan una pelota en la raqueta y los policías intentan robarla tocando su",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Los ladrones se mueven con la pelota en la raqueta",
+          "dur": 2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  50
+                ],
+                [
+                  24,
+                  36
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  70,
+                  50
+                ],
+                [
+                  76,
+                  64
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Los policías intentan tocarles el hombro",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 2,
+              "path": [
+                [
+                  50,
+                  24
+                ],
+                [
+                  28,
+                  34
+                ]
+              ]
+            },
+            {
+              "who": 3,
+              "path": [
+                [
+                  50,
+                  80
+                ],
+                [
+                  72,
+                  62
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Si tocan a un ladrón, cambian los papeles",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "4b882f59-5e16-5653-abff-2057df9fe5d7": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          50,
+          16
+        ]
+      },
+      {
+        "t": "line",
+        "from": [
+          10,
+          70
+        ],
+        "to": [
+          90,
+          70
+        ],
+        "dashed": false
+      },
+      {
+        "t": "ball",
+        "at": [
+          24,
+          48
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          66,
+          40
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          86
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          86
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            72
+          ],
+          [
+            50,
+            18
+          ]
+        ]
+      }
+    ],
+    "caption": "Recogen pelotas y, desde una línea, las lanzan con la mano a la cesta; al acabar",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Recogen pelotas por la pista",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  30,
+                  86
+                ],
+                [
+                  24,
+                  52
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  70,
+                  86
+                ],
+                [
+                  66,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Desde la línea, las lanzan a la cesta",
+          "dur": 1.8,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  52
+                ],
+                [
+                  34,
+                  72
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  66,
+                  44
+                ],
+                [
+                  66,
+                  72
+                ]
+              ]
+            }
+          ],
+          "ball": {
+            "path": [
+              [
+                34,
+                72
+              ],
+              [
+                44,
+                44
+              ],
+              [
+                50,
+                18
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "42002cad-9523-5d0e-b335-efb92b2d8e28": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          40,
+          24
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          40,
+          44
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          40,
+          64
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          60,
+          24
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          60,
+          44
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          60,
+          64
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          88
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          88
+        ],
+        "role": "rival",
+        "label": "B"
+      }
+    ],
+    "caption": "Cada alumno recorre un pasillo de conos y en cada cono hace una derecha de sombra con el",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Recorren el pasillo de conos",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  88
+                ],
+                [
+                  40,
+                  66
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  88
+                ],
+                [
+                  60,
+                  66
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "En cada cono, derecha de sombra con giro de hombros",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  66
+                ],
+                [
+                  40,
+                  46
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  66
+                ],
+                [
+                  60,
+                  46
+                ]
+              ]
+            }
+          ],
+          "swing": 0
+        },
+        {
+          "text": "Hasta el último cono: gana el equipo con todos los gestos bien",
+          "dur": 1.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  40,
+                  46
+                ],
+                [
+                  40,
+                  26
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  60,
+                  46
+                ],
+                [
+                  60,
+                  26
+                ]
+              ]
+            }
+          ],
+          "swing": 1
+        }
+      ]
+    }
+  },
+  "4c2bcc37-cd51-5f48-adcd-b447f00d5dd4": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          10,
+          8
+        ],
+        "to": [
+          40,
+          28
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "zone",
+        "from": [
+          60,
+          8
+        ],
+        "to": [
+          90,
+          28
+        ],
+        "label": "Zona"
+      },
+      {
+        "t": "ball",
+        "at": [
+          24,
+          18
+        ]
+      },
+      {
+        "t": "ball",
+        "at": [
+          74,
+          18
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          24,
+          92
+        ]
+      },
+      {
+        "t": "basket",
+        "at": [
+          74,
+          92
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          24,
+          86
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          86
+        ],
+        "role": "rival",
+        "label": "B"
+      }
+    ],
+    "caption": "Cada alumno corre a una zona del campo contrario, recoge una pelota",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Corren a una zona marcada del campo contrario",
+          "dur": 2.2,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  86
+                ],
+                [
+                  24,
+                  22
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  74,
+                  86
+                ],
+                [
+                  74,
+                  22
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Recogen una pelota y vuelven con pasos laterales",
+          "dur": 2.6,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  24,
+                  22
+                ],
+                [
+                  36,
+                  60
+                ],
+                [
+                  24,
+                  86
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  74,
+                  22
+                ],
+                [
+                  62,
+                  60
+                ],
+                [
+                  74,
+                  86
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "La dejan en el cubo de su equipo",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "12bf1784-31fe-582d-9f85-25855d517cf8": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          6,
+          40
+        ],
+        "to": [
+          94,
+          40
+        ],
+        "dashed": false
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          34
+        ],
+        "text": "Red"
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          86
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          86
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          86
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          98
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "El monitor nombra un animal y se desplazan imitándolo hasta la red: rana, canguro",
+    "choreo": {
+      "steps": [
+        {
+          "text": "«¡Rana!»: saltos a pies juntos, agachados",
+          "dur": 3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  28,
+                  86
+                ],
+                [
+                  28,
+                  44
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  50,
+                  44
+                ]
+              ]
+            },
+            {
+              "who": 2,
+              "path": [
+                [
+                  72,
+                  86
+                ],
+                [
+                  72,
+                  44
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Aterrizando sin perder el equilibrio",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "1337a31e-fc2e-53a6-9202-878e368ce6e4": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          8,
+          26
+        ],
+        "to": [
+          50,
+          50
+        ],
+        "label": "Rojo"
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          26
+        ],
+        "to": [
+          92,
+          50
+        ],
+        "label": "Azul"
+      },
+      {
+        "t": "cone",
+        "at": [
+          30,
+          38
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          70,
+          38
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          70
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            96
+          ],
+          [
+            70,
+            38
+          ]
+        ]
+      }
+    ],
+    "caption": "Cada cuadro de saque tiene un cono de color"
+  },
+  "339645ea-0a46-51cf-a8c2-c68d30e5c4f4": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "hoop",
+        "at": [
+          30,
+          38
+        ]
+      },
+      {
+        "t": "hoop",
+        "at": [
+          70,
+          38
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            96
+          ],
+          [
+            30,
+            40
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            96
+          ],
+          [
+            70,
+            40
+          ]
+        ]
+      }
+    ],
+    "caption": "Aros en los cuadros de saque: lanzamientos por arriba hacia los aros y después saques"
+  },
+  "bc1e5ad2-72c9-557b-984f-3294ff004437": {
+    "court": "mini",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          60,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          10
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            94
+          ],
+          [
+            44,
+            28
+          ]
+        ]
+      }
+    ],
+    "caption": "Por parejas: uno saca por abajo y el otro, desde el otro lado",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Uno saca por abajo desde la línea de fondo",
+          "dur": 1.8,
+          "ball": {
+            "path": [
+              [
+                60,
+                94
+              ],
+              [
+                52,
+                60
+              ],
+              [
+                44,
+                28
+              ],
+              [
+                40,
+                16
+              ]
+            ],
+            "bounces": [
+              2
+            ]
+          },
+          "swing": 0
+        },
+        {
+          "text": "El otro la atrapa tras el bote, antes de que salga",
+          "dur": 1.2,
+          "moves": [
+            {
+              "who": 1,
+              "path": [
+                [
+                  40,
+                  10
+                ],
+                [
+                  42,
+                  22
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Se cambian los papeles cada 4 saques",
+          "dur": 1.2
+        }
+      ]
+    }
+  },
+  "37240b89-fd5d-5af5-834e-ffaa0b5ca301": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "basket",
+        "at": [
+          50,
+          24
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          86
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      }
+    ],
+    "caption": "Toques suaves sobre el cordaje caminando hacia la cesta; después",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Toques suaves sobre el cordaje, caminando hacia la cesta",
+          "dur": 3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  50,
+                  86
+                ],
+                [
+                  50,
+                  34
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Dejan la pelota sin que caiga y saludan",
+          "dur": 1.4
+        }
+      ]
+    }
+  },
+  "84d642c9-21a1-52ca-b026-46905d2996e4": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          26,
+          70
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          76
+        ],
+        "role": "alumno",
+        "label": "2"
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          70
+        ],
+        "role": "alumno",
+        "label": "3"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            26,
+            68
+          ],
+          [
+            26,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            74
+          ],
+          [
+            50,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            74,
+            68
+          ],
+          [
+            74,
+            60
+          ]
+        ]
+      }
+    ],
+    "caption": "Toques de volea hacia arriba contando cuántos consiguen; después"
+  },
+  "ab78dd94-e164-5d28-985d-41bd7e36e655": {
+    "court": "libre",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          10,
+          86
+        ],
+        "to": [
+          90,
+          86
+        ],
+        "dashed": false
+      },
+      {
+        "t": "line",
+        "from": [
+          10,
+          86
+        ],
+        "to": [
+          10,
+          20
+        ],
+        "dashed": false
+      },
+      {
+        "t": "player",
+        "at": [
+          14,
+          86
+        ],
+        "role": "alumno",
+        "label": "1"
+      },
+      {
+        "t": "player",
+        "at": [
+          14,
+          76
+        ],
+        "role": "alumno",
+        "label": "2"
+      }
+    ],
+    "caption": "Toques hacia arriba mientras caminan por la línea indicada (fondo, lateral, saque)",
+    "choreo": {
+      "steps": [
+        {
+          "text": "Toques hacia arriba caminando por la línea de fondo",
+          "dur": 3,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  14,
+                  86
+                ],
+                [
+                  86,
+                  86
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  14,
+                  76
+                ],
+                [
+                  76,
+                  86
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "text": "«¡Cambio!»: alternan derecha y revés por el lateral",
+          "dur": 2.4,
+          "moves": [
+            {
+              "who": 0,
+              "path": [
+                [
+                  86,
+                  86
+                ],
+                [
+                  86,
+                  30
+                ]
+              ]
+            },
+            {
+              "who": 1,
+              "path": [
+                [
+                  76,
+                  86
+                ],
+                [
+                  86,
+                  50
+                ]
+              ]
+            }
+          ]
         }
       ]
     }
