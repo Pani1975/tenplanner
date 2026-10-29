@@ -17,7 +17,7 @@
       {
         "t": "basket",
         "at": [
-          72,
+          70,
           82
         ]
       },
@@ -33,7 +33,7 @@
       {
         "t": "player",
         "at": [
-          60,
+          56,
           80
         ],
         "role": "monitor",
@@ -43,7 +43,7 @@
         "t": "shot",
         "points": [
           [
-            60,
+            56,
             80
           ],
           [
@@ -64,6 +64,14 @@
             16
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Tras el bote"
       }
     ],
     "caption": "El monitor lanza muy cerca; el alumno contacta tras el bote y la envía al otro campo",
@@ -89,7 +97,7 @@
           "ball": {
             "path": [
               [
-                60,
+                56,
                 80
               ],
               [
@@ -174,7 +182,7 @@
           "ball": {
             "path": [
               [
-                60,
+                56,
                 80
               ],
               [
@@ -407,6 +415,14 @@
             64
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Derriba los bolos"
       }
     ],
     "caption": "Seis conos hacen de bolos: golpe suave de derecha tras el bote para derribarlos",
@@ -2106,7 +2122,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "De lado a la red"
       },
@@ -2735,7 +2751,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Apretón de manos"
       },
@@ -2979,7 +2995,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Prep·Golpe·Final"
       },
@@ -3218,7 +3234,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "De lado a la red"
       },
@@ -3457,7 +3473,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Dos manos"
       },
@@ -3870,7 +3886,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Revisa las manos"
       },
@@ -4218,7 +4234,7 @@
         "t": "player",
         "at": [
           50,
-          92
+          94
         ],
         "role": "alumno",
         "label": "A"
@@ -4226,8 +4242,8 @@
       {
         "t": "player",
         "at": [
-          54,
-          78
+          56,
+          80
         ],
         "role": "monitor",
         "label": "M"
@@ -4236,8 +4252,8 @@
         "t": "shot",
         "points": [
           [
-            54,
-            78
+            56,
+            80
           ],
           [
             56,
@@ -4249,7 +4265,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Paro y dejo muerta"
       }
@@ -4263,8 +4279,8 @@
           "ball": {
             "path": [
               [
-                54,
-                78
+                56,
+                80
               ],
               [
                 55,
@@ -4308,8 +4324,8 @@
           "ball": {
             "path": [
               [
-                54,
-                78
+                56,
+                80
               ],
               [
                 53,
@@ -4692,6 +4708,14 @@
             94
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Cae en el aro"
       }
     ],
     "caption": "El alumno lanza la pelota arriba y la deja caer sobre un aro delante de su pie adelantado",
@@ -4847,6 +4871,14 @@
             12
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Como un cohete"
       }
     ],
     "caption": "Sin raqueta: lanzan pelotas por encima de la cabeza, con el gesto del saque",
@@ -5235,7 +5267,7 @@
         "t": "text",
         "at": [
           24,
-          102
+          85
         ],
         "text": "Cubo"
       },
@@ -5264,6 +5296,14 @@
             92
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Para con el centro"
       }
     ],
     "caption": "El compañero lanza las «estrellas»; el alumno las para con el centro de la raqueta y las",
@@ -5433,6 +5473,14 @@
             12
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Derriba castillos"
       }
     ],
     "caption": "Castillos de conos en el otro campo: lanzan por encima de la cabeza, como un saque",
@@ -5546,7 +5594,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "¡Rápido!"
       }
@@ -6300,7 +6348,7 @@
         "t": "text",
         "at": [
           50,
-          56
+          106
         ],
         "text": "Raquetas al suelo"
       },
@@ -6649,7 +6697,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Estatuas de perfil"
       },
@@ -6823,7 +6871,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "¡Foto!"
       }
@@ -6852,6 +6900,7 @@
           "swing": 2
         },
         {
+          "text": "Contactan y terminan sobre el hombro",
           "dur": 1.5,
           "ball": {
             "path": [
@@ -7074,7 +7123,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Cambio cada 5"
       },
@@ -7269,6 +7318,14 @@
             86
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Cae en el cubo"
       }
     ],
     "caption": "Se lanzan la pelota arriba con una mano e intentan que caiga dentro de un cubo delante",
@@ -7940,6 +7997,14 @@
             20
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Derriba los conos"
       }
     ],
     "caption": "Un compañero lanza al revés y el alumno, de lado",
@@ -8313,7 +8378,7 @@
         "t": "text",
         "at": [
           50,
-          94
+          112
         ],
         "text": "Ojos cerrados"
       }
@@ -8578,6 +8643,14 @@
             84
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Atrapa al vuelo"
       }
     ],
     "caption": "El monitor lanza muchas pelotas altas desde la red y cada alumno atrapa el mayor número",
@@ -8788,6 +8861,14 @@
             64
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Rueda y derriba"
       }
     ],
     "caption": "Seis conos como bolos a 3 m: de rodillas, ruedan la pelota para derribar el mayor número",
@@ -9121,6 +9202,14 @@
         ],
         "role": "rival",
         "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "En equilibrio"
       }
     ],
     "caption": "Relevos: cada camarero lleva la pelota sobre la raqueta hasta un cono y vuelve sin que se",
@@ -9615,6 +9704,14 @@
         ],
         "role": "alumno",
         "label": "A"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Pelota rodando"
       }
     ],
     "caption": "Conducen la pelota rodando con la raqueta por un circuito de conos, como un coche",
@@ -10044,7 +10141,7 @@
         "t": "text",
         "at": [
           50,
-          100
+          106
         ],
         "text": "Más lento"
       }
@@ -10222,7 +10319,7 @@
         "t": "text",
         "at": [
           50,
-          92
+          112
         ],
         "text": "Espejo"
       }
@@ -10936,6 +11033,14 @@
             36
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Cubos a 2-3-4 m"
       }
     ],
     "caption": "Cubos y aros a 2, 3 y 4 m: lanzan por abajo, con una mano y con las dos; cuanto más lejos",
@@ -11127,6 +11232,14 @@
         ],
         "role": "alumno",
         "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Pie delante de pie"
       }
     ],
     "caption": "Las líneas son cuerdas de circo: las recorren pie delante de pie con la pelota sobre la",
@@ -11321,7 +11434,7 @@
         "t": "text",
         "at": [
           50,
-          100
+          106
         ],
         "text": "¡A la red!"
       }
@@ -11598,6 +11711,14 @@
         ],
         "role": "alumno",
         "label": "6"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Pasa despacio"
       }
     ],
     "caption": "Sentados en círculo se pasan la pelota despacio con música suave; al parar",
@@ -11878,6 +11999,14 @@
         ],
         "role": "rival",
         "label": "D"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "La torre más alta"
       }
     ],
     "caption": "En equipos construyen la torre más alta con conos y una pelota en lo alto",
@@ -12090,6 +12219,14 @@
             66
           ]
         ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Con la mano"
       }
     ],
     "caption": "Por parejas a cada lado de la red de minitenis",
@@ -12605,6 +12742,14 @@
         ],
         "role": "rival",
         "label": "P"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Pisa las líneas"
       }
     ],
     "caption": "Pilla-pilla en el que todos solo pueden desplazarse pisando las líneas de la pista",
@@ -12852,6 +12997,14 @@
         ],
         "role": "alumno",
         "label": "2"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Cuenta atrás"
       }
     ],
     "caption": "Al ritmo de una cuenta atrás tranquila recogen caminando todas las pelotas y las llevan a",
@@ -13182,6 +13335,14 @@
         ],
         "role": "rival",
         "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          112
+        ],
+        "text": "Roba una pelota"
       }
     ],
     "caption": "Dos equipos, cada uno con un aro de pelotas en su fondo",
@@ -13297,7 +13458,7 @@
         "t": "text",
         "at": [
           50,
-          100
+          112
         ],
         "text": "Semáforo"
       }
@@ -13412,7 +13573,7 @@
           28
         ],
         "role": "monitor",
-        "label": "S"
+        "label": "M"
       },
       {
         "t": "player",
@@ -13445,7 +13606,7 @@
         "t": "text",
         "at": [
           50,
-          92
+          112
         ],
         "text": "Simón dice…"
       }
@@ -34220,7 +34381,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Cooperativo"
       }
@@ -34395,7 +34556,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Misma esquina"
       }
@@ -34593,7 +34754,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Vuelve al centro"
       }
@@ -34755,6 +34916,14 @@
         ],
         "role": "rival",
         "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Sin que bote"
       }
     ],
     "caption": "Tenis sin que la pelota bote: se empuja por el suelo con la raqueta",
@@ -34880,7 +35049,7 @@
         "t": "text",
         "at": [
           50,
-          100
+          112
         ],
         "text": "5 = 1 punto"
       }
@@ -35039,7 +35208,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Por arriba"
       }
@@ -35217,7 +35386,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Lanza·Golpea"
       }
@@ -35351,7 +35520,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Tenis sin raqueta"
       }
@@ -35514,6 +35683,14 @@
         ],
         "role": "alumno",
         "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          106
+        ],
+        "text": "Por el pasillo"
       }
     ],
     "caption": "Se empujan la pelota por el suelo a lo largo del pasillo de dobles",
@@ -35610,7 +35787,7 @@
         "t": "text",
         "at": [
           50,
-          102
+          106
         ],
         "text": "Lanzo y pelotea"
       }
@@ -35781,7 +35958,7 @@
         "t": "text",
         "at": [
           50,
-          92
+          112
         ],
         "text": "Cuento de animales"
       }
@@ -36277,7 +36454,7 @@
         "t": "text",
         "at": [
           50,
-          92
+          112
         ],
         "text": "La corona"
       }
