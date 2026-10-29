@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ShareButton } from "@/components/app/share-button";
+import { DiagramClip } from "@/components/app/exercise-diagram-clip";
 import { cn } from "@/lib/utils";
 import {
   buildAnimationTimeline,
@@ -65,6 +66,28 @@ function sessionToClassData(s: SessionPayload): ClassData {
   };
 }
 
+/**
+ * Añade a cada ejercicio su esquema animado. Se carga bajo demanda: el JSON de
+ * esquemas es grande y solo hace falta al abrir la animación.
+ */
+async function withDiagrams(c: ClassData): Promise<ClassData> {
+  try {
+    const { getExerciseDiagram } = await import("@/lib/exercise-diagrams");
+    return {
+      ...c,
+      blocks: c.blocks.map((b) => ({
+        ...b,
+        items: b.items.map((item) => ({
+          ...item,
+          diagram: getExerciseDiagram(item.exerciseId),
+        })),
+      })),
+    };
+  } catch {
+    return c;
+  }
+}
+
 /** En una clase, el texto propio de un ejercicio manda sobre el de la biblioteca. */
 function classToAnimationData(c: ClassData): ClassData {
   return {
@@ -106,12 +129,13 @@ export function ClassAnimationButton({
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((json) =>
-        setData(
+        withDiagrams(
           sessionId
             ? sessionToClassData(json.data as SessionPayload)
             : classToAnimationData(json.data as ClassData)
         )
       )
+      .then(setData)
       .catch(() => setError(true));
   }, [classId, sessionId, data]);
 
@@ -383,14 +407,21 @@ export function ClassAnimationPlayer({
       <div className="grid gap-4 px-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         {/* Pista animada */}
         <div className="relative self-start overflow-hidden rounded-lg border border-white/10 bg-[#0B1A2B]">
-          <Court
-            timeline={timeline}
-            t={t}
-            step={step}
-            phase={phase}
-            ballColor={ballColorFor(name)}
-            reduceMotion={reduceMotion}
-          />
+          {phase === "steps" && step?.diagram ? (
+            <DiagramClip
+              diagram={step.diagram}
+              time={reduceMotion ? 0 : t - step.start}
+            />
+          ) : (
+            <Court
+              timeline={timeline}
+              t={t}
+              step={step}
+              phase={phase}
+              ballColor={ballColorFor(name)}
+              reduceMotion={reduceMotion}
+            />
+          )}
           <AnimatePresence>
             {phase === "outro" && (
               <motion.div
@@ -415,7 +446,9 @@ export function ClassAnimationPlayer({
               </motion.div>
             )}
           </AnimatePresence>
-          <SceneLegend scene={phase === "steps" && step ? step.scene : null} />
+          <SceneLegend
+            scene={phase === "steps" && step && !step.diagram ? step.scene : null}
+          />
         </div>
 
         {/* Explicación */}
