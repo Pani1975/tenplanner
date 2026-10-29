@@ -128,6 +128,8 @@ export function DiagramFrame({
   const guides = timeline.steps.filter(
     (s) => s.ball && pathLength(s.ball.path) > 0
   );
+  const knocked = new Set(timeline.steps.flatMap((s) => s.knock ?? []));
+  const cones = diagram.elements.flatMap((e) => (e.t === "cone" ? [e.at] : []));
   return (
     <svg
       viewBox={`0 0 ${scene.width} ${scene.height}`}
@@ -136,6 +138,25 @@ export function DiagramFrame({
       style={{ width: "100%", maxWidth, height: "auto", display: "block" }}
     >
       {scene.prims.map(renderPrim)}
+
+      {/* Conos que se pueden derribar */}
+      {cones.map((at, i) => {
+        if (!knocked.has(i)) return null;
+        const [cx, cy] = P(at);
+        const k = sample.fallen[i] ?? 0;
+        const dir = i % 2 === 0 ? 1 : -1;
+        return (
+          <polygon
+            key={`c${i}`}
+            points={`${cx},${cy - 4.5} ${cx - 4},${cy + 3.5} ${cx + 4},${cy + 3.5}`}
+            transform={`rotate(${dir * 90 * k} ${cx} ${cy + 3.5})`}
+            fill={COLORS.cone}
+            stroke="#9A3412"
+            strokeWidth={0.6}
+            opacity={1 - 0.25 * k}
+          />
+        );
+      })}
 
       {/* Guías tenues de las trayectorias */}
       {guides.map((s, i) => (
@@ -293,14 +314,22 @@ function AnimatedPlayer({
   maxWidth?: number;
 }) {
   const timeline = useMemo(() => buildTimeline(diagram), [diagram]);
-  const scene = useMemo(
-    () =>
-      buildScene({
-        ...diagram,
-        elements: diagram.elements.filter((e) => !STATIC_KINDS.has(e.t)),
+  const scene = useMemo(() => {
+    // Los conos que derriba la pelota los dibuja el fotograma.
+    const knocked = new Set(timeline.steps.flatMap((s) => s.knock ?? []));
+    let cone = -1;
+    return buildScene({
+      ...diagram,
+      elements: diagram.elements.filter((e) => {
+        if (STATIC_KINDS.has(e.t)) return false;
+        if (e.t === "cone") {
+          cone += 1;
+          return !knocked.has(cone);
+        }
+        return true;
       }),
-    [diagram]
-  );
+    });
+  }, [diagram, timeline]);
 
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
