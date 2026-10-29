@@ -54,6 +54,7 @@ export function DiagramClip({
         time={local}
         maxWidth={520}
         landscape={diagram.court !== "libre"}
+        dark
       />
       {text && (
         <figcaption className="mt-2 min-h-[2.4em] text-center text-xs font-medium leading-snug text-white/80">
