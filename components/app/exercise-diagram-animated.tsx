@@ -23,6 +23,33 @@ import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 const STATIC_KINDS = new Set(["player", "ball", "move", "shot"]);
 const R = 5.2;
 
+// Paleta oscura: pista azul con líneas blancas, como en la animación de la clase.
+const DARK: Record<string, string> = {
+  "#EEF4EA": "#123456",
+  "#F3F4EE": "#123456",
+  "#FFFFFF": "#1D5A96",
+  "#7C8F7A": "#E5EEF8",
+  "#3F4A3F": "#F4F4F1",
+  "#E6F6B0": "#3A7CB8",
+  "#65A30D": "#D6FF38",
+  "#1F2937": "#FFFFFF",
+  "#7C3AED": "#C4B5FD",
+};
+const DARK_ROLE = {
+  alumno: "#F4F4F1",
+  monitor: "#D6FF38",
+  rival: "#EA580C",
+} as const;
+
+function recolor(p: Prim): Prim {
+  const out: Record<string, unknown> = { ...p };
+  for (const k of ["fill", "stroke"]) {
+    const v = out[k];
+    if (typeof v === "string" && DARK[v]) out[k] = DARK[v];
+  }
+  return out as Prim;
+}
+
 function renderPrim(p: Prim, i: number, upright = false) {
   switch (p.k) {
     case "rect":
@@ -117,6 +144,7 @@ export function DiagramFrame({
   time,
   maxWidth,
   landscape = false,
+  dark = false,
 }: {
   diagram: Diagram;
   timeline: Timeline;
@@ -125,6 +153,8 @@ export function DiagramFrame({
   maxWidth: number;
   /** Gira la pista 90° (net en vertical) dejando los textos rectos. */
   landscape?: boolean;
+  /** Pista azul con líneas blancas (para fondos oscuros). */
+  dark?: boolean;
 }) {
   const P = projector(diagram.court).point;
   const sample = sampleTimeline(timeline, time);
@@ -150,7 +180,9 @@ export function DiagramFrame({
           landscape ? `translate(0 ${scene.width}) rotate(-90)` : undefined
         }
       >
-      {scene.prims.map((p, i) => renderPrim(p, i, landscape))}
+      {(dark ? scene.prims.map(recolor) : scene.prims).map((p, i) =>
+        renderPrim(p, i, landscape)
+      )}
 
       {/* Conos que se pueden derribar */}
       {cones.map((at, i) => {
@@ -177,7 +209,7 @@ export function DiagramFrame({
           key={`g${i}`}
           points={s.ball!.path.map((p) => P(p).join(",")).join(" ")}
           fill="none"
-          stroke={COLORS.shot}
+          stroke={dark ? "#FACC15" : COLORS.shot}
           strokeWidth={1}
           strokeDasharray="2.5 3"
           opacity={i === sample.stepIndex ? 0.55 : 0.18}
@@ -228,7 +260,7 @@ export function DiagramFrame({
                   y1={0}
                   x2={R + 4}
                   y2={0}
-                  stroke="#374151"
+                  stroke={dark ? "#E5E7EB" : "#374151"}
                   strokeWidth={1.2}
                   strokeLinecap="round"
                 />
@@ -239,7 +271,7 @@ export function DiagramFrame({
                   ry={2.3}
                   fill="#fff"
                   fillOpacity={0.6}
-                  stroke="#374151"
+                  stroke={dark ? "#E5E7EB" : "#374151"}
                   strokeWidth={1}
                 />
               </g>
@@ -248,7 +280,7 @@ export function DiagramFrame({
               cx={x}
               cy={y}
               r={R}
-              fill={COLORS[pl.role]}
+              fill={dark ? DARK_ROLE[pl.role] : COLORS[pl.role]}
               stroke="#fff"
               strokeWidth={1}
             />
@@ -258,7 +290,7 @@ export function DiagramFrame({
                 y={y + 2.4}
                 transform={landscape ? `rotate(90 ${x} ${y + 2.4})` : undefined}
                 fontSize={6.5}
-                fill="#fff"
+                fill={dark && pl.role !== "rival" ? "#0B1A2B" : "#fff"}
                 textAnchor="middle"
                 fontWeight={700}
                 fontFamily="system-ui, sans-serif"
