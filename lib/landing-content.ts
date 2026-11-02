@@ -162,11 +162,15 @@ export const LANDING_STRING_KEYS = LANDING_FIELD_DEFINITIONS.map(
   (field) => field.key
 ) as LandingStringKey[];
 
+// Prefijo de las filas de landing_content: evita chocar con las claves del
+// diseño anterior (hero_title, hero_cta_primary…) que siguen en la base de datos.
+export const LANDING_DB_PREFIX = "v2_";
+
 function landingString(
   map: Record<string, unknown>,
   key: LandingStringKey
 ): string {
-  const value = map[key];
+  const value = map[LANDING_DB_PREFIX + key];
   if (typeof value !== "string" || /[ÃÂâ]/.test(value)) {
     return LANDING_DEFAULTS[key];
   }
@@ -191,6 +195,6 @@ async function fetchLandingContent(): Promise<LandingContent> {
 
 export const getLandingContent = unstable_cache(
   fetchLandingContent,
-  ["landing-content-v2"],
+  ["landing-content-v4"],
   { tags: ["landing"], revalidate: 3600 }
 );

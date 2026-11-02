@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { landingContent, users } from "@/db/schema";
 import {
+  LANDING_DB_PREFIX,
   LANDING_FIELD_DEFINITIONS,
   LANDING_STRING_KEYS,
   type LandingContent,
@@ -110,7 +111,7 @@ export async function PUT(request: Request) {
         throw new Error(`Invalid value for ${key}`);
       }
       return {
-        key,
+        key: LANDING_DB_PREFIX + key,
         value: normalized,
         type: "string",
         label: LANDING_FIELD_DEFINITIONS.find(
