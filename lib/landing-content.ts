@@ -2,66 +2,55 @@ import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { landingContent } from "@/db/schema";
 
-export interface SpecItem {
-  k: string;
-  v: string;
-  sub: string;
-}
-
 export interface LandingContent {
+  hero_badge: string;
   hero_title: string;
+  hero_title_accent: string;
   hero_subtitle: string;
   hero_cta_primary: string;
   hero_cta_secondary: string;
-  specs_strip: SpecItem[];
-  planner_heading: string;
-  planner_description: string;
-  biblioteca_heading: string;
-  biblioteca_description: string;
-  anatomia_heading: string;
-  anatomia_description: string;
-  alumnos_heading: string;
-  alumnos_description: string;
-  manifesto_heading: string;
-  manifesto_sub: string;
+  problem_title: string;
+  problem_accent: string;
+  how_title: string;
+  how_accent: string;
+  prep_title: string;
+  prep_accent: string;
+  prep_description: string;
+  features_title: string;
+  features_accent: string;
+  cta_title: string;
+  cta_accent: string;
   footer_tagline: string;
 }
 
+// Deben coincidir con lo que muestra hoy la web pública sin filas en BD.
 export const LANDING_DEFAULTS: LandingContent = {
-  hero_title:
-    "Planifica sesiones serias\nsin perder la cabeza\nentre pista y pista.",
+  hero_badge: "Planificación inteligente para monitores de tenis",
+  hero_title: "La clase la piensas tú.",
+  hero_title_accent: "Ten Planner te ayuda.",
   hero_subtitle:
-    "TenPlanner junta biblioteca, alumnos, grupos, agenda y carga de trabajo en un sistema rápido para entrenadores de deportes de raqueta.",
-  hero_cta_primary: "Empezar gratis",
-  hero_cta_secondary: "Ver sistema",
-  specs_strip: [
-    { k: "Planificación", v: "3 min", sub: "de idea a sesión" },
-    { k: "Biblioteca", v: "137+", sub: "drills y clases" },
-    { k: "Pista", v: "75 min", sub: "guion por fases" },
-    { k: "Historial", v: "1 lugar", sub: "alumnos y carga" },
-  ],
-  planner_heading: "Planificación guiada\ncon contexto real.",
-  planner_description:
-    "Objetivo, nivel, notas y biblioteca quedan ordenados antes de convertir una clase en sesión.",
-  biblioteca_heading: "Tu biblioteca de ejercicios\ny clases de raqueta.",
-  biblioteca_description:
-    "Drills organizados por nivel, golpe, fase, duración y objetivo. Crea los tuyos, marca favoritos y conviértelos en sesiones completas.",
-  anatomia_heading: "La sesión completa,\nordenada por fases.",
-  anatomia_description:
-    "Cada ejercicio tiene tiempo, intensidad y foco. La carga deja de ser una intuición perdida en una libreta.",
-  alumnos_heading: "Cada alumno llega\ncon memoria propia.",
-  alumnos_description:
-    "Ficha, asistencia, notas y progreso se guardan juntos para que la siguiente clase empiece con contexto, no desde cero.",
-  manifesto_heading:
-    "Un entrenador con método\ngana tiempo antes\nde ganar partidos.",
-  manifesto_sub: "TenPlanner te da la estructura.",
+    "Explora ejercicios y clases etiquetados, construye desde cero con la biblioteca o recupera lo que ya funcionó. Tres caminos, siempre tu criterio.",
+  hero_cta_primary: "Registrarse →",
+  hero_cta_secondary: "Ver cómo funciona",
+  problem_title: "¿Te suena esto?",
+  problem_accent: "A todos los monitores les pasa.",
+  how_title: "Tú decides.",
+  how_accent: "En minutos.",
+  prep_title: "Tú piensas la clase.",
+  prep_accent: "Tres formas de prepararla.",
+  prep_description:
+    "No hay una única forma de planificar. Cada monitor trabaja diferente. Ten Planner se adapta a cómo quieres preparar cada sesión.",
+  features_title: "Todo lo que necesita",
+  features_accent: "un monitor de tenis",
+  cta_title: "La próxima clase,",
+  cta_accent: "lista en minutos.",
   footer_tagline:
-    "Cuaderno digital para entrenadores de deportes de raqueta. Hecho para trabajar en pista o cancha.",
+    "Planificación profesional para entrenadores de deportes de raqueta.",
 };
 
-export type LandingStringKey = Exclude<keyof LandingContent, "specs_strip">;
+export type LandingStringKey = keyof LandingContent;
 
-export type LandingFieldGroup = "Hero" | "Secciones" | "Manifiesto" | "Footer";
+export type LandingFieldGroup = "Hero" | "Secciones" | "Cierre";
 
 export interface LandingFieldDefinition {
   key: LandingStringKey;
@@ -72,12 +61,13 @@ export interface LandingFieldDefinition {
 }
 
 export const LANDING_FIELD_DEFINITIONS: LandingFieldDefinition[] = [
+  { key: "hero_badge", label: "Hero - Etiqueta superior", group: "Hero", maxLength: 80 },
+  { key: "hero_title", label: "Hero - Título", group: "Hero", maxLength: 80 },
   {
-    key: "hero_title",
-    label: "Hero - Título",
+    key: "hero_title_accent",
+    label: "Hero - Título (línea en cursiva)",
     group: "Hero",
-    multiline: true,
-    maxLength: 180,
+    maxLength: 80,
   },
   {
     key: "hero_subtitle",
@@ -86,92 +76,64 @@ export const LANDING_FIELD_DEFINITIONS: LandingFieldDefinition[] = [
     multiline: true,
     maxLength: 420,
   },
-  {
-    key: "hero_cta_primary",
-    label: "Hero - CTA primario",
-    group: "Hero",
-    maxLength: 40,
-  },
+  { key: "hero_cta_primary", label: "Hero - CTA primario", group: "Hero", maxLength: 40 },
   {
     key: "hero_cta_secondary",
     label: "Hero - CTA secundario",
     group: "Hero",
     maxLength: 60,
   },
+  { key: "problem_title", label: "El problema - Título", group: "Secciones", maxLength: 80 },
   {
-    key: "planner_heading",
-    label: "Planificación - Título",
+    key: "problem_accent",
+    label: "El problema - Línea en cursiva",
     group: "Secciones",
-    multiline: true,
-    maxLength: 160,
+    maxLength: 80,
+  },
+  { key: "how_title", label: "Cómo funciona - Título", group: "Secciones", maxLength: 80 },
+  {
+    key: "how_accent",
+    label: "Cómo funciona - Línea de acento",
+    group: "Secciones",
+    maxLength: 80,
+  },
+  { key: "prep_title", label: "Preparación - Título", group: "Secciones", maxLength: 80 },
+  {
+    key: "prep_accent",
+    label: "Preparación - Línea de acento",
+    group: "Secciones",
+    maxLength: 80,
   },
   {
-    key: "planner_description",
-    label: "Planificación - Descripción",
-    group: "Secciones",
-    multiline: true,
-    maxLength: 360,
-  },
-  {
-    key: "biblioteca_heading",
-    label: "Biblioteca - Título",
-    group: "Secciones",
-    multiline: true,
-    maxLength: 160,
-  },
-  {
-    key: "biblioteca_description",
-    label: "Biblioteca - Descripción",
-    group: "Secciones",
-    multiline: true,
-    maxLength: 360,
-  },
-  {
-    key: "anatomia_heading",
-    label: "Anatomía - Título",
-    group: "Secciones",
-    multiline: true,
-    maxLength: 160,
-  },
-  {
-    key: "anatomia_description",
-    label: "Anatomía - Descripción",
+    key: "prep_description",
+    label: "Preparación - Descripción",
     group: "Secciones",
     multiline: true,
     maxLength: 360,
   },
   {
-    key: "alumnos_heading",
-    label: "Alumnos - Título",
+    key: "features_title",
+    label: "Funcionalidades - Título",
     group: "Secciones",
-    multiline: true,
-    maxLength: 160,
+    maxLength: 80,
   },
   {
-    key: "alumnos_description",
-    label: "Alumnos - Descripción",
+    key: "features_accent",
+    label: "Funcionalidades - Línea de acento",
     group: "Secciones",
-    multiline: true,
-    maxLength: 360,
+    maxLength: 80,
   },
+  { key: "cta_title", label: "CTA final - Título", group: "Cierre", maxLength: 80 },
   {
-    key: "manifesto_heading",
-    label: "Manifiesto - Título",
-    group: "Manifiesto",
-    multiline: true,
-    maxLength: 160,
-  },
-  {
-    key: "manifesto_sub",
-    label: "Manifiesto - Subtítulo",
-    group: "Manifiesto",
-    multiline: true,
-    maxLength: 120,
+    key: "cta_accent",
+    label: "CTA final - Línea en cursiva",
+    group: "Cierre",
+    maxLength: 80,
   },
   {
     key: "footer_tagline",
-    label: "Footer - Tagline",
-    group: "Footer",
+    label: "Pie - Tagline",
+    group: "Cierre",
     multiline: true,
     maxLength: 180,
   },
@@ -180,26 +142,6 @@ export const LANDING_FIELD_DEFINITIONS: LandingFieldDefinition[] = [
 export const LANDING_STRING_KEYS = LANDING_FIELD_DEFINITIONS.map(
   (field) => field.key
 ) as LandingStringKey[];
-
-function isSpecItem(value: unknown): value is SpecItem {
-  if (typeof value !== "object" || value === null) return false;
-  const item = value as Record<string, unknown>;
-  return (
-    typeof item.k === "string" &&
-    typeof item.v === "string" &&
-    typeof item.sub === "string"
-  );
-}
-
-function parseSpecs(value: unknown): SpecItem[] {
-  if (!Array.isArray(value) || value.length !== 4 || !value.every(isSpecItem)) {
-    return LANDING_DEFAULTS.specs_strip;
-  }
-  if (value.some((item) => /[ÃÂâ]/.test(`${item.k} ${item.v} ${item.sub}`))) {
-    return LANDING_DEFAULTS.specs_strip;
-  }
-  return value;
-}
 
 function landingString(
   map: Record<string, unknown>,
@@ -212,17 +154,6 @@ function landingString(
   return value;
 }
 
-function hasLegacyLandingContent(map: Record<string, unknown>): boolean {
-  const legacyPattern =
-    /Claude|La clase la piensas|Ten Planner te ayuda|Usado por|IA razonando/;
-
-  return Object.values(map).some((value) => {
-    if (typeof value === "string") return legacyPattern.test(value);
-    if (Array.isArray(value)) return legacyPattern.test(JSON.stringify(value));
-    return false;
-  });
-}
-
 async function fetchLandingContent(): Promise<LandingContent> {
   try {
     const rows = await db.select().from(landingContent);
@@ -230,26 +161,10 @@ async function fetchLandingContent(): Promise<LandingContent> {
     for (const row of rows) {
       map[row.key] = row.value;
     }
-    if (hasLegacyLandingContent(map)) return LANDING_DEFAULTS;
 
-    return {
-      hero_title: landingString(map, "hero_title"),
-      hero_subtitle: landingString(map, "hero_subtitle"),
-      hero_cta_primary: landingString(map, "hero_cta_primary"),
-      hero_cta_secondary: landingString(map, "hero_cta_secondary"),
-      specs_strip: parseSpecs(map.specs_strip),
-      planner_heading: landingString(map, "planner_heading"),
-      planner_description: landingString(map, "planner_description"),
-      biblioteca_heading: landingString(map, "biblioteca_heading"),
-      biblioteca_description: landingString(map, "biblioteca_description"),
-      anatomia_heading: landingString(map, "anatomia_heading"),
-      anatomia_description: landingString(map, "anatomia_description"),
-      alumnos_heading: landingString(map, "alumnos_heading"),
-      alumnos_description: landingString(map, "alumnos_description"),
-      manifesto_heading: landingString(map, "manifesto_heading"),
-      manifesto_sub: landingString(map, "manifesto_sub"),
-      footer_tagline: landingString(map, "footer_tagline"),
-    };
+    return Object.fromEntries(
+      LANDING_STRING_KEYS.map((key) => [key, landingString(map, key)])
+    ) as unknown as LandingContent;
   } catch {
     return LANDING_DEFAULTS;
   }
@@ -257,6 +172,6 @@ async function fetchLandingContent(): Promise<LandingContent> {
 
 export const getLandingContent = unstable_cache(
   fetchLandingContent,
-  ["landing-content"],
+  ["landing-content-v2"],
   { tags: ["landing"], revalidate: 3600 }
 );

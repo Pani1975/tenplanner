@@ -19,7 +19,6 @@ import { adminPanelClass } from "../_components/admin-ui";
 import type {
   LandingFieldGroup,
   LandingStringKey,
-  SpecItem,
 } from "@/lib/landing-content";
 
 interface Field {
@@ -34,38 +33,21 @@ interface Field {
 
 type Values = Record<LandingStringKey, string>;
 
-const GROUPS: LandingFieldGroup[] = [
-  "Hero",
-  "Secciones",
-  "Manifiesto",
-  "Footer",
-];
+const GROUPS: LandingFieldGroup[] = ["Hero", "Secciones", "Cierre"];
 
-export function AdminLandingClient({
-  fields,
-  specs,
-  defaultSpecs,
-}: {
-  fields: Field[];
-  specs: SpecItem[];
-  defaultSpecs: SpecItem[];
-}) {
+export function AdminLandingClient({ fields }: { fields: Field[] }) {
   const initialValues = Object.fromEntries(
     fields.map((field) => [field.key, field.currentValue])
   ) as Values;
   const [values, setValues] = useState<Values>(initialValues);
   const [baseline, setBaseline] = useState<Values>(initialValues);
-  const [specValues, setSpecValues] = useState<SpecItem[]>(specs);
-  const [specBaseline, setSpecBaseline] = useState<SpecItem[]>(specs);
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   const dirtyTextKeys = fields
     .filter((field) => values[field.key] !== baseline[field.key])
     .map((field) => field.key);
-  const specsDirty =
-    JSON.stringify(specValues) !== JSON.stringify(specBaseline);
-  const dirtyCount = dirtyTextKeys.length + (specsDirty ? 1 : 0);
+  const dirtyCount = dirtyTextKeys.length;
 
   async function saveUpdates(updates: Record<string, unknown>, marker: string) {
     setSaving(marker);
@@ -78,15 +60,7 @@ export function AdminLandingClient({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Error al guardar");
 
-      const textUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([key]) => key !== "specs_strip")
-      ) as Partial<Values>;
-      if (Object.keys(textUpdates).length > 0) {
-        setBaseline((prev) => ({ ...prev, ...textUpdates }));
-      }
-      if ("specs_strip" in updates) {
-        setSpecBaseline(updates.specs_strip as SpecItem[]);
-      }
+      setBaseline((prev) => ({ ...prev, ...(updates as Partial<Values>) }));
       setSaved(true);
       window.setTimeout(() => setSaved(false), 1800);
       toast.success("Landing actualizada");
@@ -104,7 +78,6 @@ export function AdminLandingClient({
   function saveAll() {
     const updates: Record<string, unknown> = {};
     for (const key of dirtyTextKeys) updates[key] = values[key];
-    if (specsDirty) updates.specs_strip = specValues;
     if (Object.keys(updates).length > 0) {
       void saveUpdates(updates, "all");
     }
@@ -113,16 +86,6 @@ export function AdminLandingClient({
   function restoreField(field: Field) {
     setValues((prev) => ({ ...prev, [field.key]: field.defaultValue }));
   }
-
-  function updateSpec(index: number, key: keyof SpecItem, value: string) {
-    setSpecValues((prev) =>
-      prev.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [key]: value } : item
-      )
-    );
-  }
-
-  const heroTitlePreview = values.hero_title.split("\n").filter(Boolean);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -208,7 +171,7 @@ export function AdminLandingClient({
                                     [field.key]: event.target.value,
                                   }))
                                 }
-                                rows={field.key === "hero_title" ? 4 : 3}
+                                rows={3}
                                 className="resize-none"
                               />
                             ) : (
@@ -276,94 +239,6 @@ export function AdminLandingClient({
             </div>
           </CardContent>
         </Card>
-
-        <Card className={adminPanelClass}>
-          <CardHeader className="border-b">
-            <CardTitle>Metricas del hero</CardTitle>
-            <CardDescription>
-              Cuatro bloques visibles bajo el hero.
-            </CardDescription>
-            <CardAction>
-              <Button
-                type="button"
-                size="sm"
-                disabled={!specsDirty || saving !== null}
-                onClick={() =>
-                  void saveUpdates({ specs_strip: specValues }, "specs")
-                }
-              >
-                {saving === "specs" ? (
-                  <Loader2 className="animate-spin" data-icon="inline-start" />
-                ) : (
-                  <Save data-icon="inline-start" />
-                )}
-                Guardar
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              {specValues.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-lg border border-foreground/12 bg-background/80 p-3"
-                >
-                  <p className="mb-3 text-xs font-medium text-foreground/60">
-                    Bloque {index + 1}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Input
-                      value={item.k}
-                      maxLength={32}
-                      placeholder="Etiqueta"
-                      onChange={(event) =>
-                        updateSpec(index, "k", event.target.value)
-                      }
-                    />
-                    <Input
-                      value={item.v}
-                      maxLength={32}
-                      placeholder="Valor"
-                      onChange={(event) =>
-                        updateSpec(index, "v", event.target.value)
-                      }
-                    />
-                    <Input
-                      value={item.sub}
-                      maxLength={80}
-                      placeholder="Detalle"
-                      onChange={(event) =>
-                        updateSpec(index, "sub", event.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={saving !== null}
-                onClick={() => setSpecValues(defaultSpecs)}
-              >
-                <RotateCcw data-icon="inline-start" />
-                Defaults
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!specsDirty || saving !== null}
-                onClick={() => setSpecValues(specBaseline)}
-              >
-                <Undo2 data-icon="inline-start" />
-                Deshacer
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -374,13 +249,14 @@ export function AdminLandingClient({
           </CardHeader>
           <CardContent className="pt-4">
             <div className="rounded-lg border border-foreground/12 bg-[#050505] p-4 text-white dark:bg-background">
-              <p className="font-heading text-4xl leading-none">
-                {heroTitlePreview.map((line, index) => (
-                  <span key={`${line}-${index}`}>
-                    {line}
-                    {index < heroTitlePreview.length - 1 && <br />}
-                  </span>
-                ))}
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D6FF38]">
+                {values.hero_badge}
+              </p>
+              <p className="mt-3 font-heading text-4xl leading-none">
+                {values.hero_title}
+                <span className="block font-light italic text-white/55">
+                  {values.hero_title_accent}
+                </span>
               </p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 {values.hero_subtitle}
@@ -393,22 +269,6 @@ export function AdminLandingClient({
                   {values.hero_cta_secondary}
                 </span>
               </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {specValues.map((item) => (
-                <div
-                  key={item.k}
-                  className="rounded-lg border border-foreground/12 bg-card/80 p-3"
-                >
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                    {item.k}
-                  </p>
-                  <p className="font-heading text-xl">{item.v}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {item.sub}
-                  </p>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>

@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { LandingContent } from "@/lib/landing-content";
 import { cn } from "@/lib/utils";
 import { LandingNav } from "./landing-nav";
 import { Reveal, RevealItem, RevealStagger } from "./landing-reveal";
@@ -255,7 +256,7 @@ function PhoneMock() {
   );
 }
 
-function HeroSection() {
+function HeroSection({ content }: { content: LandingContent }) {
   return (
     <section className="relative min-h-[780px] overflow-hidden border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <div className="absolute right-0 top-0 hidden h-full w-[46%] bg-[radial-gradient(circle_at_66%_14%,rgba(214,255,56,0.18),transparent_22%),linear-gradient(90deg,transparent,rgba(232,232,225,0.72))] lg:block" />
@@ -263,26 +264,26 @@ function HeroSection() {
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#efffba] px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#5f7000]">
             <span className="size-1.5 rounded-full bg-[#5f7000]" />
-            Planificación inteligente para monitores de tenis
+            {content.hero_badge}
           </div>
           <h1 className="mt-8 font-heading text-[clamp(3.1rem,5.1vw,5.5rem)] font-bold leading-[0.96] text-[#050505]">
-            La clase la piensas tú.
+            {content.hero_title}
             <span className="block font-heading font-light italic text-[#5f7000]">
-              Ten Planner te ayuda.
+              {content.hero_title_accent}
             </span>
           </h1>
           <p className="mt-7 max-w-[560px] text-lg leading-8 text-[#66665d]">
-            Explora ejercicios y clases etiquetados, construye desde cero con la
-            biblioteca o recupera lo que ya funcionó. Tres caminos, siempre tu
-            criterio.
+            {content.hero_subtitle}
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
-            <PrimaryButton href="/register">Registrarse →</PrimaryButton>
+            <PrimaryButton href="/register">
+              {content.hero_cta_primary}
+            </PrimaryButton>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
             >
-              Ver cómo funciona <ArrowDown className="size-4" />
+              {content.hero_cta_secondary} <ArrowDown className="size-4" />
             </Link>
           </div>
         </div>
@@ -301,7 +302,7 @@ function HeroSection() {
   );
 }
 
-function ProblemSection() {
+function ProblemSection({ content }: { content: LandingContent }) {
   return (
     <section className="relative overflow-hidden bg-[#050505] px-5 py-24 text-white lg:py-32">
       <div
@@ -313,9 +314,9 @@ function ProblemSection() {
           El problema
         </p>
         <h2 className="mt-7 font-heading text-[clamp(2.5rem,4.3vw,4.1rem)] font-light leading-[0.96]">
-          ¿Te suena esto?
+          {content.problem_title}
           <span className="block font-heading italic text-white/45">
-            A todos los monitores les pasa.
+            {content.problem_accent}
           </span>
         </h2>
         <RevealStagger className="mt-14 grid gap-5 md:grid-cols-3">
@@ -340,13 +341,13 @@ function ProblemSection() {
   );
 }
 
-function HowSection() {
+function HowSection({ content }: { content: LandingContent }) {
   return (
     <section id="como-funciona" className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
         eyebrow="Cómo funciona"
-        title="Tú decides."
-        accent="En minutos."
+        title={content.how_title}
+        accent={content.how_accent}
       />
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
         Cualquier visitante puede explorar gratis la{" "}
@@ -403,17 +404,16 @@ function HowSection() {
   );
 }
 
-function PreparationSection() {
+function PreparationSection({ content }: { content: LandingContent }) {
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
         eyebrow="El monitor decide"
-        title="Tú piensas la clase."
-        accent="Tres formas de prepararla."
+        title={content.prep_title}
+        accent={content.prep_accent}
       />
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
-        No hay una única forma de planificar. Cada monitor trabaja diferente.
-        Ten Planner se adapta a cómo quieres preparar cada sesión.
+        {content.prep_description}
       </p>
       <RevealStagger className="mx-auto mt-16 grid max-w-[1110px] gap-4 md:grid-cols-2">
         {preparationCards.map((card, index) => (
@@ -458,13 +458,13 @@ function PreparationSection() {
   );
 }
 
-function FeaturesSection() {
+function FeaturesSection({ content }: { content: LandingContent }) {
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
         eyebrow="Funcionalidades"
-        title="Todo lo que necesita"
-        accent="un monitor de tenis"
+        title={content.features_title}
+        accent={content.features_accent}
       />
       <RevealStagger
         stagger={0.06}
@@ -493,21 +493,23 @@ function FeaturesSection() {
   );
 }
 
-function FinalCtaSection() {
+function FinalCtaSection({ content }: { content: LandingContent }) {
   return (
     <section className="border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20">
       <Reveal>
         <div className="mx-auto grid max-w-[1710px] gap-8 rounded-[32px] bg-[#050505] px-8 py-16 text-white md:grid-cols-[1fr_auto] md:items-center lg:px-16">
           <div>
             <h2 className="font-heading text-[clamp(2.4rem,4.3vw,4.3rem)] font-bold leading-[0.95]">
-              La próxima clase,
+              {content.cta_title}
               <span className="block font-heading font-light italic text-white/45">
-                lista en minutos.
+                {content.cta_accent}
               </span>
             </h2>
           </div>
           <div className="md:text-center">
-            <PrimaryButton href="/register">Registrarse →</PrimaryButton>
+            <PrimaryButton href="/register">
+              {content.hero_cta_primary}
+            </PrimaryButton>
           </div>
         </div>
       </Reveal>
@@ -515,7 +517,7 @@ function FinalCtaSection() {
   );
 }
 
-function Footer() {
+function Footer({ content }: { content: LandingContent }) {
   const year = new Date().getFullYear();
 
   return (
@@ -530,7 +532,7 @@ function Footer() {
             Ten<span className="text-[#d6ff38]">·</span>Planner
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-white/58">
-            Planificación profesional para entrenadores de deportes de raqueta.
+            {content.footer_tagline}
           </p>
         </div>
 
@@ -579,10 +581,12 @@ export function TenPlannerLanding({
   className,
   exerciseCards,
   classCards,
+  content,
 }: {
   className?: string;
   exerciseCards: LandingExerciseCard[];
   classCards: LandingClassCard[];
+  content: LandingContent;
 }) {
   return (
     <div
@@ -593,15 +597,15 @@ export function TenPlannerLanding({
     >
       <LandingNav />
       <main id="main">
-        <HeroSection />
-        <ProblemSection />
-        <HowSection />
-        <PreparationSection />
-        <FeaturesSection />
+        <HeroSection content={content} />
+        <ProblemSection content={content} />
+        <HowSection content={content} />
+        <PreparationSection content={content} />
+        <FeaturesSection content={content} />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
-        <FinalCtaSection />
+        <FinalCtaSection content={content} />
       </main>
-      <Footer />
+      <Footer content={content} />
     </div>
   );
 }
