@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowDown,
   BatteryFull,
   CalendarDays,
   ClipboardCheck,
@@ -19,6 +18,7 @@ import {
 
 import type { LandingContent } from "@/lib/landing-content";
 import { cn } from "@/lib/utils";
+import { HeroVideoButton } from "./hero-video-button";
 import { LandingNav } from "./landing-nav";
 import { Reveal, RevealItem, RevealStagger } from "./landing-reveal";
 import { TenPlannerMark } from "./ten-planner-mark";
@@ -31,7 +31,7 @@ import {
 const painCards = [
   {
     icon: ClipboardList,
-    quote: '"Llego a la pista sin tener claro qué voy a dar hoy."',
+    quote: '"Llego a clase sin tener claro qué voy a dar hoy."',
     text: "Improvisar no está mal, pero repetir siempre lo mismo sí. Tus alumnos lo notan.",
   },
   {
@@ -57,7 +57,7 @@ const steps = [
   },
   {
     title: "Da la clase y evalúa",
-    text: "Pasa lista, ejecuta la sesión en modo pista y registra cómo fue. Todo queda guardado en tu historial.",
+    text: "Registra la asistencia, ejecuta la sesión en modo clase y anota cómo fue. Todo queda guardado en tu historial.",
   },
 ];
 
@@ -108,7 +108,7 @@ const featureCards = [
   },
   {
     icon: ClipboardCheck,
-    title: "Pase de lista",
+    title: "Asistencia",
     text: "Registra la asistencia en segundos. Historial completo de cada alumno por clase.",
   },
   {
@@ -275,16 +275,29 @@ function HeroSection({ content }: { content: LandingContent }) {
           <p className="mt-7 max-w-[560px] text-lg leading-8 text-[#66665d]">
             {content.hero_subtitle}
           </p>
-          <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
+          <div className="mt-10 flex flex-wrap gap-3">
             <PrimaryButton href="/register">
               {content.hero_cta_primary}
             </PrimaryButton>
-            <Link
-              href="#como-funciona"
-              className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
-            >
-              {content.hero_cta_secondary} <ArrowDown className="size-4" />
-            </Link>
+            {[
+              ["/login", content.hero_cta_login],
+              ["/exercises", content.hero_cta_exercises],
+              ["/classes", content.hero_cta_classes],
+            ].map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                className="inline-flex min-h-14 items-center justify-center rounded-full border-2 border-[#050505] px-7 text-base font-bold text-[#050505] transition hover:bg-[#050505] hover:text-white"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-6">
+            <HeroVideoButton
+              label={content.hero_cta_secondary}
+              videoUrl={content.hero_video_url}
+            />
           </div>
         </div>
 

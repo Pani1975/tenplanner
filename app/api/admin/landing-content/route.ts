@@ -50,7 +50,11 @@ function normalizeLandingValue(
 ): string | null {
   if (typeof value !== "string") return null;
   const normalized = value.replace(/\r\n/g, "\n").trim();
-  if (normalized.length < 1 || normalized.length > maxLengthByKey[key]) {
+  const optional = LANDING_FIELD_DEFINITIONS.find((f) => f.key === key)?.optional;
+  if (
+    (normalized.length < 1 && !optional) ||
+    normalized.length > maxLengthByKey[key]
+  ) {
     return null;
   }
   return normalized;

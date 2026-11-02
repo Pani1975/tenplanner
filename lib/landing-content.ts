@@ -8,7 +8,11 @@ export interface LandingContent {
   hero_title_accent: string;
   hero_subtitle: string;
   hero_cta_primary: string;
+  hero_cta_login: string;
+  hero_cta_exercises: string;
+  hero_cta_classes: string;
   hero_cta_secondary: string;
+  hero_video_url: string;
   problem_title: string;
   problem_accent: string;
   how_title: string;
@@ -30,8 +34,12 @@ export const LANDING_DEFAULTS: LandingContent = {
   hero_title_accent: "Ten Planner te ayuda.",
   hero_subtitle:
     "Explora ejercicios y clases etiquetados, construye desde cero con la biblioteca o recupera lo que ya funcionó. Tres caminos, siempre tu criterio.",
-  hero_cta_primary: "Registrarse →",
+  hero_cta_primary: "Regístrate",
+  hero_cta_login: "Inicia sesión",
+  hero_cta_exercises: "Encuentra ejercicios",
+  hero_cta_classes: "Encuentra clases",
   hero_cta_secondary: "Ver cómo funciona",
+  hero_video_url: "",
   problem_title: "¿Te suena esto?",
   problem_accent: "A todos los monitores les pasa.",
   how_title: "Tú decides.",
@@ -57,6 +65,7 @@ export interface LandingFieldDefinition {
   label: string;
   group: LandingFieldGroup;
   multiline?: boolean;
+  optional?: boolean;
   maxLength: number;
 }
 
@@ -76,12 +85,22 @@ export const LANDING_FIELD_DEFINITIONS: LandingFieldDefinition[] = [
     multiline: true,
     maxLength: 420,
   },
-  { key: "hero_cta_primary", label: "Hero - CTA primario", group: "Hero", maxLength: 40 },
+  { key: "hero_cta_primary", label: "Hero - Botón registrarse", group: "Hero", maxLength: 40 },
+  { key: "hero_cta_login", label: "Hero - Botón iniciar sesión", group: "Hero", maxLength: 40 },
+  { key: "hero_cta_exercises", label: "Hero - Botón ejercicios", group: "Hero", maxLength: 40 },
+  { key: "hero_cta_classes", label: "Hero - Botón clases", group: "Hero", maxLength: 40 },
   {
     key: "hero_cta_secondary",
-    label: "Hero - CTA secundario",
+    label: "Hero - Enlace del vídeo (texto)",
     group: "Hero",
     maxLength: 60,
+  },
+  {
+    key: "hero_video_url",
+    label: "Hero - Enlace de YouTube del vídeo (vacío = sin vídeo)",
+    group: "Hero",
+    optional: true,
+    maxLength: 200,
   },
   { key: "problem_title", label: "El problema - Título", group: "Secciones", maxLength: 80 },
   {

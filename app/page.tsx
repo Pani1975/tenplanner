@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TenPlanner - Planificación para deportes de raqueta",
     description:
-      "Prepara sesiones, gestiona alumnos, organiza pistas o canchas y mantiene un método de entrenamiento.",
+      "Prepara sesiones, gestiona alumnos, organiza tus clases y mantiene un método de entrenamiento.",
     url: "/",
     type: "website",
     locale: "es_ES",
@@ -52,7 +52,7 @@ const structuredData = {
       operatingSystem: "Web",
       inLanguage: "es-ES",
       description:
-        "Planificador de clases para monitores de tenis: biblioteca de ejercicios y clases, calendario, grupos y pase de lista.",
+        "Planificador de clases para monitores de tenis: biblioteca de ejercicios y clases, calendario, grupos y asistencia.",
       publisher: { "@id": `${siteUrl}/#organization` },
     },
   ],
