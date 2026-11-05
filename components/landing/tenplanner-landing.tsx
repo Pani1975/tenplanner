@@ -177,6 +177,30 @@ function PrimaryButton({
   );
 }
 
+function SecondaryButton({
+  href,
+  children,
+  light = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  light?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex min-h-14 items-center justify-center rounded-full border-2 px-8 text-base font-bold transition",
+        light
+          ? "border-white/70 text-white hover:bg-white hover:text-[#050505]"
+          : "border-[#050505] text-[#050505] hover:bg-[#050505] hover:text-white"
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
 function PhoneMock() {
   return (
     <div className="relative mx-auto h-[560px] w-[282px] overflow-hidden rounded-[38px] bg-[#050505] p-4 text-white shadow-[0_45px_100px_rgba(5,5,5,0.22)] ring-1 ring-black/10">
@@ -279,6 +303,7 @@ function HeroSection({ content }: { content: LandingContent }) {
             <PrimaryButton href="/register">
               {content.home_hero_cta_primary}
             </PrimaryButton>
+            <SecondaryButton href="/login">Iniciar sesión</SecondaryButton>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
@@ -571,9 +596,14 @@ function FinalCtaSection({ content }: { content: LandingContent }) {
             </p>
           </div>
           <div className="md:text-center">
-            <PrimaryButton href="/register">
-              {content.home_final_cta}
-            </PrimaryButton>
+            <div className="flex flex-col gap-3 min-[440px]:flex-row md:justify-center">
+              <PrimaryButton href="/register">
+                {content.home_final_cta}
+              </PrimaryButton>
+              <SecondaryButton href="/login" light>
+                Iniciar sesión
+              </SecondaryButton>
+            </div>
             <p className="mt-4 text-xs text-white/42">
               {content.home_final_note}
             </p>
