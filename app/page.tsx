@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { TenPlannerLanding } from "@/components/landing/tenplanner-landing";
 import { db } from "@/db";
 import { classes, exercises } from "@/db/schema";
+import { getLandingContent } from "@/lib/landing-content";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -60,7 +61,8 @@ const structuredData = {
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const [exerciseCards, classCards] = await Promise.all([
+  const [content, exerciseCards, classCards] = await Promise.all([
+    getLandingContent(),
     db
       .select({
         id: exercises.id,
@@ -95,6 +97,7 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <TenPlannerLanding
+        content={content}
         exerciseCards={exerciseCards}
         classCards={classCards}
       />

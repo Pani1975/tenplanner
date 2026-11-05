@@ -575,6 +575,13 @@
       "when": 1794700000000,
       "tag": "0081_student_locality",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1794800000000,
+      "tag": "0082_landing_content_reset",
+      "breakpoints": true
     }
   ]
 }
