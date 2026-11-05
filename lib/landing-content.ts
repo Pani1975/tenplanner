@@ -39,7 +39,7 @@ export const LANDING_DEFAULTS: LandingContent = {
   home_hero_title: "La clase la piensas tú.\nTen Planner te ayuda.",
   home_hero_subtitle:
     "Explora ejercicios y clases etiquetados, construye desde cero con la biblioteca o recupera lo que ya funcionó. Clases en grupo o individuales, siempre tu criterio.",
-  home_hero_cta_primary: "Regístrate",
+  home_hero_cta_primary: "Regístrate / Inicia sesión",
   home_hero_cta_secondary: "Ver cómo funciona",
   home_hero_proof: "Para monitores, clubes y academias de cualquier deporte",
   home_problem_title: "¿Te suena esto?\nA todos los monitores les pasa.",
@@ -53,7 +53,7 @@ export const LANDING_DEFAULTS: LandingContent = {
     "Al registrarte eliges tu deporte y entras directamente a tu espacio. Cuando quieras, añade otros deportes y trabaja cada uno en su propia zona.",
   home_final_title: "La próxima clase,\nlista en minutos.",
   home_final_text: "Crea tu cuenta, elige tu deporte y empieza a planificar.",
-  home_final_cta: "Regístrate",
+  home_final_cta: "Regístrate / Inicia sesión",
   home_final_note: "Elige tu deporte al registrarte",
   home_footer_tagline:
     "Planificación profesional para monitores y clubes deportivos.",
@@ -98,7 +98,7 @@ export const LANDING_FIELD_DEFINITIONS: LandingFieldDefinition[] = [
   },
   {
     key: "home_hero_cta_primary",
-    label: "Hero - Botón principal (lleva a registro)",
+    label: "Hero - Botón principal (registro / inicio de sesión)",
     group: "Hero",
     maxLength: 40,
   },
