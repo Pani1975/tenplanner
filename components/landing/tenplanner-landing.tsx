@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { splitTitle, type LandingContent } from "@/lib/landing-content";
 import { LandingNav } from "./landing-nav";
 import { Reveal, RevealItem, RevealStagger } from "./landing-reveal";
 import { TenPlannerMark } from "./ten-planner-mark";
@@ -30,7 +31,7 @@ import {
 const painCards = [
   {
     icon: ClipboardList,
-    quote: '"Llego a la pista sin tener claro qué voy a dar hoy."',
+    quote: '"Llego a clase sin tener claro qué voy a dar hoy."',
     text: "Improvisar no está mal, pero repetir siempre lo mismo sí. Tus alumnos lo notan.",
   },
   {
@@ -56,7 +57,7 @@ const steps = [
   },
   {
     title: "Da la clase y evalúa",
-    text: "Pasa lista, ejecuta la sesión en modo pista y registra cómo fue. Todo queda guardado en tu historial.",
+    text: "Pasa lista, da la sesión y registra cómo fue. Todo queda guardado en tu historial.",
   },
 ];
 
@@ -93,7 +94,7 @@ const featureCards = [
   {
     icon: Layers3,
     title: "Biblioteca validada",
-    text: "Ejercicios específicos de tenis creados por entrenadores expertos, listos para usar o personalizar.",
+    text: "Ejercicios creados por entrenadores expertos, listos para usar o personalizar.",
   },
   {
     icon: Star,
@@ -127,14 +128,13 @@ const phoneActions: Array<{ icon: LucideIcon; label: string }> = [
 function SectionTitle({
   eyebrow,
   title,
-  accent,
   light = false,
 }: {
   eyebrow: string;
   title: string;
-  accent: string;
   light?: boolean;
 }) {
+  const { main, accent } = splitTitle(title);
   return (
     <div className="mx-auto max-w-4xl text-center">
       <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#5f7000]">
@@ -146,7 +146,7 @@ function SectionTitle({
           light ? "text-white" : "text-[#050505]"
         )}
       >
-        {title}
+        {main}
         <span
           className={cn(
             "block font-heading font-light italic",
@@ -255,7 +255,8 @@ function PhoneMock() {
   );
 }
 
-function HeroSection() {
+function HeroSection({ content }: { content: LandingContent }) {
+  const hero = splitTitle(content.home_hero_title);
   return (
     <section className="relative min-h-[780px] overflow-hidden border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <div className="absolute right-0 top-0 hidden h-full w-[46%] bg-[radial-gradient(circle_at_66%_14%,rgba(214,255,56,0.18),transparent_22%),linear-gradient(90deg,transparent,rgba(232,232,225,0.72))] lg:block" />
@@ -263,26 +264,26 @@ function HeroSection() {
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#efffba] px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#5f7000]">
             <span className="size-1.5 rounded-full bg-[#5f7000]" />
-            Planificación inteligente para monitores de tenis
+            {content.home_hero_badge}
           </div>
           <h1 className="mt-8 font-heading text-[clamp(3.1rem,5.1vw,5.5rem)] font-bold leading-[0.96] text-[#050505]">
-            La clase la piensas tú.
+            {hero.main}
             <span className="block font-heading font-light italic text-[#5f7000]">
-              Ten Planner te ayuda.
+              {hero.accent}
             </span>
           </h1>
           <p className="mt-7 max-w-[560px] text-lg leading-8 text-[#66665d]">
-            Explora ejercicios y clases etiquetados, construye desde cero con la
-            biblioteca o recupera lo que ya funcionó. Tres caminos, siempre tu
-            criterio.
+            {content.home_hero_subtitle}
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
-            <PrimaryButton href="/register">Empieza gratis →</PrimaryButton>
+            <PrimaryButton href="/register">
+              {content.home_hero_cta_primary}
+            </PrimaryButton>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
             >
-              Ver cómo funciona <ArrowDown className="size-4" />
+              {content.home_hero_cta_secondary} <ArrowDown className="size-4" />
             </Link>
           </div>
           <div className="mt-14 flex items-center gap-3 text-sm text-[#66665d]">
@@ -301,7 +302,7 @@ function HeroSection() {
                 </span>
               ))}
             </div>
-            Más de 200 monitores ya planifican con Ten Planner
+            {content.home_hero_proof}
           </div>
         </div>
 
@@ -319,7 +320,8 @@ function HeroSection() {
   );
 }
 
-function ProblemSection() {
+function ProblemSection({ content }: { content: LandingContent }) {
+  const title = splitTitle(content.home_problem_title);
   return (
     <section className="relative overflow-hidden bg-[#050505] px-5 py-24 text-white lg:py-32">
       <div
@@ -331,9 +333,9 @@ function ProblemSection() {
           El problema
         </p>
         <h2 className="mt-7 font-heading text-[clamp(2.5rem,4.3vw,4.1rem)] font-light leading-[0.96]">
-          ¿Te suena esto?
+          {title.main}
           <span className="block font-heading italic text-white/45">
-            A todos los monitores les pasa.
+            {title.accent}
           </span>
         </h2>
         <RevealStagger className="mt-14 grid gap-5 md:grid-cols-3">
@@ -358,14 +360,10 @@ function ProblemSection() {
   );
 }
 
-function HowSection() {
+function HowSection({ content }: { content: LandingContent }) {
   return (
     <section id="como-funciona" className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
-      <SectionTitle
-        eyebrow="Cómo funciona"
-        title="Tú decides."
-        accent="En minutos."
-      />
+      <SectionTitle eyebrow="Cómo funciona" title={content.home_how_title} />
       <RevealStagger className="mx-auto mt-20 grid max-w-[1100px] gap-10 md:grid-cols-3">
         {steps.map((step, index) => (
           <RevealItem key={step.title}>
@@ -410,17 +408,15 @@ function HowSection() {
   );
 }
 
-function PreparationSection() {
+function PreparationSection({ content }: { content: LandingContent }) {
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
         eyebrow="El monitor decide"
-        title="Tú piensas la clase."
-        accent="Tres formas de prepararla."
+        title={content.home_prep_title}
       />
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
-        No hay una única forma de planificar. Cada monitor trabaja diferente.
-        Ten Planner se adapta a cómo quieres preparar cada sesión.
+        {content.home_prep_text}
       </p>
       <RevealStagger className="mx-auto mt-16 grid max-w-[1110px] gap-4 md:grid-cols-2">
         {preparationCards.map((card, index) => (
@@ -465,13 +461,12 @@ function PreparationSection() {
   );
 }
 
-function FeaturesSection() {
+function FeaturesSection({ content }: { content: LandingContent }) {
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
         eyebrow="Funcionalidades"
-        title="Todo lo que necesita"
-        accent="un monitor de tenis"
+        title={content.home_features_title}
       />
       <RevealStagger
         stagger={0.06}
@@ -500,27 +495,87 @@ function FeaturesSection() {
   );
 }
 
-function FinalCtaSection() {
+const sportSteps = [
+  {
+    title: "Regístrate y elige tu deporte",
+    text: "Entras directamente a tu espacio, con la biblioteca y las herramientas de ese deporte.",
+  },
+  {
+    title: "Trabaja en tu espacio",
+    text: "Clases en grupo o individuales, con sus alumnos, su calendario y su historial.",
+  },
+  {
+    title: "Añade otros deportes",
+    text: "Dentro de la plataforma puedes abrir una zona nueva para cada deporte que entrenes.",
+  },
+];
+
+const availableSports = ["Tenis", "Pádel", "Pickleball", "Tenis playa"];
+
+function SportsSection({ content }: { content: LandingContent }) {
+  return (
+    <section id="deportes" className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
+      <SectionTitle eyebrow="Deportes" title={content.home_sports_title} />
+      <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
+        {content.home_sports_text}
+      </p>
+      <RevealStagger className="mx-auto mt-14 grid max-w-[1110px] gap-4 md:grid-cols-3">
+        {sportSteps.map((step, index) => (
+          <RevealItem key={step.title}>
+            <article className="h-full rounded-2xl border border-[#d8d8cf] bg-white p-7 shadow-[0_12px_30px_rgba(5,5,5,0.04)]">
+              <span className="grid size-11 place-items-center rounded-full bg-[#050505] font-heading text-xl font-bold text-[#d6ff38]">
+                {index + 1}
+              </span>
+              <h3 className="mt-6 text-lg font-bold text-[#050505]">
+                {step.title}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-[#66665d]">
+                {step.text}
+              </p>
+            </article>
+          </RevealItem>
+        ))}
+      </RevealStagger>
+      <Reveal className="mx-auto mt-10 flex max-w-[1110px] flex-wrap items-center justify-center gap-2">
+        {availableSports.map((sport) => (
+          <span
+            key={sport}
+            className="rounded-full bg-[#efffba] px-4 py-1.5 text-sm font-semibold text-[#5f7000]"
+          >
+            {sport}
+          </span>
+        ))}
+        <span className="rounded-full border border-dashed border-[#5f7000]/40 px-4 py-1.5 text-sm font-semibold text-[#66665d]">
+          Más deportes próximamente
+        </span>
+      </Reveal>
+    </section>
+  );
+}
+
+function FinalCtaSection({ content }: { content: LandingContent }) {
+  const title = splitTitle(content.home_final_title);
   return (
     <section className="border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20">
       <Reveal>
         <div className="mx-auto grid max-w-[1710px] gap-8 rounded-[32px] bg-[#050505] px-8 py-16 text-white md:grid-cols-[1fr_auto] md:items-center lg:px-16">
           <div>
             <h2 className="font-heading text-[clamp(2.4rem,4.3vw,4.3rem)] font-bold leading-[0.95]">
-              La próxima clase,
+              {title.main}
               <span className="block font-heading font-light italic text-white/45">
-                lista en minutos.
+                {title.accent}
               </span>
             </h2>
             <p className="mt-5 text-base text-white/65">
-              Únete a más de 200 monitores que ya planifican mejor con Ten
-              Planner.
+              {content.home_final_text}
             </p>
           </div>
           <div className="md:text-center">
-            <PrimaryButton href="/register">Empieza gratis →</PrimaryButton>
+            <PrimaryButton href="/register">
+              {content.home_final_cta}
+            </PrimaryButton>
             <p className="mt-4 text-xs text-white/42">
-              14 días gratis · Sin tarjeta
+              {content.home_final_note}
             </p>
           </div>
         </div>
@@ -529,7 +584,7 @@ function FinalCtaSection() {
   );
 }
 
-function Footer() {
+function Footer({ content }: { content: LandingContent }) {
   const year = new Date().getFullYear();
 
   return (
@@ -544,7 +599,7 @@ function Footer() {
             Ten<span className="text-[#d6ff38]">·</span>Planner
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-white/58">
-            Planificación profesional para entrenadores de deportes de raqueta.
+            {content.home_footer_tagline}
           </p>
         </div>
 
@@ -575,7 +630,7 @@ function Footer() {
       </div>
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs font-semibold text-white/42 sm:flex-row sm:items-center sm:justify-between">
         <p>Copyright {year} TenPlanner. Todos los derechos reservados.</p>
-        <p>Producto, cuenta y soporte para entrenadores.</p>
+        <p>Producto, cuenta y soporte para monitores.</p>
       </div>
     </footer>
   );
@@ -585,10 +640,12 @@ export function TenPlannerLanding({
   className,
   exerciseCards,
   classCards,
+  content,
 }: {
   className?: string;
   exerciseCards: LandingExerciseCard[];
   classCards: LandingClassCard[];
+  content: LandingContent;
 }) {
   return (
     <div
@@ -599,15 +656,16 @@ export function TenPlannerLanding({
     >
       <LandingNav />
       <main id="main">
-        <HeroSection />
-        <ProblemSection />
-        <HowSection />
-        <PreparationSection />
-        <FeaturesSection />
+        <HeroSection content={content} />
+        <ProblemSection content={content} />
+        <HowSection content={content} />
+        <PreparationSection content={content} />
+        <FeaturesSection content={content} />
+        <SportsSection content={content} />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
-        <FinalCtaSection />
+        <FinalCtaSection content={content} />
       </main>
-      <Footer />
+      <Footer content={content} />
     </div>
   );
 }
