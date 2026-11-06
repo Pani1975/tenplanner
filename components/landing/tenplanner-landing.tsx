@@ -277,7 +277,15 @@ function HeroSection() {
             criterio.
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
-            <PrimaryButton href="/register">Registrarse →</PrimaryButton>
+            <div className="flex flex-wrap items-center gap-4">
+              <PrimaryButton href="/register">Registrarse →</PrimaryButton>
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center rounded-full border border-[#050505]/15 bg-white px-6 text-base font-semibold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+              >
+                Iniciar sesión
+              </Link>
+            </div>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
