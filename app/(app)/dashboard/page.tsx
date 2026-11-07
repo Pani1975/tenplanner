@@ -547,20 +547,32 @@ export default async function DashboardPage() {
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
       <div className="flex w-full flex-col gap-8 px-4 py-6 sm:px-6 md:px-10 md:py-8">
-        <header className="relative overflow-hidden rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_18px_60px_rgba(5,5,5,0.06)] dark:border-white/10 dark:bg-white/[0.045] sm:p-6">
+        <header
+          className={
+            workMode.kind === "club"
+              ? "tp-hero-panel relative overflow-hidden rounded-lg p-5 text-white sm:p-6"
+              : "relative overflow-hidden rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_18px_60px_rgba(5,5,5,0.06)] dark:border-white/10 dark:bg-white/[0.045] sm:p-6"
+          }
+        >
           <div
             aria-hidden
             className="court-grid pointer-events-none absolute inset-0 opacity-45 dark:opacity-25"
           />
           <div className="relative flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="mb-2 inline-flex rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[12px] font-semibold text-foreground/60 dark:bg-[#050505]/70">
+              <p
+                className={
+                  workMode.kind === "club"
+                    ? "mb-2 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[12px] font-semibold text-[#050505]"
+                    : "mb-2 inline-flex rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[12px] font-semibold text-foreground/60 dark:bg-[#050505]/70"
+                }
+              >
                 {formatLongDate(now)}
               </p>
               {workMode.kind === "club" ? (
-                <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
+                <h1 className="font-heading text-3xl font-semibold text-white sm:text-4xl">
                   Espacio de{" "}
-                  <span className="text-brand">{workMode.clubName}</span>
+                  <span className="text-[#D6FF38]">{workMode.clubName}</span>
                 </h1>
               ) : (
                 <TimeGreeting
