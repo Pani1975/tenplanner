@@ -28,11 +28,7 @@ export default async function AdminLandingPage() {
         actions={<AdminExternalLink href="/">Ver landing</AdminExternalLink>}
       />
 
-      <AdminLandingClient
-        fields={fields}
-        specs={content.specs_strip}
-        defaultSpecs={LANDING_DEFAULTS.specs_strip}
-      />
+      <AdminLandingClient fields={fields} />
     </div>
   );
 }

@@ -20,8 +20,9 @@ export interface SemanticSearchResult {
   similarity: number;
 }
 
-export const AI_EMBEDDING_DIMENSIONS = 1536;
-export const DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
+// Voyage AI: voyage-3.5 usa 1024 dimensiones por defecto (confirmar en docs.voyageai.com).
+export const AI_EMBEDDING_DIMENSIONS = 1024;
+export const DEFAULT_EMBEDDING_MODEL = "voyage-3.5";
 
 export function buildExerciseEmbeddingText(exercise: {
   name: string;
@@ -96,18 +97,19 @@ export function hashEmbeddingContent(content: string) {
 
 export async function createTextEmbedding(
   input: string,
+  inputType: "query" | "document" = "document",
   model = process.env.AI_EMBEDDING_MODEL ?? DEFAULT_EMBEDDING_MODEL
 ) {
-  const apiKey = process.env.OPENAI_API_KEY ?? process.env.NEXT_OPENAI_API_KEY;
+  const apiKey = process.env.VOYAGE_API_KEY;
   if (!apiKey) return null;
 
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
+  const response = await fetch("https://api.voyageai.com/v1/embeddings", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, input }),
+    body: JSON.stringify({ model, input, input_type: inputType }),
   });
 
   if (!response.ok) {
@@ -233,7 +235,7 @@ export async function searchAiDocumentsByText(input: {
   limit?: number;
   threshold?: number;
 }) {
-  const embedding = await createTextEmbedding(input.query);
+  const embedding = await createTextEmbedding(input.query, "query");
   if (!embedding) return [];
   return searchAiDocuments({ ...input, embedding });
 }

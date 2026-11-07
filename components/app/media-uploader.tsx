@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Dynamic upload/blob previews cannot be optimized reliably by next/image. */
 
-import { useState, useRef, DragEvent, KeyboardEvent } from "react";
+import { useState, useRef, useEffect, DragEvent, KeyboardEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Upload,
@@ -13,10 +13,18 @@ import {
   Loader2,
   Check,
   ExternalLink,
+  PenTool,
 } from "lucide-react";
+import { isDrawingUrl } from "@/lib/court-board";
 import { cn } from "@/lib/utils";
 
-type Tab = "upload" | "stock" | "url";
+type Tab = "upload" | "drawings" | "stock" | "url";
+
+interface MyDrawing {
+  id: string;
+  title: string;
+  imageUrl: string;
+}
 
 interface PexelsPhoto {
   id: number;
@@ -59,6 +67,39 @@ export function MediaUploader({
   const [searching, setSearching] = useState(false);
   const [photos, setPhotos] = useState<PexelsPhoto[]>([]);
   const [stockError, setStockError] = useState<string | null>(null);
+
+  // Mis dibujos (pizarra de Recursos)
+  const [drawings, setDrawings] = useState<MyDrawing[] | null>(null);
+  const [drawingsError, setDrawingsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (tab !== "drawings" || drawings !== null) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/resources");
+        if (!res.ok) throw new Error("failed");
+        const json = (await res.json()) as {
+          data: Array<{ id: string; title: string; imageUrl: string | null }>;
+        };
+        if (!active) return;
+        setDrawings(
+          json.data
+            .filter((r) => isDrawingUrl(r.imageUrl))
+            .map((r) => ({
+              id: r.id,
+              title: r.title,
+              imageUrl: r.imageUrl as string,
+            }))
+        );
+      } catch {
+        if (active) setDrawingsError("No se pudieron cargar tus dibujos.");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [tab, drawings]);
 
   // URL
   const [urlInput, setUrlInput] = useState(value ?? "");
@@ -195,6 +236,7 @@ export function MediaUploader({
             {(
               [
                 { id: "upload" as Tab, label: "Subir archivo", icon: Upload },
+                { id: "drawings" as Tab, label: "Mis dibujos", icon: PenTool },
                 {
                   id: "stock" as Tab,
                   label: "Banco de imágenes",
@@ -285,6 +327,52 @@ export function MediaUploader({
                   <code className="bg-muted px-1 rounded">exercise-media</code>{" "}
                   (público) en Supabase Storage.
                 </p>
+              </div>
+            )}
+
+            {/* ─── Mis dibujos ─── */}
+            {tab === "drawings" && (
+              <div className="space-y-3">
+                {drawingsError && (
+                  <p className="text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                    {drawingsError}
+                  </p>
+                )}
+                {drawings === null && !drawingsError && (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {drawings !== null && drawings.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    Aún no tienes dibujos. Crea uno en Recursos con «Nueva
+                    pizarra».
+                  </p>
+                )}
+                {drawings !== null && drawings.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {drawings.map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => {
+                          onChange(d.imageUrl);
+                          setOpen(false);
+                        }}
+                        className="group overflow-hidden rounded-lg border border-border text-left transition-colors hover:border-brand"
+                      >
+                        <img
+                          src={d.imageUrl}
+                          alt={d.title}
+                          className="aspect-[3/4] w-full object-cover"
+                        />
+                        <span className="block truncate px-2 py-1 text-[11px] font-medium">
+                          {d.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

@@ -4,26 +4,28 @@ import { TenPlannerLanding } from "@/components/landing/tenplanner-landing";
 import { db } from "@/db";
 import { classes, exercises } from "@/db/schema";
 import { siteUrl } from "@/lib/site";
+import { getLandingContent } from "@/lib/landing-content";
 
-export const metadata: Metadata = {
-  title: "TenPlanner - Planificación para deportes de raqueta",
-  description:
-    "Planifica sesiones de deportes de raqueta con biblioteca, alumnos, grupos y calendario en un sistema profesional para entrenadores.",
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: "TenPlanner - Planificación para deportes de raqueta",
-    description:
-      "Prepara sesiones, gestiona alumnos, organiza pistas o canchas y mantiene un método de entrenamiento.",
-    url: "/",
-    type: "website",
-    locale: "es_ES",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "TenPlanner",
-    description: "Sistema digital para entrenadores de deportes de raqueta.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getLandingContent();
+  return {
+    title: content.home_meta_title,
+    description: content.home_meta_description,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title: content.home_meta_title,
+      description: content.home_meta_description,
+      url: "/",
+      type: "website",
+      locale: "es_ES",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "TenPlanner",
+      description: content.home_meta_description,
+    },
+  };
+}
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -60,7 +62,8 @@ const structuredData = {
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const [exerciseCards, classCards] = await Promise.all([
+  const [content, exerciseCards, classCards] = await Promise.all([
+    getLandingContent(),
     db
       .select({
         id: exercises.id,
@@ -97,6 +100,7 @@ export default async function LandingPage() {
       <TenPlannerLanding
         exerciseCards={exerciseCards}
         classCards={classCards}
+        content={content}
       />
     </>
   );

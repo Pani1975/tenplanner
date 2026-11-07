@@ -6,9 +6,7 @@ import { landingContent, users } from "@/db/schema";
 import {
   LANDING_FIELD_DEFINITIONS,
   LANDING_STRING_KEYS,
-  type LandingContent,
   type LandingStringKey,
-  type SpecItem,
 } from "@/lib/landing-content";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
@@ -39,32 +37,16 @@ const stringKeySchema = z.enum(
   LANDING_STRING_KEYS as [LandingStringKey, ...LandingStringKey[]]
 );
 
-const specsStripSchema = z
-  .array(
-    z.object({
-      k: z.string().trim().min(1).max(32),
-      v: z.string().trim().min(1).max(32),
-      sub: z.string().trim().min(1).max(80),
-    })
-  )
-  .length(4);
-
-const keySchema = z.union([stringKeySchema, z.literal("specs_strip")]);
+const keySchema = stringKeySchema;
 
 const maxLengthByKey = Object.fromEntries(
   LANDING_FIELD_DEFINITIONS.map((field) => [field.key, field.maxLength])
 ) as Record<LandingStringKey, number>;
 
 function normalizeLandingValue(
-  key: keyof LandingContent,
+  key: LandingStringKey,
   value: unknown
-): string | SpecItem[] | null {
-  if (key === "specs_strip") {
-    const parsed = specsStripSchema.safeParse(value);
-    if (!parsed.success) return null;
-    return parsed.data;
-  }
-
+): string | null {
   if (typeof value !== "string") return null;
   const normalized = value.replace(/\r\n/g, "\n").trim();
   if (normalized.length < 1 || normalized.length > maxLengthByKey[key]) {
@@ -117,7 +99,7 @@ export async function PUT(request: Request) {
         : { [parsed.data.key]: parsed.data.value };
 
     const rows = Object.entries(updates).map(([key, value]) => {
-      const parsedKey = key as keyof LandingContent;
+      const parsedKey = key as LandingStringKey;
       const normalized = normalizeLandingValue(parsedKey, value);
       if (normalized === null) {
         throw new Error(`Invalid value for ${key}`);
@@ -125,12 +107,10 @@ export async function PUT(request: Request) {
       return {
         key,
         value: normalized,
-        type: parsedKey === "specs_strip" ? "json" : "string",
-        label:
-          parsedKey === "specs_strip"
-            ? "Metricas"
-            : LANDING_FIELD_DEFINITIONS.find((field) => field.key === parsedKey)
-                ?.label,
+        type: "string",
+        label: LANDING_FIELD_DEFINITIONS.find(
+          (field) => field.key === parsedKey
+        )?.label,
         updatedBy: admin.id,
       };
     });

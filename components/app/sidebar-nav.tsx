@@ -245,14 +245,16 @@ function navItemsForSpace(inClub: boolean): NavItem[] {
     "/classes?tab=favorites": labels.lists,
   };
   return navItems.map((item) =>
-    item.submenu
-      ? {
-          ...item,
-          submenu: item.submenu.map((sub) =>
-            bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
-          ),
-        }
-      : item
+    item.href === "/resources"
+      ? { ...item, label: labels.resources }
+      : item.submenu
+        ? {
+            ...item,
+            submenu: item.submenu.map((sub) =>
+              bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
+            ),
+          }
+        : item
   );
 }
 

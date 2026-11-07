@@ -1294,6 +1294,13 @@ export const resources = pgTable(
     documentName: varchar("document_name", { length: 255 }),
     imageUrl: text("image_url"),
     isFavorite: boolean("is_favorite").default(false).notNull(),
+    // null = recurso del espacio particular de su autor. Si se crea
+    // trabajando como un club (modo de trabajo), queda en la carpeta de su
+    // autor dentro de "Recursos club" y lo ven todos los miembros activos.
+    // Mismo criterio que exercises.clubId / classes.clubId.
+    clubId: uuid("club_id").references(() => clubs.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -1304,6 +1311,7 @@ export const resources = pgTable(
   },
   (t) => [
     index("resources_user_id_idx").on(t.userId),
+    index("resources_club_id_idx").on(t.clubId),
     index("resources_user_favorite_idx").on(t.userId, t.isFavorite),
     index("resources_user_created_at_idx").on(t.userId, t.createdAt),
   ]
@@ -1684,7 +1692,7 @@ export const aiDocumentEmbeddings = pgTable(
       .$type<Record<string, unknown>>()
       .default({})
       .notNull(),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    embedding: vector("embedding", { dimensions: 1024 }).notNull(),
     embeddedAt: timestamp("embedded_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
