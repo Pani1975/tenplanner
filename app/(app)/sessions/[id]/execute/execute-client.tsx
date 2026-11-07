@@ -611,6 +611,23 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
               </span>
             )}
           </div>
+          {/* Atajo: botón Siguiente arriba, para no tener que bajar */}
+          <button
+            onClick={goNext}
+            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-[0.98]"
+          >
+            {currentIdx < totalExercises - 1 ? (
+              <>
+                <SkipForward className="size-4" />
+                Siguiente
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-4" />
+                Completar sesión
+              </>
+            )}
+          </button>
         </div>
 
         {/* Timer */}
