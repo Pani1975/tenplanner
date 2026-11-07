@@ -160,6 +160,29 @@ function SectionTitle({
   );
 }
 
+function SecondaryButton({
+  href,
+  children,
+  dark = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  dark?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        dark
+          ? "inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 px-8 text-base font-bold text-white transition hover:border-[#d6ff38] hover:text-[#d6ff38]"
+          : "inline-flex min-h-14 items-center justify-center rounded-full border border-[#050505]/15 bg-white px-8 text-base font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+      }
+    >
+      {children}
+    </Link>
+  );
+}
+
 function PrimaryButton({
   href,
   children,
@@ -276,9 +299,12 @@ function HeroSection({ content }: { content: LandingContent }) {
             {content.home_hero_subtitle}
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
-            <PrimaryButton href="/register">
-              {content.home_hero_cta_primary}
-            </PrimaryButton>
+            <div className="flex flex-wrap items-center gap-3">
+              <PrimaryButton href="/register">
+                {content.home_hero_cta_primary}
+              </PrimaryButton>
+              <SecondaryButton href="/login">Inicia sesión</SecondaryButton>
+            </div>
             <Link
               href="#como-funciona"
               className="inline-flex items-center gap-2 text-base font-semibold text-[#5f7000]"
@@ -582,9 +608,14 @@ function FinalCtaSection({ content }: { content: LandingContent }) {
             </p>
           </div>
           <div className="md:text-center">
-            <PrimaryButton href="/register">
-              {content.home_final_cta}
-            </PrimaryButton>
+            <div className="flex flex-wrap items-center gap-3 md:justify-center">
+              <PrimaryButton href="/register">
+                {content.home_final_cta}
+              </PrimaryButton>
+              <SecondaryButton href="/login" dark>
+                Inicia sesión
+              </SecondaryButton>
+            </div>
             <p className="mt-4 text-xs text-white/42">
               {content.home_final_note}
             </p>
