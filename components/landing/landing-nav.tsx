@@ -51,10 +51,16 @@ export function LandingNav() {
         <div className="flex items-center gap-2">
           <InstallAppButton className="hidden md:inline-flex" />
           <Link
+            href="/login"
+            className="hidden min-h-11 items-center rounded-full border border-[#050505]/15 bg-white px-5 text-sm font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000] md:inline-flex"
+          >
+            Inicia sesión
+          </Link>
+          <Link
             href="/register"
             className="hidden min-h-11 items-center rounded-full bg-[#050505] px-6 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505] md:inline-flex"
           >
-            Regístrate / Inicia sesión
+            Regístrate
           </Link>
           <button
             type="button"
@@ -95,7 +101,14 @@ export function LandingNav() {
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex justify-center rounded-full bg-[#050505] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505]"
             >
-              Regístrate / Inicia sesión
+              Regístrate
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="inline-flex justify-center rounded-full border border-[#050505]/15 bg-white px-6 py-3 text-sm font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+            >
+              Inicia sesión
             </Link>
             <InstallAppButton className="mt-1 w-full justify-center" />
           </div>
