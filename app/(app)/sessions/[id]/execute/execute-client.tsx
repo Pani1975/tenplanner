@@ -19,6 +19,7 @@ import {
   Package,
   Timer,
   Dumbbell,
+  ListOrdered,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   "warm-up": "Calentamiento",
   warmup: "Descanso",
   stations: "Estaciones",
+};
+
+const CATEGORY_BAR: Record<string, string> = {
+  technique: "bg-blue-400",
+  tactics: "bg-purple-400",
+  fitness: "bg-amber-400",
+  "warm-up": "bg-brand",
+  warmup: "bg-sky-400",
+  stations: "bg-emerald-400",
 };
 
 interface ExerciseData {
@@ -116,6 +126,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
   const [finishing, setFinishing] = useState(false);
   const [showFinish, setShowFinish] = useState(false);
   const [showQuickComplete, setShowQuickComplete] = useState(false);
+  const [showRoadmap, setShowRoadmap] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
   const [executionById, setExecutionById] = useState<
     Record<string, ExerciseExecution>
@@ -534,6 +545,92 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
     );
   }
 
+  // Hoja de ruta: qué se ha hecho, dónde estamos y qué queda
+  const remainingMinutes = exercises
+    .slice(currentIdx + 1)
+    .reduce((sum, ex) => sum + (ex.durationMinutes || 0), 0);
+
+  function renderRoadmap({ onPick }: { onPick?: () => void } = {}) {
+    return (
+      <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
+        <div className="border-b border-[#050505]/10 px-5 py-3.5 dark:border-white/10">
+          <h2 className="text-sm font-black text-foreground">Hoja de ruta</h2>
+          <p className="text-[11px] text-muted-foreground">
+            {done.size} de {totalExercises} hechos
+            {remainingMinutes > 0 && ` · quedan ${remainingMinutes} min`}
+          </p>
+        </div>
+        <ol className="divide-y divide-[#050505]/10 dark:divide-white/10">
+          {exercises.map((ex, idx) => {
+            const isCurrent = idx === currentIdx;
+            const isSkipped = Boolean(executionById[ex.key]?.skipped);
+            const isDone = done.has(ex.key) && !isCurrent;
+            return (
+              <li key={ex.key}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    selectExercise(idx);
+                    onPick?.();
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+                    isCurrent ? "bg-brand/15" : "hover:bg-muted/60",
+                    isDone && "opacity-60"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-mono",
+                      isCurrent
+                        ? "bg-brand text-brand-foreground"
+                        : isDone
+                          ? "bg-brand/15 text-brand"
+                          : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {isDone && !isSkipped ? (
+                      <CheckCircle2 className="size-3.5" />
+                    ) : (
+                      idx + 1
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      "h-7 w-1 shrink-0 rounded-full",
+                      CATEGORY_BAR[ex.category] ?? "bg-muted"
+                    )}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={cn(
+                        "block truncate text-sm text-foreground",
+                        isCurrent ? "font-black" : "font-semibold",
+                        isDone && "line-through decoration-foreground/30"
+                      )}
+                    >
+                      {ex.kind === "text" ? ex.name.split("\n")[0] : ex.name}
+                    </span>
+                    <span className="block text-[10px] font-semibold text-muted-foreground">
+                      {isCurrent
+                        ? "Ahora"
+                        : isSkipped
+                          ? "Saltado"
+                          : isDone
+                            ? "Hecho"
+                            : "Pendiente"}
+                      {ex.durationMinutes > 0 && ` · ${ex.durationMinutes} min`}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    );
+  }
+
   // ── Session in progress ─────────────────────────────────────────────
   const countdownPct =
     countdownMode && current
@@ -557,7 +654,16 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
           <X className="size-4" />
         </Link>
 
-        <div className="text-center">
+        <button
+          type="button"
+          onClick={() => setShowRoadmap(true)}
+          aria-label="Ver hoja de ruta"
+          className="ml-2 flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden dark:border-white/10"
+        >
+          <ListOrdered className="size-4" />
+        </button>
+
+        <div className="flex-1 text-center">
           <p className="text-xs font-semibold text-foreground truncate max-w-[160px]">
             {session.title}
           </p>
@@ -584,271 +690,304 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
       </div>
 
       {/* Exercise content */}
-      <main className="flex-1 flex flex-col px-4 py-6 max-w-2xl mx-auto w-full gap-5">
-        {/* Category + name */}
-        <div
-          ref={exerciseTopRef}
-          className={cn(
-            "scroll-mt-24 rounded-[28px] border p-6 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)]",
-            CATEGORY_COLORS[current.category] ??
-              "border-[#050505]/10 bg-white dark:border-white/10 dark:bg-[#10100e]"
-          )}
-        >
-          <p
-            className={cn(
-              "mb-2 text-[10px] font-black uppercase",
-              CATEGORY_ACCENT[current.category] ?? "text-brand"
-            )}
-          >
-            {CATEGORY_LABELS[current.category] ?? current.category}
-          </p>
-          {current.kind === "text" ? (
-            <p className="mb-3 whitespace-pre-line text-xl font-bold leading-snug text-foreground">
-              {current.name}
-            </p>
-          ) : (
-            <h1 className="mb-3 text-3xl font-black leading-tight text-foreground">
-              {current.name}
-            </h1>
-          )}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            {current.durationMinutes > 0 && (
-              <span className="flex items-center gap-1">
-                <Clock className="size-3" />
-                {current.durationMinutes} min sugeridos
-              </span>
-            )}
-            {done.has(current.key) && (
-              <span className="flex items-center gap-1 text-brand font-semibold">
-                <CheckCircle2 className="size-3" />
-                Completado
-              </span>
-            )}
+      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 lg:px-4">
+        {/* Hoja de ruta (escritorio/tablet horizontal): siempre visible al lado */}
+        <aside className="hidden w-80 shrink-0 py-6 lg:block">
+          <div className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto">
+            {renderRoadmap()}
           </div>
-          {/* Atajo: botón Siguiente arriba, para no tener que bajar */}
-          <button
-            onClick={goNext}
-            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-[0.98]"
-          >
-            {currentIdx < totalExercises - 1 ? (
-              <>
-                <SkipForward className="size-4" />
-                Siguiente
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="size-4" />
-                Completar sesión
-              </>
+        </aside>
+        <main className="flex-1 flex flex-col px-4 py-6 max-w-2xl mx-auto w-full gap-5 lg:px-0">
+          {/* Category + name */}
+          <div
+            ref={exerciseTopRef}
+            className={cn(
+              "scroll-mt-24 rounded-[28px] border p-6 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)]",
+              CATEGORY_COLORS[current.category] ??
+                "border-[#050505]/10 bg-white dark:border-white/10 dark:bg-[#10100e]"
             )}
-          </button>
-        </div>
+          >
+            <p
+              className={cn(
+                "mb-2 text-[10px] font-black uppercase",
+                CATEGORY_ACCENT[current.category] ?? "text-brand"
+              )}
+            >
+              {CATEGORY_LABELS[current.category] ?? current.category}
+            </p>
+            {current.kind === "text" ? (
+              <p className="mb-3 whitespace-pre-line text-xl font-bold leading-snug text-foreground">
+                {current.name}
+              </p>
+            ) : (
+              <h1 className="mb-3 text-3xl font-black leading-tight text-foreground">
+                {current.name}
+              </h1>
+            )}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              {current.durationMinutes > 0 && (
+                <span className="flex items-center gap-1">
+                  <Clock className="size-3" />
+                  {current.durationMinutes} min sugeridos
+                </span>
+              )}
+              {done.has(current.key) && (
+                <span className="flex items-center gap-1 text-brand font-semibold">
+                  <CheckCircle2 className="size-3" />
+                  Completado
+                </span>
+              )}
+            </div>
+            {/* Atajo: botón Siguiente arriba, para no tener que bajar */}
+            <button
+              onClick={goNext}
+              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground text-sm font-black text-background transition-all hover:bg-foreground/90 active:scale-[0.98]"
+            >
+              {currentIdx < totalExercises - 1 ? (
+                <>
+                  <SkipForward className="size-4" />
+                  Siguiente
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-4" />
+                  Completar sesión
+                </>
+              )}
+            </button>
+          </div>
 
-        {/* Timer */}
-        <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
-          {/* Countdown progress bar */}
-          {countdownMode && (
-            <div className="h-1 bg-border">
-              <div
+          {/* Timer */}
+          <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
+            {/* Countdown progress bar */}
+            {countdownMode && (
+              <div className="h-1 bg-border">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-1000",
+                    countdownPct > 30
+                      ? "bg-brand"
+                      : countdownPct > 10
+                        ? "bg-amber-400"
+                        : "bg-red-400"
+                  )}
+                  style={{ width: `${countdownPct}%` }}
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-4 p-5">
+              <span
                 className={cn(
-                  "h-full transition-all duration-1000",
-                  countdownPct > 30
-                    ? "bg-brand"
-                    : countdownPct > 10
-                      ? "bg-amber-400"
-                      : "bg-red-400"
+                  "font-mono text-3xl tabular-nums flex-1",
+                  countdownMode && timerSeconds === 0
+                    ? "text-red-400"
+                    : "text-foreground"
                 )}
-                style={{ width: `${countdownPct}%` }}
+              >
+                {formatTime(timerSeconds)}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setTimerRunning((r) => !r)}
+                  className="flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
+                  aria-label={timerRunning ? "Pausar" : "Iniciar"}
+                >
+                  {timerRunning ? (
+                    <Pause className="size-5" />
+                  ) : (
+                    <Play className="size-5 translate-x-0.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setTimerRunning(false);
+                    setTimerSeconds(
+                      countdownMode ? current.durationMinutes * 60 : 0
+                    );
+                  }}
+                  className="flex size-11 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
+                  aria-label="Reiniciar"
+                >
+                  <RotateCcw className="size-4" />
+                </button>
+                <button
+                  onClick={toggleCountdown}
+                  title={
+                    countdownMode
+                      ? "Cambiar a cronómetro"
+                      : "Cambiar a cuenta atrás"
+                  }
+                  className={cn(
+                    "flex size-11 items-center justify-center rounded-full border transition-colors",
+                    countdownMode
+                      ? "border-brand bg-brand/10 text-brand"
+                      : "border-[#050505]/10 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10"
+                  )}
+                  aria-label={
+                    countdownMode ? "Modo cronómetro" : "Modo cuenta atrás"
+                  }
+                >
+                  <Timer className="size-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Live execution notes (solo ejercicios de la biblioteca) */}
+          {current.kind === "exercise" && (
+            <div className="space-y-4 rounded-[28px] border border-[#050505]/10 bg-white p-4 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground">
+                    Registro de pista
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Se guarda al completar la sesión.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() =>
+                        updateExecution(current.key, { rating: value })
+                      }
+                      className={cn(
+                        "size-8 rounded-full border text-xs font-black transition-colors",
+                        currentExecution.rating === value
+                          ? "border-brand bg-brand text-brand-foreground"
+                          : "border-[#050505]/10 text-muted-foreground hover:border-brand/40 hover:text-foreground dark:border-white/10"
+                      )}
+                      aria-label={`Valorar ejercicio con ${value}`}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                value={currentExecution.notes}
+                onChange={(event) =>
+                  updateExecution(current.key, { notes: event.target.value })
+                }
+                rows={3}
+                maxLength={1000}
+                placeholder="Notas rápidas: ajuste aplicado, respuesta del alumno, variante usada..."
+                className="tp-field w-full resize-none px-3 py-2 text-sm placeholder:text-muted-foreground"
               />
             </div>
           )}
-          <div className="flex items-center gap-4 p-5">
-            <span
-              className={cn(
-                "font-mono text-3xl tabular-nums flex-1",
-                countdownMode && timerSeconds === 0
-                  ? "text-red-400"
-                  : "text-foreground"
-              )}
-            >
-              {formatTime(timerSeconds)}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setTimerRunning((r) => !r)}
-                className="flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
-                aria-label={timerRunning ? "Pausar" : "Iniciar"}
-              >
-                {timerRunning ? (
-                  <Pause className="size-5" />
-                ) : (
-                  <Play className="size-5 translate-x-0.5" />
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setTimerRunning(false);
-                  setTimerSeconds(
-                    countdownMode ? current.durationMinutes * 60 : 0
-                  );
-                }}
-                className="flex size-11 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
-                aria-label="Reiniciar"
-              >
-                <RotateCcw className="size-4" />
-              </button>
-              <button
-                onClick={toggleCountdown}
-                title={
-                  countdownMode
-                    ? "Cambiar a cronómetro"
-                    : "Cambiar a cuenta atrás"
-                }
-                className={cn(
-                  "flex size-11 items-center justify-center rounded-full border transition-colors",
-                  countdownMode
-                    ? "border-brand bg-brand/10 text-brand"
-                    : "border-[#050505]/10 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10"
-                )}
-                aria-label={
-                  countdownMode ? "Modo cronómetro" : "Modo cuenta atrás"
-                }
-              >
-                <Timer className="size-4" />
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Live execution notes (solo ejercicios de la biblioteca) */}
-        {current.kind === "exercise" && (
-          <div className="space-y-4 rounded-[28px] border border-[#050505]/10 bg-white p-4 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground">
-                  Registro de pista
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Se guarda al completar la sesión.
-                </p>
-              </div>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() =>
-                      updateExecution(current.key, { rating: value })
-                    }
-                    className={cn(
-                      "size-8 rounded-full border text-xs font-black transition-colors",
-                      currentExecution.rating === value
-                        ? "border-brand bg-brand text-brand-foreground"
-                        : "border-[#050505]/10 text-muted-foreground hover:border-brand/40 hover:text-foreground dark:border-white/10"
-                    )}
-                    aria-label={`Valorar ejercicio con ${value}`}
+          {/* Materials for this exercise */}
+          {current.materials && current.materials.length > 0 && (
+            <div className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#10100e]">
+              <Package className="size-4 text-brand mt-0.5 shrink-0" />
+              <div className="flex flex-wrap gap-1.5">
+                {current.materials.map((m) => (
+                  <span
+                    key={m}
+                    className="rounded-full bg-brand/15 px-2 py-1 text-[11px] font-black text-foreground"
                   >
-                    {value}
-                  </button>
+                    {m}
+                  </span>
                 ))}
               </div>
             </div>
-            <textarea
-              value={currentExecution.notes}
-              onChange={(event) =>
-                updateExecution(current.key, { notes: event.target.value })
-              }
-              rows={3}
-              maxLength={1000}
-              placeholder="Notas rápidas: ajuste aplicado, respuesta del alumno, variante usada..."
-              className="tp-field w-full resize-none px-3 py-2 text-sm placeholder:text-muted-foreground"
-            />
-          </div>
-        )}
+          )}
 
-        {/* Materials for this exercise */}
-        {current.materials && current.materials.length > 0 && (
-          <div className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#10100e]">
-            <Package className="size-4 text-brand mt-0.5 shrink-0" />
-            <div className="flex flex-wrap gap-1.5">
-              {current.materials.map((m) => (
-                <span
-                  key={m}
-                  className="rounded-full bg-brand/15 px-2 py-1 text-[11px] font-black text-foreground"
-                >
-                  {m}
-                </span>
-              ))}
+          {/* Description */}
+          {current.description && (
+            <div className="text-sm text-foreground/70 leading-relaxed">
+              {current.description}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Description */}
-        {current.description && (
-          <div className="text-sm text-foreground/70 leading-relaxed">
-            {current.description}
-          </div>
-        )}
+          {current.exerciseId && diagrams?.[current.exerciseId] && (
+            <ExerciseDiagramView
+              diagram={diagrams[current.exerciseId]}
+              maxWidth={280}
+            />
+          )}
 
-        {current.exerciseId && diagrams?.[current.exerciseId] && (
-          <ExerciseDiagramView
-            diagram={diagrams[current.exerciseId]}
-            maxWidth={280}
-          />
-        )}
-
-        {/* Steps */}
-        {current.steps.length > 0 && (
-          <div className="space-y-3">
-            <p className="text-[10px] font-black uppercase text-muted-foreground">
-              Pasos
-            </p>
-            <ol className="space-y-3">
-              {current.steps.map((step, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-brand/20 bg-brand/15 text-[11px] font-black text-foreground">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {step.title}
-                    </p>
-                    {step.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        {step.description}
+          {/* Steps */}
+          {current.steps.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-black uppercase text-muted-foreground">
+                Pasos
+              </p>
+              <ol className="space-y-3">
+                {current.steps.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-brand/20 bg-brand/15 text-[11px] font-black text-foreground">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {step.title}
                       </p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
+                      {step.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          {step.description}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
 
-        {/* Coach notes */}
-        {current.notes && (
-          <div className="rounded-[22px] border border-amber-500/20 bg-amber-500/10 p-4">
-            <p className="mb-1.5 text-[10px] font-black uppercase text-amber-500/80">
-              Notas del entrenador
-            </p>
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {current.notes}
-            </p>
-          </div>
-        )}
+          {/* Coach notes */}
+          {current.notes && (
+            <div className="rounded-[22px] border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="mb-1.5 text-[10px] font-black uppercase text-amber-500/80">
+                Notas del entrenador
+              </p>
+              <p className="text-sm text-foreground/80 leading-relaxed">
+                {current.notes}
+              </p>
+            </div>
+          )}
 
-        {/* Tips */}
-        {current.tips && (
-          <div className="rounded-[22px] border border-[#050505]/10 bg-white p-4 dark:border-white/10 dark:bg-[#10100e]">
-            <p className="mb-1.5 text-[10px] font-black uppercase text-muted-foreground">
-              Tips
-            </p>
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              {current.tips}
-            </p>
+          {/* Tips */}
+          {current.tips && (
+            <div className="rounded-[22px] border border-[#050505]/10 bg-white p-4 dark:border-white/10 dark:bg-[#10100e]">
+              <p className="mb-1.5 text-[10px] font-black uppercase text-muted-foreground">
+                Tips
+              </p>
+              <p className="text-sm text-foreground/70 leading-relaxed">
+                {current.tips}
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Hoja de ruta (móvil): panel lateral */}
+      {showRoadmap && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div className="h-full w-[85%] max-w-sm overflow-y-auto bg-[#F4F4F1] p-4 pt-[calc(1rem+env(safe-area-inset-top))] shadow-2xl dark:bg-[#050505]">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowRoadmap(false)}
+                aria-label="Cerrar hoja de ruta"
+                className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground dark:border-white/10"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            {renderRoadmap({ onPick: () => setShowRoadmap(false) })}
           </div>
-        )}
-      </main>
+          <button
+            type="button"
+            aria-label="Cerrar hoja de ruta"
+            onClick={() => setShowRoadmap(false)}
+            className="flex-1 bg-black/40"
+          />
+        </div>
+      )}
 
       {/* Exercise index strip */}
       <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto border-t border-[#050505]/10 bg-white/86 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-[#10100e]/86">
