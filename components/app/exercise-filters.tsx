@@ -12,9 +12,9 @@ import {
   PELOTAS,
   PELOTAS_LEGACY,
   SITUACION_JUEGO,
+  TIPO_ACTIVIDAD_LABELS,
   TIPO_COMPETICION,
   showsTipoPelota,
-  tipoEjercicioOptionLabel,
 } from "@/lib/exercise-taxonomy";
 import {
   Popover,
@@ -56,11 +56,11 @@ const DURACION_RANGOS: Option[] = [
   { id: "+20", label: "+20 min" },
 ];
 
-// Incluye los tipos antiguos (marcados "antiguo") para poder encontrar los
-// ejercicios que aún no se han re-etiquetado.
+// Incluye los tipos antiguos para poder encontrar los ejercicios que aún no se
+// han re-etiquetado. En el filtro se muestran sin marca de "antiguo".
 const TIPOS_ACTIVIDAD: Option[] = NUEVOS_TIPOS_ACTIVIDAD.map((id) => ({
   id,
-  label: tipoEjercicioOptionLabel(id),
+  label: TIPO_ACTIVIDAD_LABELS[id],
 }));
 
 const PELOTAS_COLOR: Option[] = PELOTAS.map((p) => ({ ...p }));
@@ -69,7 +69,7 @@ const PELOTAS_COLOR: Option[] = PELOTAS.map((p) => ({ ...p }));
 // aún no se han re-etiquetado.
 const PELOTAS_ANTIGUAS: Option[] = PELOTAS_LEGACY.map((p) => ({
   id: p.id,
-  label: `${p.label} (antigua)`,
+  label: p.label,
 }));
 
 const GOLPES: Option[] = [
