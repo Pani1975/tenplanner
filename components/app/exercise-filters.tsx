@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import {
@@ -228,49 +222,6 @@ function valuesFromProps(
     location: current.location,
     autoria: current.autoria,
   };
-}
-
-function ChipButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-sans font-semibold tracking-[0.04em] transition-colors",
-        active
-          ? "border-[#D6FF38] bg-[#D6FF38] text-[#050505]"
-          : "border-foreground/15 text-foreground/55 hover:border-foreground/30 hover:bg-muted hover:text-foreground"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function FilterGroup({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-foreground/40">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
-    </div>
-  );
 }
 
 function CountBadge({ count }: { count: number }) {
@@ -546,20 +497,15 @@ export function ExerciseFilters({
       {moreOpen && (
         <div
           id="exercise-more-filters"
-          className="mt-3 grid grid-cols-1 gap-5 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5 md:grid-cols-2"
+          className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5"
         >
           {SECONDARY_FILTERS.map((def) => (
-            <FilterGroup key={def.param} label={def.label}>
-              {def.options.map((option) => (
-                <ChipButton
-                  key={option.id}
-                  active={(values[def.param] ?? []).includes(option.id)}
-                  onClick={() => toggle(def.param, option.id)}
-                >
-                  {option.label}
-                </ChipButton>
-              ))}
-            </FilterGroup>
+            <FilterDropdown
+              key={def.param}
+              def={def}
+              selected={values[def.param] ?? []}
+              onToggle={toggle}
+            />
           ))}
         </div>
       )}
