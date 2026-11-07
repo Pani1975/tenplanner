@@ -10,7 +10,6 @@ import {
   FASES,
   NUEVOS_TIPOS_ACTIVIDAD,
   PELOTAS,
-  PELOTAS_LEGACY,
   SITUACION_JUEGO,
   TIPO_ACTIVIDAD_LABELS,
   TIPO_COMPETICION,
@@ -64,13 +63,6 @@ const TIPOS_ACTIVIDAD: Option[] = NUEVOS_TIPOS_ACTIVIDAD.map((id) => ({
 }));
 
 const PELOTAS_COLOR: Option[] = PELOTAS.map((p) => ({ ...p }));
-
-// Las pelotas antiguas se listan aparte para encontrar los ejercicios que
-// aún no se han re-etiquetado.
-const PELOTAS_ANTIGUAS: Option[] = PELOTAS_LEGACY.map((p) => ({
-  id: p.id,
-  label: p.label,
-}));
 
 const GOLPES: Option[] = [
   { id: "derecha", label: "Derecha" },
@@ -141,8 +133,6 @@ type FilterDef = {
   param: string;
   label: string;
   options: Option[];
-  // Opciones secundarias (sin color) que se muestran bajo la rejilla de color.
-  extraOptions?: Option[];
   swatches?: boolean;
 };
 
@@ -160,7 +150,6 @@ const PRIMARY_FILTERS: FilterDef[] = [
     param: "tipoPelota",
     label: "Pelota",
     options: PELOTAS_COLOR,
-    extraOptions: PELOTAS_ANTIGUAS,
     swatches: true,
   },
   { param: "fase", label: "Fase", options: FASES.map((f) => ({ ...f })) },
@@ -340,18 +329,6 @@ function FilterDropdown({
         ) : (
           <div className="grid gap-0.5">
             {def.options.map((option) => (
-              <CheckboxRow
-                key={option.id}
-                option={option}
-                checked={selected.includes(option.id)}
-                onToggle={() => onToggle(def.param, option.id)}
-              />
-            ))}
-          </div>
-        )}
-        {def.extraOptions && (
-          <div className="mt-2 grid gap-0.5 border-t border-foreground/10 pt-2">
-            {def.extraOptions.map((option) => (
               <CheckboxRow
                 key={option.id}
                 option={option}
