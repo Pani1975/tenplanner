@@ -564,7 +564,7 @@ async function RecentActivitySection() {
 async function SystemHealthSection() {
   const checks = [
     { label: "ANTHROPIC_API_KEY", ok: !!process.env.ANTHROPIC_API_KEY },
-    { label: "OPENAI_API_KEY", ok: !!process.env.OPENAI_API_KEY },
+    { label: "VOYAGE_API_KEY", ok: !!process.env.VOYAGE_API_KEY },
     { label: "DATABASE_URL", ok: !!process.env.DATABASE_URL },
     {
       label: "NEXT_PUBLIC_SUPABASE_URL",
