@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import {
   ASPECTO_JUEGO_LABELS,
   AUTORIAS,
@@ -146,7 +146,7 @@ type FilterDef = {
   swatches?: boolean;
 };
 
-// Los más usados van en la barra; el resto, bajo "Más filtros".
+// Todos los filtros se muestran a la vez; los más usados van primero.
 const PRIMARY_FILTERS: FilterDef[] = [
   { param: "aspectoJuego", label: "Aspecto", options: ASPECTOS },
   {
@@ -376,7 +376,6 @@ export function ExerciseFilters({
     ? PRIMARY_FILTERS
     : PRIMARY_FILTERS.filter((f) => f.param !== "tipoPelota");
   const [isPending, startTransition] = useTransition();
-  const [moreOpen, setMoreOpen] = useState(false);
   const [values, setValues] = useState<Values>(() =>
     valuesFromProps(currentFilters)
   );
@@ -442,73 +441,35 @@ export function ExerciseFilters({
     navigate(next, 0);
   }
 
-  const primaryCount = primaryFilters.reduce(
+  // Todos los filtros van visibles de entrada, en filas que se ajustan al ancho.
+  const visibleFilters = [...primaryFilters, ...SECONDARY_FILTERS];
+  const activeCount = visibleFilters.reduce(
     (sum, f) => sum + (values[f.param]?.length ?? 0),
     0
   );
-  const secondaryCount = SECONDARY_FILTERS.reduce(
-    (sum, f) => sum + (values[f.param]?.length ?? 0),
-    0
-  );
-  const activeCount = primaryCount + secondaryCount;
 
   return (
     <div className={cn("transition-opacity", isPending && "opacity-70")}>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setMoreOpen((o) => !o)}
-          aria-expanded={moreOpen}
-          aria-controls="exercise-more-filters"
-          aria-label="Más filtros"
-          title="Más filtros"
-          className={cn(
-            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 transition-colors",
-            moreOpen || secondaryCount > 0
-              ? "border-[#050505] bg-[#D6FF38] text-[#050505]"
-              : "border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground"
-          )}
-        >
-          <SlidersHorizontal className="size-4" strokeWidth={1.8} />
-          {secondaryCount > 0 && <CountBadge count={secondaryCount} />}
-        </button>
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {primaryFilters.map((def) => (
-            <FilterDropdown
-              key={def.param}
-              def={def}
-              selected={values[def.param] ?? []}
-              onToggle={toggle}
-            />
-          ))}
-          {activeCount > 0 && (
-            <button
-              type="button"
-              onClick={clearAll}
-              className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 font-sans text-[11px] text-foreground/50 transition-colors hover:text-foreground"
-            >
-              <X className="size-3" />
-              Limpiar ({activeCount})
-            </button>
-          )}
-        </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {visibleFilters.map((def) => (
+          <FilterDropdown
+            key={def.param}
+            def={def}
+            selected={values[def.param] ?? []}
+            onToggle={toggle}
+          />
+        ))}
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 font-sans text-[11px] text-foreground/50 transition-colors hover:text-foreground"
+          >
+            <X className="size-3" />
+            Limpiar ({activeCount})
+          </button>
+        )}
       </div>
-
-      {moreOpen && (
-        <div
-          id="exercise-more-filters"
-          className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5"
-        >
-          {SECONDARY_FILTERS.map((def) => (
-            <FilterDropdown
-              key={def.param}
-              def={def}
-              selected={values[def.param] ?? []}
-              onToggle={toggle}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
