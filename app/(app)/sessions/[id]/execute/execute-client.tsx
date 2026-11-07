@@ -20,6 +20,8 @@ import {
   Timer,
   Dumbbell,
   ListOrdered,
+  Check,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -83,11 +85,21 @@ interface SessionData {
   durationMinutes: number;
   scheduledAt: string;
   status: string;
+  coachRating?: number | null;
+  coachComment?: string | null;
+}
+
+interface StudentData {
+  id: string;
+  name: string;
+  attended: boolean | null;
+  rating: number | null;
 }
 
 interface Props {
   session: SessionData;
   exercises: ExerciseData[];
+  students?: StudentData[];
   diagrams?: Record<string, Diagram>;
 }
 
@@ -98,6 +110,49 @@ type ExerciseExecution = {
   rating: number | null;
   notes: string;
 };
+
+function StarRating({
+  value,
+  onChange,
+  label,
+  size = "lg",
+  allowClear = false,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  label: string;
+  size?: "lg" | "sm";
+  allowClear?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center gap-1"
+      role="radiogroup"
+      aria-label={label}
+    >
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={value === n}
+          aria-label={`${n} de 5`}
+          onClick={() => onChange(allowClear && value === n ? 0 : n)}
+          className="rounded-md p-0.5 transition-transform active:scale-90"
+        >
+          <Star
+            className={cn(
+              size === "lg" ? "size-9" : "size-6",
+              n <= value
+                ? "fill-amber-400 text-amber-400"
+                : "text-muted-foreground/35"
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
@@ -115,7 +170,12 @@ function formatDate(isoString: string) {
   }).format(new Date(isoString));
 }
 
-export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
+export function ExecuteSessionClient({
+  session,
+  exercises,
+  students = [],
+  diagrams,
+}: Props) {
   const router = useRouter();
   const [started, setStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -128,6 +188,28 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
   const [showQuickComplete, setShowQuickComplete] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  // Pasar lista antes de empezar: por defecto todos presentes (salvo lo ya
+  // guardado), y el monitor marca a quien falta.
+  const [attendanceStage, setAttendanceStage] = useState(false);
+  const [attendance, setAttendance] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(students.map((s) => [s.id, s.attended ?? true]))
+  );
+  const [savingAttendance, setSavingAttendance] = useState(false);
+  const [attendanceError, setAttendanceError] = useState<string | null>(null);
+  // Valoración al terminar: estrellas de la clase (obligatoria), comentario y
+  // estrellas por alumno (opcionales).
+  const [sessionRating, setSessionRating] = useState(
+    session.coachRating ?? 0
+  );
+  const [sessionComment, setSessionComment] = useState(
+    session.coachComment ?? ""
+  );
+  const [studentRatings, setStudentRatings] = useState<Record<string, number>>(
+    () =>
+      Object.fromEntries(
+        students.filter((s) => s.rating).map((s) => [s.id, s.rating as number])
+      )
+  );
   const [executionById, setExecutionById] = useState<
     Record<string, ExerciseExecution>
   >({});
@@ -176,9 +258,47 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
     }
   }
 
-  function handleStart() {
+  function beginSession() {
     resetTimerForExercise(current);
     setStarted(true);
+  }
+
+  function handleStart() {
+    // Lo primero es pasar lista (si la sesión tiene alumnos).
+    if (students.length > 0) {
+      setAttendanceStage(true);
+      return;
+    }
+    beginSession();
+  }
+
+  async function confirmAttendance() {
+    setSavingAttendance(true);
+    setAttendanceError(null);
+    try {
+      const results = await Promise.all(
+        students.map((student) =>
+          fetch(`/api/sessions/${session.id}/attendance`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentId: student.id,
+              attended: attendance[student.id] ?? true,
+            }),
+          })
+        )
+      );
+      if (results.some((r) => !r.ok)) throw new Error("attendance");
+    } catch {
+      setSavingAttendance(false);
+      setAttendanceError(
+        "No se pudo guardar la lista. Revisa la conexión e inténtalo de nuevo."
+      );
+      return;
+    }
+    setSavingAttendance(false);
+    setAttendanceStage(false);
+    beginSession();
   }
 
   function toggleCountdown() {
@@ -274,8 +394,46 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
   }
 
   async function handleFinish({ markAll = false }: { markAll?: boolean } = {}) {
+    if (sessionRating < 1) {
+      setFinishError("Valora la clase de 1 a 5 estrellas para terminar.");
+      return;
+    }
     setFinishing(true);
     setFinishError(null);
+
+    // Valoración de la clase y, si se han puesto, de cada alumno.
+    try {
+      const reviewResults = await Promise.all([
+        fetch(`/api/sessions/${session.id}/review`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coachRating: sessionRating,
+            coachComment: sessionComment.trim() || null,
+          }),
+        }),
+        ...students
+          .filter((student) => (studentRatings[student.id] ?? 0) > 0)
+          .map((student) =>
+            fetch(`/api/sessions/${session.id}/attendance`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                studentId: student.id,
+                rating: studentRatings[student.id],
+              }),
+            })
+          ),
+      ]);
+      if (reviewResults.some((r) => !r.ok)) throw new Error("review");
+    } catch {
+      setFinishing(false);
+      setFinishError(
+        "No se pudo guardar la valoración. Revisa la conexión e inténtalo de nuevo."
+      );
+      return;
+    }
+
     const currentElapsed = current ? elapsedSecondsFor(current) : 0;
     const payload = exercises
       .filter((exercise) => exercise.kind === "exercise" && exercise.exerciseId)
@@ -324,6 +482,76 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
     router.refresh();
   }
 
+  const reviewStudents = students.filter((s) => attendance[s.id] !== false);
+
+  const reviewFields = (
+    <div className="mb-5 space-y-4 text-left">
+      <div className="text-center">
+        <p className="text-sm font-black text-foreground">
+          ¿Qué tal ha ido la clase?{" "}
+          <span className="text-destructive" aria-hidden>
+            *
+          </span>
+        </p>
+        <div className="mt-2 flex justify-center">
+          <StarRating
+            value={sessionRating}
+            onChange={setSessionRating}
+            label="Valoración de la clase de 1 a 5 estrellas"
+          />
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Obligatoria: de 1 a 5 estrellas
+        </p>
+      </div>
+      <label className="block">
+        <span className="text-xs font-black text-foreground">
+          Comentario <span className="font-semibold text-muted-foreground">(opcional)</span>
+        </span>
+        <textarea
+          value={sessionComment}
+          onChange={(e) => setSessionComment(e.target.value)}
+          rows={3}
+          maxLength={2000}
+          placeholder="Qué ha funcionado, qué cambiarías, incidencias…"
+          className="mt-1 w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
+        />
+      </label>
+      {reviewStudents.length > 0 && (
+        <details className="rounded-2xl border border-[#050505]/10 dark:border-white/10">
+          <summary className="cursor-pointer px-3 py-2.5 text-xs font-black text-foreground">
+            Valorar alumnos{" "}
+            <span className="font-semibold text-muted-foreground">(opcional)</span>
+          </summary>
+          <ul className="divide-y divide-[#050505]/10 border-t border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
+            {reviewStudents.map((student) => (
+              <li
+                key={student.id}
+                className="flex items-center justify-between gap-2 px-3 py-2"
+              >
+                <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                  {student.name}
+                </span>
+                <StarRating
+                  size="sm"
+                  allowClear
+                  value={studentRatings[student.id] ?? 0}
+                  onChange={(next) =>
+                    setStudentRatings((prev) => ({
+                      ...prev,
+                      [student.id]: next,
+                    }))
+                  }
+                  label={`Valoración de ${student.name}`}
+                />
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+
   const exerciseItemsCount = exercises.filter(
     (e) => e.kind === "exercise"
   ).length;
@@ -334,7 +562,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => !finishing && setShowQuickComplete(false)}
       />
-      <div className="relative w-full max-w-sm rounded-[28px] border border-[#050505]/10 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
+      <div className="relative max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-[28px] border border-[#050505]/10 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
         <div className="text-center mb-6">
           <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-brand text-brand-foreground">
             <CheckCircle2 className="size-7" />
@@ -355,6 +583,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
             </p>
           )}
         </div>
+        {reviewFields}
         <div className="flex gap-3">
           <button
             onClick={() => setShowQuickComplete(false)}
@@ -365,7 +594,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
           </button>
           <button
             onClick={() => handleFinish({ markAll: true })}
-            disabled={finishing}
+            disabled={finishing || sessionRating < 1}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
           >
             {finishing && <Loader2 className="size-4 animate-spin" />}
@@ -391,6 +620,110 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
         >
           Volver a la sesión
         </Link>
+      </div>
+    );
+  }
+
+  // ── Pasar lista ─────────────────────────────────────────────────────
+  if (!started && attendanceStage) {
+    const presentCount = students.filter((s) => attendance[s.id]).length;
+    return (
+      <div className="flex min-h-[100dvh] flex-col bg-[#F4F4F1] text-[#050505] dark:bg-[#050505] dark:text-white">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[#050505]/10 bg-white/86 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-[#10100e]/86">
+          <button
+            type="button"
+            onClick={() => !savingAttendance && setAttendanceStage(false)}
+            aria-label="Volver a la preparación"
+            className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <p className="max-w-[200px] truncate text-xs font-semibold text-foreground">
+            {session.title}
+          </p>
+          <div className="w-9" />
+        </header>
+
+        <main className="mx-auto w-full max-w-xl flex-1 space-y-5 px-4 py-8">
+          <div className="space-y-2 text-center">
+            <p className="tp-kicker">Pasar lista</p>
+            <h1 className="text-3xl font-black leading-tight text-foreground">
+              ¿Quién ha venido?
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {presentCount} de {students.length} presente
+              {presentCount !== 1 ? "s" : ""}. Toca a quien falte para
+              marcarlo como ausente.
+            </p>
+          </div>
+
+          <ul className="space-y-2">
+            {students.map((student) => {
+              const present = attendance[student.id] ?? true;
+              return (
+                <li key={student.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAttendance((prev) => ({
+                        ...prev,
+                        [student.id]: !present,
+                      }))
+                    }
+                    aria-pressed={present}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors",
+                      present
+                        ? "border-brand/40 bg-brand/15"
+                        : "border-[#050505]/10 bg-white opacity-70 dark:border-white/10 dark:bg-[#10100e]"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center rounded-full",
+                        present
+                          ? "bg-brand text-brand-foreground"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {present ? (
+                        <Check className="size-4" />
+                      ) : (
+                        <X className="size-4" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-base font-black text-foreground">
+                      {student.name}
+                    </span>
+                    <span className="text-xs font-black text-muted-foreground">
+                      {present ? "Presente" : "Ausente"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </main>
+
+        <footer className="border-t border-[#050505]/10 bg-white/86 px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] backdrop-blur dark:border-white/10 dark:bg-[#10100e]/86">
+          {attendanceError && (
+            <p className="mb-3 text-center text-sm font-semibold text-destructive">
+              {attendanceError}
+            </p>
+          )}
+          <button
+            onClick={confirmAttendance}
+            disabled={savingAttendance}
+            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-brand text-base font-black text-brand-foreground shadow-sm transition-all hover:bg-brand/90 active:scale-[0.98] disabled:opacity-60"
+          >
+            {savingAttendance ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <Play className="size-5 translate-x-0.5" />
+            )}
+            Empezar la clase
+          </button>
+        </footer>
       </div>
     );
   }
@@ -1060,7 +1393,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => !finishing && setShowFinish(false)}
           />
-          <div className="relative w-full max-w-sm rounded-[28px] border border-[#050505]/10 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
+          <div className="relative max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-[28px] border border-[#050505]/10 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
             <div className="text-center mb-6">
               <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-brand text-brand-foreground">
                 <CheckCircle2 className="size-7" />
@@ -1077,6 +1410,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
                 </p>
               )}
             </div>
+            {reviewFields}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFinish(false)}
@@ -1087,7 +1421,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
               </button>
               <button
                 onClick={() => handleFinish()}
-                disabled={finishing}
+                disabled={finishing || sessionRating < 1}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
               >
                 {finishing && <Loader2 className="size-4 animate-spin" />}

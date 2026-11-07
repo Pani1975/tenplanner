@@ -330,6 +330,8 @@ export const sessions = pgTable(
     // Comentario libre del monitor sobre la sesión en general; se puede
     // escribir antes o después de marcarla como completada.
     coachComment: text("coach_comment"),
+    // Valoración global de la clase (1-5), obligatoria al terminar la sesión en marcha.
+    coachRating: integer("coach_rating"),
     // Nota de voz del monitor sobre la sesión en general: ruta del archivo
     // en el bucket privado "session-audio" y duración en segundos.
     coachAudioPath: text("coach_audio_path"),
