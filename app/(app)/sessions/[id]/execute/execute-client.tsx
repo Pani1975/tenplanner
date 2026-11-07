@@ -2,7 +2,7 @@
 
 import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -128,6 +128,19 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
   const allMaterials = Array.from(
     new Set(exercises.flatMap((e) => e.materials ?? []))
   );
+
+  // Al empezar la sesión y al cambiar de ejercicio, subir siempre al título
+  const exerciseTopRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!started) return;
+    const frame = requestAnimationFrame(() => {
+      exerciseTopRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [started, currentIdx]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -574,8 +587,9 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
       <main className="flex-1 flex flex-col px-4 py-6 max-w-2xl mx-auto w-full gap-5">
         {/* Category + name */}
         <div
+          ref={exerciseTopRef}
           className={cn(
-            "rounded-[28px] border p-6 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)]",
+            "scroll-mt-24 rounded-[28px] border p-6 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)]",
             CATEGORY_COLORS[current.category] ??
               "border-[#050505]/10 bg-white dark:border-white/10 dark:bg-[#10100e]"
           )}
