@@ -143,7 +143,7 @@ export function EmbeddingsClient({ stats: initial }: { stats: Stats }) {
           ejercicios y sesiones nuevos se indexan automáticamente al crearlos.
           Requiere{" "}
           <code className="font-mono text-[11px] bg-foreground/8 px-1 py-0.5 rounded">
-            OPENAI_API_KEY
+            VOYAGE_API_KEY
           </code>{" "}
           configurada.
         </p>
@@ -208,9 +208,9 @@ export function EmbeddingsClient({ stats: initial }: { stats: Stats }) {
             Cada ejercicio y sesión se convierte en texto descriptivo y se envía
             a{" "}
             <code className="font-mono text-[11px] bg-foreground/8 px-1 py-0.5 rounded">
-              text-embedding-3-small
+              voyage-3.5
             </code>{" "}
-            de OpenAI para obtener un vector de 1536 dimensiones.
+            de Voyage AI para obtener un vector de 1024 dimensiones.
           </p>
           <p>
             El vector se almacena en Postgres con la extensión{" "}

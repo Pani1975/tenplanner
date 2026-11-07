@@ -1,4 +1,4 @@
-const CACHE_VERSION = "tenplanner-v1";
+const CACHE_VERSION = "tenplanner-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -92,8 +92,29 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (JS/CSS/fonts/images): cache-first, since these are
-  // content-hashed and safe to reuse.
+  // Static assets: cache-first ONLY for content-hashed build files and
+  // images. Everything else (notably Next.js RSC payloads, ?_rsc=..., used
+  // on client-side navigation) is network-first; caching those cache-first
+  // kept serving old versions of pages after each deploy.
+  const isHashedAsset = url.pathname.startsWith("/_next/static/");
+  const isImage = request.destination === "image";
+  if (!isHashedAsset && !isImage) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches
+              .open(RUNTIME_CACHE)
+              .then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;

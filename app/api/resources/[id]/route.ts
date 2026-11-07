@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { resources } from "@/db/schema";
+import { getOwnedClub } from "@/lib/clubs";
+import { removeDrawingFiles } from "@/lib/drawing-storage";
 import { createClient } from "@/lib/supabase/server";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -79,12 +81,23 @@ export async function DELETE(_req: Request, ctx: Ctx) {
 
   const { id } = await ctx.params;
 
-  const [deleted] = await db
-    .delete(resources)
-    .where(and(eq(resources.id, id), eq(resources.userId, user.id)))
-    .returning({ id: resources.id });
+  const [row] = await db
+    .select()
+    .from(resources)
+    .where(eq(resources.id, id))
+    .limit(1);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (!deleted)
+  // Lo borra su autor o, si es del club, el gestor del club.
+  let allowed = row.userId === user.id;
+  if (!allowed && row.clubId) {
+    const owned = await getOwnedClub(user.id);
+    allowed = owned?.id === row.clubId;
+  }
+  if (!allowed)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await db.delete(resources).where(eq(resources.id, id));
+  await removeDrawingFiles(row.imageUrl);
   return NextResponse.json({ ok: true });
 }

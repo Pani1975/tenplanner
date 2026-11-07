@@ -30,6 +30,10 @@ export interface ResourceData {
   imageUrl: string | null;
   isFavorite: boolean;
   createdAt: string;
+  /** Autor del recurso (en el espacio del club hay recursos de varios). */
+  userId?: string;
+  authorName?: string;
+  clubId?: string | null;
 }
 
 const RESOURCES_BUCKET = "resources";

@@ -12,12 +12,14 @@ export function spaceLabels(inClub: boolean) {
         exercises: "Ejercicios club",
         favorites: "Favoritos club",
         lists: "Listas club",
+        resources: "Recursos club",
       }
     : {
         classes: "Mis clases",
         exercises: "Mis ejercicios",
         favorites: "Favoritos",
         lists: "Mis listas",
+        resources: "Mis recursos",
       };
 }
 
