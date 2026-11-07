@@ -1202,7 +1202,7 @@ export function StepExercises({
                                         Estaciones ({ex.stations?.length ?? 0})
                                       </p>
                                     ) : (
-                                      <p className="text-sm font-medium text-foreground truncate leading-snug">
+                                      <p className="text-sm font-medium text-foreground line-clamp-2 break-words leading-snug">
                                         {ex.name}
                                       </p>
                                     )}
@@ -1224,6 +1224,18 @@ export function StepExercises({
                                             ex.category)}
                                       </span>
                                     </div>
+                                    {!isTextItem(ex) &&
+                                      !isWarmupItem(ex) &&
+                                      !isStationsItem(ex) && (
+                                        <ExerciseQuickDescription
+                                          className="mt-1"
+                                          text={
+                                            libraryExercises.find(
+                                              (lib) => lib.id === ex.exerciseId
+                                            )?.description
+                                          }
+                                        />
+                                      )}
                                   </div>
 
                                   {isEditingDuration ? (
@@ -1304,6 +1316,23 @@ export function StepExercises({
                                       )}
                                     </div>
                                   )}
+
+                                  {!isTextItem(ex) &&
+                                    !isWarmupItem(ex) &&
+                                    !isStationsItem(ex) && (
+                                      <NextLink
+                                        href={`/exercises/${ex.exerciseId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        draggable={false}
+                                        onClick={(e) => e.stopPropagation()}
+                                        title="Ver la ficha completa (se abre en una ventana nueva)"
+                                        aria-label="Ver la ficha completa del ejercicio en una ventana nueva"
+                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                      >
+                                        <ExternalLink className="size-3.5" />
+                                      </NextLink>
+                                    )}
 
                                   <button
                                     type="button"
