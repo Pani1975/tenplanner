@@ -234,7 +234,7 @@ export const SETTING_DEFINITIONS = [
   },
   {
     key: "ai.embedding_model",
-    defaultValue: "text-embedding-3-small",
+    defaultValue: "voyage-3.5",
     type: "string",
     label: "Modelo de embeddings",
     description: "Modelo usado por los jobs que generen embeddings.",
@@ -243,7 +243,7 @@ export const SETTING_DEFINITIONS = [
   },
   {
     key: "ai.embedding_dimensions",
-    defaultValue: 1536,
+    defaultValue: 1024,
     type: "number",
     label: "Dimensiones embeddings",
     description: "Debe coincidir con la dimensión de la columna vectorial.",

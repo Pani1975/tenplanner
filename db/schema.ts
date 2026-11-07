@@ -1692,7 +1692,7 @@ export const aiDocumentEmbeddings = pgTable(
       .$type<Record<string, unknown>>()
       .default({})
       .notNull(),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    embedding: vector("embedding", { dimensions: 1024 }).notNull(),
     embeddedAt: timestamp("embedded_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
