@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AppScreensPhone } from "./app-screens-phone";
+import { LANDING_SCREENS } from "@/lib/landing-screens";
 import {
   ArrowDown,
   BatteryFull,
@@ -315,7 +317,11 @@ function HeroSection({ content }: { content: LandingContent }) {
           <div className="absolute right-[2%] top-[20%] hidden rounded-2xl bg-white px-5 py-3 text-sm font-medium text-[#050505] shadow-[0_20px_55px_rgba(5,5,5,0.12)] lg:block">
             ⚡ Clase lista en 90 seg
           </div>
-          <PhoneMock />
+          {LANDING_SCREENS.length > 0 ? (
+            <AppScreensPhone screens={LANDING_SCREENS} />
+          ) : (
+            <PhoneMock />
+          )}
         </div>
       </div>
     </section>
