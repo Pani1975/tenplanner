@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { sessions } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { sessionStudents, sessions, students } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import { getExerciseDiagrams } from "@/lib/exercise-diagrams";
 import { ExecuteSessionClient } from "./execute-client";
@@ -29,6 +29,18 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
 
   if (!sessionRow) notFound();
   if (sessionRow.userId !== user.id) notFound();
+
+  const studentRows = await db
+    .select({
+      id: students.id,
+      name: students.name,
+      attended: sessionStudents.attended,
+      rating: sessionStudents.rating,
+    })
+    .from(sessionStudents)
+    .innerJoin(students, eq(sessionStudents.studentId, students.id))
+    .where(eq(sessionStudents.sessionId, id))
+    .orderBy(asc(students.name));
 
   const plan = await loadSessionPlan(id, user.id);
   const resolvedExercises = plan.items.map((item, orderIndex) => {
@@ -114,7 +126,10 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
         durationMinutes: sessionRow.durationMinutes,
         scheduledAt: sessionRow.scheduledAt.toISOString(),
         status: sessionRow.status,
+        coachRating: sessionRow.coachRating,
+        coachComment: sessionRow.coachComment,
       }}
+      students={studentRows}
       exercises={resolvedExercises}
       diagrams={getExerciseDiagrams(
         resolvedExercises
