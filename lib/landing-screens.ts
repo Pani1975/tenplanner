@@ -34,12 +34,12 @@ export const LANDING_SCREENS: LandingScreen[] = [
     label: "Clases listas para usar",
   },
   {
-    src: "/landing/app/calendario.webp",
+    src: "/landing/app/calendario-v2.webp",
     alt: "Calendario de sesiones del club",
     label: "Tu calendario de sesiones",
   },
   {
-    src: "/landing/app/estadisticas.webp",
+    src: "/landing/app/estadisticas-v2.webp",
     alt: "Estadísticas de entrenamiento: tiempo jugado, ejercicio más hecho y golpe más trabajado",
     label: "Seguimiento del trabajo hecho",
   },
