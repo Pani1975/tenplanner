@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { nivelLabel } from "@/lib/exercise-taxonomy";
 
 export type LandingExerciseCard = {
   id: string;
@@ -85,6 +86,11 @@ function cleanLabel(value: string | null, fallback: string) {
   return value.replace(/_/g, " ");
 }
 
+/** Nivel con su nombre bonito ("Precompetición", no "precompeticion"). */
+function levelLabel(value: string | null, fallback: string) {
+  return value ? nivelLabel(value) : fallback;
+}
+
 function buildExerciseCards(cards: LandingExerciseCard[]): LibraryPreview[] {
   return cards.slice(0, 3).map((card, index) => {
     const style = cardStyles[index] ?? cardStyles[0];
@@ -94,7 +100,7 @@ function buildExerciseCards(cards: LandingExerciseCard[]): LibraryPreview[] {
       title: card.name,
       top: style.top,
       tag: cleanLabel(card.aspectoJuego, "Biblioteca"),
-      level: cleanLabel(card.nivel, "Todos"),
+      level: levelLabel(card.nivel, "Todos"),
       time: `${card.durationMinutes} min`,
       icon: style.exerciseIcon,
     };
@@ -110,7 +116,7 @@ function buildClassCards(cards: LandingClassCard[]): LibraryPreview[] {
       title: card.name,
       top: style.top,
       tag: "Clase",
-      level: cleanLabel(card.nivel, `${card.numAlumnos ?? "Grupo"} alumnos`),
+      level: levelLabel(card.nivel, `${card.numAlumnos ?? "Grupo"} alumnos`),
       time: `${card.duracionMinutes} min`,
       icon: style.classIcon,
     };
