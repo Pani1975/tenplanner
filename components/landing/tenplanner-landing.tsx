@@ -437,14 +437,14 @@ function PreparationSection({ content }: { content: LandingContent }) {
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
         {content.home_prep_text}
       </p>
-      <RevealStagger className="mx-auto mt-16 grid max-w-[1110px] gap-4 md:grid-cols-2">
+      <RevealStagger className="mx-auto mt-16 grid max-w-[1240px] gap-4 md:grid-cols-2 lg:grid-cols-3">
         {preparationCards.map((card, index) => (
           <RevealItem
             key={card.title}
-            className={cn(index === 2 && "md:max-w-[542px]")}
+            className={cn("h-full", index === 2 && "md:col-span-2 lg:col-span-1")}
           >
-            <article className="rounded-2xl border border-[#d8d8cf] bg-white p-9 shadow-[0_12px_30px_rgba(5,5,5,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(5,5,5,0.07)]">
-              <div className="grid gap-6 sm:grid-cols-[58px_1fr]">
+            <article className="h-full rounded-2xl border border-[#d8d8cf] bg-white p-9 shadow-[0_12px_30px_rgba(5,5,5,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(5,5,5,0.07)] lg:p-8">
+              <div className="grid gap-6 sm:grid-cols-[58px_1fr] lg:grid-cols-1 lg:gap-5">
                 <span
                   className={cn(
                     "grid size-14 place-items-center rounded-2xl text-2xl",
