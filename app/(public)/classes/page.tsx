@@ -20,6 +20,7 @@ import {
   classNavQueryString,
   classOrderBy,
   CLASS_SORTS,
+  CLASS_SORT_DEFAULT,
   parseClassSort,
   type ClassSort,
 } from "@/lib/nav/class-nav";
@@ -94,6 +95,7 @@ const GOLPES_FILTERS = [
 ];
 
 const SORT_LABELS: Record<ClassSort, string> = {
+  nivel: "Por nivel",
   alpha: "Alfabético",
   popular: "Más populares",
   recent: "Más recientes",
@@ -373,7 +375,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     aspectoList.forEach((a) => sp.append("aspecto", a));
     golpeList.forEach((g) => sp.append("golpe", g));
     autoriaList.forEach((a) => sp.append("autoria", a));
-    if (activeSort !== "alpha") sp.set("sort", activeSort);
+    if (activeSort !== CLASS_SORT_DEFAULT) sp.set("sort", activeSort);
     if (page > 1) sp.set("page", String(page));
     return sp.toString() ? `/classes?${sp.toString()}` : "/classes";
   }
@@ -387,7 +389,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     aspectoList.forEach((a) => sp.append("aspecto", a));
     golpeList.forEach((g) => sp.append("golpe", g));
     autoriaList.forEach((a) => sp.append("autoria", a));
-    if (sort !== "alpha") sp.set("sort", sort);
+    if (sort !== CLASS_SORT_DEFAULT) sp.set("sort", sort);
     return sp.toString() ? `/classes?${sp.toString()}` : "/classes";
   }
 
@@ -454,7 +456,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             aspectoList.forEach((a) => sp.append("aspecto", a));
             golpeList.forEach((g) => sp.append("golpe", g));
             autoriaList.forEach((a) => sp.append("autoria", a));
-            if (activeSort !== "alpha") sp.set("sort", activeSort);
+            if (activeSort !== CLASS_SORT_DEFAULT) sp.set("sort", activeSort);
             return (
               <Link
                 key={t}
@@ -556,7 +558,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               action="/classes"
             >
               {tab !== "all" && <input type="hidden" name="tab" value={tab} />}
-              {activeSort !== "alpha" && (
+              {activeSort !== CLASS_SORT_DEFAULT && (
                 <input type="hidden" name="sort" value={activeSort} />
               )}
               <div className="flex-1 min-w-[200px]">
