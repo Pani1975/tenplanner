@@ -32,8 +32,9 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
       onMouseLeave={() => setPaused(false)}
       onTouchStart={() => setPaused(true)}
     >
-      <div className="relative h-[560px] w-[282px] rounded-[42px] bg-[#050505] p-[9px] shadow-[0_45px_100px_rgba(5,5,5,0.22)] ring-1 ring-black/10">
-        <div className="relative h-full w-full overflow-hidden rounded-[34px] bg-[#f4f4f1]">
+      <div className="relative w-[282px] rounded-[42px] bg-[#050505] p-[9px] shadow-[0_45px_100px_rgba(5,5,5,0.22)] ring-1 ring-black/10">
+        {/* Las capturas son 1080×1917: el hueco de pantalla mantiene esa forma. */}
+        <div className="relative aspect-[1080/1917] w-full overflow-hidden rounded-[34px] bg-[#eeeee8]">
           {screens.map((screen, i) => (
             <Image
               key={screen.src}
