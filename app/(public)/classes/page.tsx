@@ -43,6 +43,7 @@ import { PublicClassListsSection } from "@/components/app/public-class-lists-sec
 import { getSpaceLabel, isUserAdmin } from "@/lib/classes/lists";
 import { ClassesGrid } from "./classes-grid";
 import { LevelBallDot } from "@/components/app/level-balls";
+import { AutoSubmitRadio } from "@/components/app/auto-submit-radio";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 
@@ -604,8 +605,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         key={n.id || "todos"}
                         className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-[#D6FF38]/10 has-[:checked]:bg-[#D6FF38]/20 has-[:checked]:font-semibold"
                       >
-                        <input
-                          type="radio"
+                        <AutoSubmitRadio
                           name="nivel"
                           value={n.id}
                           defaultChecked={nivel === n.id}
