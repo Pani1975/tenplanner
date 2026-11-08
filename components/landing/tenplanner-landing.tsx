@@ -514,63 +514,6 @@ function FeaturesSection({ content }: { content: LandingContent }) {
   );
 }
 
-const sportSteps = [
-  {
-    title: "Regístrate y elige tu deporte",
-    text: "Entras directamente a tu espacio, con la biblioteca y las herramientas de ese deporte.",
-  },
-  {
-    title: "Trabaja en tu espacio",
-    text: "Clases en grupo o individuales, con sus alumnos, su calendario y su historial.",
-  },
-  {
-    title: "Añade otros deportes",
-    text: "Dentro de la plataforma puedes abrir una zona nueva para cada deporte que entrenes.",
-  },
-];
-
-const availableSports = ["Tenis", "Pádel", "Pickleball", "Tenis playa"];
-
-function SportsSection({ content }: { content: LandingContent }) {
-  return (
-    <section id="deportes" className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
-      <SectionTitle eyebrow="Deportes" title={content.home_sports_title} />
-      <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
-        {content.home_sports_text}
-      </p>
-      <RevealStagger className="mx-auto mt-14 grid max-w-[1110px] gap-4 md:grid-cols-3">
-        {sportSteps.map((step, index) => (
-          <RevealItem key={step.title}>
-            <article className="h-full rounded-2xl border border-[#d8d8cf] bg-white p-7 shadow-[0_12px_30px_rgba(5,5,5,0.04)]">
-              <span className="grid size-11 place-items-center rounded-full bg-[#050505] font-heading text-xl font-bold text-[#d6ff38]">
-                {index + 1}
-              </span>
-              <h3 className="mt-6 text-lg font-bold text-[#050505]">
-                {step.title}
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-[#66665d]">
-                {step.text}
-              </p>
-            </article>
-          </RevealItem>
-        ))}
-      </RevealStagger>
-      <Reveal className="mx-auto mt-10 flex max-w-[1110px] flex-wrap items-center justify-center gap-2">
-        {availableSports.map((sport) => (
-          <span
-            key={sport}
-            className="rounded-full bg-[#efffba] px-4 py-1.5 text-sm font-semibold text-[#5f7000]"
-          >
-            {sport}
-          </span>
-        ))}
-        <span className="rounded-full border border-dashed border-[#5f7000]/40 px-4 py-1.5 text-sm font-semibold text-[#66665d]">
-          Más deportes próximamente
-        </span>
-      </Reveal>
-    </section>
-  );
-}
 
 function FinalCtaSection({ content }: { content: LandingContent }) {
   const title = splitTitle(content.home_final_title);
@@ -689,7 +632,6 @@ export function TenPlannerLanding({
         <HowSection content={content} />
         <PreparationSection content={content} />
         <FeaturesSection content={content} />
-        <SportsSection content={content} />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
         <FinalCtaSection content={content} />
       </main>
