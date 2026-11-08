@@ -79,6 +79,7 @@ export interface SessionData {
   observations: string | null;
   /** Comentario del monitor sobre la sesión en general. */
   coachComment?: string | null;
+  coachRating?: number | null;
   /** Nota de voz de la sesión (URL firmada; solo para el monitor dueño). */
   coachAudioUrl?: string | null;
   coachAudioSeconds?: number | null;
@@ -1074,12 +1075,33 @@ export function SessionDetailClient({
       )}
 
       {/* Comentarios generales de la sesión (antes o después de completarla) */}
-      {(isOwner || session.coachComment?.trim()) && (
+      {(isOwner || session.coachComment?.trim() || session.coachRating) && (
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-border/50">
-            <h2 className="font-semibold text-sm text-foreground">
-              Comentarios de la sesión
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-semibold text-sm text-foreground">
+                Comentarios de la sesión
+              </h2>
+              {session.coachRating ? (
+                <div
+                  className="flex items-center gap-0.5"
+                  role="img"
+                  aria-label={`Valoración de la clase: ${session.coachRating} de 5`}
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={cn(
+                        "size-4",
+                        n <= (session.coachRating ?? 0)
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-muted-foreground/30"
+                      )}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Anota cómo ha ido la clase en general. Puedes escribir antes o
               después de marcarla como completada.
