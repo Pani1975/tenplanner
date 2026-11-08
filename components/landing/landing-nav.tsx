@@ -9,8 +9,8 @@ import { InstallAppButton } from "./install-app-button";
 
 const navItems = [
   { label: "Cómo funciona", href: "#como-funciona" },
-  { label: "Ejercicios", href: "/exercises" },
-  { label: "Clases", href: "/classes" },
+  { label: "Ejercicios de tenis", href: "/exercises" },
+  { label: "Clases de tenis", href: "/classes" },
 ];
 
 export function LandingNav() {
