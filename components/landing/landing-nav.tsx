@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TenPlannerMark } from "./ten-planner-mark";
 import { InstallAppButton } from "./install-app-button";
@@ -52,15 +52,10 @@ export function LandingNav() {
           <InstallAppButton className="hidden md:inline-flex" />
           <Link
             href="/login"
-            className="hidden min-h-11 items-center rounded-full border border-[#050505]/15 bg-white px-5 text-sm font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000] md:inline-flex"
+            aria-label="Iniciar sesión o registrarte"
+            className="grid size-11 place-items-center rounded-full bg-[#d6ff38] text-[#050505] transition hover:bg-[#050505] hover:text-[#d6ff38]"
           >
-            Inicia sesión
-          </Link>
-          <Link
-            href="/register"
-            className="hidden min-h-11 items-center rounded-full bg-[#050505] px-6 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505] md:inline-flex"
-          >
-            Regístrate
+            <UserRound className="size-5" />
           </Link>
           <button
             type="button"
@@ -96,20 +91,6 @@ export function LandingNav() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/register"
-              onClick={() => setOpen(false)}
-              className="mt-2 inline-flex justify-center rounded-full bg-[#050505] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#d6ff38] hover:text-[#050505]"
-            >
-              Regístrate
-            </Link>
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="inline-flex justify-center rounded-full border border-[#050505]/15 bg-white px-6 py-3 text-sm font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
-            >
-              Inicia sesión
-            </Link>
             <InstallAppButton className="mt-1 w-full justify-center" />
           </div>
         </div>

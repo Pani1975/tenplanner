@@ -47,6 +47,11 @@ function LoginForm() {
   const [resendError, setResendError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // El formulario de email se abre al pulsar "Continuar con email", o ya
+  // abierto si venimos de registrarnos o de un error de verificación.
+  const [showEmailForm, setShowEmailForm] = useState(
+    emailJustRegistered || !!registeredEmail || !!callbackError
+  );
 
   const {
     register,
@@ -133,12 +138,11 @@ function LoginForm() {
     <div className="rounded-[32px] border border-[#050505]/10 bg-white p-5 shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
       <div className="space-y-6">
         <div>
-          <p className="tp-kicker">Acceso de entrenador</p>
-          <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-            Bienvenido de nuevo
+          <h1 className="text-3xl font-black leading-tight text-foreground">
+            Inicia sesión o regístrate
           </h1>
           <p className="mt-2 text-sm leading-6 text-foreground/62">
-            Inicia sesión en tu cuenta de entrenamiento.
+            Una sola cuenta para todos tus deportes.
           </p>
         </div>
 
@@ -211,10 +215,22 @@ function LoginForm() {
           <Separator className="flex-1" />
         </div>
 
+        {!showEmailForm && (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full rounded-full"
+            onClick={() => setShowEmailForm(true)}
+          >
+            <Mail className="mr-2 size-4" />
+            Continuar con email
+          </Button>
+        )}
+
         <form
           method="post"
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
+          className={showEmailForm ? "space-y-4" : "hidden"}
         >
           <div className="space-y-1.5">
             <Label htmlFor="email">Correo electrónico</Label>
@@ -358,12 +374,12 @@ function LoginForm() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          No tienes cuenta?{" "}
+          ¿Aún no tienes cuenta?{" "}
           <Link
             href="/register"
             className="font-medium text-foreground transition-colors hover:text-brand"
           >
-            Crea una gratis
+            Crea una con tu email
           </Link>
         </p>
       </div>

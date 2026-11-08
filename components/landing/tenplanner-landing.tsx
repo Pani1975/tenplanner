@@ -160,29 +160,6 @@ function SectionTitle({
   );
 }
 
-function SecondaryButton({
-  href,
-  children,
-  dark = false,
-}: {
-  href: string;
-  children: React.ReactNode;
-  dark?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={
-        dark
-          ? "inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 px-8 text-base font-bold text-white transition hover:border-[#d6ff38] hover:text-[#d6ff38]"
-          : "inline-flex min-h-14 items-center justify-center rounded-full border border-[#050505]/15 bg-white px-8 text-base font-bold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
-      }
-    >
-      {children}
-    </Link>
-  );
-}
-
 function PrimaryButton({
   href,
   children,
@@ -300,10 +277,9 @@ function HeroSection({ content }: { content: LandingContent }) {
           </p>
           <div className="mt-10 flex flex-col gap-4 min-[440px]:flex-row min-[440px]:items-center">
             <div className="flex flex-wrap items-center gap-3">
-              <PrimaryButton href="/register">
+              <PrimaryButton href="/login">
                 {content.home_hero_cta_primary}
               </PrimaryButton>
-              <SecondaryButton href="/login">Inicia sesión</SecondaryButton>
             </div>
             <Link
               href="#como-funciona"
@@ -609,12 +585,9 @@ function FinalCtaSection({ content }: { content: LandingContent }) {
           </div>
           <div className="md:text-center">
             <div className="flex flex-wrap items-center gap-3 md:justify-center">
-              <PrimaryButton href="/register">
+              <PrimaryButton href="/login">
                 {content.home_final_cta}
               </PrimaryButton>
-              <SecondaryButton href="/login" dark>
-                Inicia sesión
-              </SecondaryButton>
             </div>
             <p className="mt-4 text-xs text-white/42">
               {content.home_final_note}
@@ -657,8 +630,7 @@ function Footer({ content }: { content: LandingContent }) {
           <div>
             <p className="text-sm font-black uppercase text-white">Cuenta</p>
             <div className="mt-3 grid gap-2 text-sm text-white/58">
-              <Link href="/login">Entrar</Link>
-              <Link href="/register">Crear cuenta</Link>
+              <Link href="/login">Inicia sesión o regístrate</Link>
             </div>
           </div>
           <div>
