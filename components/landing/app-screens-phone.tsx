@@ -1,36 +1,54 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { LandingScreen } from "@/lib/landing-screens";
 
 const INTERVAL_MS = 4500;
 
 /**
- * Marco de móvil con capturas reales de la app que se van alternando.
- * Se pausa al pasar el ratón o el dedo, y respeta "reducir movimiento".
+ * Marco de móvil con capturas reales de la app que se van alternando solas.
+ * Con ratón se pausa mientras está encima; en el móvil se puede deslizar o
+ * tocar los puntos, y el pase automático sigue después.
  */
 export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  // Cambia cada vez que el usuario elige pantalla, para reiniciar el temporizador.
+  const [tick, setTick] = useState(0);
+  const touchX = useRef<number | null>(null);
 
   useEffect(() => {
-    if (screens.length < 2 || paused) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (screens.length < 2 || hovered) return;
     const id = window.setInterval(
       () => setIndex((i) => (i + 1) % screens.length),
       INTERVAL_MS
     );
     return () => window.clearInterval(id);
-  }, [screens.length, paused]);
+  }, [screens.length, hovered, tick]);
+
+  function goTo(next: number) {
+    setIndex((next + screens.length) % screens.length);
+    setTick((t) => t + 1);
+  }
 
   return (
     <div
       className="mx-auto w-[282px]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setHovered(false)}
+      onTouchStart={(e) => {
+        touchX.current = e.touches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(e) => {
+        const startX = touchX.current;
+        touchX.current = null;
+        const endX = e.changedTouches[0]?.clientX;
+        if (startX == null || endX == null) return;
+        const dx = endX - startX;
+        if (Math.abs(dx) > 40) goTo(index + (dx < 0 ? 1 : -1));
+      }}
     >
       <div className="relative w-[282px] rounded-[42px] bg-[#050505] p-[9px] shadow-[0_45px_100px_rgba(5,5,5,0.22)] ring-1 ring-black/10">
         {/* Las capturas son 1080×1917: el hueco de pantalla mantiene esa forma. */}
@@ -44,7 +62,7 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
               sizes="264px"
               priority={i === 0}
               className={cn(
-                "object-cover object-top transition-opacity duration-700",
+                "object-cover object-top transition-opacity duration-700 motion-reduce:transition-none",
                 i === index ? "opacity-100" : "opacity-0"
               )}
               aria-hidden={i !== index}
@@ -68,10 +86,7 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
               <button
                 key={screen.src}
                 type="button"
-                onClick={() => {
-                  setIndex(i);
-                  setPaused(true);
-                }}
+                onClick={() => goTo(i)}
                 aria-label={`Ver ${screen.label}`}
                 aria-current={i === index}
                 className={cn(
