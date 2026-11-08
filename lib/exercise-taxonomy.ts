@@ -193,6 +193,15 @@ export function nivelesForSport(sport?: string | null) {
   return sport === "padel" ? PADEL_NIVELES : NIVELES;
 }
 
+// Orden de menor a mayor nivel de todas las escalas (tenis, pádel y legacy).
+// Los ids son únicos entre escalas, así que basta con una lista combinada
+// para ordenar por nivel dentro del deporte activo.
+export const NIVEL_ORDER: readonly string[] = [
+  ...NIVELES.map((n) => n.id),
+  ...PADEL_NIVELES.map((n) => n.id),
+  ...NIVEL_LEGACY.map((n) => n.id),
+];
+
 /** Color de pelota de un nivel de tenis (null si el nivel no tiene). */
 export function nivelBallColor(id: string): string | null {
   return NIVELES.find((n) => n.id === id)?.color ?? null;

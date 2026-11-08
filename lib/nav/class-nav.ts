@@ -13,6 +13,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { NIVEL_ORDER } from "@/lib/exercise-taxonomy";
 
 export type ClassNavParams = Record<string, string | string[] | undefined>;
 
@@ -24,18 +25,44 @@ function paramList(value: string | string[] | undefined): string[] {
   return [];
 }
 
-export const CLASS_SORTS = ["alpha", "popular", "recent", "oldest"] as const;
+export const CLASS_SORTS = [
+  "nivel",
+  "alpha",
+  "popular",
+  "recent",
+  "oldest",
+] as const;
 export type ClassSort = (typeof CLASS_SORTS)[number];
+
+/** Orden por defecto: de menor a mayor nivel. */
+export const CLASS_SORT_DEFAULT: ClassSort = "nivel";
 
 export function parseClassSort(params: ClassNavParams): ClassSort {
   const v = typeof params.sort === "string" ? params.sort : "";
   return (CLASS_SORTS as readonly string[]).includes(v)
     ? (v as ClassSort)
-    : "alpha";
+    : CLASS_SORT_DEFAULT;
 }
 
 /** Times a session has been created from this class — used to rank "más populares". */
 const CLASS_POPULARITY_SQL = sql`(select count(*)::int from sessions s where s.source_class_id = ${classes.id})`;
+
+// Posición de cada nivel en NIVEL_ORDER (1 = el más bajo). Un valor fuera de
+// la lista (o sin nivel) va al final.
+const NIVEL_NO_RANK = NIVEL_ORDER.length + 1;
+const NIVEL_ORDER_ARRAY = sql`ARRAY[${sql.join(
+  NIVEL_ORDER.map((id) => sql`${id}`),
+  sql`, `
+)}]::text[]`;
+
+// Una clase puede tener varios niveles: se ordena por el más bajo de ellos.
+// Si no hay ninguno reconocido, se usa el campo `nivel` heredado.
+const CLASS_NIVEL_RANK_SQL = sql`coalesce(
+  (select min(array_position(${NIVEL_ORDER_ARRAY}, lvl.v))
+     from jsonb_array_elements_text(coalesce(${classes.niveles}, '[]'::jsonb)) as lvl(v)),
+  array_position(${NIVEL_ORDER_ARRAY}, ${classes.nivel}),
+  ${NIVEL_NO_RANK}
+)`;
 
 /**
  * Returns the ORDER BY clauses for a given sort mode. Shared by the list
@@ -44,6 +71,8 @@ const CLASS_POPULARITY_SQL = sql`(select count(*)::int from sessions s where s.s
  */
 export function classOrderBy(sort: ClassSort) {
   switch (sort) {
+    case "nivel":
+      return [sql`${CLASS_NIVEL_RANK_SQL} asc`, asc(classes.name)];
     case "popular":
       return [sql`${CLASS_POPULARITY_SQL} desc`, desc(classes.createdAt)];
     case "recent":
@@ -179,6 +208,6 @@ export function classNavQueryString(params: ClassNavParams): string {
   for (const v of paramList(params.golpe)) p.append("golpe", v);
   for (const v of paramList(params.autoria)) p.append("autoria", v);
   const sort = parseClassSort(params);
-  if (sort !== "alpha") p.set("sort", sort);
+  if (sort !== CLASS_SORT_DEFAULT) p.set("sort", sort);
   return p.toString();
 }
