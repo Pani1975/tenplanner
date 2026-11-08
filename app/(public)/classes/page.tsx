@@ -15,7 +15,14 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { classes, classFavorites } from "@/db/schema";
-import { Plus, Search, FileText, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  Plus,
+  Search,
+  FileText,
+  ArrowLeft,
+  ArrowRight,
+  ChevronDown,
+} from "lucide-react";
 import {
   classNavQueryString,
   classOrderBy,
@@ -35,6 +42,7 @@ import { ClassListsSection } from "@/components/app/class-lists-section";
 import { PublicClassListsSection } from "@/components/app/public-class-lists-section";
 import { getSpaceLabel, isUserAdmin } from "@/lib/classes/lists";
 import { ClassesGrid } from "./classes-grid";
+import { LevelBallDot } from "@/components/app/level-balls";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 
@@ -159,11 +167,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
 
   // Cabecera con el dueño: "Clases Ten Planner" en la Biblioteca,
   // "Clases CT Tenerife" / "Clases de David" en el espacio propio.
-  const heading = libraryHeading(
-    "Clases",
-    workMode,
-    activeTab === "library"
-  );
+  const heading = libraryHeading("Clases", workMode, activeTab === "library");
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const nivel = typeof params.nivel === "string" ? params.nivel : "";
@@ -580,24 +584,43 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 </div>
               </div>
               <div>
-                <label
-                  htmlFor="nivel"
-                  className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5"
-                >
+                <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
                   Nivel
                 </label>
-                <select
-                  id="nivel"
-                  name="nivel"
-                  defaultValue={nivel}
-                  className="h-11 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-3 text-sm text-foreground focus:border-[#D6FF38] focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/40 dark:border-white/10 dark:bg-[#050505]"
-                >
-                  {nivelFiltersForSport(sport).map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.label}
-                    </option>
-                  ))}
-                </select>
+                {/* Desplegable propio (no <select>) para poder mostrar la
+                    pelota de cada nivel: roja, naranja, verde y amarilla. */}
+                <details className="relative">
+                  <summary className="flex h-11 w-full min-w-[12rem] cursor-pointer list-none items-center justify-between gap-2 rounded-full border border-[#050505]/12 bg-[#F4F4F1] px-4 text-sm text-foreground focus:border-[#D6FF38] focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/40 dark:border-white/10 dark:bg-[#050505]">
+                    <span className="flex items-center gap-2">
+                      {nivel && <LevelBallDot nivel={nivel} />}
+                      {nivelFiltersForSport(sport).find((n) => n.id === nivel)
+                        ?.label ?? "Todos"}
+                    </span>
+                    <ChevronDown className="size-4 text-muted-foreground" />
+                  </summary>
+                  <div className="absolute z-10 mt-2 w-64 space-y-1 rounded-lg border border-[#050505]/12 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-[#0a0a0a]">
+                    {nivelFiltersForSport(sport).map((n) => (
+                      <label
+                        key={n.id || "todos"}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-[#D6FF38]/10 has-[:checked]:bg-[#D6FF38]/20 has-[:checked]:font-semibold"
+                      >
+                        <input
+                          type="radio"
+                          name="nivel"
+                          value={n.id}
+                          defaultChecked={nivel === n.id}
+                          className="sr-only"
+                        />
+                        {n.id ? (
+                          <LevelBallDot nivel={n.id} />
+                        ) : (
+                          <span className="size-4 shrink-0" />
+                        )}
+                        {n.label}
+                      </label>
+                    ))}
+                  </div>
+                </details>
               </div>
               <div>
                 <label

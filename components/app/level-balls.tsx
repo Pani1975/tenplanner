@@ -40,6 +40,47 @@ export function LevelBalls({
   );
 }
 
+/**
+ * Pelota pequeña de un nivel (roja, naranja, verde o amarilla) para filtros
+ * y listas sobre fondo claro. No pinta nada si el nivel no tiene pelota
+ * (p. ej. niveles de pádel).
+ */
+export function LevelBallDot({
+  nivel,
+  className,
+}: {
+  nivel: string;
+  className?: string;
+}) {
+  const color = nivelBallColor(nivel);
+  if (!color) return null;
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      className={cn("size-4 shrink-0", className)}
+      aria-hidden="true"
+    >
+      <circle
+        cx="16"
+        cy="16"
+        r="15"
+        fill={color}
+        stroke="#050505"
+        strokeOpacity="0.35"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M5.2 6.6c4.6 3.8 4.6 15 0 18.8M26.8 6.6c-4.6 3.8-4.6 15 0 18.8"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeOpacity="0.85"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function TennisBall({
   color,
   title,
