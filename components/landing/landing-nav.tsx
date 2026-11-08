@@ -9,7 +9,6 @@ import { InstallAppButton } from "./install-app-button";
 
 const navItems = [
   { label: "Cómo funciona", href: "#como-funciona" },
-  { label: "Deportes", href: "#deportes" },
   { label: "Ejercicios", href: "/exercises" },
   { label: "Clases", href: "/classes" },
 ];
