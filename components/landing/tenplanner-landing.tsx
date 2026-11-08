@@ -3,18 +3,23 @@ import { AppScreensPhone } from "./app-screens-phone";
 import { LANDING_SCREENS } from "@/lib/landing-screens";
 import {
   ArrowDown,
+  BarChart3,
   BatteryFull,
+  Building2,
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
   Clock3,
+  FileText,
   Folder,
   Layers3,
+  MessageSquare,
   Pencil,
   Repeat2,
   Search,
   Signal,
   Star,
+  Users,
   Wifi,
   type LucideIcon,
 } from "lucide-react";
@@ -110,13 +115,46 @@ const featureCards = [
   },
   {
     icon: ClipboardCheck,
-    title: "Pase de lista",
+    title: "Asistencia",
     text: "Registra la asistencia en segundos. Historial completo de cada alumno por clase.",
   },
   {
     icon: Folder,
     title: "Mi espacio",
     text: "Tu calendario, tus grupos, tus espacios, tus ejercicios y tus clases creadas. Todo organizado en un solo lugar.",
+  },
+];
+
+const academyFeatureCards = [
+  {
+    icon: FileText,
+    title: "Informes de sus clientes",
+    text: "Informes de progreso de cada alumno, listos para entregar a sus familias.",
+  },
+  {
+    icon: Users,
+    title: "Seguimiento de sus monitores",
+    text: "Consulta las clases impartidas y la asistencia de cada monitor de un vistazo.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Comunicación con las familias",
+    text: "Avisos por grupo y mensajes directos, para que las familias estén siempre al día.",
+  },
+  {
+    icon: BarChart3,
+    title: "Estadísticas para toma de decisiones",
+    text: "Datos de clases, asistencia y progreso para decidir con criterio.",
+  },
+  {
+    icon: Building2,
+    title: "Espacio para el club",
+    text: "Monitores, alumnos, grupos y biblioteca compartida en un solo espacio.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Calendario para organizar",
+    text: "Organiza clases, turnos y eventos de la academia en un calendario común.",
   },
 ];
 
@@ -480,18 +518,21 @@ function PreparationSection({ content }: { content: LandingContent }) {
   );
 }
 
-function FeaturesSection({ content }: { content: LandingContent }) {
+function FeaturesSection({
+  title,
+  cards,
+}: {
+  title: string;
+  cards: typeof featureCards;
+}) {
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
-      <SectionTitle
-        eyebrow="Funcionalidades"
-        title={content.home_features_title}
-      />
+      <SectionTitle eyebrow="Funcionalidades" title={title} />
       <RevealStagger
         stagger={0.06}
         className="mx-auto mt-16 grid max-w-[1110px] gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
-        {featureCards.map((card) => {
+        {cards.map((card) => {
           const Icon = card.icon;
           return (
             <RevealItem key={card.title}>
@@ -631,7 +672,14 @@ export function TenPlannerLanding({
         <ProblemSection content={content} />
         <HowSection content={content} />
         <PreparationSection content={content} />
-        <FeaturesSection content={content} />
+        <FeaturesSection
+          title={content.home_features_title}
+          cards={featureCards}
+        />
+        <FeaturesSection
+          title={"Todo lo que necesita\nuna academia"}
+          cards={academyFeatureCards}
+        />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
         <FinalCtaSection content={content} />
       </main>
