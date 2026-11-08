@@ -514,7 +514,6 @@ function FeaturesSection({ content }: { content: LandingContent }) {
   );
 }
 
-const availableSports = ["Tenis", "Pádel", "Pickleball", "Tenis playa"];
 
 function FinalCtaSection({ content }: { content: LandingContent }) {
   const title = splitTitle(content.home_final_title);
