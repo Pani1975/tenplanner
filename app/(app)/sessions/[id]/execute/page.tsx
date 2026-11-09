@@ -120,6 +120,7 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
 
   return (
     <ExecuteSessionClient
+      userId={user.id}
       session={{
         id: sessionRow.id,
         title: sessionRow.title,

@@ -24,8 +24,11 @@ import {
   Star,
   RefreshCw,
   Trash2,
+  NotebookPen,
+  PenTool,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CourtBoardDialog } from "@/components/app/court-board-dialog";
 import {
   PLAN_CHANGE_REASONS,
   type PlanChangeReason,
@@ -103,6 +106,8 @@ interface StudentData {
 }
 
 interface Props {
+  /** Usuario actual (para guardar los dibujos de la pizarra). */
+  userId: string;
   session: SessionData;
   exercises: ExerciseData[];
   students?: StudentData[];
@@ -182,6 +187,7 @@ function formatDate(isoString: string) {
 }
 
 export function ExecuteSessionClient({
+  userId,
   session,
   exercises: initialExercises,
   students = [],
@@ -224,10 +230,21 @@ export function ExecuteSessionClient({
     "plan"
   );
   const [planReason, setPlanReason] = useState<PlanChangeReason | null>(null);
+  const [planFollowed, setPlanFollowed] = useState<boolean | null>(null);
+  const [planNote, setPlanNote] = useState("");
+  // Herramientas a mano durante la clase: bloc de notas y pizarra.
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesSaved, setNotesSaved] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardMessage, setBoardMessage] = useState<string | null>(null);
 
   function openClose(kind: "finish" | "quick") {
     setCloseStep("plan");
     setPlanReason(null);
+    setPlanFollowed(null);
+    setPlanNote("");
     setFinishError(null);
     if (kind === "finish") setShowFinish(true);
     else setShowQuickComplete(true);
@@ -239,6 +256,11 @@ export function ExecuteSessionClient({
     Object.fromEntries(students.map((s) => [s.id, s.attended ?? true]))
   );
   const [savingAttendance, setSavingAttendance] = useState(false);
+  // ¿Se ha pasado lista? (al empezar o en una vez anterior). Si no, se pide
+  // al cerrar la sesión.
+  const [attendanceTaken, setAttendanceTaken] = useState(() =>
+    students.some((s) => s.attended !== null)
+  );
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   // Valoración al terminar: estrellas de la clase (obligatoria), comentario y
   // estrellas por alumno (opcionales).
@@ -344,6 +366,7 @@ export function ExecuteSessionClient({
       return;
     }
     setSavingAttendance(false);
+    setAttendanceTaken(true);
     setAttendanceStage(false);
     beginSession();
   }
@@ -563,11 +586,24 @@ export function ExecuteSessionClient({
     setPlanEdit(null);
   }
 
-  async function handleFinish({
-    markAll = false,
-    planChanged = false,
-  }: { markAll?: boolean; planChanged?: boolean } = {}) {
-    if (!planChanged && sessionRating < 1) {
+  /** Guarda el bloc de notas (comentario general de la sesión) y lo cierra. */
+  async function closeNotes() {
+    setNotesSaved("saving");
+    const res = await fetch(`/api/sessions/${session.id}/comments`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionComment: sessionComment.trim() || null }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setNotesSaved("error");
+      return;
+    }
+    setNotesSaved("saved");
+    setNotesOpen(false);
+  }
+
+  async function handleFinish({ markAll = false }: { markAll?: boolean } = {}) {
+    if (sessionRating < 1) {
       setFinishError("Valora la clase de 1 a 5 estrellas para terminar.");
       return;
     }
@@ -580,31 +616,37 @@ export function ExecuteSessionClient({
         fetch(`/api/sessions/${session.id}/review`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          // Si la sesión cambió, aquí solo se guarda la respuesta del plan;
-          // la valoración se pide después de editar la sesión.
-          body: JSON.stringify(
-            planChanged
-              ? { planFollowed: false, planChangeReason: planReason }
+          body: JSON.stringify({
+            ...(planFollowed === null
+              ? {}
               : {
-                  planFollowed: true,
-                  coachRating: sessionRating,
-                  coachComment: sessionComment.trim() || null,
-                }
-          ),
+                  planFollowed,
+                  planChangeReason: planFollowed ? null : planReason,
+                  planChangeNote:
+                    !planFollowed && planReason === "otro"
+                      ? planNote.trim() || null
+                      : null,
+                }),
+            coachRating: sessionRating,
+            coachComment: sessionComment.trim() || null,
+          }),
         }),
-        ...students
-          .filter(() => !planChanged)
-          .filter((student) => (studentRatings[student.id] ?? 0) > 0)
-          .map((student) =>
-            fetch(`/api/sessions/${session.id}/attendance`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                studentId: student.id,
-                rating: studentRatings[student.id],
-              }),
-            })
-          ),
+        // Asistencia de todos (se vuelve a guardar al cerrar, por si falló al
+        // empezar o se pasó lista ahora) y valoración de quien la tenga.
+        ...students.map((student) =>
+          fetch(`/api/sessions/${session.id}/attendance`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentId: student.id,
+              attended: attendance[student.id] ?? true,
+              ...((studentRatings[student.id] ?? 0) > 0 &&
+              attendance[student.id] !== false
+                ? { rating: studentRatings[student.id] }
+                : {}),
+            }),
+          })
+        ),
       ]);
       if (reviewResults.some((r) => !r.ok)) throw new Error("review");
     } catch {
@@ -662,13 +704,7 @@ export function ExecuteSessionClient({
       );
       return;
     }
-    // No se dio según lo planificado: a editar la sesión para que quede lo
-    // que se hizo de verdad; al guardar se pide la valoración final.
-    router.push(
-      planChanged
-        ? `/sessions/${session.id}/edit?cierre=1`
-        : `/sessions/${session.id}`
-    );
+    router.push(`/sessions/${session.id}`);
     router.refresh();
   }
 
@@ -676,6 +712,49 @@ export function ExecuteSessionClient({
 
   const reviewFields = (
     <div className="mb-5 space-y-4 text-left">
+      {!attendanceTaken && students.length > 0 && (
+        <div className="rounded-2xl border border-[#050505]/10 p-3 dark:border-white/10">
+          <p className="text-xs font-black text-foreground">
+            Asistencia{" "}
+            <span className="font-semibold text-muted-foreground">
+              (no se pasó lista al empezar)
+            </span>
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {students.map((student) => {
+              const present = attendance[student.id] ?? true;
+              return (
+                <li
+                  key={student.id}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <span className="min-w-0 truncate text-sm font-semibold text-foreground">
+                    {student.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAttendance((prev) => ({
+                        ...prev,
+                        [student.id]: !present,
+                      }))
+                    }
+                    aria-pressed={present}
+                    className={cn(
+                      "shrink-0 rounded-full px-3 py-1 text-xs font-black transition-colors",
+                      present
+                        ? "bg-brand text-brand-foreground"
+                        : "bg-destructive/15 text-destructive"
+                    )}
+                  >
+                    {present ? "Ha venido" : "Falta"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
       <div className="text-center">
         <p className="text-sm font-black text-foreground">
           ¿Qué tal ha ido la clase?{" "}
@@ -777,14 +856,20 @@ export function ExecuteSessionClient({
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setCloseStep("reason")}
+              onClick={() => {
+                setPlanFollowed(false);
+                setCloseStep("reason");
+              }}
               className={secondary}
             >
               No, cambió
             </button>
             <button
               type="button"
-              onClick={() => setCloseStep("review")}
+              onClick={() => {
+                setPlanFollowed(true);
+                setCloseStep("review");
+              }}
               className={primary}
             >
               Sí, tal cual
@@ -808,8 +893,8 @@ export function ExecuteSessionClient({
             ¿Por qué cambió?
           </p>
           <p className="mb-3 text-xs text-muted-foreground">
-            Opcional. Después podrás editar la sesión para que quede lo que se
-            hizo de verdad.
+            Opcional. Si quieres que el plan refleje lo que se hizo, usa después
+            «Editar» en la sesión.
           </p>
           <div className="mb-5 flex flex-wrap gap-2">
             {PLAN_CHANGE_REASONS.map((r) => (
@@ -829,6 +914,17 @@ export function ExecuteSessionClient({
               </button>
             ))}
           </div>
+          {planReason === "otro" && (
+            <textarea
+              autoFocus
+              rows={2}
+              maxLength={300}
+              value={planNote}
+              onChange={(e) => setPlanNote(e.target.value)}
+              placeholder="Cuenta brevemente qué pasó…"
+              className="-mt-2 mb-5 w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
+            />
+          )}
           <div className="flex gap-3">
             <button
               type="button"
@@ -840,12 +936,10 @@ export function ExecuteSessionClient({
             </button>
             <button
               type="button"
-              onClick={() => handleFinish({ markAll, planChanged: true })}
-              disabled={finishing}
+              onClick={() => setCloseStep("review")}
               className={primary}
             >
-              {finishing && <Loader2 className="size-4 animate-spin" />}
-              Editar la sesión
+              Siguiente
             </button>
           </div>
         </>
@@ -858,7 +952,9 @@ export function ExecuteSessionClient({
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => setCloseStep("plan")}
+            onClick={() =>
+              setCloseStep(planFollowed === false ? "reason" : "plan")
+            }
             disabled={finishing}
             className={secondary}
           >
@@ -1315,14 +1411,50 @@ export function ExecuteSessionClient({
           </p>
         </div>
 
-        <button
-          onClick={() => openClose("quick")}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors"
-        >
-          <Flag className="size-3" />
-          Sesión completada
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setNotesSaved("idle");
+              setNotesOpen(true);
+            }}
+            aria-label="Bloc de notas"
+            title="Bloc de notas"
+            className={cn(
+              "flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10",
+              sessionComment.trim() &&
+                "border-brand/40 bg-brand/10 text-foreground"
+            )}
+          >
+            <NotebookPen className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setBoardMessage(null);
+              setBoardOpen(true);
+            }}
+            aria-label="Pizarra"
+            title="Pizarra"
+            className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
+          >
+            <PenTool className="size-4" />
+          </button>
+          <button
+            onClick={() => openClose("quick")}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors"
+          >
+            <Flag className="size-3" />
+            <span className="hidden sm:inline">Sesión completada</span>
+            <span className="sm:hidden">Terminar</span>
+          </button>
+        </div>
       </header>
+      {boardMessage && (
+        <p className="bg-brand/15 px-4 py-2 text-center text-xs font-semibold text-foreground">
+          {boardMessage}
+        </p>
+      )}
 
       {/* Progress bar */}
       <div className="h-1 bg-border">
@@ -1863,6 +1995,67 @@ export function ExecuteSessionClient({
             </div>
           </div>
         </div>
+      )}
+      {notesOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => void closeNotes()}
+          />
+          <div className="relative w-full max-w-md rounded-[28px] border border-[#050505]/10 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
+            <div className="mb-2 flex items-center gap-2">
+              <NotebookPen className="size-4 text-brand" />
+              <h2 className="text-base font-black text-foreground">
+                Bloc de notas
+              </h2>
+              <span className="ml-auto text-[11px] text-muted-foreground">
+                {notesSaved === "saving"
+                  ? "Guardando…"
+                  : notesSaved === "saved"
+                    ? "Guardado"
+                    : notesSaved === "error"
+                      ? "No se pudo guardar"
+                      : ""}
+              </span>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Apunta lo que no quieras olvidar. Se guarda en los comentarios de
+              la sesión y lo verás al cerrarla y en la ficha.
+            </p>
+            <textarea
+              autoFocus
+              rows={7}
+              maxLength={4000}
+              value={sessionComment}
+              onChange={(e) => {
+                setSessionComment(e.target.value);
+                setNotesSaved("idle");
+              }}
+              placeholder="Ej.: Julia cansada del hombro · repetir saque cruzado · cambiar el juego final…"
+              className="w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
+            />
+            <button
+              type="button"
+              onClick={() => void closeNotes()}
+              className="mt-3 h-11 w-full rounded-full bg-foreground text-sm font-black text-background"
+            >
+              Guardar y volver a la clase
+            </button>
+          </div>
+        </div>
+      )}
+      {boardOpen && (
+        <CourtBoardDialog
+          open={boardOpen}
+          onOpenChange={setBoardOpen}
+          userId={userId}
+          onSaved={(resource) => {
+            setBoardOpen(false);
+            setBoardMessage(
+              `Dibujo «${resource.title || "sin título"}» guardado en Mis recursos.`
+            );
+          }}
+        />
       )}
       {quickCompleteModal}
     </div>

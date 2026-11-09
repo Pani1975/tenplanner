@@ -889,14 +889,32 @@ export async function PUT(request: Request, context: RouteContext) {
       }
 
       if (studentIds !== undefined) {
+        // Solo se quitan los alumnos que ya no están y se añaden los nuevos:
+        // así no se pierde la asistencia, la valoración ni los comentarios
+        // de quien sigue en la sesión (antes se borraba todo y se recreaba).
         const unique = Array.from(new Set(studentIds));
-        await tx
-          .delete(sessionStudents)
+        const current = await tx
+          .select({ studentId: sessionStudents.studentId })
+          .from(sessionStudents)
           .where(eq(sessionStudents.sessionId, id));
-        if (unique.length > 0) {
+        const currentIds = new Set(current.map((r) => r.studentId));
+        const keep = new Set(unique);
+        const toRemove = [...currentIds].filter((sid) => !keep.has(sid));
+        const toAdd = unique.filter((sid) => !currentIds.has(sid));
+        if (toRemove.length > 0) {
+          await tx
+            .delete(sessionStudents)
+            .where(
+              and(
+                eq(sessionStudents.sessionId, id),
+                inArray(sessionStudents.studentId, toRemove)
+              )
+            );
+        }
+        if (toAdd.length > 0) {
           await tx
             .insert(sessionStudents)
-            .values(unique.map((studentId) => ({ sessionId: id, studentId })));
+            .values(toAdd.map((studentId) => ({ sessionId: id, studentId })));
         }
       }
 
