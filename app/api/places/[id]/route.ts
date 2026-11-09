@@ -7,10 +7,22 @@ import { createClient } from "@/lib/supabase/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-const updateSchema = z.object({
-  name: z.string().trim().min(1).max(120).optional(),
-  description: z.string().trim().max(2000).nullable().optional(),
-});
+const updateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    description: z.string().trim().max(2000).nullable().optional(),
+    // Reserva pública: si se puede reservar y su horario (minutos, hora local).
+    bookingEnabled: z.boolean().optional(),
+    bookingOpenMinute: z.number().int().min(0).max(1410).optional(),
+    bookingCloseMinute: z.number().int().min(30).max(1440).optional(),
+  })
+  .refine(
+    (v) =>
+      v.bookingOpenMinute === undefined ||
+      v.bookingCloseMinute === undefined ||
+      v.bookingCloseMinute - v.bookingOpenMinute >= 60,
+    { message: "El horario debe tener al menos una hora." }
+  );
 
 export async function PATCH(request: Request, ctx: Ctx) {
   const supabase = await createClient();
@@ -42,6 +54,15 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
         ...(parsed.data.description !== undefined
           ? { description: parsed.data.description }
+          : {}),
+        ...(parsed.data.bookingEnabled !== undefined
+          ? { bookingEnabled: parsed.data.bookingEnabled }
+          : {}),
+        ...(parsed.data.bookingOpenMinute !== undefined
+          ? { bookingOpenMinute: parsed.data.bookingOpenMinute }
+          : {}),
+        ...(parsed.data.bookingCloseMinute !== undefined
+          ? { bookingCloseMinute: parsed.data.bookingCloseMinute }
           : {}),
       })
       .where(and(eq(places.id, id), eq(places.coachId, user.id)))

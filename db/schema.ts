@@ -130,6 +130,9 @@ export const users = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     image: text("image"),
+    // Enlace público para reservar sus pistas (/reservar/<token>). null =
+    // aún no lo ha generado.
+    bookingToken: varchar("booking_token", { length: 40 }).unique(),
     city: varchar("city", { length: 255 }),
     role: varchar("role", { length: 20 }), // "player" | "coach" | "both"
     playerLevel: varchar("player_level", { length: 30 }), // "beginner" | "amateur" | "intermediate" | "advanced" | "competitive"
@@ -273,6 +276,11 @@ export const places = pgTable(
       .notNull(),
     name: varchar("name", { length: 120 }).notNull(),
     description: text("description"),
+    // Reserva pública: si la pista se puede reservar desde el enlace público
+    // y su horario (minutos desde medianoche, hora local).
+    bookingEnabled: boolean("booking_enabled").notNull().default(false),
+    bookingOpenMinute: integer("booking_open_minute").notNull().default(480),
+    bookingCloseMinute: integer("booking_close_minute").notNull().default(1320),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -284,6 +292,32 @@ export const places = pgTable(
   (t) => [
     index("places_coach_id_idx").on(t.coachId),
     uniqueIndex("places_coach_name_uniq").on(t.coachId, t.name),
+  ]
+);
+
+// Reservas públicas de pistas (desde /reservar/<token>, sin cuenta).
+export const courtBookings = pgTable(
+  "court_bookings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    placeId: uuid("place_id")
+      .references(() => places.id, { onDelete: "cascade" })
+      .notNull(),
+    // Dueño de la pista (el monitor o la cuenta del club).
+    ownerId: uuid("owner_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    startAt: timestamp("start_at", { withTimezone: true }).notNull(),
+    durationMinutes: integer("duration_minutes").notNull(),
+    fullName: varchar("full_name", { length: 120 }).notNull(),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("court_bookings_place_start_idx").on(t.placeId, t.startAt),
+    index("court_bookings_owner_start_idx").on(t.ownerId, t.startAt),
   ]
 );
 

@@ -1,8 +1,8 @@
-import { and, eq, gte, lt, ne } from "drizzle-orm";
+import { and, eq, gte, isNull, lt, ne } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { places, sessions } from "@/db/schema";
+import { courtBookings, places, sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { findOverlaps, slotEnd } from "@/lib/sessions/overlap";
 
@@ -76,14 +76,40 @@ export async function POST(request: Request) {
       )
     );
 
+  // Reservas públicas de esa pista: también ocupan la hora.
+  const bookingRows = await db
+    .select({
+      id: courtBookings.id,
+      fullName: courtBookings.fullName,
+      startAt: courtBookings.startAt,
+      durationMinutes: courtBookings.durationMinutes,
+    })
+    .from(courtBookings)
+    .where(
+      and(
+        eq(courtBookings.placeId, place.id),
+        isNull(courtBookings.cancelledAt),
+        gte(courtBookings.startAt, from),
+        lt(courtBookings.startAt, to)
+      )
+    );
+
   const conflicts = findOverlaps(
     slots,
-    rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      start: r.scheduledAt,
-      durationMinutes: r.durationMinutes,
-    })),
+    [
+      ...rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        start: r.scheduledAt,
+        durationMinutes: r.durationMinutes,
+      })),
+      ...bookingRows.map((b) => ({
+        id: b.id,
+        title: `Reserva de ${b.fullName}`,
+        start: b.startAt,
+        durationMinutes: b.durationMinutes,
+      })),
+    ],
     parsed.data.excludeSessionId
   );
 
