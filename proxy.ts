@@ -148,6 +148,26 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Vuelta de Google (OAuth) a la portada: si Supabase no tiene autorizada
+  // la URL /auth/callback, devuelve al usuario a la "Site URL" (la portada)
+  // con ?code=… y la sesión no llega a completarse. Se reenvía al callback
+  // con los mismos parámetros para terminar el inicio de sesión.
+  if (pathname === "/") {
+    const params = request.nextUrl.searchParams;
+    if (params.has("code")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/callback";
+      return withSecurityHeaders(NextResponse.redirect(url), csp);
+    }
+    if (params.has("error") && params.has("error_description")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "";
+      url.searchParams.set("error", "auth_callback_failed");
+      return withSecurityHeaders(NextResponse.redirect(url), csp);
+    }
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
