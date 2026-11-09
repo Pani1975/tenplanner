@@ -265,9 +265,17 @@ export function BookingsPanel({
 
       {/* Próximas reservas */}
       <div>
-        <h3 className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
-          Próximas reservas
-        </h3>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+            Próximas reservas
+          </h3>
+          <a
+            href="/reservas-pistas"
+            className="text-xs font-semibold text-foreground underline-offset-2 hover:underline"
+          >
+            Ver ocupación por día
+          </a>
+        </div>
         {bookings.length === 0 ? (
           <p className="text-xs text-muted-foreground">
             Todavía no hay reservas.
