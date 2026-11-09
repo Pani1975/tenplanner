@@ -41,6 +41,13 @@ export interface AgeBand {
   count: number;
 }
 
+export interface IncompleteStudent {
+  id: string;
+  name: string;
+  /** Datos que faltan, en texto para el usuario. */
+  missing: string[];
+}
+
 export interface OriginPoint {
   name: string;
   lat: number;
@@ -60,6 +67,20 @@ export interface StudentsStats {
   ageBands: AgeBand[];
   /** Alumnos en grupos sin fecha de nacimiento (no entran en las edades). */
   groupedWithoutBirthDate: number;
+  /** Edades de todos los alumnos (estén o no en un grupo). */
+  allAgeBands: AgeBand[];
+  /** Edad media y mediana de todos los alumnos con fecha de nacimiento. */
+  ageSummary: {
+    average: number | null;
+    median: number | null;
+    counted: number;
+  };
+  /** Alumnos (de todos) sin fecha de nacimiento. */
+  withoutBirthDate: number;
+  /** Fichas a las que les falta algún dato que usan las estadísticas. */
+  incompleteStudents: IncompleteStudent[];
+  /** % de fichas completas (fecha de nacimiento, nivel y localidad). */
+  completePct: number;
   /** Localidades con coordenadas, para el mapa. */
   origins: OriginPoint[];
   /** Alumnos con localidad pero sin poder situarla en el mapa. */
@@ -199,6 +220,53 @@ export function buildStudentsStats({
     }
   }
 
+  // Edades de toda la escuela (no solo de los grupos), con media y mediana.
+  const allAgeBands: AgeBand[] = AGE_BANDS.map((b) => ({
+    label: b.label,
+    count: 0,
+  }));
+  const ages: number[] = [];
+  for (const s of students) {
+    const age = ageOn(s.birthDate, now);
+    if (age === null) continue;
+    ages.push(age);
+    const idx = AGE_BANDS.findIndex((b) => age >= b.min && age <= b.max);
+    if (idx >= 0) allAgeBands[idx].count += 1;
+  }
+  ages.sort((a, b) => a - b);
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const ageSummary = {
+    average: ages.length
+      ? round1(ages.reduce((a, b) => a + b, 0) / ages.length)
+      : null,
+    median: ages.length
+      ? round1(
+          ages.length % 2
+            ? ages[(ages.length - 1) / 2]
+            : (ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2
+        )
+      : null,
+    counted: ages.length,
+  };
+
+  // Fichas incompletas: lo que falta para que el alumno cuente en todos los
+  // gráficos (edad, nivel y procedencia).
+  const incompleteStudents: IncompleteStudent[] = [];
+  for (const s of students) {
+    const missing: string[] = [];
+    if (ageOn(s.birthDate, now) === null) missing.push("fecha de nacimiento");
+    if (!s.playerLevel) missing.push("nivel");
+    if (!s.locality?.trim()) missing.push("localidad");
+    if (missing.length)
+      incompleteStudents.push({ id: s.id, name: s.name, missing });
+  }
+  incompleteStudents.sort((a, b) => a.name.localeCompare(b.name));
+  const completePct = students.length
+    ? Math.round(
+        ((students.length - incompleteStudents.length) / students.length) * 100
+      )
+    : 100;
+
   // Procedencia: un punto por localidad (sin distinguir mayúsculas ni tildes).
   const byLocality = new Map<
     string,
@@ -246,6 +314,11 @@ export function buildStudentsStats({
     oldest,
     ageBands: bands,
     groupedWithoutBirthDate,
+    allAgeBands,
+    ageSummary,
+    withoutBirthDate: students.length - ages.length,
+    incompleteStudents,
+    completePct,
     origins,
     unlocatedStudents,
     withoutLocality,
