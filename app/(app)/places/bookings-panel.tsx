@@ -28,6 +28,8 @@ export type UpcomingBooking = {
   startAt: string;
   durationMinutes: number;
   fullName: string;
+  /** "club" = reserva hecha por el propio club (fullName = para qué es). */
+  kind?: string;
 };
 
 const HALF_HOURS = Array.from({ length: 49 }, (_, i) => i * 30);
@@ -294,6 +296,11 @@ export function BookingsPanel({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-foreground">
+                      {b.kind === "club" ? (
+                        <span className="mr-1.5 rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-violet-700 dark:text-violet-300">
+                          Club
+                        </span>
+                      ) : null}
                       {b.fullName}
                     </p>
                     <p className="text-xs text-muted-foreground">
