@@ -16,6 +16,8 @@ const patchSchema = z
     coachComment: z.string().trim().max(2000).nullable().optional(),
     planFollowed: z.boolean().optional(),
     planChangeReason: z.enum(PLAN_CHANGE_REASON_IDS).nullable().optional(),
+    // Texto libre cuando el motivo es "Otro motivo" (se guarda en status_note).
+    planChangeNote: z.string().trim().max(300).nullable().optional(),
   })
   .refine((v) => v.coachRating !== undefined || v.planFollowed !== undefined, {
     message: "Falta la valoración o la respuesta sobre el plan.",
@@ -68,6 +70,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     setValues.planChangeReason = parsed.data.planFollowed
       ? null
       : (parsed.data.planChangeReason ?? null);
+    setValues.statusNote =
+      !parsed.data.planFollowed && parsed.data.planChangeReason === "otro"
+        ? parsed.data.planChangeNote || null
+        : null;
   }
   if (parsed.data.coachComment !== undefined) {
     setValues.coachComment = parsed.data.coachComment || null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, PencilLine, Star } from "lucide-react";
+import { CheckCircle2, Loader2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   PLAN_CHANGE_REASONS,
@@ -9,11 +9,15 @@ import {
 } from "@/lib/sessions/plan-change";
 
 export type SessionCloseRating = {
-  planFollowed: true;
+  planFollowed: boolean;
+  planChangeReason: PlanChangeReason | null;
+  /** Texto libre cuando el motivo es "Otro motivo". */
+  planChangeNote: string | null;
   sessionRating: number;
   note: string | null;
 };
 
+/** @deprecated El cierre ya no lleva a editar; se mantiene el tipo. */
 export type SessionClosePlanChanged = {
   planFollowed: false;
   planChangeReason: PlanChangeReason | null;
@@ -26,9 +30,9 @@ type Step = "plan" | "reason" | "rating";
  * completada" en el modo clase y "Sesión completada" en la ficha):
  *
  * 1. ¿Se ha completado tal y como estaba planificada?
- * 2a. Sí → valoración final (estrellas obligatorias, comentario opcional).
- * 2b. No → motivo opcional → `onPlanChanged` (quien lo usa guarda lo hecho y
- *     lleva a editar la sesión; la valoración se pide al volver).
+ * 2. Si no: motivo opcional (con texto si es "Otro motivo").
+ * 3. Valoración final (estrellas obligatorias, comentario opcional) y se
+ *    cierra la sesión. Para cambiar el plan se usa "Editar" en la ficha.
  *
  * Con `initialStep="rating"` se abre directamente en la valoración (al volver
  * de editar la sesión).
@@ -37,7 +41,6 @@ export function SessionCloseDialog({
   open,
   onClose,
   onRate,
-  onPlanChanged,
   initialStep = "plan",
   summary,
   initialNote = "",
@@ -46,8 +49,6 @@ export function SessionCloseDialog({
   onClose: () => void;
   /** Guarda la sesión como completada con su valoración. true = ok. */
   onRate: (data: SessionCloseRating | RatingAfterEdit) => Promise<boolean>;
-  /** Guarda lo hecho y lleva a editar la sesión. true = ok. */
-  onPlanChanged: (data: SessionClosePlanChanged) => Promise<boolean>;
   initialStep?: Step;
   /** Texto pequeño bajo la pregunta, p. ej. "5 de 6 elementos realizados". */
   summary?: string;
@@ -55,6 +56,8 @@ export function SessionCloseDialog({
 }) {
   const [step, setStep] = useState<Step>(initialStep);
   const [reason, setReason] = useState<PlanChangeReason | null>(null);
+  const [planFollowed, setPlanFollowed] = useState<boolean | null>(null);
+  const [reasonNote, setReasonNote] = useState("");
   const [rating, setRating] = useState(0);
   const [note, setNote] = useState(initialNote);
   const [saving, setSaving] = useState(false);
@@ -111,14 +114,20 @@ export function SessionCloseDialog({
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setStep("reason")}
+                onClick={() => {
+                  setPlanFollowed(false);
+                  setStep("reason");
+                }}
                 className="rounded-full border border-border px-4 py-3 text-sm font-black transition-colors hover:bg-muted"
               >
                 No, cambió
               </button>
               <button
                 type="button"
-                onClick={() => setStep("rating")}
+                onClick={() => {
+                  setPlanFollowed(true);
+                  setStep("rating");
+                }}
                 className="rounded-full bg-brand px-4 py-3 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
               >
                 Sí, tal cual
@@ -164,6 +173,17 @@ export function SessionCloseDialog({
                 </button>
               ))}
             </div>
+            {reason === "otro" && (
+              <textarea
+                autoFocus
+                rows={2}
+                maxLength={300}
+                value={reasonNote}
+                onChange={(e) => setReasonNote(e.target.value)}
+                placeholder="Cuenta brevemente qué pasó…"
+                className="-mt-2 mb-5 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
+              />
+            )}
             {error && (
               <p className="mb-3 text-sm font-semibold text-destructive">
                 {error}
@@ -181,22 +201,10 @@ export function SessionCloseDialog({
               <button
                 type="button"
                 disabled={saving}
-                onClick={() =>
-                  run(() =>
-                    onPlanChanged({
-                      planFollowed: false,
-                      planChangeReason: reason,
-                    })
-                  )
-                }
+                onClick={() => setStep("rating")}
                 className="inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
               >
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <PencilLine className="size-4" />
-                )}
-                Editar la sesión
+                Siguiente
               </button>
             </div>
           </>
@@ -252,7 +260,9 @@ export function SessionCloseDialog({
               <button
                 type="button"
                 onClick={() =>
-                  initialStep === "rating" ? close() : setStep("plan")
+                  initialStep === "rating"
+                    ? close()
+                    : setStep(planFollowed === false ? "reason" : "plan")
                 }
                 disabled={saving}
                 className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted"
@@ -272,7 +282,13 @@ export function SessionCloseDialog({
                             note: note.trim() || null,
                           }
                         : {
-                            planFollowed: true,
+                            planFollowed: planFollowed !== false,
+                            planChangeReason:
+                              planFollowed === false ? reason : null,
+                            planChangeNote:
+                              planFollowed === false && reason === "otro"
+                                ? reasonNote.trim() || null
+                                : null,
                             sessionRating: rating,
                             note: note.trim() || null,
                           }

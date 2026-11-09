@@ -13,7 +13,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   SessionCloseDialog,
   type RatingAfterEdit,
-  type SessionClosePlanChanged,
   type SessionCloseRating,
 } from "@/components/app/session-close-dialog";
 import { planChangeReasonLabel } from "@/lib/sessions/plan-change";
@@ -90,6 +89,8 @@ export interface SessionData {
   /** ¿Se dio tal y como estaba planificada? null = sin responder. */
   planFollowed?: boolean | null;
   planChangeReason?: string | null;
+  /** Texto del motivo "Otro" (o motivo de cancelación). */
+  statusNote?: string | null;
   /** Nota de voz de la sesión (URL firmada; solo para el monitor dueño). */
   coachAudioUrl?: string | null;
   coachAudioSeconds?: number | null;
@@ -484,7 +485,13 @@ export function SessionDetailClient({
   async function handleCloseRate(data: SessionCloseRating | RatingAfterEdit) {
     if (!(await markCompleted())) return false;
     const ok = await patchJson(`/api/sessions/${session.id}/review`, {
-      ...("afterEdit" in data ? {} : { planFollowed: true }),
+      ...("afterEdit" in data
+        ? {}
+        : {
+            planFollowed: data.planFollowed,
+            planChangeReason: data.planChangeReason,
+            planChangeNote: data.planChangeNote,
+          }),
       coachRating: data.sessionRating,
       coachComment: data.note,
     });
@@ -493,17 +500,6 @@ export function SessionDetailClient({
     setCloseStep(null);
     router.replace(`/sessions/${session.id}`);
     router.refresh();
-    return true;
-  }
-
-  async function handleClosePlanChanged(data: SessionClosePlanChanged) {
-    if (!(await markCompleted())) return false;
-    const ok = await patchJson(`/api/sessions/${session.id}/review`, {
-      planFollowed: false,
-      planChangeReason: data.planChangeReason,
-    });
-    if (!ok) return false;
-    router.push(`/sessions/${session.id}/edit?cierre=1`);
     return true;
   }
 
@@ -1188,6 +1184,11 @@ export function SessionDetailClient({
                         planChangeReasonLabel(session.planChangeReason)
                           ? ` · ${planChangeReasonLabel(session.planChangeReason)}`
                           : ""
+                      }${
+                        session.planChangeReason === "otro" &&
+                        session.statusNote
+                          ? `: ${session.statusNote}`
+                          : ""
                       }`}
                 </span>
               </p>
@@ -1498,7 +1499,6 @@ export function SessionDetailClient({
           }
         }}
         onRate={handleCloseRate}
-        onPlanChanged={handleClosePlanChanged}
       />
 
       {/* Status note dialog */}
