@@ -1,3 +1,4 @@
+import { formatHours } from "@/lib/stats/labels";
 import { notFound, redirect } from "next/navigation";
 import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
 import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
@@ -192,10 +193,12 @@ export default async function StudentDetailPage({ params }: PageProps) {
     db
       .select({
         totalSessions: sql<number>`COUNT(*)`,
-        totalMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}), 0)`,
         pastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now())`,
         upcomingCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= now())`,
-        pastMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now()), 0)`,
+        // Misma definición que "Tiempo jugado" (lib/stats/load-training-stats):
+        // sesiones pasadas, no canceladas y a las que el alumno no faltó.
+        playedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND ${sessionStudents.attended} IS NOT FALSE)`,
+        playedMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND ${sessionStudents.attended} IS NOT FALSE), 0)`,
         pastWithAttendanceCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} IS NOT NULL)`,
         attendedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} = true)`,
         last30PastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= (now() - INTERVAL '30 days') AND ${sessions.scheduledAt} < now())`,
@@ -248,10 +251,10 @@ export default async function StudentDetailPage({ params }: PageProps) {
 
   const stats = statsRows[0];
   const totalSessions = Number(stats?.totalSessions ?? 0);
-  const totalMinutes = Number(stats?.totalMinutes ?? 0);
   const pastCount = Number(stats?.pastCount ?? 0);
   const upcomingCount = Number(stats?.upcomingCount ?? 0);
-  const pastMinutes = Number(stats?.pastMinutes ?? 0);
+  const playedCount = Number(stats?.playedCount ?? 0);
+  const playedMinutes = Number(stats?.playedMinutes ?? 0);
   const pastWithAttendanceCount = Number(stats?.pastWithAttendanceCount ?? 0);
   const attendedCount = Number(stats?.attendedCount ?? 0);
   const attendanceRate =
@@ -379,11 +382,11 @@ export default async function StudentDetailPage({ params }: PageProps) {
         {/* Stats strip */}
         <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4">
           <StatCell label="Sesiones totales" value={totalSessions.toString()} />
-          <StatCell label="Completadas" value={pastCount.toString()} />
+          <StatCell label="Entrenadas" value={playedCount.toString()} />
           <StatCell label="Próximas" value={upcomingCount.toString()} accent />
           <StatCell
-            label="Horas totales"
-            value={`${Math.round(totalMinutes / 60)}h`}
+            label="Horas entrenadas"
+            value={formatHours(playedMinutes)}
           />
         </section>
 
@@ -600,7 +603,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                   Acumuladas
                 </p>
                 <p className="text-3xl font-black tabular-nums leading-none text-foreground">
-                  {Math.round(pastMinutes / 60)}h
+                  {formatHours(playedMinutes)}
                 </p>
                 <p className="text-[11px] text-foreground/50 mt-1">
                   entrenadas

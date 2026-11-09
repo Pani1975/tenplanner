@@ -429,6 +429,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         observations: session.observations,
         coachComment: session.coachComment,
         coachRating: session.coachRating,
+        planFollowed: session.planFollowed,
+        planChangeReason: session.planChangeReason,
         coachAudioUrl: session.coachAudioPath
           ? (audioUrls.get(session.coachAudioPath) ?? null)
           : null,
