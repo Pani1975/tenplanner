@@ -1283,7 +1283,9 @@ export function StepExercises({
                                     : "border-border hover:border-brand/30 cursor-grab active:cursor-grabbing"
                                 )}
                               >
-                                <div className="flex items-center gap-2 px-3 py-2.5">
+                                {/* En el móvil: título y descripción a todo el ancho y
+                                    los botones en una fila debajo. */}
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 px-3 py-2.5 sm:flex-nowrap">
                                   <div
                                     className={cn(
                                       "w-0.5 h-8 rounded-full shrink-0",
@@ -1291,7 +1293,7 @@ export function StepExercises({
                                     )}
                                   />
                                   <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
-                                  <div className="flex-1 min-w-0">
+                                  <div className="min-w-0 flex-[1_1_calc(100%-3rem)] sm:flex-1">
                                     {isTextItem(ex) ? (
                                       <div className="space-y-1">
                                         <input
@@ -1372,154 +1374,158 @@ export function StepExercises({
                                       )}
                                   </div>
 
-                                  {isEditingDuration ? (
-                                    <div className="flex items-center gap-1 shrink-0">
-                                      <input
-                                        ref={durationInputRef}
-                                        type="number"
-                                        min={1}
-                                        max={300}
-                                        value={durationEditValue}
-                                        onChange={(e) =>
-                                          setDurationEditValue(e.target.value)
-                                        }
-                                        onBlur={() =>
-                                          commitDurationEdit(flatIdx)
-                                        }
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            commitDurationEdit(flatIdx);
+                                  <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:shrink-0">
+                                    {isEditingDuration ? (
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <input
+                                          ref={durationInputRef}
+                                          type="number"
+                                          min={1}
+                                          max={300}
+                                          value={durationEditValue}
+                                          onChange={(e) =>
+                                            setDurationEditValue(e.target.value)
                                           }
-                                          if (e.key === "Escape")
-                                            setEditingDurationIdx(null);
-                                        }}
-                                        className="w-14 h-7 text-xs text-center bg-background border border-brand/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40"
-                                      />
-                                      <span className="text-xs text-muted-foreground">
-                                        min
-                                      </span>
-                                    </div>
-                                  ) : isTextItem(ex) &&
-                                    ex.overrideDuration === null ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => startEditDuration(flatIdx)}
-                                      title="Poner duración (se convierte en actividad)"
-                                      className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 px-1.5 py-1 rounded-lg hover:bg-muted"
-                                    >
-                                      <Clock className="size-3" />
-                                      <span>Sin duración</span>
-                                    </button>
-                                  ) : (
-                                    <div className="flex items-center gap-0.5 shrink-0">
+                                          onBlur={() =>
+                                            commitDurationEdit(flatIdx)
+                                          }
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                              e.preventDefault();
+                                              commitDurationEdit(flatIdx);
+                                            }
+                                            if (e.key === "Escape")
+                                              setEditingDurationIdx(null);
+                                          }}
+                                          className="w-14 h-7 text-xs text-center bg-background border border-brand/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40"
+                                        />
+                                        <span className="text-xs text-muted-foreground">
+                                          min
+                                        </span>
+                                      </div>
+                                    ) : isTextItem(ex) &&
+                                      ex.overrideDuration === null ? (
                                       <button
                                         type="button"
                                         onClick={() =>
                                           startEditDuration(flatIdx)
                                         }
-                                        title={
-                                          isStationsItem(ex)
-                                            ? "Duración de cada estación"
-                                            : "Editar duración"
-                                        }
-                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded-lg hover:bg-muted group/dur"
+                                        title="Poner duración (se convierte en actividad)"
+                                        className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 px-1.5 py-1 rounded-lg hover:bg-muted"
                                       >
                                         <Clock className="size-3" />
-                                        <span>
-                                          {effectiveDuration} min
-                                          {isStationsItem(ex)
-                                            ? "/estación"
-                                            : ""}
-                                        </span>
-                                        <ChevronDown className="size-2.5 opacity-0 group-hover/dur:opacity-100 transition-opacity" />
+                                        <span>Sin duración</span>
                                       </button>
-                                      {isTextItem(ex) && (
+                                    ) : (
+                                      <div className="flex items-center gap-0.5 shrink-0">
                                         <button
                                           type="button"
                                           onClick={() =>
-                                            patchItem(flatIdx, {
-                                              overrideDuration: null,
-                                            })
+                                            startEditDuration(flatIdx)
                                           }
-                                          title="Quitar duración (queda como anotación)"
-                                          className="flex size-5 items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                          title={
+                                            isStationsItem(ex)
+                                              ? "Duración de cada estación"
+                                              : "Editar duración"
+                                          }
+                                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded-lg hover:bg-muted group/dur"
                                         >
-                                          <X className="size-3" />
+                                          <Clock className="size-3" />
+                                          <span>
+                                            {effectiveDuration} min
+                                            {isStationsItem(ex)
+                                              ? "/estación"
+                                              : ""}
+                                          </span>
+                                          <ChevronDown className="size-2.5 opacity-0 group-hover/dur:opacity-100 transition-opacity" />
                                         </button>
+                                        {isTextItem(ex) && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              patchItem(flatIdx, {
+                                                overrideDuration: null,
+                                              })
+                                            }
+                                            title="Quitar duración (queda como anotación)"
+                                            className="flex size-5 items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                          >
+                                            <X className="size-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {!isTextItem(ex) &&
+                                      !isWarmupItem(ex) &&
+                                      !isStationsItem(ex) && (
+                                        <NextLink
+                                          href={`/exercises/${ex.exerciseId}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          draggable={false}
+                                          onClick={(e) => e.stopPropagation()}
+                                          title="Ver la ficha completa (se abre en una ventana nueva)"
+                                          aria-label="Ver la ficha completa del ejercicio en una ventana nueva"
+                                          className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        >
+                                          <ExternalLink className="size-3.5" />
+                                        </NextLink>
                                       )}
-                                    </div>
-                                  )}
 
-                                  {!isTextItem(ex) &&
-                                    !isWarmupItem(ex) &&
-                                    !isStationsItem(ex) && (
-                                      <NextLink
-                                        href={`/exercises/${ex.exerciseId}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        draggable={false}
-                                        onClick={(e) => e.stopPropagation()}
-                                        title="Ver la ficha completa (se abre en una ventana nueva)"
-                                        aria-label="Ver la ficha completa del ejercicio en una ventana nueva"
-                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                      >
-                                        <ExternalLink className="size-3.5" />
-                                      </NextLink>
-                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setReplaceMenuIdx(
+                                          replaceMenuIdx === flatIdx
+                                            ? null
+                                            : flatIdx
+                                        )
+                                      }
+                                      aria-expanded={replaceMenuIdx === flatIdx}
+                                      title="Sustituir por otro ejercicio, texto, descanso o estaciones"
+                                      className={cn(
+                                        "inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors",
+                                        replaceMenuIdx === flatIdx ||
+                                          replacing?.idx === flatIdx
+                                          ? "bg-brand/15 text-foreground"
+                                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                      )}
+                                    >
+                                      <RefreshCw className="size-3" />
+                                      <span className="hidden sm:inline">
+                                        Sustituir
+                                      </span>
+                                    </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setReplaceMenuIdx(
-                                        replaceMenuIdx === flatIdx
-                                          ? null
-                                          : flatIdx
-                                      )
-                                    }
-                                    aria-expanded={replaceMenuIdx === flatIdx}
-                                    title="Sustituir por otro ejercicio, texto, descanso o estaciones"
-                                    className={cn(
-                                      "inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors",
-                                      replaceMenuIdx === flatIdx ||
-                                        replacing?.idx === flatIdx
-                                        ? "bg-brand/15 text-foreground"
-                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    )}
-                                  >
-                                    <RefreshCw className="size-3" />
-                                    <span className="hidden sm:inline">
-                                      Sustituir
-                                    </span>
-                                  </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedIdx(
+                                          isExpanded ? null : flatIdx
+                                        )
+                                      }
+                                      title="Ajustes"
+                                      className={cn(
+                                        "size-6 rounded-md flex items-center justify-center transition-colors shrink-0",
+                                        isExpanded || ex.notes || ex.aspecto
+                                          ? "text-brand bg-brand/10"
+                                          : "text-muted-foreground hover:text-foreground hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100"
+                                      )}
+                                    >
+                                      <StickyNote className="size-3.5" />
+                                    </button>
 
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setExpandedIdx(
-                                        isExpanded ? null : flatIdx
-                                      )
-                                    }
-                                    title="Ajustes"
-                                    className={cn(
-                                      "size-6 rounded-md flex items-center justify-center transition-colors shrink-0",
-                                      isExpanded || ex.notes || ex.aspecto
-                                        ? "text-brand bg-brand/10"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted sm:opacity-0 sm:group-hover:opacity-100"
-                                    )}
-                                  >
-                                    <StickyNote className="size-3.5" />
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      removeExercise(ex.exerciseId)
-                                    }
-                                    className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
-                                  >
-                                    <X className="size-3.5" />
-                                  </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeExercise(ex.exerciseId)
+                                      }
+                                      className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                                    >
+                                      <X className="size-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
 
                                 {replaceMenuIdx === flatIdx && (
