@@ -23,6 +23,8 @@ const PUBLIC_PREFIXES = [
   "/ficha-monitor/",
   "/api/cron/",
   "/api/public/sport",
+  "/api/public/reservas/",
+  "/reservar/",
 ];
 const PUBLIC_EXACT = new Set(["/"]);
 // Logged-out visitors are sent to /login only for these app pages. Any other

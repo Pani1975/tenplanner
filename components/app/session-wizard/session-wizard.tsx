@@ -411,6 +411,16 @@ export function SessionWizard({
     total: number;
   } | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  // Aviso de choque: otra sesión en la misma pista a la misma hora.
+  const [conflictWarning, setConflictWarning] = useState<{
+    placeName: string;
+    conflicts: {
+      id: string;
+      title: string;
+      scheduledAt: string;
+      durationMinutes: number;
+    }[];
+  } | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [, setHasDraft] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
@@ -601,7 +611,12 @@ export function SessionWizard({
     goToStep(step - 1);
   }
 
-  async function onSubmit() {
+  function onSubmit() {
+    void submitSession(false);
+  }
+
+  async function submitSession(ignoreConflicts: boolean) {
+    setConflictWarning(null);
     const allErrors = validateStep(1, state);
     if (Object.keys(allErrors).length > 0) {
       setShowErrors(true);
@@ -636,11 +651,54 @@ export function SessionWizard({
           ? computeTimelineDuration(state)
           : state.durationMinutes;
 
+      // ¿Coincide con otra sesión en la misma pista? Solo avisa: se puede
+      // guardar igualmente. Si la comprobación falla, no bloquea.
+      if (!ignoreConflicts && state.placeId) {
+        try {
+          const check = await fetch("/api/sessions/conflicts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              placeId: state.placeId,
+              excludeSessionId: edit?.sessionId ?? null,
+              slots: sessionDates.slice(0, 60).map((date) => ({
+                start: date.toISOString(),
+                durationMinutes,
+              })),
+            }),
+          });
+          if (check.ok) {
+            const json = (await check.json()) as {
+              data: {
+                placeName?: string;
+                conflicts: {
+                  id: string;
+                  title: string;
+                  scheduledAt: string;
+                  durationMinutes: number;
+                }[];
+              };
+            };
+            if (json.data.conflicts.length > 0) {
+              setConflictWarning({
+                placeName: json.data.placeName ?? "la pista",
+                conflicts: json.data.conflicts,
+              });
+              setSubmitting(false);
+              return;
+            }
+          }
+        } catch {
+          // Sin conexión para comprobarlo: se sigue guardando.
+        }
+      }
+
       if (edit) {
         const res = await fetch(`/api/sessions/${edit.sessionId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            reopenIfCompleted: !closingAfterChange,
             title: state.title.trim(),
             scheduledAt: scheduledIso,
             durationMinutes,
@@ -784,6 +842,79 @@ export function SessionWizard({
 
   return (
     <div className="flex w-full flex-col gap-8 rounded-lg border border-[#050505]/10 bg-white p-4 pb-28 shadow-[0_18px_60px_rgba(5,5,5,0.05)] dark:border-white/10 dark:bg-white/[0.045] sm:p-5 md:pb-6">
+      {conflictWarning && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setConflictWarning(null)}
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="conflict-title"
+            className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-[28px] border border-border bg-card p-6 text-foreground shadow-2xl"
+          >
+            <h2
+              id="conflict-title"
+              className="text-lg font-black leading-tight"
+            >
+              Ya hay otra sesión en {conflictWarning.placeName} a esa hora
+            </h2>
+            <ul className="my-4 space-y-2">
+              {conflictWarning.conflicts.slice(0, 6).map((c) => {
+                const start = new Date(c.scheduledAt);
+                const end = new Date(
+                  start.getTime() + c.durationMinutes * 60_000
+                );
+                const day = start.toLocaleDateString("es-ES", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                });
+                const hm = (d: Date) =>
+                  d.toLocaleTimeString("es-ES", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                return (
+                  <li
+                    key={c.id}
+                    className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm"
+                  >
+                    <span className="font-semibold">{c.title}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {day} · {hm(start)}–{hm(end)}
+                    </span>
+                  </li>
+                );
+              })}
+              {conflictWarning.conflicts.length > 6 && (
+                <li className="text-xs text-muted-foreground">
+                  y {conflictWarning.conflicts.length - 6} más
+                </li>
+              )}
+            </ul>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConflictWarning(null)}
+                className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted"
+              >
+                Cambiar
+              </button>
+              <button
+                type="button"
+                onClick={() => void submitSession(true)}
+                disabled={submitting}
+                className="inline-flex flex-[1.4] items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 disabled:opacity-60"
+              >
+                {submitting && <Loader2 className="size-4 animate-spin" />}
+                Guardar igualmente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {closingAfterChange && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
           <p className="font-semibold">

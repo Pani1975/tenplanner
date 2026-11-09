@@ -105,6 +105,11 @@ export async function POST(request: Request, ctx: Ctx) {
         tags: original.tags,
         location: original.location,
         placeId: original.placeId,
+        // Mismo espacio (club o particular), grupo y deporte que el original:
+        // sin esto la copia caía en el modo particular y no se veía en el club.
+        clubId: original.clubId,
+        groupId: original.groupId,
+        sport: original.sport,
         status: "scheduled",
       })
       .returning({ id: sessions.id });
@@ -128,6 +133,10 @@ export async function POST(request: Request, ctx: Ctx) {
             exerciseName: item.exerciseName,
             exerciseDescription: item.exerciseDescription,
             freeText: item.freeText,
+            title: item.title,
+            kind: item.kind,
+            stations: item.stations,
+            aspectoJuego: item.aspectoJuego,
             orderIndex: item.orderIndex,
             durationMinutes: item.durationMinutes,
             notes: item.notes,
