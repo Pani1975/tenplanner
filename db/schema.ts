@@ -334,6 +334,12 @@ export const sessions = pgTable(
     // en el bucket privado "session-audio" y duración en segundos.
     coachAudioPath: text("coach_audio_path"),
     coachAudioSeconds: integer("coach_audio_seconds"),
+    // Cierre de la sesión: ¿se dio tal y como estaba planificada? (null =
+    // sin responder, sesiones antiguas), motivo del cambio (clave de
+    // lib/sessions/plan-change.ts, opcional) y valoración final 1-5.
+    planFollowed: boolean("plan_followed"),
+    planChangeReason: varchar("plan_change_reason", { length: 40 }),
+    sessionRating: integer("session_rating"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

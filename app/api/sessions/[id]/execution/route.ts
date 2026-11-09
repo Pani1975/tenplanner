@@ -4,6 +4,10 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessionExercises, sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import {
+  sessionCloseFields,
+  sessionCloseValues,
+} from "@/lib/sessions/close-schema";
 
 const executionItemSchema = z.object({
   exerciseId: z.string().uuid(),
@@ -17,6 +21,7 @@ const executionItemSchema = z.object({
 const executionSchema = z.object({
   exercises: z.array(executionItemSchema).min(1).max(80),
   completeSession: z.boolean().optional().default(true),
+  ...sessionCloseFields,
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -110,7 +115,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (parsed.data.completeSession) {
       await tx
         .update(sessions)
-        .set({ status: "completed" })
+        .set({ status: "completed", ...sessionCloseValues(parsed.data) })
         .where(and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)));
     }
   });
