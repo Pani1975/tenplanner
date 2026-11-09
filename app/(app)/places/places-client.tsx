@@ -94,7 +94,7 @@ function formatHours(minutes: number) {
 
 function usageLabel(place: Place) {
   if (place.upcomingSessions > 0) return "Con agenda";
-  if (place.totalSessions > 0) return "Historico";
+  if (place.totalSessions > 0) return "Histórico";
   return "Sin uso";
 }
 
