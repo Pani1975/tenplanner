@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CalendarDays, Copy, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -36,7 +37,8 @@ function toLocalInput(date: Date) {
  * Diálogo para mover una sesión a otra fecha/hora o duplicarla.
  * - "move": cambia la fecha; si el nombre es un código AAMMDD_Grupo, se actualiza.
  * - "duplicate": copia completa (plan, textos libres, alumnos) en la fecha elegida;
- *   por defecto, una semana después.
+ *   por defecto, una semana después. Desde aquí también se puede abrir el
+ *   asistente con la sesión cargada para cambiarla antes de guardar.
  */
 export function SessionDateDialog({
   mode,
@@ -187,6 +189,18 @@ export function SessionDateDialog({
 
           {error && (
             <p className="text-sm font-medium text-destructive">{error}</p>
+          )}
+
+          {mode === "duplicate" && (
+            <p className="text-xs text-muted-foreground">
+              ¿Quieres cambiar ejercicios, grupo o repetirla varias semanas?{" "}
+              <Link
+                href={`/sessions/new?from=${session.id}`}
+                className="font-semibold text-foreground underline underline-offset-2"
+              >
+                Editar antes de guardar
+              </Link>
+            </p>
           )}
 
           <div className="flex justify-end gap-2">

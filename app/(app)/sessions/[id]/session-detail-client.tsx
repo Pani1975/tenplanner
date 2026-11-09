@@ -30,7 +30,6 @@ import {
   Circle,
   FileDown,
   Copy,
-  Repeat,
   Star,
   Play,
   CalendarClock,
@@ -739,16 +738,6 @@ export function SessionDetailClient({
               <Copy className="size-3.5" />
               <span className="hidden sm:inline">Duplicar</span>
             </button>
-          )}
-          {/* Reutilizar: abre el asistente con esta sesión como base */}
-          {isOwner && (
-            <Link
-              href={`/sessions/new?from=${session.id}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
-            >
-              <Repeat className="size-3.5" />
-              <span className="hidden sm:inline">Reutilizar</span>
-            </Link>
           )}
           <SessionFavoriteToggle
             sessionId={session.id}
