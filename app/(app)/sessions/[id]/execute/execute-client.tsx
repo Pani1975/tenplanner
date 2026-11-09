@@ -22,6 +22,8 @@ import {
   ListOrdered,
   Check,
   Star,
+  RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -181,11 +183,30 @@ function formatDate(isoString: string) {
 
 export function ExecuteSessionClient({
   session,
-  exercises,
+  exercises: initialExercises,
   students = [],
   diagrams,
 }: Props) {
   const router = useRouter();
+  // El plan se puede cambiar durante la clase (sustituir o quitar).
+  const [exercises, setExercises] = useState(initialExercises);
+  const [planEdit, setPlanEdit] = useState<
+    null | { mode: "menu" } | { mode: "replace" } | { mode: "remove" }
+  >(null);
+  const [planSearch, setPlanSearch] = useState("");
+  const [planResults, setPlanResults] = useState<
+    | {
+        id: string;
+        name: string;
+        category: string;
+        durationMinutes: number;
+        description: string | null;
+      }[]
+    | null
+  >(null);
+  const [planBusy, setPlanBusy] = useState(false);
+  const planSearchSeq = useRef(0);
+  const [planError, setPlanError] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [done, setDone] = useState<Set<string>>(new Set());
@@ -431,6 +452,115 @@ export function ExecuteSessionClient({
   function selectExercise(idx: number) {
     resetTimerForExercise(exercises[idx]);
     setCurrentIdx(idx);
+  }
+
+  // ── Cambiar el plan durante la clase ───────────────────────────────
+  async function searchPlanExercises(q: string) {
+    setPlanSearch(q);
+    // Solo vale la respuesta de la última búsqueda (se escribe rápido).
+    const requestId = ++planSearchSeq.current;
+    try {
+      const res = await fetch(
+        `/api/sessions/${session.id}/plan-item?q=${encodeURIComponent(q)}`
+      );
+      if (!res.ok) throw new Error();
+      const json = (await res.json()) as {
+        data: NonNullable<typeof planResults>;
+      };
+      if (requestId === planSearchSeq.current) setPlanResults(json.data);
+    } catch {
+      setPlanError("No se pudo buscar. Revisa la conexión.");
+    }
+  }
+
+  function openReplace() {
+    setPlanError(null);
+    setPlanResults(null);
+    setPlanEdit({ mode: "replace" });
+    void searchPlanExercises("");
+  }
+
+  function forgetProgress(key: string) {
+    setDone((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setExecutionById((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
+  async function replaceCurrent(ex: NonNullable<typeof planResults>[number]) {
+    if (!current) return;
+    setPlanBusy(true);
+    setPlanError(null);
+    const res = await fetch(`/api/sessions/${session.id}/plan-item`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "replace",
+        itemKey: current.key,
+        exerciseId: ex.id,
+      }),
+    }).catch(() => null);
+    setPlanBusy(false);
+    if (!res?.ok) {
+      setPlanError("No se pudo sustituir. Inténtalo de nuevo.");
+      return;
+    }
+    const key = current.key;
+    setExercises((list) =>
+      list.map((item) =>
+        item.key === key
+          ? {
+              ...item,
+              kind: "exercise" as const,
+              exerciseId: ex.id,
+              name: ex.name,
+              category: ex.category,
+              description: ex.description,
+              // Se mantiene el tiempo planificado para ese hueco.
+              durationMinutes: item.durationMinutes || ex.durationMinutes,
+              steps: [],
+              tips: null,
+              materials: [],
+            }
+          : item
+      )
+    );
+    forgetProgress(key);
+    resetTimerForExercise({
+      ...current,
+      durationMinutes: current.durationMinutes || ex.durationMinutes,
+    });
+    setPlanEdit(null);
+  }
+
+  async function removeCurrent() {
+    if (!current) return;
+    setPlanBusy(true);
+    setPlanError(null);
+    const res = await fetch(`/api/sessions/${session.id}/plan-item`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "remove", itemKey: current.key }),
+    }).catch(() => null);
+    setPlanBusy(false);
+    if (!res?.ok) {
+      setPlanError("No se pudo quitar. Inténtalo de nuevo.");
+      return;
+    }
+    const key = current.key;
+    const nextList = exercises.filter((item) => item.key !== key);
+    forgetProgress(key);
+    setExercises(nextList);
+    const nextIdx = Math.min(currentIdx, Math.max(nextList.length - 1, 0));
+    setCurrentIdx(nextIdx);
+    if (nextList[nextIdx]) resetTimerForExercise(nextList[nextIdx]);
+    setPlanEdit(null);
   }
 
   async function handleFinish({
@@ -1268,6 +1398,66 @@ export function ExecuteSessionClient({
                 </>
               )}
             </button>
+            {/* Cambiar el plan sobre la marcha */}
+            {planEdit?.mode === "remove" ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm">
+                <span className="font-semibold text-foreground">
+                  ¿Quitar «{current.name}» de la sesión?
+                </span>
+                <span className="ml-auto flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPlanEdit(null)}
+                    disabled={planBusy}
+                    className="rounded-full border border-[#050505]/10 px-3 py-1.5 text-xs font-black text-muted-foreground dark:border-white/10"
+                  >
+                    No
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void removeCurrent()}
+                    disabled={planBusy}
+                    className="inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-xs font-black text-white disabled:opacity-60"
+                  >
+                    {planBusy && <Loader2 className="size-3 animate-spin" />}
+                    Sí, quitar
+                  </button>
+                </span>
+              </div>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={openReplace}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/15 text-xs font-black text-foreground transition-colors hover:bg-muted dark:border-white/15"
+                >
+                  <RefreshCw className="size-3.5" />
+                  Sustituir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanError(null);
+                    setPlanEdit({ mode: "remove" });
+                  }}
+                  disabled={totalExercises <= 1}
+                  title={
+                    totalExercises <= 1
+                      ? "La sesión necesita al menos un elemento"
+                      : undefined
+                  }
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/15 text-xs font-black text-foreground transition-colors hover:bg-muted disabled:opacity-40 dark:border-white/15"
+                >
+                  <Trash2 className="size-3.5" />
+                  Quitar
+                </button>
+              </div>
+            )}
+            {planError && planEdit?.mode !== "replace" && (
+              <p className="mt-2 text-xs font-semibold text-destructive">
+                {planError}
+              </p>
+            )}
           </div>
 
           {/* Timer */}
@@ -1596,6 +1786,81 @@ export function ExecuteSessionClient({
               backLabel: "Seguir con la sesión",
               finishLabel: "Guardar y salir",
             })}
+          </div>
+        </div>
+      )}
+      {planEdit?.mode === "replace" && current && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !planBusy && setPlanEdit(null)}
+          />
+          <div className="relative flex max-h-[88dvh] w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
+            <div className="border-b border-[#050505]/10 p-4 dark:border-white/10">
+              <p className="text-xs font-semibold text-muted-foreground">
+                Sustituir «{current.name}» por:
+              </p>
+              <input
+                autoFocus
+                value={planSearch}
+                onChange={(e) => void searchPlanExercises(e.target.value)}
+                placeholder="Busca un ejercicio…"
+                className="mt-2 h-11 w-full rounded-xl border border-[#050505]/15 bg-background px-3 text-base text-foreground outline-none focus:border-brand dark:border-white/15"
+              />
+              {planError && (
+                <p className="mt-2 text-xs font-semibold text-destructive">
+                  {planError}
+                </p>
+              )}
+            </div>
+            <ul className="flex-1 divide-y divide-[#050505]/10 overflow-y-auto dark:divide-white/10">
+              {planResults === null ? (
+                <li className="flex justify-center p-6">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                </li>
+              ) : planResults.length === 0 ? (
+                <li className="p-6 text-center text-sm text-muted-foreground">
+                  No hay ejercicios con ese nombre.
+                </li>
+              ) : (
+                planResults
+                  .filter((ex) => ex.id !== current.exerciseId)
+                  .map((ex) => (
+                    <li key={ex.id}>
+                      <button
+                        type="button"
+                        disabled={planBusy}
+                        onClick={() => void replaceCurrent(ex)}
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted disabled:opacity-60"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-bold text-foreground">
+                            {ex.name}
+                          </span>
+                          {ex.description && (
+                            <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">
+                              {ex.description}
+                            </span>
+                          )}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {ex.durationMinutes} min
+                        </span>
+                      </button>
+                    </li>
+                  ))
+              )}
+            </ul>
+            <div className="border-t border-[#050505]/10 p-3 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setPlanEdit(null)}
+                disabled={planBusy}
+                className="h-10 w-full rounded-full border border-[#050505]/15 text-sm font-black text-muted-foreground dark:border-white/15"
+              >
+                {planBusy ? "Guardando…" : "Cancelar"}
+              </button>
+            </div>
           </div>
         </div>
       )}
