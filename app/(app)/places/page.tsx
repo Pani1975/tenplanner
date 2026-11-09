@@ -60,6 +60,7 @@ export default async function PlacesPage() {
         startAt: courtBookings.startAt,
         durationMinutes: courtBookings.durationMinutes,
         fullName: courtBookings.fullName,
+        kind: courtBookings.kind,
       })
       .from(courtBookings)
       .innerJoin(places, eq(places.id, courtBookings.placeId))

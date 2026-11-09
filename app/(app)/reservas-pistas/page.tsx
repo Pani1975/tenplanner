@@ -18,6 +18,7 @@ import {
 } from "@/lib/bookings/availability";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
+import { ClubBookingButton } from "./club-booking-button";
 
 export const metadata = { title: "Reservas de pistas" };
 
@@ -26,7 +27,7 @@ const HOUR_PX = 56;
 
 type Block = {
   key: string;
-  kind: "session" | "booking";
+  kind: "session" | "booking" | "club";
   id: string;
   label: string;
   startMinute: number;
@@ -117,6 +118,7 @@ export default async function CourtBookingsPage({
               id: courtBookings.id,
               placeId: courtBookings.placeId,
               fullName: courtBookings.fullName,
+              bookingKind: courtBookings.kind,
               start: courtBookings.startAt,
               minutes: courtBookings.durationMinutes,
             })
@@ -167,9 +169,9 @@ export default async function CourtBookingsPage({
     const list = blocksByPlace.get(r.placeId) ?? [];
     list.push({
       key: `b-${r.id}`,
-      kind: "booking",
+      kind: r.bookingKind === "club" ? "club" : "booking",
       id: r.id,
-      label: r.fullName,
+      label: r.bookingKind === "club" ? `Club: ${r.fullName}` : r.fullName,
       ...b,
     });
     blocksByPlace.set(r.placeId, list);
@@ -211,16 +213,23 @@ export default async function CourtBookingsPage({
               Reservas de pistas
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ocupación de cada pista: sesiones y reservas de clientes.
+              Ocupación de cada pista: sesiones, reservas de clientes y reservas
+              del club.
             </p>
           </div>
-          <Link
-            href="/places"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
-          >
-            <Settings2 className="size-3.5" />
-            Pistas, horario y enlace
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <ClubBookingButton
+              places={placeRows.map((p) => ({ id: p.id, name: p.name }))}
+              date={date}
+            />
+            <Link
+              href="/places"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <Settings2 className="size-3.5" />
+              Pistas, horario y enlace
+            </Link>
+          </div>
         </header>
 
         {/* Navegación por días */}
@@ -274,7 +283,12 @@ export default async function CourtBookingsPage({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-sm bg-amber-400" /> Reservas de
-            clientes ({bookingRows.length})
+            clientes (
+            {bookingRows.filter((b) => b.bookingKind !== "club").length})
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-violet-500" /> Reservas del
+            club ({bookingRows.filter((b) => b.bookingKind === "club").length})
           </span>
           {date !== today && (
             <Link href="/reservas-pistas" className="font-semibold underline">
@@ -386,7 +400,12 @@ export default async function CourtBookingsPage({
                       ) : (
                         <div
                           key={b.key}
-                          className="absolute inset-x-1 flex items-start gap-1 overflow-hidden rounded-lg border border-amber-500/60 bg-amber-400/25 px-2 py-1 text-foreground"
+                          className={cn(
+                            "absolute inset-x-1 flex items-start gap-1 overflow-hidden rounded-lg border px-2 py-1 text-foreground",
+                            b.kind === "club"
+                              ? "border-violet-500/60 bg-violet-500/20"
+                              : "border-amber-500/60 bg-amber-400/25"
+                          )}
                           style={{ top: top(b.startMinute) + 1, height }}
                         >
                           <div className="min-w-0 flex-1">{content}</div>

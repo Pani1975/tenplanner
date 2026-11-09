@@ -81,6 +81,7 @@ export async function POST(request: Request) {
     .select({
       id: courtBookings.id,
       fullName: courtBookings.fullName,
+      kind: courtBookings.kind,
       startAt: courtBookings.startAt,
       durationMinutes: courtBookings.durationMinutes,
     })
@@ -105,7 +106,10 @@ export async function POST(request: Request) {
       })),
       ...bookingRows.map((b) => ({
         id: b.id,
-        title: `Reserva de ${b.fullName}`,
+        title:
+          b.kind === "club"
+            ? `Reserva del club: ${b.fullName}`
+            : `Reserva de ${b.fullName}`,
         start: b.startAt,
         durationMinutes: b.durationMinutes,
       })),

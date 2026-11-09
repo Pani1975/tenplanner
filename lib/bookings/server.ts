@@ -260,3 +260,105 @@ async function loadBookablePlacesTx(
     },
   ];
 }
+
+export type ClubBookingError = "not_found" | "invalid_time" | "taken";
+
+/**
+ * Reserva hecha por el propio club (o monitor) sobre una de sus pistas, para
+ * lo que indique (mantenimiento, torneo, clase particular…). No depende de si
+ * la pista está abierta a reservas públicas ni de su horario, pero no puede
+ * chocar con una sesión o con otra reserva.
+ */
+export async function createClubBooking({
+  ownerId,
+  placeId,
+  start,
+  durationMinutes,
+  purpose,
+}: {
+  ownerId: string;
+  placeId: string;
+  start: Date;
+  durationMinutes: number;
+  purpose: string;
+}): Promise<
+  | { ok: true; id: string }
+  | { ok: false; error: ClubBookingError; conflict?: string }
+> {
+  if (
+    isNaN(start.getTime()) ||
+    durationMinutes < 15 ||
+    durationMinutes > 12 * 60
+  ) {
+    return { ok: false, error: "invalid_time" };
+  }
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${placeId}))`);
+    const [place] = await tx
+      .select({ id: places.id })
+      .from(places)
+      .where(and(eq(places.id, placeId), eq(places.coachId, ownerId)))
+      .limit(1);
+    if (!place) return { ok: false as const, error: "not_found" as const };
+
+    const windowStart = new Date(start.getTime() - 12 * 3600_000);
+    const [sessionRows, bookingRows] = await Promise.all([
+      tx
+        .select({
+          title: sessions.title,
+          start: sessions.scheduledAt,
+          minutes: sessions.durationMinutes,
+        })
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.placeId, placeId),
+            ne(sessions.status, "cancelled"),
+            gte(sessions.scheduledAt, windowStart),
+            lt(sessions.scheduledAt, end)
+          )
+        ),
+      tx
+        .select({
+          title: courtBookings.fullName,
+          start: courtBookings.startAt,
+          minutes: courtBookings.durationMinutes,
+        })
+        .from(courtBookings)
+        .where(
+          and(
+            eq(courtBookings.placeId, placeId),
+            isNull(courtBookings.cancelledAt),
+            gte(courtBookings.startAt, windowStart),
+            lt(courtBookings.startAt, end)
+          )
+        ),
+    ]);
+    const clash = [...sessionRows, ...bookingRows].find(
+      (b) =>
+        b.start < end &&
+        start < new Date(b.start.getTime() + b.minutes * 60_000)
+    );
+    if (clash) {
+      return {
+        ok: false as const,
+        error: "taken" as const,
+        conflict: clash.title,
+      };
+    }
+    const [created] = await tx
+      .insert(courtBookings)
+      .values({
+        placeId,
+        ownerId,
+        startAt: start,
+        durationMinutes,
+        fullName: purpose.trim().replace(/\s+/g, " ").slice(0, 120),
+        kind: "club",
+      })
+      .returning({ id: courtBookings.id });
+    return { ok: true as const, id: created.id };
+  });
+}

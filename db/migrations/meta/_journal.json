@@ -610,6 +610,13 @@
       "when": 1795200000000,
       "tag": "0086_court_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795300000000,
+      "tag": "0087_court_bookings_kind",
+      "breakpoints": true
     }
   ]
 }

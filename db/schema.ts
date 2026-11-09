@@ -309,7 +309,10 @@ export const courtBookings = pgTable(
       .notNull(),
     startAt: timestamp("start_at", { withTimezone: true }).notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
+    // Cliente: nombre y apellidos. Reserva del club: para qué es.
     fullName: varchar("full_name", { length: 120 }).notNull(),
+    // "public" = desde el enlace público; "club" = la hace el propio club.
+    kind: varchar("kind", { length: 16 }).notNull().default("public"),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
