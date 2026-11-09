@@ -8,6 +8,7 @@ import {
 } from "@/lib/objectives";
 import { getWorkMode, spaceTitle, workModeKicker } from "@/lib/work-mode";
 import { WorkspaceObjectivesManager } from "./workspace-objectives-manager";
+import { BulkObjectivesActions } from "./bulk-objectives-actions";
 
 export const metadata = { title: "Objetivos" };
 
@@ -64,6 +65,10 @@ export default async function ObjectivesPage() {
             toda la plataforma. Para cambios solo tuyos o de un club, cambia de
             modo en el menú lateral.
           </p>
+        )}
+
+        {scope !== "base" && (
+          <BulkObjectivesActions inClub={scope === "club"} />
         )}
 
         <WorkspaceObjectivesManager items={items} scope={scope} />
