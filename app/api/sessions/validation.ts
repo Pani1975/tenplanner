@@ -216,6 +216,9 @@ export const updateSessionSchema = z
     studentIds: z.array(z.string().uuid("ID de alumno inválido")).optional(),
     exercises: z.array(exerciseItemSchema).optional(),
     blocks: z.array(sessionBlockSchema).max(3).optional().nullable(),
+    // Editar desde el asistente una sesión ya completada la devuelve a
+    // pendiente (salvo al editarla justo al cerrarla porque cambió).
+    reopenIfCompleted: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field is required for update",

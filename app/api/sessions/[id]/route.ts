@@ -490,7 +490,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
   try {
     const [existing] = await db
-      .select({ userId: sessions.userId })
+      .select({ userId: sessions.userId, status: sessions.status })
       .from(sessions)
       .where(eq(sessions.id, id))
       .limit(1);
@@ -504,6 +504,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const {
+      reopenIfCompleted,
       exercises: exerciseItems,
       blocks,
       studentIds,
@@ -611,6 +612,13 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const updateValues: Record<string, unknown> = {};
+    // Una sesión completada que se edita vuelve a "pendiente": se marcará
+    // otra vez como completada (con su cierre) cuando corresponda.
+    if (reopenIfCompleted && existing.status === "completed") {
+      updateValues.status = "scheduled";
+      updateValues.planFollowed = null;
+      updateValues.planChangeReason = null;
+    }
     if (sessionFields.title !== undefined)
       updateValues.title = sessionFields.title;
     if (sessionFields.description !== undefined)
