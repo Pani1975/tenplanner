@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { objectiveOverrides, tennisObjectives } from "@/db/schema";
 import {
@@ -446,4 +446,66 @@ export async function duplicateObjectiveFor(
     { ball: source.ball, aspect: source.aspect, block: source.block },
     next?.id ?? null
   );
+}
+
+/**
+ * Quita de golpe todos los objetivos visibles en un club o en el espacio
+ * particular de un monitor: oculta los de Ten Planner (con un ajuste, se
+ * pueden restaurar) y desactiva los propios de ese ámbito.
+ */
+export async function hideAllObjectivesFor(
+  ctx: ScopeContext,
+  scope: "club" | "coach",
+  userId: string
+): Promise<WriteOk | WriteFailure> {
+  const ownerId = scope === "club" ? ctx.clubId : ctx.coachId;
+  if (!ownerId) return { ok: false, error: "Not found" };
+  const scopeCol = scope === "club" ? sql.raw("club_id") : sql.raw("coach_id");
+
+  await db.transaction(async (tx) => {
+    // Ajustes ya existentes de este ámbito → ocultos.
+    await tx.execute(sql`
+      update objective_overrides set hidden = true, updated_by = ${userId}, updated_at = now()
+      where ${scopeCol} = ${ownerId}
+    `);
+    // Objetivos de Ten Planner vigentes sin ajuste en este ámbito → ajuste oculto.
+    await tx.execute(sql`
+      insert into objective_overrides (objective_id, ${scopeCol}, hidden, updated_by)
+      select o.id, ${ownerId}, true, ${userId}
+      from tennis_objectives o
+      where o.is_active
+        and o.club_id is null and o.coach_id is null and o.student_id is null
+        and not exists (
+          select 1 from objective_overrides ov
+          where ov.objective_id = o.id and ov.${scopeCol} = ${ownerId}
+        )
+    `);
+    // Objetivos propios de este ámbito → desactivados.
+    await tx.execute(sql`
+      update tennis_objectives set is_active = false
+      where ${scopeCol} = ${ownerId} and is_active
+    `);
+  });
+  return { ok: true };
+}
+
+/**
+ * Vuelve a mostrar todos los objetivos de Ten Planner vigentes tal y como
+ * están en el catálogo: borra los ajustes (ocultos, textos, orden) de este
+ * ámbito. Los objetivos propios del ámbito no se tocan.
+ */
+export async function restoreAllBaseObjectivesFor(
+  ctx: ScopeContext,
+  scope: "club" | "coach"
+): Promise<WriteOk | WriteFailure> {
+  const ownerId = scope === "club" ? ctx.clubId : ctx.coachId;
+  if (!ownerId) return { ok: false, error: "Not found" };
+  await db
+    .delete(objectiveOverrides)
+    .where(
+      scope === "club"
+        ? eq(objectiveOverrides.clubId, ownerId)
+        : eq(objectiveOverrides.coachId, ownerId)
+    );
+  return { ok: true };
 }

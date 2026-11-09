@@ -13,6 +13,8 @@ import {
 import {
   createOwnObjective,
   duplicateObjectiveFor,
+  hideAllObjectivesFor,
+  restoreAllBaseObjectivesFor,
   moveObjectiveFor,
   placeObjectiveFor,
   removeObjectiveFor,
@@ -266,4 +268,23 @@ export async function duplicateWorkspaceObjective(input: {
       parsed.data.objectiveId
     )
   );
+}
+
+/** Quitar todos los objetivos del club o del espacio particular. */
+export async function hideAllWorkspaceObjectives() {
+  const auth = await authorize();
+  if (!auth.ok) return auth;
+  // El catálogo de Ten Planner no se vacía de golpe (afectaría a todos).
+  if (auth.scope === "base")
+    return { ok: false as const, error: "No disponible en Modo Ten Planner" };
+  return done(await hideAllObjectivesFor(auth.ctx, auth.scope, auth.userId));
+}
+
+/** Restaurar todos los objetivos vigentes de Ten Planner tal cual. */
+export async function restoreAllBaseWorkspaceObjectives() {
+  const auth = await authorize();
+  if (!auth.ok) return auth;
+  if (auth.scope === "base")
+    return { ok: false as const, error: "No disponible en Modo Ten Planner" };
+  return done(await restoreAllBaseObjectivesFor(auth.ctx, auth.scope));
 }
