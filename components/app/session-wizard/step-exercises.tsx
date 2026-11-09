@@ -204,6 +204,7 @@ export function StepExercises({
   const [replaceMenuIdx, setReplaceMenuIdx] = useState<number | null>(null);
   /** Elemento que se está sustituyendo por un ejercicio de la biblioteca o
    * por unas estaciones: lo elegido ocupa su lugar en vez de añadirse. */
+  const replacePanelRef = useRef<HTMLDivElement>(null);
   const [replacing, setReplacing] = useState<{
     idx: number;
     name: string;
@@ -211,6 +212,18 @@ export function StepExercises({
   } | null>(null);
 
   const selected = state.exercises;
+
+  // Al sustituir, el buscador se abre bajo el elemento: llevarlo a la vista.
+  useEffect(() => {
+    if (!replacing) return;
+    const frame = requestAnimationFrame(() =>
+      replacePanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [replacing]);
 
   // Las sesiones creadas antes de que los 3 bloques fueran explícitos tienen
   // items con phase=null; al cargarlos aquí se normalizan a "main" (igual que
@@ -857,6 +870,41 @@ export function StepExercises({
   // en el que se pulsa "Añadir ejercicio" (o al elegir el ejercicio de una
   // estación), como en el formulario de clases, en vez de ocupar una columna
   // fija con toda la biblioteca.
+  const stationsDraftPanel = (
+    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-2 py-1.5">
+      <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
+        {replacing?.target === "stations"
+          ? `Sustituir «${replacing.name}» por estaciones. ¿Cuántas?`
+          : "¿Cuántas?"}
+      </span>
+      <input
+        type="number"
+        min={STATION_COUNT_MIN}
+        max={STATION_COUNT_MAX}
+        value={stationsDraftCount}
+        onChange={(e) => setStationsDraftCount(Number(e.target.value))}
+        className="h-6 w-12 rounded-md border border-border bg-background px-1 text-xs text-center tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-brand/40"
+      />
+      <button
+        type="button"
+        onClick={confirmStationsDraft}
+        className="rounded-md bg-foreground px-2 py-1 text-[10px] font-bold text-background transition-colors hover:bg-foreground/90"
+      >
+        {replacing?.target === "stations" ? "Sustituir" : "Crear"}
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setStationsDraftPhase(null);
+          setReplacing(null);
+        }}
+        className="text-[10px] text-muted-foreground hover:text-foreground"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+
   const sourcesPanel = (
     <div className="mt-3 flex flex-col rounded-xl border border-border overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20 shrink-0">
@@ -1256,11 +1304,13 @@ export function StepExercises({
                               <div
                                 draggable={
                                   !isEditingDuration &&
-                                  focusedTextIdx !== flatIdx
+                                  focusedTextIdx !== flatIdx &&
+                                  replacing?.idx !== flatIdx
                                 }
                                 onDragStart={(e) =>
                                   !isEditingDuration &&
                                   focusedTextIdx !== flatIdx &&
+                                  replacing?.idx !== flatIdx &&
                                   onTimelineDragStart(e, flatIdx)
                                 }
                                 onDragEnd={() => {
@@ -1527,6 +1577,19 @@ export function StepExercises({
                                     </button>
                                   </div>
                                 </div>
+
+                                {replacing?.idx === flatIdx && (
+                                  <div
+                                    ref={replacePanelRef}
+                                    className="scroll-mt-24 border-t border-border/40 px-3 pb-3 pt-2"
+                                  >
+                                    {replacing.target === "exercise"
+                                      ? sourcesPanel
+                                      : stationsDraftPhase
+                                        ? stationsDraftPanel
+                                        : null}
+                                  </div>
+                                )}
 
                                 {replaceMenuIdx === flatIdx && (
                                   <div className="flex flex-wrap items-center gap-1.5 border-t border-border/40 px-3 py-2">
@@ -1891,43 +1954,9 @@ export function StepExercises({
                     )}
 
                     {/* Acciones para añadir directamente a este bloque */}
-                    {stationsDraftPhase === phase ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-2 py-1.5">
-                        <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
-                          {replacing?.target === "stations"
-                            ? `Sustituir «${replacing.name}» por estaciones. ¿Cuántas?`
-                            : "¿Cuántas?"}
-                        </span>
-                        <input
-                          type="number"
-                          min={STATION_COUNT_MIN}
-                          max={STATION_COUNT_MAX}
-                          value={stationsDraftCount}
-                          onChange={(e) =>
-                            setStationsDraftCount(Number(e.target.value))
-                          }
-                          className="h-6 w-12 rounded-md border border-border bg-background px-1 text-xs text-center tabular-nums text-foreground focus:outline-none focus:ring-1 focus:ring-brand/40"
-                        />
-                        <button
-                          type="button"
-                          onClick={confirmStationsDraft}
-                          className="rounded-md bg-foreground px-2 py-1 text-[10px] font-bold text-background transition-colors hover:bg-foreground/90"
-                        >
-                          {replacing?.target === "stations"
-                            ? "Sustituir"
-                            : "Crear"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setStationsDraftPhase(null);
-                            setReplacing(null);
-                          }}
-                          className="text-[10px] text-muted-foreground hover:text-foreground"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
+                    {stationsDraftPhase === phase &&
+                    replacing?.target !== "stations" ? (
+                      stationsDraftPanel
                     ) : (
                       <div className="mt-2 flex flex-wrap gap-2">
                         <button
@@ -1982,7 +2011,9 @@ export function StepExercises({
                       </div>
                     )}
 
-                    {pickerPhase === phase && sourcesPanel}
+                    {pickerPhase === phase &&
+                      replacing?.target !== "exercise" &&
+                      sourcesPanel}
                   </div>
                 </div>
               );
