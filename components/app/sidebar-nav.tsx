@@ -41,6 +41,12 @@ import { ThemeToggle } from "./theme-toggle";
 import { WorkModeBadge } from "./work-mode-badge";
 import { spaceLabels } from "@/lib/space-labels";
 import { SportBadge } from "./sport-badge";
+
+/**
+ * Selector de deporte en la barra lateral. Oculto mientras solo haya tenis;
+ * poner a true cuando se abran pádel, pickleball, etc.
+ */
+const SHOW_SPORT_SELECTOR = false;
 import { formatUnread, useUnreadMessages } from "./use-unread-messages";
 import type { ClubOption } from "./club-context-select";
 import type { Sport } from "@/lib/sport-constants";
@@ -434,26 +440,31 @@ function NavContent({
         </Link>
       </div>
 
-      {user && !familyOnly && (
-        <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
-          <SportBadge activeSport={activeSport} />
-          {platformAccount ? (
-            <PlatformBadge />
-          ) : (
-            (workModeClubs.length > 0 || isAdmin) && (
-              <WorkModeBadge
-                key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
-                clubs={workModeClubs}
-                activeClubId={activeWorkClubId}
-                canUseTenPlanner={isAdmin}
-                tenPlannerActive={tenPlannerMode}
-                clubAccountClubId={clubAccountClubId}
-                managementActive={managementMode}
-              />
-            )
-          )}
-        </div>
-      )}
+      {user &&
+        !familyOnly &&
+        (SHOW_SPORT_SELECTOR ||
+          platformAccount ||
+          workModeClubs.length > 0 ||
+          isAdmin) && (
+          <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
+            {SHOW_SPORT_SELECTOR && <SportBadge activeSport={activeSport} />}
+            {platformAccount ? (
+              <PlatformBadge />
+            ) : (
+              (workModeClubs.length > 0 || isAdmin) && (
+                <WorkModeBadge
+                  key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
+                  clubs={workModeClubs}
+                  activeClubId={activeWorkClubId}
+                  canUseTenPlanner={isAdmin}
+                  tenPlannerActive={tenPlannerMode}
+                  clubAccountClubId={clubAccountClubId}
+                  managementActive={managementMode}
+                />
+              )
+            )}
+          </div>
+        )}
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
@@ -941,26 +952,31 @@ function SidebarNavInner({
             </button>
           </div>
         </div>
-        {user && !familyOnly && (
-          <div className="px-4 pb-3 space-y-2">
-            <SportBadge activeSport={activeSport} />
-            {platformAccount ? (
-              <PlatformBadge />
-            ) : (
-              (workModeClubs.length > 0 || isAdmin) && (
-                <WorkModeBadge
-                  key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
-                  clubs={workModeClubs}
-                  activeClubId={activeWorkClubId}
-                  canUseTenPlanner={isAdmin}
-                  tenPlannerActive={tenPlannerMode}
-                  clubAccountClubId={clubAccountClubId}
-                  managementActive={managementMode}
-                />
-              )
-            )}
-          </div>
-        )}
+        {user &&
+          !familyOnly &&
+          (SHOW_SPORT_SELECTOR ||
+            platformAccount ||
+            workModeClubs.length > 0 ||
+            isAdmin) && (
+            <div className="px-4 pb-3 space-y-2">
+              {SHOW_SPORT_SELECTOR && <SportBadge activeSport={activeSport} />}
+              {platformAccount ? (
+                <PlatformBadge />
+              ) : (
+                (workModeClubs.length > 0 || isAdmin) && (
+                  <WorkModeBadge
+                    key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
+                    clubs={workModeClubs}
+                    activeClubId={activeWorkClubId}
+                    canUseTenPlanner={isAdmin}
+                    tenPlannerActive={tenPlannerMode}
+                    clubAccountClubId={clubAccountClubId}
+                    managementActive={managementMode}
+                  />
+                )
+              )}
+            </div>
+          )}
       </header>
 
       {mobileOpen && (
