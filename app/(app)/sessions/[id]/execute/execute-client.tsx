@@ -24,6 +24,10 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  PLAN_CHANGE_REASONS,
+  type PlanChangeReason,
+} from "@/lib/sessions/plan-change";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "border-blue-500/40 bg-blue-500/5",
@@ -193,6 +197,20 @@ export function ExecuteSessionClient({
   const [showQuickComplete, setShowQuickComplete] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  // Cierre: primero "¿se ha completado tal y como estaba planificada?";
+  // si sí, valoración; si no, motivo (opcional) y a editar la sesión.
+  const [closeStep, setCloseStep] = useState<"plan" | "reason" | "review">(
+    "plan"
+  );
+  const [planReason, setPlanReason] = useState<PlanChangeReason | null>(null);
+
+  function openClose(kind: "finish" | "quick") {
+    setCloseStep("plan");
+    setPlanReason(null);
+    setFinishError(null);
+    if (kind === "finish") setShowFinish(true);
+    else setShowQuickComplete(true);
+  }
   // Pasar lista antes de empezar: por defecto todos presentes (salvo lo ya
   // guardado), y el monitor marca a quien falta.
   const [attendanceStage, setAttendanceStage] = useState(false);
@@ -203,9 +221,7 @@ export function ExecuteSessionClient({
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   // Valoración al terminar: estrellas de la clase (obligatoria), comentario y
   // estrellas por alumno (opcionales).
-  const [sessionRating, setSessionRating] = useState(
-    session.coachRating ?? 0
-  );
+  const [sessionRating, setSessionRating] = useState(session.coachRating ?? 0);
   const [sessionComment, setSessionComment] = useState(
     session.coachComment ?? ""
   );
@@ -389,7 +405,7 @@ export function ExecuteSessionClient({
       resetTimerForExercise(exercises[nextIdx]);
       setCurrentIdx(nextIdx);
     } else {
-      setShowFinish(true);
+      openClose("finish");
     }
   }
 
@@ -400,7 +416,7 @@ export function ExecuteSessionClient({
       resetTimerForExercise(exercises[nextIdx]);
       setCurrentIdx(nextIdx);
     } else {
-      setShowFinish(true);
+      openClose("finish");
     }
   }
 
@@ -417,8 +433,11 @@ export function ExecuteSessionClient({
     setCurrentIdx(idx);
   }
 
-  async function handleFinish({ markAll = false }: { markAll?: boolean } = {}) {
-    if (sessionRating < 1) {
+  async function handleFinish({
+    markAll = false,
+    planChanged = false,
+  }: { markAll?: boolean; planChanged?: boolean } = {}) {
+    if (!planChanged && sessionRating < 1) {
       setFinishError("Valora la clase de 1 a 5 estrellas para terminar.");
       return;
     }
@@ -431,12 +450,20 @@ export function ExecuteSessionClient({
         fetch(`/api/sessions/${session.id}/review`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            coachRating: sessionRating,
-            coachComment: sessionComment.trim() || null,
-          }),
+          // Si la sesión cambió, aquí solo se guarda la respuesta del plan;
+          // la valoración se pide después de editar la sesión.
+          body: JSON.stringify(
+            planChanged
+              ? { planFollowed: false, planChangeReason: planReason }
+              : {
+                  planFollowed: true,
+                  coachRating: sessionRating,
+                  coachComment: sessionComment.trim() || null,
+                }
+          ),
         }),
         ...students
+          .filter(() => !planChanged)
           .filter((student) => (studentRatings[student.id] ?? 0) > 0)
           .map((student) =>
             fetch(`/api/sessions/${session.id}/attendance`, {
@@ -505,7 +532,13 @@ export function ExecuteSessionClient({
       );
       return;
     }
-    router.push(`/sessions/${session.id}`);
+    // No se dio según lo planificado: a editar la sesión para que quede lo
+    // que se hizo de verdad; al guardar se pide la valoración final.
+    router.push(
+      planChanged
+        ? `/sessions/${session.id}/edit?cierre=1`
+        : `/sessions/${session.id}`
+    );
     router.refresh();
   }
 
@@ -533,7 +566,10 @@ export function ExecuteSessionClient({
       </div>
       <label className="block">
         <span className="text-xs font-black text-foreground">
-          Comentario <span className="font-semibold text-muted-foreground">(opcional)</span>
+          Comentario{" "}
+          <span className="font-semibold text-muted-foreground">
+            (opcional)
+          </span>
         </span>
         <textarea
           value={sessionComment}
@@ -548,7 +584,9 @@ export function ExecuteSessionClient({
         <details className="rounded-2xl border border-[#050505]/10 dark:border-white/10">
           <summary className="cursor-pointer px-3 py-2.5 text-xs font-black text-foreground">
             Valorar alumnos{" "}
-            <span className="font-semibold text-muted-foreground">(opcional)</span>
+            <span className="font-semibold text-muted-foreground">
+              (opcional)
+            </span>
           </summary>
           <ul className="divide-y divide-[#050505]/10 border-t border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
             {reviewStudents.map((student) => (
@@ -583,6 +621,133 @@ export function ExecuteSessionClient({
     (e) => e.kind === "exercise"
   ).length;
 
+  /** Contenido de la ventana de cierre según el paso (plan, motivo, valoración). */
+  function closeBody({
+    markAll,
+    onBack,
+    backLabel,
+    finishLabel,
+  }: {
+    markAll: boolean;
+    onBack: () => void;
+    backLabel: string;
+    finishLabel: string;
+  }) {
+    const secondary =
+      "flex-1 rounded-full border border-[#050505]/10 px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted dark:border-white/10";
+    const primary =
+      "inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60";
+
+    if (closeStep === "plan") {
+      return (
+        <>
+          <p className="mb-4 text-center text-base font-black leading-snug text-foreground">
+            ¿Se ha completado la sesión tal y como estaba planificada?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setCloseStep("reason")}
+              className={secondary}
+            >
+              No, cambió
+            </button>
+            <button
+              type="button"
+              onClick={() => setCloseStep("review")}
+              className={primary}
+            >
+              Sí, tal cual
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onBack}
+            className="mt-4 w-full text-center text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {backLabel}
+          </button>
+        </>
+      );
+    }
+
+    if (closeStep === "reason") {
+      return (
+        <>
+          <p className="text-base font-black text-foreground">
+            ¿Por qué cambió?
+          </p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Opcional. Después podrás editar la sesión para que quede lo que se
+            hizo de verdad.
+          </p>
+          <div className="mb-5 flex flex-wrap gap-2">
+            {PLAN_CHANGE_REASONS.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                aria-pressed={planReason === r.id}
+                onClick={() => setPlanReason(planReason === r.id ? null : r.id)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                  planReason === r.id
+                    ? "border-brand bg-brand/20 text-foreground"
+                    : "border-[#050505]/10 text-muted-foreground hover:bg-muted dark:border-white/10"
+                )}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setCloseStep("plan")}
+              disabled={finishing}
+              className={secondary}
+            >
+              Atrás
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFinish({ markAll, planChanged: true })}
+              disabled={finishing}
+              className={primary}
+            >
+              {finishing && <Loader2 className="size-4 animate-spin" />}
+              Editar la sesión
+            </button>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {reviewFields}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setCloseStep("plan")}
+            disabled={finishing}
+            className={secondary}
+          >
+            Atrás
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFinish({ markAll })}
+            disabled={finishing || sessionRating < 1}
+            className={primary}
+          >
+            {finishing && <Loader2 className="size-4 animate-spin" />}
+            {finishLabel}
+          </button>
+        </div>
+      </>
+    );
+  }
+
   const quickCompleteModal = showQuickComplete ? (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       <div
@@ -610,24 +775,12 @@ export function ExecuteSessionClient({
             </p>
           )}
         </div>
-        {reviewFields}
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowQuickComplete(false)}
-            disabled={finishing}
-            className="flex-1 rounded-full border border-[#050505]/10 px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted dark:border-white/10"
-          >
-            Volver
-          </button>
-          <button
-            onClick={() => handleFinish({ markAll: true })}
-            disabled={finishing || sessionRating < 1}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
-          >
-            {finishing && <Loader2 className="size-4 animate-spin" />}
-            Sí, completada
-          </button>
-        </div>
+        {closeBody({
+          markAll: true,
+          onBack: () => setShowQuickComplete(false),
+          backLabel: "Volver a la sesión",
+          finishLabel: "Guardar",
+        })}
       </div>
     </div>
   ) : null;
@@ -679,8 +832,8 @@ export function ExecuteSessionClient({
             </h1>
             <p className="text-sm text-muted-foreground">
               {presentCount} de {students.length} presente
-              {presentCount !== 1 ? "s" : ""}. Toca a quien falte para
-              marcarlo como ausente.
+              {presentCount !== 1 ? "s" : ""}. Toca a quien falte para marcarlo
+              como ausente.
             </p>
           </div>
 
@@ -893,7 +1046,7 @@ export function ExecuteSessionClient({
             Comenzar sesión
           </button>
           <button
-            onClick={() => setShowQuickComplete(true)}
+            onClick={() => openClose("quick")}
             className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#050505]/15 text-sm font-black text-foreground transition-colors hover:bg-muted dark:border-white/15"
           >
             <CheckCircle2 className="size-4" />
@@ -1033,7 +1186,7 @@ export function ExecuteSessionClient({
         </div>
 
         <button
-          onClick={() => setShowQuickComplete(true)}
+          onClick={() => openClose("quick")}
           className="inline-flex items-center gap-1 text-xs font-semibold text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors"
         >
           <Flag className="size-3" />
@@ -1437,24 +1590,12 @@ export function ExecuteSessionClient({
                 </p>
               )}
             </div>
-            {reviewFields}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowFinish(false)}
-                disabled={finishing}
-                className="flex-1 rounded-full border border-[#050505]/10 px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted dark:border-white/10"
-              >
-                Seguir
-              </button>
-              <button
-                onClick={() => handleFinish()}
-                disabled={finishing || sessionRating < 1}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
-              >
-                {finishing && <Loader2 className="size-4 animate-spin" />}
-                Guardar y salir
-              </button>
-            </div>
+            {closeBody({
+              markAll: false,
+              onBack: () => setShowFinish(false),
+              backLabel: "Seguir con la sesión",
+              finishLabel: "Guardar y salir",
+            })}
           </div>
         </div>
       )}

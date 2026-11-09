@@ -332,6 +332,10 @@ export const sessions = pgTable(
     coachComment: text("coach_comment"),
     // Valoración global de la clase (1-5), obligatoria al terminar la sesión en marcha.
     coachRating: integer("coach_rating"),
+    // Cierre: ¿se dio tal y como estaba planificada? (null = sin responder)
+    // y motivo del cambio (clave de lib/sessions/plan-change.ts, opcional).
+    planFollowed: boolean("plan_followed"),
+    planChangeReason: varchar("plan_change_reason", { length: 40 }),
     // Nota de voz del monitor sobre la sesión en general: ruta del archivo
     // en el bucket privado "session-audio" y duración en segundos.
     coachAudioPath: text("coach_audio_path"),

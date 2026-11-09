@@ -4,13 +4,22 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { PLAN_CHANGE_REASON_IDS } from "@/lib/sessions/plan-change";
 
-// Valoración de la clase al terminarla: de 1 a 5 estrellas (obligatoria) y un
-// comentario opcional.
-const patchSchema = z.object({
-  coachRating: z.number().int().min(1).max(5),
-  coachComment: z.string().trim().max(2000).nullable().optional(),
-});
+// Cierre de la clase: valoración de 1 a 5 estrellas y comentario opcional, y
+// si se dio tal y como estaba planificada (con el motivo si cambió). Si la
+// sesión cambió, primero se guarda el plan y la valoración llega después de
+// editarla, por eso cada campo es opcional (pero hace falta alguno).
+const patchSchema = z
+  .object({
+    coachRating: z.number().int().min(1).max(5).optional(),
+    coachComment: z.string().trim().max(2000).nullable().optional(),
+    planFollowed: z.boolean().optional(),
+    planChangeReason: z.enum(PLAN_CHANGE_REASON_IDS).nullable().optional(),
+  })
+  .refine((v) => v.coachRating !== undefined || v.planFollowed !== undefined, {
+    message: "Falta la valoración o la respuesta sobre el plan.",
+  });
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -50,9 +59,16 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (existing.userId !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const setValues: Record<string, unknown> = {
-    coachRating: parsed.data.coachRating,
-  };
+  const setValues: Record<string, unknown> = {};
+  if (parsed.data.coachRating !== undefined) {
+    setValues.coachRating = parsed.data.coachRating;
+  }
+  if (parsed.data.planFollowed !== undefined) {
+    setValues.planFollowed = parsed.data.planFollowed;
+    setValues.planChangeReason = parsed.data.planFollowed
+      ? null
+      : (parsed.data.planChangeReason ?? null);
+  }
   if (parsed.data.coachComment !== undefined) {
     setValues.coachComment = parsed.data.coachComment || null;
   }

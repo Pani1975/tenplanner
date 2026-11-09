@@ -9,7 +9,14 @@ import {
   type VoiceNoteSaved,
 } from "@/components/app/session-voice-note";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  SessionCloseDialog,
+  type RatingAfterEdit,
+  type SessionClosePlanChanged,
+  type SessionCloseRating,
+} from "@/components/app/session-close-dialog";
+import { planChangeReasonLabel } from "@/lib/sessions/plan-change";
 import {
   ArrowLeft,
   Pencil,
@@ -80,6 +87,9 @@ export interface SessionData {
   /** Comentario del monitor sobre la sesión en general. */
   coachComment?: string | null;
   coachRating?: number | null;
+  /** ¿Se dio tal y como estaba planificada? null = sin responder. */
+  planFollowed?: boolean | null;
+  planChangeReason?: string | null;
   /** Nota de voz de la sesión (URL firmada; solo para el monitor dueño). */
   coachAudioUrl?: string | null;
   coachAudioSeconds?: number | null;
@@ -444,6 +454,59 @@ export function SessionDetailClient({
     kind: "complete" | "cancel";
     note: string;
   } | null>(null);
+  // Cierre de la sesión (¿según lo planificado? + valoración). Al volver de
+  // editar una sesión que cambió (?valorar=1) se abre en la valoración.
+  const searchParams = useSearchParams();
+  const [closeStep, setCloseStep] = useState<"plan" | "rating" | null>(() =>
+    isOwner &&
+    session.status === "completed" &&
+    searchParams.get("valorar") === "1"
+      ? "rating"
+      : null
+  );
+
+  async function patchJson(url: string, body: Record<string, unknown>) {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  }
+
+  async function markCompleted() {
+    if (status === "completed") return true;
+    return patchJson(`/api/sessions/${session.id}/status`, {
+      status: "completed",
+    });
+  }
+
+  async function handleCloseRate(data: SessionCloseRating | RatingAfterEdit) {
+    if (!(await markCompleted())) return false;
+    const ok = await patchJson(`/api/sessions/${session.id}/review`, {
+      ...("afterEdit" in data ? {} : { planFollowed: true }),
+      coachRating: data.sessionRating,
+      coachComment: data.note,
+    });
+    if (!ok) return false;
+    setStatus("completed");
+    setCloseStep(null);
+    router.replace(`/sessions/${session.id}`);
+    router.refresh();
+    return true;
+  }
+
+  async function handleClosePlanChanged(data: SessionClosePlanChanged) {
+    if (!(await markCompleted())) return false;
+    const ok = await patchJson(`/api/sessions/${session.id}/review`, {
+      planFollowed: false,
+      planChangeReason: data.planChangeReason,
+    });
+    if (!ok) return false;
+    router.push(`/sessions/${session.id}/edit?cierre=1`);
+    return true;
+  }
+
   const [repeatOpen, setRepeatOpen] = useState(false);
   const [repeatDates, setRepeatDates] = useState<string[]>([""]);
   const [repeating, setRepeating] = useState(false);
@@ -800,7 +863,7 @@ export function SessionDetailClient({
         {isOwner && status !== "completed" && status !== "cancelled" && (
           <div className="flex flex-wrap items-center gap-2 border-b border-border/50 px-4 py-3 sm:px-6">
             <button
-              onClick={() => setStatusDialog({ kind: "complete", note: "" })}
+              onClick={() => setCloseStep("plan")}
               disabled={updatingStatus}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors disabled:opacity-50"
             >
@@ -1100,8 +1163,35 @@ export function SessionDetailClient({
                     />
                   ))}
                 </div>
+              ) : isOwner && status === "completed" ? (
+                <button
+                  type="button"
+                  onClick={() => setCloseStep("rating")}
+                  className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-amber-500/20"
+                >
+                  <Star className="size-3 fill-amber-400 text-amber-400" />
+                  Falta la valoración
+                </button>
               ) : null}
             </div>
+            {session.planFollowed != null && (
+              <p className="mt-1.5">
+                <span
+                  className={cn(
+                    "inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium text-foreground",
+                    session.planFollowed ? "bg-brand/15" : "bg-amber-500/15"
+                  )}
+                >
+                  {session.planFollowed
+                    ? "Según lo planificado"
+                    : `Cambió respecto al plan${
+                        planChangeReasonLabel(session.planChangeReason)
+                          ? ` · ${planChangeReasonLabel(session.planChangeReason)}`
+                          : ""
+                      }`}
+                </span>
+              </p>
+            )}
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               Anota cómo ha ido la clase en general. Puedes escribir antes o
               después de marcarla como completada.
@@ -1395,6 +1485,21 @@ export function SessionDetailClient({
           }}
         />
       )}
+
+      <SessionCloseDialog
+        key={closeStep ?? "closed"}
+        open={closeStep !== null}
+        initialStep={closeStep ?? "plan"}
+        initialNote={session.coachComment ?? ""}
+        onClose={() => {
+          setCloseStep(null);
+          if (searchParams.get("valorar")) {
+            router.replace(`/sessions/${session.id}`);
+          }
+        }}
+        onRate={handleCloseRate}
+        onPlanChanged={handleClosePlanChanged}
+      />
 
       {/* Status note dialog */}
       {statusDialog && (
