@@ -10,6 +10,7 @@ import {
   Coffee,
   Dumbbell,
   ExternalLink,
+  RefreshCw,
   Filter,
   GripVertical,
   LayoutGrid,
@@ -142,6 +143,8 @@ function groupByPhase(
   return groups;
 }
 
+const ITEM_KIND_FALLBACK_NAME = "este elemento";
+
 export function StepExercises({
   state,
   update,
@@ -197,6 +200,15 @@ export function StepExercises({
   } | null>(null);
   /** Bloque en el que está abierto el buscador de ejercicios (como en Clases). */
   const [pickerPhase, setPickerPhase] = useState<TrainingPhase | null>(null);
+  /** Elemento con el menú "Sustituir por…" abierto (índice en la sesión). */
+  const [replaceMenuIdx, setReplaceMenuIdx] = useState<number | null>(null);
+  /** Elemento que se está sustituyendo por un ejercicio de la biblioteca o
+   * por unas estaciones: lo elegido ocupa su lugar en vez de añadirse. */
+  const [replacing, setReplacing] = useState<{
+    idx: number;
+    name: string;
+    target: "exercise" | "stations";
+  } | null>(null);
 
   const selected = state.exercises;
 
@@ -281,6 +293,82 @@ export function StepExercises({
     setExercises([...selected, item]);
   }
 
+  /**
+   * Pone `next` en el lugar del elemento `idx` (mismo bloque y posición). Se
+   * conserva el tiempo que tenía ese hueco si era distinto del nuevo, para
+   * que la duración de la sesión no cambie sin querer.
+   */
+  function replaceAt(idx: number, next: WizardExercise) {
+    const old = selected[idx];
+    if (!old) return;
+    const oldMinutes = old.overrideDuration ?? old.durationMinutes;
+    const keepTime =
+      !isStationsItem(next) &&
+      !isStationsItem(old) &&
+      oldMinutes != null &&
+      oldMinutes !== next.durationMinutes;
+    const item: WizardExercise = {
+      ...next,
+      phase: old.phase,
+      overrideDuration: keepTime ? oldMinutes : next.overrideDuration,
+    };
+    setExercises(selected.map((e, i) => (i === idx ? item : e)));
+    setReplacing(null);
+    setReplaceMenuIdx(null);
+    setExpandedIdx(null);
+  }
+
+  function exerciseItemFrom(
+    ex: AvailableExercise,
+    phase: TrainingPhase
+  ): WizardExercise {
+    return {
+      exerciseId: ex.id,
+      name: ex.name,
+      category: ex.category,
+      durationMinutes: ex.durationMinutes,
+      overrideDuration: null,
+      notes: "",
+      phase,
+      intensity: null,
+    };
+  }
+
+  /** "Sustituir por…": Ejercicio abre el buscador; Texto y Descanso
+   * sustituyen al momento; Estaciones pide cuántas. */
+  function startReplace(
+    idx: number,
+    kind: "exercise" | "text" | "warmup" | "stations"
+  ) {
+    const old = selected[idx];
+    if (!old) return;
+    const phase = old.phase ?? "main";
+    const name = old.name || ITEM_KIND_FALLBACK_NAME;
+    setReplaceMenuIdx(null);
+    if (kind === "text") {
+      replaceAt(idx, createTextItem("", phase));
+      return;
+    }
+    if (kind === "warmup") {
+      replaceAt(idx, createWarmupItem(phase));
+      return;
+    }
+    if (kind === "stations") {
+      setReplacing({ idx, name, target: "stations" });
+      setPickerPhase(null);
+      setStationsDraftPhase(phase);
+      setStationsDraftCount(4);
+      return;
+    }
+    setReplacing({ idx, name, target: "exercise" });
+    setAddPhaseOverride(phase);
+    setPickingStation(null);
+    setStationsDraftPhase(null);
+    setSourceTab("library");
+    setSearch("");
+    setPickerPhase(phase);
+  }
+
   /** Sustituye un item de texto libre (por su clave local) por un ejercicio
    * de biblioteca recién creado, conservando bloque, duración y notas. */
   function replaceItemWithExercise(key: string, ex: AvailableExercise) {
@@ -357,7 +445,12 @@ export function StepExercises({
       STATION_COUNT_MAX,
       Math.max(STATION_COUNT_MIN, stationsDraftCount || STATION_COUNT_MIN)
     );
-    setExercises([...selected, createStationsItem(stationsDraftPhase, n, "")]);
+    const stationsItem = createStationsItem(stationsDraftPhase, n, "");
+    if (replacing?.target === "stations") {
+      replaceAt(replacing.idx, stationsItem);
+    } else {
+      setExercises([...selected, stationsItem]);
+    }
     setStationsDraftPhase(null);
     setStationsDraftCount(4);
   }
@@ -471,6 +564,14 @@ export function StepExercises({
     if (selectedIds.has(ex.id)) {
       return { ok: false, message: "Este ejercicio ya está en la sesión." };
     }
+    if (replacing?.target === "exercise") {
+      replaceAt(replacing.idx, exerciseItemFrom(ex, target.phase));
+      setPickerPhase(null);
+      return {
+        ok: true,
+        message: "Ejercicio sustituido. Ya puedes cerrar esta pestaña.",
+      };
+    }
     addExercise(ex, target.phase);
     return {
       ok: true,
@@ -479,6 +580,9 @@ export function StepExercises({
   });
 
   function removeExercise(id: string) {
+    // Cambian las posiciones: se anula una sustitución a medias.
+    setReplacing(null);
+    setReplaceMenuIdx(null);
     setExercises(selected.filter((e) => e.exerciseId !== id));
   }
 
@@ -496,6 +600,8 @@ export function StepExercises({
   ) {
     const item = selected[sourceFlatIdx];
     if (!item) return;
+    setReplacing(null);
+    setReplaceMenuIdx(null);
     const groups = groupByPhase(selected);
     // Mapa mutable fase -> array de ejercicios, para hacer el splice/insert
     // y luego aplanar en el orden fijo de los 3 bloques.
@@ -801,6 +907,7 @@ export function StepExercises({
             onClick={() => {
               setPickerPhase(null);
               setPickingStation(null);
+              setReplacing(null);
             }}
             aria-label="Cerrar buscador de ejercicios"
             title="Cerrar"
@@ -810,6 +917,25 @@ export function StepExercises({
           </button>
         </div>
       </div>
+
+      {replacing?.target === "exercise" && !pickingStation && (
+        <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
+          <RefreshCw className="size-3.5 text-brand shrink-0" />
+          <span className="min-w-0 truncate text-xs font-semibold text-foreground">
+            Elige el ejercicio que sustituye a «{replacing.name}»
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setReplacing(null);
+              setPickerPhase(null);
+            }}
+            className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {pickingStation && (
         <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
@@ -964,15 +1090,23 @@ export function StepExercises({
                   </NextLink>
                   <button
                     type="button"
-                    onClick={() =>
-                      pickingStation
-                        ? setStationExercise(
-                            pickingStation.itemIdx,
-                            pickingStation.stationIdx,
-                            ex
-                          )
-                        : addExercise(ex, activeAddPhase)
-                    }
+                    onClick={() => {
+                      if (pickingStation) {
+                        setStationExercise(
+                          pickingStation.itemIdx,
+                          pickingStation.stationIdx,
+                          ex
+                        );
+                      } else if (replacing?.target === "exercise") {
+                        replaceAt(
+                          replacing.idx,
+                          exerciseItemFrom(ex, activeAddPhase)
+                        );
+                        setPickerPhase(null);
+                      } else {
+                        addExercise(ex, activeAddPhase);
+                      }
+                    }}
                     title={
                       pickingStation
                         ? "Añadir a esta estación"
@@ -1337,6 +1471,31 @@ export function StepExercises({
                                   <button
                                     type="button"
                                     onClick={() =>
+                                      setReplaceMenuIdx(
+                                        replaceMenuIdx === flatIdx
+                                          ? null
+                                          : flatIdx
+                                      )
+                                    }
+                                    aria-expanded={replaceMenuIdx === flatIdx}
+                                    title="Sustituir por otro ejercicio, texto, descanso o estaciones"
+                                    className={cn(
+                                      "inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors",
+                                      replaceMenuIdx === flatIdx ||
+                                        replacing?.idx === flatIdx
+                                        ? "bg-brand/15 text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                  >
+                                    <RefreshCw className="size-3" />
+                                    <span className="hidden sm:inline">
+                                      Sustituir
+                                    </span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
                                       setExpandedIdx(
                                         isExpanded ? null : flatIdx
                                       )
@@ -1362,6 +1521,41 @@ export function StepExercises({
                                     <X className="size-3.5" />
                                   </button>
                                 </div>
+
+                                {replaceMenuIdx === flatIdx && (
+                                  <div className="flex flex-wrap items-center gap-1.5 border-t border-border/40 px-3 py-2">
+                                    <span className="text-[11px] font-semibold text-muted-foreground">
+                                      Sustituir por:
+                                    </span>
+                                    {(
+                                      [
+                                        ["exercise", "Ejercicio", Dumbbell],
+                                        ["text", "Texto", Type],
+                                        ["warmup", "Descanso", Coffee],
+                                        ["stations", "Estaciones", LayoutGrid],
+                                      ] as const
+                                    ).map(([kind, label, Icon]) => (
+                                      <button
+                                        key={kind}
+                                        type="button"
+                                        onClick={() =>
+                                          startReplace(flatIdx, kind)
+                                        }
+                                        className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:border-brand/50 hover:bg-brand/10"
+                                      >
+                                        <Icon className="size-3" />
+                                        {label}
+                                      </button>
+                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={() => setReplaceMenuIdx(null)}
+                                      className="ml-auto text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                )}
 
                                 {isStationsItem(ex) && (
                                   <div className="px-3 pb-3 border-t border-border/40 pt-3 space-y-2.5">
@@ -1694,7 +1888,9 @@ export function StepExercises({
                     {stationsDraftPhase === phase ? (
                       <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-2 py-1.5">
                         <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
-                          ¿Cuántas?
+                          {replacing?.target === "stations"
+                            ? `Sustituir «${replacing.name}» por estaciones. ¿Cuántas?`
+                            : "¿Cuántas?"}
                         </span>
                         <input
                           type="number"
@@ -1711,11 +1907,16 @@ export function StepExercises({
                           onClick={confirmStationsDraft}
                           className="rounded-md bg-foreground px-2 py-1 text-[10px] font-bold text-background transition-colors hover:bg-foreground/90"
                         >
-                          Crear
+                          {replacing?.target === "stations"
+                            ? "Sustituir"
+                            : "Crear"}
                         </button>
                         <button
                           type="button"
-                          onClick={() => setStationsDraftPhase(null)}
+                          onClick={() => {
+                            setStationsDraftPhase(null);
+                            setReplacing(null);
+                          }}
                           className="text-[10px] text-muted-foreground hover:text-foreground"
                         >
                           Cancelar
@@ -1728,6 +1929,7 @@ export function StepExercises({
                           onClick={() => {
                             setAddPhaseOverride(phase);
                             setPickingStation(null);
+                            setReplacing(null);
                             setSourceTab("library");
                             setSearch("");
                             setPickerPhase((current) =>
