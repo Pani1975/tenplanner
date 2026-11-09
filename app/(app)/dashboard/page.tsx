@@ -10,7 +10,8 @@ import {
   exercises as exercisesTable,
   students as studentsTable,
 } from "@/db/schema";
-import { and, asc, count, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, lt, ne, or, sql } from "drizzle-orm";
+import { getActiveSport } from "@/lib/sports";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -32,7 +33,6 @@ import { TimeGreeting } from "@/components/app/dashboard/time-greeting";
 import { Skeleton } from "@/components/ui/skeleton";
 import { greetingForHour } from "@/lib/time-greeting";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { isFamilyOnlyUser } from "@/lib/family";
@@ -143,7 +143,10 @@ async function DashboardBody({
 
   // El panel refleja el modo de trabajo activo: en particular, solo lo
   // propio sin club; en modo club, todo el espacio compartido de ese club.
-  const activeClubId = await getActiveWorkClubId(userId);
+  const [activeClubId, activeSport] = await Promise.all([
+    getActiveWorkClubId(userId),
+    getActiveSport(userId),
+  ]);
   const sessionsVisibility = sharedWithClubCondition(
     sessionsTable.userId,
     sessionsTable.clubId,
@@ -180,7 +183,9 @@ async function DashboardBody({
     db
       .select({
         total: sql<number>`count(*)`,
-        totalMinutes: sql<number>`coalesce(sum(${sessionsTable.durationMinutes}), 0)`,
+        // Tiempo en pista = solo sesiones ya pasadas y no canceladas (misma
+        // regla que las estadísticas de alumnos y el modo Gestión).
+        totalMinutes: sql<number>`coalesce(sum(${sessionsTable.durationMinutes}) filter (where ${sessionsTable.scheduledAt} < now() and ${sessionsTable.status} <> 'cancelled'), 0)`,
         thisWeekCount: sql<number>`count(*) filter (where ${sessionsTable.scheduledAt} >= ${weekStart.toISOString()})`,
       })
       .from(sessionsTable)
@@ -188,7 +193,22 @@ async function DashboardBody({
     db
       .select({ count: count() })
       .from(exercisesTable)
-      .where(exerciseVisibleToUserCondition(userId)),
+      // Mismo criterio que la pestaña "Todos" de la biblioteca: deporte
+      // activo y (públicos o del espacio de trabajo activo).
+      .where(
+        and(
+          eq(exercisesTable.sport, activeSport),
+          or(
+            eq(exercisesTable.isGlobal, true),
+            sharedWithClubCondition(
+              exercisesTable.createdBy,
+              exercisesTable.clubId,
+              userId,
+              activeClubId
+            )
+          )
+        )
+      ),
     db.select({ count: count() }).from(studentsTable).where(studentsVisibility),
     db
       .select({
@@ -199,7 +219,8 @@ async function DashboardBody({
         and(
           sessionsVisibility,
           gte(sessionsTable.scheduledAt, lastWeekStart),
-          lt(sessionsTable.scheduledAt, now)
+          lt(sessionsTable.scheduledAt, now),
+          ne(sessionsTable.status, "cancelled")
         )
       ),
     db

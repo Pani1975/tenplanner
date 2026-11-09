@@ -95,6 +95,31 @@ describe("buildStudentsStats", () => {
 
   const stats = buildStudentsStats({ students, groups, memberships, now });
 
+  it("calcula edad media y mediana de todos los alumnos con fecha", () => {
+    // Edades: Ana, Bea, Carlos, Eva (Dani sin fecha).
+    const ages = ["2021-03-01", "2018-05-05", "2008-02-02", "1990-01-01"]
+      .map((d) => ageOn(d, now)!)
+      .sort((a, b) => a - b);
+    const avg = Math.round((ages.reduce((a, b) => a + b, 0) / 4) * 10) / 10;
+    expect(stats.ageSummary.counted).toBe(4);
+    expect(stats.ageSummary.average).toBe(avg);
+    expect(stats.ageSummary.median).toBe((ages[1] + ages[2]) / 2);
+    expect(stats.withoutBirthDate).toBe(1);
+    expect(stats.allAgeBands.reduce((a, b) => a + b.count, 0)).toBe(4);
+  });
+
+  it("lista las fichas incompletas y el % de fichas completas", () => {
+    const dani = stats.incompleteStudents.find((s) => s.id === "d");
+    expect(dani?.missing).toEqual([
+      "fecha de nacimiento",
+      "nivel",
+      "localidad",
+    ]);
+    expect(stats.completePct).toBe(
+      Math.round(((5 - stats.incompleteStudents.length) / 5) * 100)
+    );
+  });
+
   it("cuenta alumnos, grupos y tamaño de cada grupo", () => {
     expect(stats.totalStudents).toBe(5);
     expect(stats.groupCount).toBe(3);

@@ -101,7 +101,7 @@ export function StudentsStatsPdf({
   stats: StudentsStats;
 }) {
   const levels = stats.levels.filter((l) => l.count > 0);
-  const ages = stats.ageBands.filter((b) => b.count > 0);
+  const ages = stats.allAgeBands.filter((b) => b.count > 0);
   const groups = stats.groupSizes.slice(0, 10);
   const origins = stats.origins.slice(0, 12);
 
@@ -136,12 +136,16 @@ export function StudentsStatsPdf({
             color={ACCENT}
           />
           <StatTile
-            label="Edad máxima"
-            value={stats.oldest ? `${stats.oldest.age} años` : "—"}
+            label="Edad media"
+            value={
+              stats.ageSummary.average === null
+                ? "—"
+                : `${String(stats.ageSummary.average).replace(".", ",")} años`
+            }
             hint={
-              stats.oldest
-                ? `${stats.oldest.name}${stats.oldest.groupName ? ` · ${stats.oldest.groupName}` : ""}`
-                : "Sin fechas de nacimiento en grupos"
+              stats.ageSummary.median === null
+                ? "Sin fechas de nacimiento"
+                : `Mediana ${String(stats.ageSummary.median).replace(".", ",")} · ${stats.ageSummary.counted} de ${stats.totalStudents} con fecha`
             }
             color={VIOLET}
           />
@@ -173,19 +177,19 @@ export function StudentsStatsPdf({
           />
         )}
 
-        <SectionHeading color={VIOLET}>Edades en los grupos</SectionHeading>
+        <SectionHeading color={VIOLET}>Edades</SectionHeading>
         {ages.length === 0 ? (
           <Text style={styles.muted}>
-            Faltan fechas de nacimiento en los alumnos de grupos.
+            Faltan fechas de nacimiento en las fichas de los alumnos.
           </Text>
         ) : (
           <>
             <HBars rows={barRows(ages, VIOLET)} />
-            {stats.groupedWithoutBirthDate > 0 && (
+            {stats.withoutBirthDate > 0 && (
               <Text style={[styles.muted, { marginTop: 4 }]}>
-                {studentsLabel(stats.groupedWithoutBirthDate)} sin fecha de
-                nacimiento no se cuenta
-                {stats.groupedWithoutBirthDate === 1 ? "" : "n"}.
+                {studentsLabel(stats.withoutBirthDate)} sin fecha de nacimiento
+                no se cuenta
+                {stats.withoutBirthDate === 1 ? "" : "n"}.
               </Text>
             )}
           </>

@@ -154,6 +154,11 @@ function StarRating({
   );
 }
 
+/** Reloj para medir el tiempo real en pista (solo en manejadores de eventos). */
+function nowMs() {
+  return Date.now();
+}
+
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -249,7 +254,12 @@ export function ExecuteSessionClient({
     return () => clearInterval(interval);
   }, [timerRunning, countdownMode]);
 
+  // Momento en que el ejercicio actual pasó a estar en pantalla. Sirve para
+  // registrar el tiempo real aunque el monitor no use el cronómetro.
+  const exerciseShownAtRef = useRef<number | null>(null);
+
   function resetTimerForExercise(exercise = current) {
+    exerciseShownAtRef.current = nowMs();
     setTimerRunning(false);
     if (countdownMode && exercise) {
       setTimerSeconds((exercise.durationMinutes ?? 0) * 60);
@@ -320,10 +330,22 @@ export function ExecuteSessionClient({
     });
   }
 
+  /**
+   * Segundos reales de esta visita al ejercicio: lo que marque el cronómetro
+   * si se ha usado; si no, el tiempo que el ejercicio ha estado en pantalla
+   * (con tope, por si el móvil se quedó encendido sin tocar).
+   */
   function elapsedSecondsFor(exercise = current) {
     if (!exercise) return 0;
-    if (!countdownMode) return timerSeconds;
-    return Math.max(exercise.durationMinutes * 60 - timerSeconds, 0);
+    const fromTimer = countdownMode
+      ? Math.max(exercise.durationMinutes * 60 - timerSeconds, 0)
+      : timerSeconds;
+    if (fromTimer > 0) return fromTimer;
+    const shownAt = exerciseShownAtRef.current;
+    if (!shownAt) return 0;
+    const wallClock = Math.round((nowMs() - shownAt) / 1000);
+    const cap = Math.max((exercise.durationMinutes ?? 0) * 60 * 3, 30 * 60);
+    return Math.min(Math.max(wallClock, 0), cap);
   }
 
   function updateExecution(key: string, patch: Partial<ExerciseExecution>) {
@@ -350,8 +372,10 @@ export function ExecuteSessionClient({
     skipped?: boolean;
   }) {
     if (!current) return;
+    // Si se vuelve a un ejercicio ya hecho, el tiempo se suma al anterior.
+    const previous = executionById[current.key]?.actualDurationSeconds ?? 0;
     updateExecution(current.key, {
-      actualDurationSeconds: elapsedSecondsFor(current),
+      actualDurationSeconds: previous + elapsedSecondsFor(current),
       completed,
       skipped,
     });
@@ -445,12 +469,15 @@ export function ExecuteSessionClient({
           done.has(exercise.key) ||
           (started && isCurrent) ||
           existing?.completed;
+        const actual =
+          started && isCurrent
+            ? (existing?.actualDurationSeconds ?? 0) + currentElapsed
+            : (existing?.actualDurationSeconds ?? 0);
         return {
           exerciseId: exercise.exerciseId as string,
-          actualDurationSeconds:
-            started && isCurrent
-              ? currentElapsed
-              : (existing?.actualDurationSeconds ?? 0),
+          // Sin tiempo medido (p. ej. "marcar todo" sin pasar por el
+          // ejercicio) no se guarda 0: se deja vacío para no mostrar "0s".
+          actualDurationSeconds: actual > 0 ? actual : undefined,
           completed: Boolean(completed),
           skipped: existing?.skipped ?? false,
           rating: existing?.rating ?? null,

@@ -443,8 +443,8 @@ export function StudentForm({
               <input
                 id="heightCm"
                 type="number"
-                min={50}
-                max={250}
+                min={80}
+                max={230}
                 placeholder="175"
                 {...register("heightCm")}
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
@@ -466,8 +466,8 @@ export function StudentForm({
               <input
                 id="weightKg"
                 type="number"
-                min={20}
-                max={250}
+                min={12}
+                max={200}
                 placeholder="70"
                 {...register("weightKg")}
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"

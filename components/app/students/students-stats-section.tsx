@@ -90,7 +90,9 @@ export function StudentsStatsSection({
   reportHref: string;
 }) {
   const hasLevels = stats.levels.some((l) => l.count > 0);
-  const hasAges = stats.ageBands.some((b) => b.count > 0);
+  const hasAges = stats.allAgeBands.some((b) => b.count > 0);
+  const fmtAge = (n: number | null) =>
+    n === null ? "—" : `${String(n).replace(".", ",")} años`;
   const groupBars = stats.groupSizes.slice(0, 8);
 
   return (
@@ -119,11 +121,11 @@ export function StudentsStatsSection({
         />
         <Kpi
           icon={CalendarClock}
-          label="Edad máxima en grupos"
-          value={stats.oldest ? `${stats.oldest.age} años` : "—"}
+          label="Edad media"
+          value={fmtAge(stats.ageSummary.average)}
           hint={
-            stats.oldest
-              ? `${stats.oldest.name}${stats.oldest.groupName ? ` · ${stats.oldest.groupName}` : ""}`
+            stats.ageSummary.counted > 0
+              ? `Mediana ${fmtAge(stats.ageSummary.median)} · ${stats.ageSummary.counted} de ${stats.totalStudents} con fecha`
               : "Sin fechas de nacimiento"
           }
         />
@@ -138,6 +140,35 @@ export function StudentsStatsSection({
           }
         />
       </div>
+
+      {stats.incompleteStudents.length > 0 && (
+        <details className="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-semibold text-foreground">
+            {stats.completePct}% de fichas completas ·{" "}
+            {studentsLabel(stats.incompleteStudents.length)} con datos
+            pendientes
+            <span className="block text-xs font-normal text-muted-foreground">
+              Sin fecha de nacimiento, nivel o localidad el alumno no aparece en
+              todos los gráficos.
+            </span>
+          </summary>
+          <ul className="mt-3 space-y-1.5">
+            {stats.incompleteStudents.map((s) => (
+              <li key={s.id} className="flex flex-wrap gap-x-2 text-xs">
+                <a
+                  href={`/students/${s.id}`}
+                  className="font-medium text-foreground underline-offset-2 hover:underline"
+                >
+                  {s.name}
+                </a>
+                <span className="text-muted-foreground">
+                  Falta: {s.missing.join(", ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Alumnos por nivel" note="Según la etiqueta de nivel">
@@ -179,20 +210,20 @@ export function StudentsStatsSection({
         </Card>
 
         <Card
-          title="Edades en los grupos"
+          title="Edades"
           note={
-            stats.groupedWithoutBirthDate > 0
-              ? `${studentsLabel(stats.groupedWithoutBirthDate)} sin fecha de nacimiento no se cuenta${stats.groupedWithoutBirthDate === 1 ? "" : "n"}`
-              : "Alumnos que pertenecen a algún grupo"
+            stats.withoutBirthDate > 0
+              ? `${studentsLabel(stats.withoutBirthDate)} sin fecha de nacimiento no se cuenta${stats.withoutBirthDate === 1 ? "" : "n"}`
+              : "Todos los alumnos de la escuela"
           }
         >
           {!hasAges ? (
-            <Empty text="Faltan fechas de nacimiento en los alumnos de grupos." />
+            <Empty text="Faltan fechas de nacimiento en las fichas de los alumnos." />
           ) : (
             <div className="h-64 text-foreground">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={stats.ageBands}
+                  data={stats.allAgeBands}
                   margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid vertical={false} strokeOpacity={0.12} />

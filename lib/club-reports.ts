@@ -26,6 +26,8 @@ export type ClubCoachRow = {
   id: string;
   name: string;
   email: string;
+  /** Es la cuenta que gestiona el club (aparece si también da clases). */
+  isOwner: boolean;
   players: number;
   sessions: number;
   minutes: number;
@@ -134,6 +136,7 @@ export async function loadClubReport(
           and s.status <> 'cancelled'
       )
       select u.id, u.name, u.email,
+        (u.id = (select c.owner_id from clubs c where c.id = ${clubId})) as is_owner,
         (select count(*) from students st
           where st.club_id = ${clubId} and st.coach_id = u.id) as players,
         (select count(*) from done d where d.user_id = u.id) as sessions,
@@ -196,6 +199,7 @@ export async function loadClubReport(
       id: String(r.id),
       name: String(r.name),
       email: String(r.email),
+      isOwner: r.is_owner === true,
       players: n(r.players),
       sessions: n(r.sessions),
       minutes: n(r.minutes),

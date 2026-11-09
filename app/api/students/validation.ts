@@ -54,19 +54,30 @@ export const createStudentSchema = z.object({
     .nullable()
     .or(z.literal("")),
   gender: genderSchema.optional().nullable(),
-  birthDate: dateStringSchema.optional().nullable(),
+  birthDate: dateStringSchema
+    .refine(
+      (v) => {
+        const d = new Date(`${v}T00:00:00Z`);
+        const now = new Date();
+        const age = now.getUTCFullYear() - d.getUTCFullYear();
+        return !isNaN(d.getTime()) && d <= now && age >= 2 && age <= 100;
+      },
+      { message: "La fecha de nacimiento parece incorrecta" }
+    )
+    .optional()
+    .nullable(),
   heightCm: z.coerce
     .number()
     .int()
-    .min(50, "Mínimo 50 cm")
-    .max(250, "Máximo 250 cm")
+    .min(80, "La altura parece incorrecta: mínimo 80 cm")
+    .max(230, "La altura parece incorrecta: máximo 230 cm")
     .optional()
     .nullable(),
   weightKg: z.coerce
     .number()
     .int()
-    .min(20, "Mínimo 20 kg")
-    .max(250, "Máximo 250 kg")
+    .min(12, "El peso parece incorrecto: mínimo 12 kg")
+    .max(200, "El peso parece incorrecto: máximo 200 kg")
     .optional()
     .nullable(),
   dominantHand: dominantHandSchema.optional().nullable(),

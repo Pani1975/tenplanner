@@ -145,11 +145,17 @@ export default async function ManagementPage({
             label="Monitores"
             icon={UserRound}
             value={report.coaches}
-            hint={
+            hint={[
+              "Monitores que han aceptado la invitación.",
+              report.coachRows.some((c) => c.isOwner)
+                ? "La tabla incluye además al gestor, porque también da clases."
+                : null,
               report.pendingInvites > 0
                 ? `${report.pendingInvites} invitación(es) pendiente(s).`
-                : "Monitores que han aceptado la invitación."
-            }
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
           />
           <MetricCard
             label="Alumnos"
@@ -228,6 +234,11 @@ export default async function ManagementPage({
                       <td className="py-2.5 pr-3">
                         <span className="block font-semibold text-foreground">
                           {coach.name}
+                          {coach.isOwner && (
+                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
+                              Gestor
+                            </span>
+                          )}
                         </span>
                         <span className="block text-xs text-muted-foreground">
                           {coach.email}
