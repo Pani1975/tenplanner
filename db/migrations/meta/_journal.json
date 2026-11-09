@@ -589,6 +589,13 @@
       "when": 1794900000000,
       "tag": "0083_voyage_embeddings",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1795000000000,
+      "tag": "0084_session_plan_followed",
+      "breakpoints": true
     }
   ]
 }

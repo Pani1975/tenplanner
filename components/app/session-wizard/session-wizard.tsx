@@ -337,6 +337,9 @@ export function SessionWizard({
   const isEdit = !!edit;
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Se llega aquí al cerrar una sesión que no se dio según lo planificado:
+  // tras guardar se vuelve a la sesión para la valoración final.
+  const closingAfterChange = isEdit && searchParams.get("cierre") === "1";
   // El paso vive en el estado del asistente (y se refleja en la URL sin
   // navegar): cambiar de paso con el router podía volver a montar el
   // asistente y perder lo escrito en el paso 1 (objetivo, lugar, duración…).
@@ -667,7 +670,11 @@ export function SessionWizard({
           );
           return;
         }
-        router.push(`/sessions/${edit.sessionId}`);
+        router.push(
+          closingAfterChange
+            ? `/sessions/${edit.sessionId}?valorar=1`
+            : `/sessions/${edit.sessionId}`
+        );
         router.refresh();
         return;
       }
@@ -777,6 +784,17 @@ export function SessionWizard({
 
   return (
     <div className="flex w-full flex-col gap-8 rounded-lg border border-[#050505]/10 bg-white p-4 pb-28 shadow-[0_18px_60px_rgba(5,5,5,0.05)] dark:border-white/10 dark:bg-white/[0.045] sm:p-5 md:pb-6">
+      {closingAfterChange && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+          <p className="font-semibold">
+            Ajusta la sesión a lo que se hizo de verdad
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Cambia, quita o añade ejercicios y tiempos, y pulsa Guardar. Después
+            te pediremos la valoración final.
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <ProgressIndicator
           step={step}
@@ -861,7 +879,13 @@ export function SessionWizard({
       >
         {step === 1 ? (
           <Link
-            href={edit ? `/sessions/${edit.sessionId}` : "/sessions"}
+            href={
+              edit
+                ? closingAfterChange
+                  ? `/sessions/${edit.sessionId}?valorar=1`
+                  : `/sessions/${edit.sessionId}`
+                : "/sessions"
+            }
             className="px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Cancelar

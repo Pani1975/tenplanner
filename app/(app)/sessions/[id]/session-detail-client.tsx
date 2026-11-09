@@ -9,7 +9,14 @@ import {
   type VoiceNoteSaved,
 } from "@/components/app/session-voice-note";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  SessionCloseDialog,
+  type RatingAfterEdit,
+  type SessionClosePlanChanged,
+  type SessionCloseRating,
+} from "@/components/app/session-close-dialog";
+import { planChangeReasonLabel } from "@/lib/sessions/plan-change";
 import {
   ArrowLeft,
   Pencil,
@@ -89,6 +96,13 @@ export interface SessionData {
   /** Nombre del lugar (Mis lugares) donde se imparte. */
   placeName?: string | null;
   status: "scheduled" | "completed" | "cancelled";
+  /** Nota del cierre (valoración) o motivo de cancelación. */
+  statusNote?: string | null;
+  /** ¿Se dio tal y como estaba planificada? null = sin responder. */
+  planFollowed?: boolean | null;
+  planChangeReason?: string | null;
+  /** Valoración final de la sesión (1-5). */
+  sessionRating?: number | null;
 }
 
 export interface SessionStudentData {
@@ -443,6 +457,54 @@ export function SessionDetailClient({
     kind: "complete" | "cancel";
     note: string;
   } | null>(null);
+  // Cierre de la sesión (¿según lo planificado? + valoración). Al volver de
+  // editar una sesión que cambió (?valorar=1) se abre en la valoración.
+  const searchParams = useSearchParams();
+  const [closeStep, setCloseStep] = useState<"plan" | "rating" | null>(() =>
+    isOwner &&
+    session.status === "completed" &&
+    searchParams.get("valorar") === "1"
+      ? "rating"
+      : null
+  );
+
+  async function patchClose(body: Record<string, unknown>) {
+    const res = await fetch(`/api/sessions/${session.id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "completed", ...body }),
+    });
+    return res.ok;
+  }
+
+  async function handleCloseRate(data: SessionCloseRating | RatingAfterEdit) {
+    const ok = await patchClose(
+      "afterEdit" in data
+        ? { sessionRating: data.sessionRating, statusNote: data.note }
+        : {
+            planFollowed: true,
+            sessionRating: data.sessionRating,
+            statusNote: data.note,
+          }
+    );
+    if (!ok) return false;
+    setStatus("completed");
+    setCloseStep(null);
+    router.replace(`/sessions/${session.id}`);
+    router.refresh();
+    return true;
+  }
+
+  async function handleClosePlanChanged(data: SessionClosePlanChanged) {
+    const ok = await patchClose({
+      planFollowed: false,
+      planChangeReason: data.planChangeReason,
+    });
+    if (!ok) return false;
+    router.push(`/sessions/${session.id}/edit?cierre=1`);
+    return true;
+  }
+
   const [repeatOpen, setRepeatOpen] = useState(false);
   const [repeatDates, setRepeatDates] = useState<string[]>([""]);
   const [repeating, setRepeating] = useState(false);
@@ -799,7 +861,7 @@ export function SessionDetailClient({
         {isOwner && status !== "completed" && status !== "cancelled" && (
           <div className="flex flex-wrap items-center gap-2 border-b border-border/50 px-4 py-3 sm:px-6">
             <button
-              onClick={() => setStatusDialog({ kind: "complete", note: "" })}
+              onClick={() => setCloseStep("plan")}
               disabled={updatingStatus}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors disabled:opacity-50"
             >
@@ -844,6 +906,65 @@ export function SessionDetailClient({
             </button>
           </div>
         )}
+
+        {status === "completed" &&
+          (session.planFollowed != null ||
+            session.sessionRating != null ||
+            session.statusNote ||
+            isOwner) && (
+            <div className="space-y-1.5 border-b border-border/50 px-4 py-3 text-xs sm:px-6">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span className="font-semibold text-foreground">
+                  Cierre de la sesión
+                </span>
+                {session.sessionRating != null ? (
+                  <span
+                    className="inline-flex items-center gap-0.5 text-amber-400"
+                    aria-label={`Valoración ${session.sessionRating} de 5`}
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star
+                        key={n}
+                        className={cn(
+                          "size-3.5 fill-current",
+                          n > session.sessionRating! && "text-foreground/15"
+                        )}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => setCloseStep("rating")}
+                      className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-semibold text-foreground hover:bg-amber-500/20"
+                    >
+                      <Star className="size-3 fill-current text-amber-400" />
+                      Falta la valoración
+                    </button>
+                  )
+                )}
+                {session.planFollowed === true && (
+                  <span className="rounded-full bg-brand/10 px-2 py-0.5 font-medium text-foreground">
+                    Según lo planificado
+                  </span>
+                )}
+                {session.planFollowed === false && (
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-foreground">
+                    Cambió respecto al plan
+                    {planChangeReasonLabel(session.planChangeReason)
+                      ? ` · ${planChangeReasonLabel(session.planChangeReason)}`
+                      : ""}
+                  </span>
+                )}
+              </div>
+              {session.statusNote && (
+                <p className="leading-relaxed text-muted-foreground">
+                  {session.statusNote}
+                </p>
+              )}
+            </div>
+          )}
 
         {/* Content */}
         <div className="space-y-5 p-4 sm:p-6">
@@ -1373,6 +1494,21 @@ export function SessionDetailClient({
           }}
         />
       )}
+
+      <SessionCloseDialog
+        key={closeStep ?? "closed"}
+        open={closeStep !== null}
+        initialStep={closeStep ?? "plan"}
+        initialNote={session.statusNote ?? ""}
+        onClose={() => {
+          setCloseStep(null);
+          if (searchParams.get("valorar")) {
+            router.replace(`/sessions/${session.id}`);
+          }
+        }}
+        onRate={handleCloseRate}
+        onPlanChanged={handleClosePlanChanged}
+      />
 
       {/* Status note dialog */}
       {statusDialog && (

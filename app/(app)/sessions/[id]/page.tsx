@@ -438,6 +438,10 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         location: session.location,
         placeName: placeRow?.name ?? null,
         status: session.status,
+        statusNote: session.statusNote,
+        planFollowed: session.planFollowed,
+        planChangeReason: session.planChangeReason,
+        sessionRating: session.sessionRating,
       }}
       sessionExercises={resolvedExercises}
       diagrams={getExerciseDiagrams(resolvedExercises.map((e) => e.exerciseId))}

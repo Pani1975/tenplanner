@@ -22,6 +22,12 @@ import {
   ListOrdered,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  SessionCloseDialog,
+  type RatingAfterEdit,
+  type SessionClosePlanChanged,
+  type SessionCloseRating,
+} from "@/components/app/session-close-dialog";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "border-blue-500/40 bg-blue-500/5",
@@ -133,6 +139,11 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
   const [showQuickComplete, setShowQuickComplete] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  // Cierre: pregunta "¿según lo planificado?" y valoración. `markAll` = se
+  // llegó desde "Sesión completada" sin ir ejercicio a ejercicio.
+  const [closeDialog, setCloseDialog] = useState<{ markAll: boolean } | null>(
+    null
+  );
   const [executionById, setExecutionById] = useState<
     Record<string, ExerciseExecution>
   >({});
@@ -297,9 +308,25 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
     setCurrentIdx(idx);
   }
 
-  async function handleFinish({ markAll = false }: { markAll?: boolean } = {}) {
+  async function handleFinish({
+    markAll = false,
+    close,
+  }: {
+    markAll?: boolean;
+    close: SessionCloseRating | SessionClosePlanChanged | RatingAfterEdit;
+  }): Promise<boolean> {
     setFinishing(true);
     setFinishError(null);
+    const closeFields =
+      close.planFollowed === true
+        ? {
+            planFollowed: true,
+            sessionRating: close.sessionRating,
+            statusNote: close.note,
+          }
+        : close.planFollowed === false
+          ? { planFollowed: false, planChangeReason: close.planChangeReason }
+          : {};
     const currentElapsed = current ? elapsedSecondsFor(current) : 0;
     const payload = exercises
       .filter((exercise) => exercise.kind === "exercise" && exercise.exerciseId)
@@ -333,27 +360,56 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
         ? await fetch(`/api/sessions/${session.id}/execution`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ exercises: payload, completeSession: true }),
+            body: JSON.stringify({
+              exercises: payload,
+              completeSession: true,
+              ...closeFields,
+            }),
           })
         : await fetch(`/api/sessions/${session.id}/status`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "completed" }),
+            body: JSON.stringify({ status: "completed", ...closeFields }),
           });
     if (!res.ok) {
       setFinishing(false);
       setFinishError(
         "No se pudo guardar. Revisa la conexión e inténtalo de nuevo."
       );
-      return;
+      return false;
     }
-    router.push(`/sessions/${session.id}`);
+    // No se dio según lo planificado: a editar la sesión para que quede lo
+    // que se hizo de verdad; al guardar se pide la valoración final.
+    router.push(
+      close.planFollowed === false
+        ? `/sessions/${session.id}/edit?cierre=1`
+        : `/sessions/${session.id}`
+    );
     router.refresh();
+    return true;
   }
 
   const exerciseItemsCount = exercises.filter(
     (e) => e.kind === "exercise"
   ).length;
+
+  const closeDialogEl = (
+    <SessionCloseDialog
+      open={closeDialog !== null}
+      onClose={() => setCloseDialog(null)}
+      summary={
+        closeDialog?.markAll
+          ? undefined
+          : `${done.size} de ${totalExercises} elementos realizados`
+      }
+      onRate={(data) =>
+        handleFinish({ markAll: closeDialog?.markAll ?? false, close: data })
+      }
+      onPlanChanged={(data) =>
+        handleFinish({ markAll: closeDialog?.markAll ?? false, close: data })
+      }
+    />
+  );
 
   const quickCompleteModal = showQuickComplete ? (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
@@ -391,7 +447,10 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
             Volver
           </button>
           <button
-            onClick={() => handleFinish({ markAll: true })}
+            onClick={() => {
+              setShowQuickComplete(false);
+              setCloseDialog({ markAll: true });
+            }}
             disabled={finishing}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
           >
@@ -568,6 +627,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
           </button>
         </footer>
         {quickCompleteModal}
+        {closeDialogEl}
       </div>
     );
   }
@@ -1113,7 +1173,10 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
                 Seguir
               </button>
               <button
-                onClick={() => handleFinish()}
+                onClick={() => {
+                  setShowFinish(false);
+                  setCloseDialog({ markAll: false });
+                }}
                 disabled={finishing}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
               >
@@ -1125,6 +1188,7 @@ export function ExecuteSessionClient({ session, exercises, diagrams }: Props) {
         </div>
       )}
       {quickCompleteModal}
+      {closeDialogEl}
     </div>
   );
 }

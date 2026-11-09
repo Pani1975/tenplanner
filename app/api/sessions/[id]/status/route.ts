@@ -4,10 +4,15 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import {
+  sessionCloseFields,
+  sessionCloseValues,
+} from "@/lib/sessions/close-schema";
 
 const patchSchema = z.object({
   status: z.enum(["scheduled", "completed", "cancelled"]),
   statusNote: z.string().trim().max(2000).nullable().optional(),
+  ...sessionCloseFields,
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -54,6 +59,14 @@ export async function PATCH(request: Request, context: RouteContext) {
     setValues.statusNote = parsed.data.statusNote;
   }
 
+  Object.assign(setValues, sessionCloseValues(parsed.data));
+  // Volver a "programada" deshace el cierre.
+  if (parsed.data.status === "scheduled") {
+    setValues.planFollowed = null;
+    setValues.planChangeReason = null;
+    setValues.sessionRating = null;
+  }
+
   const [updated] = await db
     .update(sessions)
     .set(setValues)
@@ -62,6 +75,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       id: sessions.id,
       status: sessions.status,
       statusNote: sessions.statusNote,
+      planFollowed: sessions.planFollowed,
+      planChangeReason: sessions.planChangeReason,
+      sessionRating: sessions.sessionRating,
     });
 
   return NextResponse.json({ data: updated });
