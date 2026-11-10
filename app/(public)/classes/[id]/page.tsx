@@ -58,32 +58,40 @@ function classValues(values: string[] | null, fallback: string | null) {
       : [];
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  technique: "Técnica",
-  tactics: "Táctica",
-  fitness: "Físico",
-  "warm-up": "Calentamiento",
-  "trucos-tecnicos": "Trucos técnicos",
+/** Fase de la clase según el orden del bloque (1 = inicio, 3 = final). */
+const PHASE_LABELS: Record<number, string> = {
+  1: "Calentamiento",
+  2: "Bloque principal",
+  3: "Vuelta a la calma",
 };
+
+function phaseLabel(orderIndex: number): string {
+  return PHASE_LABELS[orderIndex] ?? "Bloque";
+}
 
 /** Tarjeta de un ejercicio de la clase, con enlace a su ficha. */
 function ExerciseCard({
   exercise: ex,
   number,
   numberLabel,
+  durationMinutes,
+  phase,
   classId,
 }: {
   exercise: {
     id: string;
     name: string;
     description: string | null;
-    category: string;
     materials: string[] | null;
     videoUrl: string | null;
   };
   number: number;
   /** "Estación" en las estaciones; sin etiqueta, solo el número. */
   numberLabel?: string;
+  /** Minutos del ejercicio en la clase (si los tiene). */
+  durationMinutes?: number | null;
+  /** Fase de la clase en la que está el ejercicio. */
+  phase: string;
   classId: string;
 }) {
   return (
@@ -108,8 +116,13 @@ function ExerciseCard({
         </span>
         <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
           <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-            {CATEGORY_LABELS[ex.category] ?? ex.category}
+            {phase}
           </span>
+          {durationMinutes ? (
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums">
+              {durationMinutes} min
+            </span>
+          ) : null}
           {ex.videoUrl && (
             <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
               Vídeo
@@ -242,7 +255,6 @@ export default async function ClassDetailPage({
           id: exercises.id,
           name: exercises.name,
           description: exercises.description,
-          category: exercises.category,
           materials: exercises.materials,
           videoUrl: exercises.videoUrl,
         })
@@ -255,11 +267,17 @@ export default async function ClassDetailPage({
   // vez, y cada bloque de estaciones junto, como "Ejercicio estaciones" con
   // sus estaciones dentro.
   type ExerciseEntry =
-    | { kind: "exercise"; exercise: LinkedExercise }
+    | {
+        kind: "exercise";
+        exercise: LinkedExercise;
+        durationMinutes: number | null;
+        phase: string;
+      }
     | {
         kind: "stations";
         key: string;
         durationMinutes: number | null;
+        phase: string;
         stations: Array<
           | { kind: "exercise"; exercise: LinkedExercise }
           | { kind: "text"; text: string }
@@ -290,6 +308,7 @@ export default async function ClassDetailPage({
             kind: "stations",
             key: it.id,
             durationMinutes: it.durationMinutes,
+            phase: phaseLabel(block.orderIndex),
             stations: group,
           });
         continue;
@@ -297,7 +316,12 @@ export default async function ClassDetailPage({
       const exercise = it.exerciseId ? linkedById.get(it.exerciseId) : null;
       if (exercise && !listedExerciseIds.has(exercise.id)) {
         listedExerciseIds.add(exercise.id);
-        classExercises.push({ kind: "exercise", exercise });
+        classExercises.push({
+          kind: "exercise",
+          exercise,
+          durationMinutes: it.durationMinutes,
+          phase: phaseLabel(block.orderIndex),
+        });
       }
     }
   const classExerciseCount = classExercises.reduce(
@@ -804,6 +828,8 @@ export default async function ClassDetailPage({
                   <ExerciseCard
                     exercise={entry.exercise}
                     number={idx + 1}
+                    durationMinutes={entry.durationMinutes}
+                    phase={entry.phase}
                     classId={cls.id}
                   />
                 </li>
@@ -834,6 +860,7 @@ export default async function ClassDetailPage({
                             exercise={st.exercise}
                             number={si + 1}
                             numberLabel="Estación"
+                            phase={entry.phase}
                             classId={cls.id}
                           />
                         ) : (
