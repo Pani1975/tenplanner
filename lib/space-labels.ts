@@ -13,6 +13,7 @@ export function spaceLabels(inClub: boolean) {
         favorites: "Favoritos club",
         lists: "Listas club",
         resources: "Recursos club",
+        sessions: "Sesiones club",
       }
     : {
         classes: "Mis clases",
@@ -20,6 +21,7 @@ export function spaceLabels(inClub: boolean) {
         favorites: "Favoritos",
         lists: "Mis listas",
         resources: "Mis recursos",
+        sessions: "Mis sesiones",
       };
 }
 

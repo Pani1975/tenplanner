@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 const schema = z.object({
   scheduledAt: z.string().datetime(),
@@ -39,7 +40,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
       scheduledAt: new Date(parsed.data.scheduledAt),
       ...(parsed.data.title ? { title: parsed.data.title } : {}),
     })
-    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+    .where(and(eq(sessions.id, id), await editableSessionCondition(user.id)))
     .returning({
       id: sessions.id,
       title: sessions.title,

@@ -1,9 +1,10 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 const bulkDeleteSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(500),
@@ -35,7 +36,7 @@ export async function DELETE(request: Request) {
       .delete(sessions)
       .where(
         and(
-          eq(sessions.userId, user.id),
+          await editableSessionCondition(user.id),
           inArray(sessions.id, Array.from(new Set(parsed.data.ids)))
         )
       )

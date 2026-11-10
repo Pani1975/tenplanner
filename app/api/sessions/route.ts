@@ -33,7 +33,11 @@ import {
 } from "./validation";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getBooleanSetting, getNumberSetting } from "@/lib/app-settings";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  canTagWithClub,
+  getActiveWorkClubId,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
 import { classDraftVisibility } from "@/lib/classes/visibility";
 import { getActiveSport } from "@/lib/sports";
 import { embedSession } from "@/lib/ai/semantic-search";
@@ -463,6 +467,7 @@ export async function POST(request: Request) {
     location,
     placeId,
     groupId,
+    coachId: requestedCoachId,
     studentIds,
     exercises: exerciseItems,
     blocks,
@@ -475,6 +480,19 @@ export async function POST(request: Request) {
     getActiveSport(user.id),
   ]);
   let sessionSport = activeSport;
+
+  // Monitor que imparte: solo en modo club y si es monitor activo del club.
+  // Si es quien la crea, se deja null (la imparte el creador).
+  let coachId: string | null = null;
+  if (requestedCoachId && requestedCoachId !== user.id) {
+    if (!clubId || !(await canTagWithClub(requestedCoachId, clubId))) {
+      return NextResponse.json(
+        { error: "El monitor no pertenece al club" },
+        { status: 400 }
+      );
+    }
+    coachId = requestedCoachId;
+  }
 
   try {
     await ensureUser(user);
@@ -638,6 +656,7 @@ export async function POST(request: Request) {
           placeId: placeId ?? null,
           groupId: groupId ?? null,
           clubId: clubId ?? null,
+          coachId,
           sport: sessionSport,
         })
         .returning();

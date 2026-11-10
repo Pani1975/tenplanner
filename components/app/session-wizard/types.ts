@@ -107,6 +107,8 @@ export interface WizardState {
   groupName?: string;
   /** Grupo al que se imparte la sesión (se guarda en sessions.group_id). */
   groupId?: string | null;
+  /** Monitor que imparte la sesión (modo club; sessions.coach_id). */
+  coachId?: string | null;
   /** El monitor ha fijado la duración a mano: no se recalcula del plan. */
   durationManual?: boolean;
   /** Grupos marcados en el paso de alumnos (selección independiente). */

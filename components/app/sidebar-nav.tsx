@@ -260,19 +260,26 @@ function navItemsForSpace(inClub: boolean): NavItem[] {
     "/exercises?tab=favorites": labels.favorites,
     "/classes?tab=mine": labels.classes,
     "/classes?tab=favorites": labels.lists,
+    "/sessions": labels.sessions,
   };
-  return navItems.map((item) =>
-    item.href === "/resources"
-      ? { ...item, label: labels.resources }
-      : item.submenu
-        ? {
-            ...item,
-            submenu: item.submenu.map((sub) =>
-              bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
-            ),
-          }
-        : item
-  );
+  return navItems.map((item) => {
+    if (item.href === "/resources") return { ...item, label: labels.resources };
+    if (!item.submenu) return item;
+    const submenu = item.submenu.map((sub) =>
+      bySubHref[sub.href] ? { ...sub, label: bySubHref[sub.href] } : sub
+    );
+    // En modo club, "Mis sesiones" = las que imparte el usuario dentro del
+    // club, sin salir del espacio del club.
+    if (inClub && item.href === "/sessions") {
+      const at = submenu.findIndex((sub) => sub.href === "/sessions");
+      submenu.splice(at + 1, 0, {
+        href: "/sessions?mine=1",
+        label: "Mis sesiones",
+        icon: UserRound,
+      });
+    }
+    return { ...item, submenu };
+  });
 }
 
 /**

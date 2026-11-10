@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { getActiveSport } from "@/lib/sports";
 import { phaseFromBlockOrder, blockOrderFromIndex } from "@/lib/sessions/plan";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -24,12 +25,17 @@ async function ownSession(sessionId: string) {
   if (!user) return { error: 401 as const };
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return { error: 404 as const };
   const [session] = await db
-    .select({ userId: sessions.userId, status: sessions.status })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+      status: sessions.status,
+    })
     .from(sessions)
     .where(eq(sessions.id, sessionId))
     .limit(1);
   if (!session) return { error: 404 as const };
-  if (session.userId !== user.id) return { error: 403 as const };
+  if (!(await canEditSession(user.id, session))) return { error: 403 as const };
   return { user, session };
 }
 

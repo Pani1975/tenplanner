@@ -4,6 +4,10 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessionExercises, sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import {
+  canEditSession,
+  editableSessionCondition,
+} from "@/lib/sessions/permissions";
 
 const executionItemSchema = z.object({
   exerciseId: z.string().uuid(),
@@ -49,7 +53,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const [session] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, sessionId))
     .limit(1);
@@ -57,7 +65,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!session) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (session.userId !== user.id) {
+  if (!(await canEditSession(user.id, session))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -111,7 +119,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       await tx
         .update(sessions)
         .set({ status: "completed" })
-        .where(and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)));
+        .where(
+          and(
+            eq(sessions.id, sessionId),
+            await editableSessionCondition(user.id)
+          )
+        );
     }
   });
 

@@ -20,6 +20,8 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import { planItemsToWizard } from "@/components/app/session-wizard/timeline";
+import { canEditSession } from "@/lib/sessions/permissions";
+import { getClubMembersDirectory } from "@/lib/clubs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -40,7 +42,7 @@ export default async function EditSessionPage({ params }: PageProps) {
     .from(sessions)
     .where(eq(sessions.id, id))
     .limit(1);
-  if (!sessionRow || sessionRow.userId !== user.id) notFound();
+  if (!sessionRow || !(await canEditSession(user.id, sessionRow))) notFound();
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"
@@ -97,6 +99,12 @@ export default async function EditSessionPage({ params }: PageProps) {
     user.user_metadata?.full_name ||
     user.email ||
     "Monitor";
+  // Sesión del club: se puede cambiar el monitor que la imparte.
+  const clubCoaches = sessionRow.clubId
+    ? (await getClubMembersDirectory([sessionRow.clubId])).sort((a, b) =>
+        a.name.localeCompare(b.name, "es")
+      )
+    : [];
 
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
@@ -134,6 +142,7 @@ export default async function EditSessionPage({ params }: PageProps) {
               availableExercises={allExercises}
               places={coachPlaces}
               monitorName={monitorName}
+              coaches={clubCoaches}
               allowDraftRestore={false}
               edit={{
                 sessionId: id,
@@ -144,6 +153,7 @@ export default async function EditSessionPage({ params }: PageProps) {
                   location: sessionRow.location ?? "",
                   placeId: sessionRow.placeId ?? null,
                   groupId: sessionRow.groupId ?? null,
+                  coachId: sessionRow.coachId ?? sessionRow.userId,
                   objective: sessionRow.objective ?? "",
                   material: sessionRow.material ?? "",
                   observations: sessionRow.observations ?? "",

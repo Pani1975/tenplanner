@@ -5,6 +5,10 @@ import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_CHANGE_REASON_IDS } from "@/lib/sessions/plan-change";
+import {
+  canEditSession,
+  editableSessionCondition,
+} from "@/lib/sessions/permissions";
 
 // Cierre de la clase: valoración de 1 a 5 estrellas y comentario opcional, y
 // si se dio tal y como estaba planificada (con el motivo si cambió). Si la
@@ -51,14 +55,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const [existing] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, id))
     .limit(1);
 
   if (!existing)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.userId !== user.id)
+  if (!(await canEditSession(user.id, existing)))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const setValues: Record<string, unknown> = {};
@@ -82,7 +90,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   await db
     .update(sessions)
     .set(setValues)
-    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)));
+    .where(and(eq(sessions.id, id), await editableSessionCondition(user.id)));
 
   return NextResponse.json({ ok: true });
 }

@@ -26,6 +26,10 @@ import {
   Search,
   CalendarClock,
 } from "lucide-react";
+import {
+  sessionCoachColumn,
+  taughtByCondition,
+} from "@/lib/sessions/permissions";
 import { SessionDraftsPanel } from "@/components/app/session-drafts-panel";
 import { SessionsSearchInput } from "@/components/app/sessions-search-input";
 import { getAppSettings } from "@/lib/app-settings";
@@ -54,6 +58,8 @@ interface PageProps {
     q?: string;
     sort?: string;
     monitor?: string;
+    /** "1" = Mis sesiones: las que imparte el usuario (modo club). */
+    mine?: string;
   }>;
 }
 
@@ -98,13 +104,18 @@ export default async function SessionsPage({ searchParams }: PageProps) {
   const sessionCreationEnabled =
     settings.get("feature.session_creation_enabled") !== false;
 
-  const { filter, page, q, sort, monitor } = await searchParams;
+  const { filter, page, q, sort, monitor, mine } = await searchParams;
   const activeClubId = await getActiveWorkClubId(user.id);
   const clubMembers = activeClubId
     ? await getClubMembersDirectory([activeClubId])
     : [];
-  const monitorFilter =
-    monitor && clubMembers.some((m) => m.id === monitor) ? monitor : null;
+  // "Mis sesiones" (modo club) = filtro por monitor con el propio usuario.
+  const mineOnly = mine === "1" && !!activeClubId;
+  const monitorFilter = mineOnly
+    ? user.id
+    : monitor && clubMembers.some((m) => m.id === monitor)
+      ? monitor
+      : null;
   const mineOrClub = sharedWithClubCondition(
     sessionsTable.userId,
     sessionsTable.clubId,
@@ -127,8 +138,9 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
 
   const whereConditions: SQL[] = [mineOrClub];
-  if (monitorFilter)
-    whereConditions.push(eq(sessionsTable.userId, monitorFilter));
+  // El monitor de una sesión es quien la imparte (coach_id) o, si no hay,
+  // quien la creó.
+  if (monitorFilter) whereConditions.push(taughtByCondition(monitorFilter));
   if (activeFilter === "upcoming")
     whereConditions.push(sql`${sessionsTable.scheduledAt} >= now()`);
   else if (activeFilter === "past")
@@ -147,7 +159,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
   const whereClause = and(...whereConditions) ?? mineOrClub;
 
   const baseCountClause = monitorFilter
-    ? and(mineOrClub, eq(sessionsTable.userId, monitorFilter))!
+    ? and(mineOrClub, taughtByCondition(monitorFilter))!
     : mineOrClub;
 
   const [
@@ -198,10 +210,17 @@ export default async function SessionsPage({ searchParams }: PageProps) {
       durationMinutes: sessionsTable.durationMinutes,
       status: sessionsTable.status,
       userId: sessionsTable.userId,
+      coachId: sessionCoachColumn,
       authorName: usersTable.name,
     })
     .from(sessionsTable)
-    .leftJoin(usersTable, eq(usersTable.id, sessionsTable.userId))
+    .leftJoin(
+      usersTable,
+      eq(
+        usersTable.id,
+        sql`COALESCE(${sessionsTable.coachId}, ${sessionsTable.userId})`
+      )
+    )
     .where(whereClause)
     .orderBy(...sessionOrderBy(activeSort))
     .limit(PAGE_SIZE)
@@ -252,10 +271,13 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     if (nextPage > 1) p.set("page", String(nextPage));
     const nextSort = opts.sort ?? activeSort;
     if (nextSort !== "oldest") p.set("sort", nextSort);
-    const nextMonitor = Object.prototype.hasOwnProperty.call(opts, "monitor")
-      ? opts.monitor
-      : monitorFilter;
-    if (nextMonitor) p.set("monitor", nextMonitor);
+    if (mineOnly) p.set("mine", "1");
+    else {
+      const nextMonitor = Object.prototype.hasOwnProperty.call(opts, "monitor")
+        ? opts.monitor
+        : monitorFilter;
+      if (nextMonitor) p.set("monitor", nextMonitor);
+    }
     const qs = p.toString();
     return qs ? `/sessions?${qs}` : "/sessions";
   }
@@ -282,12 +304,16 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                 Plan operativo
               </p>
               <h1 className="break-words font-heading text-3xl font-semibold text-foreground md:text-4xl">
-                {user
-                  ? personalTitle("Sesiones", await getWorkMode(user.id))
-                  : "Sesiones"}
+                {mineOnly
+                  ? "Mis sesiones"
+                  : user
+                    ? personalTitle("Sesiones", await getWorkMode(user.id))
+                    : "Sesiones"}
               </h1>
               <p className="mt-1.5 max-w-2xl text-[14px] text-foreground/60">
-                Entrenamientos agendados con fecha, hora, lugar y alumnos.
+                {mineOnly
+                  ? "Las sesiones del club que impartiste, impartes o impartirás."
+                  : "Entrenamientos agendados con fecha, hora, lugar y alumnos."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -341,7 +367,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
             })}
           </nav>
 
-          {clubMembers.length > 0 && (
+          {clubMembers.length > 0 && !mineOnly && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
               <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
                 Monitor
@@ -513,8 +539,9 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                       durationMinutes: session.durationMinutes,
                       exerciseCount: exerciseCountMap.get(session.id) ?? 0,
                       favorited: favoritedIds.has(session.id),
+                      // Monitor que la imparte, si no es el propio usuario.
                       authorName:
-                        session.userId !== user.id
+                        session.coachId !== user.id
                           ? (session.authorName ?? null)
                           : null,
                     };

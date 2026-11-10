@@ -178,10 +178,11 @@ interface Props {
   navPosition?: number | null;
   navTotal?: number | null;
   backToSearchHref?: string | null;
-  /** false cuando se ve una sesión compartida por el club de otro
-   * monitor: oculta editar/eliminar/cambiar estado/duplicar/repetir. */
+  /** false cuando se ve una sesión del club que no puede editar (no la
+   * creó, no la imparte y no es el gestor): oculta editar/eliminar/cambiar
+   * estado/repetir; duplicar sigue disponible. */
   isOwner?: boolean;
-  /** Nombre de quien creó la sesión, mostrado cuando isOwner es false. */
+  /** Monitor que imparte la sesión, si no es quien la ve. */
   authorName?: string | null;
 }
 
@@ -728,17 +729,16 @@ export function SessionDetailClient({
               </span>
             </Link>
           )}
-          {/* Duplicar: copia completa en otra fecha, en un paso */}
-          {isOwner && (
-            <button
-              type="button"
-              onClick={() => setShowDuplicate(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
-            >
-              <Copy className="size-3.5" />
-              <span className="hidden sm:inline">Duplicar</span>
-            </button>
-          )}
+          {/* Duplicar: copia completa en otra fecha, en un paso. También
+              para los demás monitores del club: la copia es suya. */}
+          <button
+            type="button"
+            onClick={() => setShowDuplicate(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
+          >
+            <Copy className="size-3.5" />
+            <span className="hidden sm:inline">Duplicar</span>
+          </button>
           <SessionFavoriteToggle
             sessionId={session.id}
             sessionTitle={session.title}
@@ -792,9 +792,9 @@ export function SessionDetailClient({
               <span className="hidden sm:inline">Eliminar</span>
             </button>
           )}
-          {!isOwner && authorName && (
+          {authorName && (
             <span className="inline-flex items-center rounded-full border border-foreground/15 bg-foreground/5 px-3 py-2 text-sm font-semibold text-foreground/60">
-              Sesión de {authorName}
+              Imparte {authorName}
             </span>
           )}
         </div>

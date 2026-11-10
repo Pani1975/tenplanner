@@ -4,6 +4,10 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import {
+  canEditSession,
+  editableSessionCondition,
+} from "@/lib/sessions/permissions";
 
 const patchSchema = z.object({
   status: z.enum(["scheduled", "completed", "cancelled"]),
@@ -39,14 +43,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const [existing] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, id))
     .limit(1);
 
   if (!existing)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.userId !== user.id)
+  if (!(await canEditSession(user.id, existing)))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const setValues: Record<string, unknown> = { status: parsed.data.status };
@@ -57,7 +65,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const [updated] = await db
     .update(sessions)
     .set(setValues)
-    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+    .where(and(eq(sessions.id, id), await editableSessionCondition(user.id)))
     .returning({
       id: sessions.id,
       status: sessions.status,

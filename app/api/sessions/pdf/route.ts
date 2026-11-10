@@ -1,7 +1,7 @@
 import { createElement, type ReactElement } from "react";
 import type { DocumentProps } from "@react-pdf/renderer";
 import { renderToStream } from "@react-pdf/renderer";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
@@ -14,6 +14,7 @@ import {
   slugify,
 } from "@/lib/sessions/pdf-data";
 import { zodValidationErrorResponse } from "../validation";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 const MAX_SESSIONS = 20;
 
@@ -72,7 +73,9 @@ export async function GET(request: Request) {
   const rows = await db
     .select()
     .from(sessions)
-    .where(and(inArray(sessions.id, ids), eq(sessions.userId, user.id)))
+    .where(
+      and(inArray(sessions.id, ids), await editableSessionCondition(user.id))
+    )
     .orderBy(asc(sessions.scheduledAt));
 
   if (rows.length === 0) {

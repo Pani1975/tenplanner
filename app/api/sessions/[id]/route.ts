@@ -22,9 +22,17 @@ import {
 } from "../validation";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
 import { embedSession } from "@/lib/ai/semantic-search";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  canTagWithClub,
+  getActiveWorkClubId,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
 import { classDraftVisibility } from "@/lib/classes/visibility";
 import { sumBlocksDuration, type StationItemJson } from "@/lib/block-items";
+import {
+  canEditSession,
+  editableSessionCondition,
+} from "@/lib/sessions/permissions";
 
 function internalServerError() {
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -265,7 +273,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const [session] = await db
       .select()
       .from(sessions)
-      .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+      .where(and(eq(sessions.id, id), await editableSessionCondition(user.id)))
       .limit(1);
 
     if (!session) {
@@ -490,7 +498,12 @@ export async function PUT(request: Request, context: RouteContext) {
 
   try {
     const [existing] = await db
-      .select({ userId: sessions.userId, status: sessions.status })
+      .select({
+        userId: sessions.userId,
+        coachId: sessions.coachId,
+        clubId: sessions.clubId,
+        status: sessions.status,
+      })
       .from(sessions)
       .where(eq(sessions.id, id))
       .limit(1);
@@ -499,7 +512,7 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    if (existing.userId !== user.id) {
+    if (!(await canEditSession(user.id, existing))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -641,6 +654,24 @@ export async function PUT(request: Request, context: RouteContext) {
       updateValues.placeId = sessionFields.placeId;
     if (sessionFields.groupId !== undefined)
       updateValues.groupId = sessionFields.groupId;
+    if (
+      sessionFields.coachId !== undefined &&
+      sessionFields.coachId !== (existing.coachId ?? existing.userId)
+    ) {
+      // Solo en sesiones del club y con un monitor activo de ese club.
+      const coachId = sessionFields.coachId;
+      if (!coachId) updateValues.coachId = null;
+      else if (
+        existing.clubId &&
+        (await canTagWithClub(coachId, existing.clubId))
+      )
+        updateValues.coachId = coachId === existing.userId ? null : coachId;
+      else
+        return NextResponse.json(
+          { error: "El monitor no pertenece al club" },
+          { status: 400 }
+        );
+    }
     if (tags !== undefined) {
       updateValues.tags =
         tags && tags.length > 0
@@ -680,7 +711,9 @@ export async function PUT(request: Request, context: RouteContext) {
       const [session] = await tx
         .update(sessions)
         .set(updateValues)
-        .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+        .where(
+          and(eq(sessions.id, id), await editableSessionCondition(user.id))
+        )
         .returning();
 
       if (replacesPlan) {
@@ -959,6 +992,8 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const [existing] = await db
       .select({
         userId: sessions.userId,
+        coachId: sessions.coachId,
+        clubId: sessions.clubId,
         coachAudioPath: sessions.coachAudioPath,
       })
       .from(sessions)
@@ -969,7 +1004,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    if (existing.userId !== user.id) {
+    if (!(await canEditSession(user.id, existing))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

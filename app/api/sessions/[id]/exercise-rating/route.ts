@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { sessions, sessionExercises } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 const patchSchema = z.object({
   exerciseId: z.string().uuid(),
@@ -38,14 +39,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const [session] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, sessionId))
     .limit(1);
 
   if (!session)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (session.userId !== user.id)
+  if (!(await canEditSession(user.id, session)))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   await db

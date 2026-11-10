@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, gte, ne } from "drizzle-orm";
+import { and, asc, desc, gte, ne } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 // Sesiones del monitor a las que se puede añadir un ejercicio: programadas
 // desde hoy en adelante (o también pasadas con ?past=1), sin las canceladas.
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
   startOfToday.setHours(startOfToday.getHours() - 12);
 
   const conditions = [
-    eq(sessions.userId, user.id),
+    await editableSessionCondition(user.id),
     ne(sessions.status, "cancelled"),
   ];
   if (!includePast) conditions.push(gte(sessions.scheduledAt, startOfToday));

@@ -37,6 +37,7 @@ import {
   getFilteredSessionIds,
   sessionNavQueryString,
 } from "@/lib/nav/session-nav";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -160,7 +161,10 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
 
   const session = sessionRow;
   if (!session) notFound();
-  const isOwner = session.userId === user.id;
+  // Pueden editarla quien la creó, el monitor que la imparte y el gestor
+  // del club; el resto de monitores del club solo la ven (y la duplican).
+  const isOwner = await canEditSession(user.id, session);
+  const sessionCoachId = session.coachId ?? session.userId;
   const [placeRow] = session.placeId
     ? await db
         .select({ name: places.name })
@@ -174,15 +178,17 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       : null;
     if (!session.clubId || session.clubId !== activeClubId) notFound();
   }
-  const authorName = isOwner
-    ? null
-    : ((
-        await db
-          .select({ name: users.name })
-          .from(users)
-          .where(eq(users.id, session.userId))
-          .limit(1)
-      )[0]?.name ?? null);
+  // Monitor que imparte la sesión, si no es quien la está viendo.
+  const authorName =
+    sessionCoachId === user.id
+      ? null
+      : ((
+          await db
+            .select({ name: users.name })
+            .from(users)
+            .where(eq(users.id, sessionCoachId))
+            .limit(1)
+        )[0]?.name ?? null);
 
   const favoritedIds = new Set(favRows.map((f) => f.exerciseId));
 
