@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { students } from "@/db/schema";
 import { StudentForm } from "@/components/app/student-form";
+import type { HowFound, LeftReason } from "@/lib/students/membership";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -85,6 +86,12 @@ export default async function EditStudentPage({ params }: PageProps) {
           phone: student.phone,
           preferredSchedule: student.preferredSchedule,
           locality: student.locality,
+          joinedAt: student.joinedAt,
+          howFound: student.howFound as HowFound | null,
+          howFoundDetail: student.howFoundDetail,
+          leftAt: student.leftAt,
+          leftReason: student.leftReason as LeftReason | null,
+          leftReasonDetail: student.leftReasonDetail,
           notes: student.notes,
           imageUrl: student.imageUrl,
         }}

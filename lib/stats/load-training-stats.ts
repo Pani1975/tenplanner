@@ -35,7 +35,10 @@ function pastNotCancelled() {
   );
 }
 
-async function statsForSessionIds(ids: string[]): Promise<TrainingStats> {
+/** Estadística de entrenamiento de un conjunto de sesiones (por id). */
+export async function statsForSessionIds(
+  ids: string[]
+): Promise<TrainingStats> {
   if (ids.length === 0) return computeTrainingStats([], new Map());
 
   const [sessionRows, itemRows] = await Promise.all([

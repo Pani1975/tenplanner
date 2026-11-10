@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAllowedImageUrl } from "@/lib/url-safety";
+import { HOW_FOUND_IDS, LEFT_REASON_IDS } from "@/lib/students/membership";
 
 export const genderSchema = z.enum(["male", "female", "other"]);
 export const dominantHandSchema = z.enum(["left", "right"]);
@@ -117,6 +118,32 @@ export const createStudentSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
+  joinedAt: dateStringSchema
+    .refine((v) => !isNaN(new Date(`${v}T00:00:00Z`).getTime()), {
+      message: "La fecha de alta parece incorrecta",
+    })
+    .optional()
+    .nullable(),
+  howFound: z.enum(HOW_FOUND_IDS).optional().nullable(),
+  howFoundDetail: z
+    .string()
+    .trim()
+    .max(255, "Máximo 255 caracteres")
+    .optional()
+    .nullable(),
+  leftAt: dateStringSchema
+    .refine((v) => !isNaN(new Date(`${v}T00:00:00Z`).getTime()), {
+      message: "La fecha de baja parece incorrecta",
+    })
+    .optional()
+    .nullable(),
+  leftReason: z.enum(LEFT_REASON_IDS).optional().nullable(),
+  leftReasonDetail: z
+    .string()
+    .trim()
+    .max(500, "Máximo 500 caracteres")
+    .optional()
+    .nullable(),
   notes: z
     .string()
     .trim()

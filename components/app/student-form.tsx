@@ -17,8 +17,15 @@ import {
   Phone,
   Clock,
   MapPin,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  HOW_FOUND_OPTIONS,
+  LEFT_REASON_OPTIONS,
+  type HowFound,
+  type LeftReason,
+} from "@/lib/students/membership";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -90,6 +97,12 @@ const formSchema = z.object({
   phone: z.string().trim().max(32).optional().or(z.literal("")),
   preferredSchedule: z.string().trim().max(500).optional().nullable(),
   locality: z.string().trim().max(120).optional().nullable(),
+  joinedAt: z.string().optional().nullable(),
+  howFound: z.string().optional().nullable(),
+  howFoundDetail: z.string().trim().max(255).optional().nullable(),
+  leftAt: z.string().optional().nullable(),
+  leftReason: z.string().optional().nullable(),
+  leftReasonDetail: z.string().trim().max(500).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
   imageUrl: z.string().trim().max(1000).optional().or(z.literal("")),
 });
@@ -146,6 +159,12 @@ export interface StudentFormProps {
     phone?: string | null;
     preferredSchedule?: string | null;
     locality?: string | null;
+    joinedAt?: string | null;
+    howFound?: HowFound | null;
+    howFoundDetail?: string | null;
+    leftAt?: string | null;
+    leftReason?: LeftReason | null;
+    leftReasonDetail?: string | null;
     notes?: string | null;
     imageUrl?: string | null;
   };
@@ -209,6 +228,12 @@ export function StudentForm({
       phone: initialData?.phone ?? "",
       preferredSchedule: initialData?.preferredSchedule ?? "",
       locality: initialData?.locality ?? "",
+      joinedAt: initialData?.joinedAt ?? "",
+      howFound: initialData?.howFound ?? "",
+      howFoundDetail: initialData?.howFoundDetail ?? "",
+      leftAt: initialData?.leftAt ?? "",
+      leftReason: initialData?.leftReason ?? "",
+      leftReasonDetail: initialData?.leftReasonDetail ?? "",
       notes: initialData?.notes ?? "",
       imageUrl: initialData?.imageUrl ?? "",
     },
@@ -250,6 +275,14 @@ export function StudentForm({
       phone: values.phone?.trim() || null,
       preferredSchedule: values.preferredSchedule?.trim() || null,
       locality: values.locality?.trim() || null,
+      joinedAt: values.joinedAt || null,
+      howFound: values.howFound || null,
+      howFoundDetail: values.howFoundDetail?.trim() || null,
+      leftAt: values.leftAt || null,
+      leftReason: values.leftAt ? values.leftReason || null : null,
+      leftReasonDetail: values.leftAt
+        ? values.leftReasonDetail?.trim() || null
+        : null,
       notes: values.notes?.trim() || null,
       imageUrl: values.imageUrl?.trim() || null,
     };
@@ -694,6 +727,141 @@ export function StudentForm({
                 {errors.locality.message as string}
               </p>
             )}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
+        <SectionHeader
+          icon={UserPlus}
+          title="Alta y baja"
+          subtitle="Cómo nos conoció y, si deja la escuela, cuándo y por qué"
+        />
+        <div className="space-y-5">
+          <div className="space-y-1.5 sm:max-w-xs">
+            <label
+              htmlFor="joinedAt"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Fecha de alta
+              <span className="font-normal text-muted-foreground ml-1">
+                {mode === "create" ? "(si la dejas vacía, hoy)" : ""}
+              </span>
+            </label>
+            <input
+              id="joinedAt"
+              type="date"
+              {...register("joinedAt")}
+              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+            />
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="howFound"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Cómo nos conoció
+                <span className="font-normal text-muted-foreground ml-1">
+                  (opcional)
+                </span>
+              </label>
+              <select
+                id="howFound"
+                {...register("howFound")}
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              >
+                <option value="">Sin indicar</option>
+                {HOW_FOUND_OPTIONS.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="howFoundDetail"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Detalle
+                <span className="font-normal text-muted-foreground ml-1">
+                  (opcional)
+                </span>
+              </label>
+              <input
+                id="howFoundDetail"
+                type="text"
+                maxLength={255}
+                placeholder="Ej: nos lo recomendó la familia de Pablo"
+                {...register("howFoundDetail")}
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-foreground/10 bg-background/40 p-4">
+            <p className="mb-3 text-sm font-semibold text-foreground">
+              Baja
+              <span className="font-normal text-muted-foreground ml-1">
+                (déjala vacía si el alumno sigue activo)
+              </span>
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="leftAt"
+                  className="block text-xs font-semibold text-foreground"
+                >
+                  Fecha de baja
+                </label>
+                <input
+                  id="leftAt"
+                  type="date"
+                  {...register("leftAt")}
+                  className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="leftReason"
+                  className="block text-xs font-semibold text-foreground"
+                >
+                  Motivo
+                </label>
+                <select
+                  id="leftReason"
+                  {...register("leftReason")}
+                  className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+                >
+                  <option value="">Sin indicar</option>
+                  {LEFT_REASON_OPTIONS.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 space-y-1.5">
+              <label
+                htmlFor="leftReasonDetail"
+                className="block text-xs font-semibold text-foreground"
+              >
+                Detalle del motivo
+                <span className="font-normal text-muted-foreground ml-1">
+                  (opcional)
+                </span>
+              </label>
+              <input
+                id="leftReasonDetail"
+                type="text"
+                maxLength={500}
+                {...register("leftReasonDetail")}
+                className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+            </div>
           </div>
         </div>
       </section>
