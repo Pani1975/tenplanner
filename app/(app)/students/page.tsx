@@ -2,12 +2,20 @@ import Link from "next/link";
 import { getWorkMode, personalTitle } from "@/lib/work-mode";
 import { redirect } from "next/navigation";
 import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm";
-import { Plus, Search, ArrowLeft, ArrowUpRight, Users } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ArrowLeft,
+  ArrowUpRight,
+  FileSpreadsheet,
+  Users,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { students as studentsTable, users as usersTable } from "@/db/schema";
 import {
   getActiveWorkClubId,
+  getClubAccountClubId,
   getClubMembersDirectory,
   sharedWithClubCondition,
 } from "@/lib/clubs";
@@ -69,7 +77,10 @@ export default async function StudentsPage({ searchParams }: PageProps) {
     Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
 
-  const activeClubId = await getActiveWorkClubId(user.id);
+  const [activeClubId, clubAccountId] = await Promise.all([
+    getActiveWorkClubId(user.id),
+    getClubAccountClubId(user.id),
+  ]);
   const clubMembers = activeClubId
     ? await getClubMembersDirectory([activeClubId])
     : [];
@@ -156,15 +167,26 @@ export default async function StudentsPage({ searchParams }: PageProps) {
               {totalStudents !== 1 ? "s" : ""}.
             </p>
           </div>
-          {totalStudents > 0 && (
-            <Link
-              href="/students/new"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-[13px] font-black text-[#050505] transition-transform hover:-translate-y-0.5"
-            >
-              <Plus className="size-4" />
-              Nuevo alumno
-            </Link>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {clubAccountId && (
+              <Link
+                href="/students/importar"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/25 px-4 text-[13px] font-black text-white transition-colors hover:bg-white/10"
+              >
+                <FileSpreadsheet className="size-4" />
+                Importar desde Excel
+              </Link>
+            )}
+            {totalStudents > 0 && (
+              <Link
+                href="/students/new"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-[13px] font-black text-[#050505] transition-transform hover:-translate-y-0.5"
+              >
+                <Plus className="size-4" />
+                Nuevo alumno
+              </Link>
+            )}
+          </div>
         </header>
 
         {clubMembers.length > 0 && (
