@@ -239,6 +239,12 @@ export function ExecuteSessionClient({
   >("idle");
   const [boardOpen, setBoardOpen] = useState(false);
   const [boardMessage, setBoardMessage] = useState<string | null>(null);
+  // Cronómetro libre que el monitor activa si lo necesita (independiente del
+  // temporizador del ejercicio). Sigue corriendo aunque cierre el panel.
+  const [stopwatchOpen, setStopwatchOpen] = useState(false);
+  const [swBaseMs, setSwBaseMs] = useState(0);
+  const [swStartedAt, setSwStartedAt] = useState<number | null>(null);
+  const [swElapsedMs, setSwElapsedMs] = useState(0);
 
   function openClose(kind: "finish" | "quick") {
     setCloseStep("plan");
@@ -312,6 +318,33 @@ export function ExecuteSessionClient({
     }, 1000);
     return () => clearInterval(interval);
   }, [timerRunning, countdownMode]);
+
+  // Cronómetro libre: se calcula con la hora real para no perder tiempo si la
+  // pestaña se queda en segundo plano.
+  useEffect(() => {
+    if (swStartedAt === null) return;
+    const interval = setInterval(() => {
+      setSwElapsedMs(swBaseMs + (nowMs() - swStartedAt));
+    }, 250);
+    return () => clearInterval(interval);
+  }, [swStartedAt, swBaseMs]);
+
+  function toggleStopwatch() {
+    if (swStartedAt === null) {
+      setSwStartedAt(nowMs());
+    } else {
+      const total = swBaseMs + (nowMs() - swStartedAt);
+      setSwBaseMs(total);
+      setSwElapsedMs(total);
+      setSwStartedAt(null);
+    }
+  }
+
+  function resetStopwatch() {
+    setSwStartedAt(null);
+    setSwBaseMs(0);
+    setSwElapsedMs(0);
+  }
 
   // Momento en que el ejercicio actual pasó a estar en pantalla. Sirve para
   // registrar el tiempo real aunque el monitor no use el cronómetro.
@@ -1430,6 +1463,25 @@ export function ExecuteSessionClient({
           </button>
           <button
             type="button"
+            onClick={() => setStopwatchOpen(true)}
+            aria-label="Cronómetro"
+            title="Cronómetro"
+            className={cn(
+              "flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10",
+              swElapsedMs > 0 || swStartedAt !== null
+                ? "border-brand/40 bg-brand/10 px-3 text-foreground"
+                : "size-10"
+            )}
+          >
+            <Timer className="size-4" />
+            {(swElapsedMs > 0 || swStartedAt !== null) && (
+              <span className="text-xs font-black tabular-nums">
+                {formatTime(Math.floor(swElapsedMs / 1000))}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setBoardMessage(null);
               setBoardOpen(true);
@@ -2040,6 +2092,67 @@ export function ExecuteSessionClient({
               className="mt-3 h-11 w-full rounded-full bg-foreground text-sm font-black text-background"
             >
               Guardar y volver a la clase
+            </button>
+          </div>
+        </div>
+      )}
+      {stopwatchOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setStopwatchOpen(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-[28px] border border-[#050505]/10 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
+            <div className="mb-2 flex items-center gap-2">
+              <Timer className="size-4 text-brand" />
+              <h2 className="text-base font-black text-foreground">
+                Cronómetro
+              </h2>
+            </div>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Úsalo cuando lo necesites. Sigue contando aunque cierres este
+              panel y es independiente del temporizador del ejercicio.
+            </p>
+            <p
+              className="mb-4 text-center text-6xl font-black tabular-nums text-foreground"
+              aria-live="off"
+            >
+              {formatTime(Math.floor(swElapsedMs / 1000))}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleStopwatch}
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-black text-background"
+              >
+                {swStartedAt !== null ? (
+                  <>
+                    <Pause className="size-4" /> Pausar
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-4" />{" "}
+                    {swElapsedMs > 0 ? "Seguir" : "Iniciar"}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={resetStopwatch}
+                disabled={swElapsedMs === 0 && swStartedAt === null}
+                aria-label="Reiniciar cronómetro"
+                title="Reiniciar"
+                className="flex size-11 items-center justify-center rounded-full border border-[#050505]/15 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40 dark:border-white/15"
+              >
+                <RotateCcw className="size-4" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStopwatchOpen(false)}
+              className="mt-3 h-10 w-full rounded-full border border-[#050505]/15 text-sm font-black text-muted-foreground dark:border-white/15"
+            >
+              Cerrar
             </button>
           </div>
         </div>
