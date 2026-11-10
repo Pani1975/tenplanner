@@ -15,7 +15,9 @@ import {
   buildImportRows,
   cellText,
   guessMapping,
+  hasNameColumn,
   IMPORT_FIELDS,
+  TEMPLATE_FIELDS,
   IMPORT_MAX_ROWS,
   parseCsv,
   type CellValue,
@@ -44,15 +46,19 @@ const PREVIEW_LIMIT = 300;
 /** Plantilla .xlsx: hoja de alumnos (cabecera + ejemplo) y hoja de valores. */
 async function downloadTemplate() {
   const { default: writeXlsxFile } = await import("write-excel-file/browser");
-  const header = IMPORT_FIELDS.map((f) => ({
+  const header = TEMPLATE_FIELDS.map((f) => ({
     value: f.label,
     fontWeight: "bold" as const,
     backgroundColor: "#D6FF38",
   }));
-  const example = IMPORT_FIELDS.map((f) => ({ value: f.example }));
+  const example = TEMPLATE_FIELDS.map((f) => ({ value: f.example }));
   const values: string[][] = [
     ["Campo", "Valores que se entienden"],
     ["Nombre", "Obligatorio. Una fila por alumno."],
+    [
+      "Apellidos",
+      "Los dos apellidos en la misma columna (también vale «Primer apellido» y «Segundo apellido» por separado, o una sola columna «Nombre y apellidos»)",
+    ],
     [
       "Fecha de nacimiento / alta",
       "Día/mes/año: 15/03/2014, 15-3-14 o una fecha de Excel",
@@ -72,7 +78,7 @@ async function downloadTemplate() {
       {
         sheet: "Alumnos",
         data: [header, example],
-        columns: IMPORT_FIELDS.map(() => ({ width: 22 })),
+        columns: TEMPLATE_FIELDS.map(() => ({ width: 22 })),
         stickyRowsCount: 1,
       },
       {
@@ -220,7 +226,7 @@ export function StudentImport() {
     setError(null);
   }
 
-  const nameMapped = mapping.includes("name");
+  const nameMapped = hasNameColumn(mapping);
   const withErrors = rows.filter((r) => r.errors.length > 0).length;
   const duplicateCount = check?.duplicates.size ?? 0;
   const withWarnings = ready.filter((r) => r.warnings.length > 0).length;
@@ -347,9 +353,6 @@ export function StudentImport() {
                         {IMPORT_FIELDS.map((f) => (
                           <option key={f.key} value={f.key}>
                             {f.label}
-                            {"required" in f && f.required
-                              ? " (obligatorio)"
-                              : ""}
                           </option>
                         ))}
                       </select>
@@ -361,7 +364,8 @@ export function StudentImport() {
           </div>
           {!nameMapped && (
             <p className="text-xs font-semibold text-red-500">
-              Indica qué columna tiene el nombre del alumno.
+              Indica qué columna tiene el nombre del alumno («Nombre» o «Nombre
+              y apellidos»).
             </p>
           )}
           <div className="flex flex-wrap gap-2">

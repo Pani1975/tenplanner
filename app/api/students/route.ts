@@ -1,5 +1,6 @@
 import { asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { joinFullName, splitFullName } from "@/lib/students/names";
 import { db } from "@/db";
 import { students, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
       .insert(students)
       .values({
         coachId: user.id,
-        name: d.name,
+        ...studentNames(d),
         email: d.email ? d.email : null,
         gender: d.gender ?? null,
         birthDate: d.birthDate ?? null,
@@ -131,4 +132,26 @@ export async function POST(request: Request) {
   } catch {
     return internalServerError();
   }
+}
+
+/** Nombre, apellidos y nombre completo a partir de lo que llegue. */
+function studentNames(d: {
+  name?: string;
+  firstName?: string;
+  lastName?: string | null;
+}) {
+  if (d.firstName) {
+    const lastName = d.lastName?.trim() || null;
+    return {
+      firstName: d.firstName,
+      lastName,
+      name: joinFullName(d.firstName, lastName),
+    };
+  }
+  const split = splitFullName(d.name);
+  return {
+    name: d.name!,
+    firstName: split.firstName,
+    lastName: split.lastName,
+  };
 }

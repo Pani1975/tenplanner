@@ -506,7 +506,11 @@ export const students = pgTable(
     coachId: uuid("coach_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
+    // Nombre completo (nombre + apellidos), el que se muestra en listas,
+    // informes y PDF. La API lo recalcula a partir de first_name/last_name.
     name: varchar("name", { length: 255 }).notNull(),
+    firstName: varchar("first_name", { length: 255 }),
+    lastName: varchar("last_name", { length: 255 }),
     email: varchar("email", { length: 255 }),
     gender: varchar("gender", { length: 20 }), // "male" | "female" | "other"
     birthDate: date("birth_date"),

@@ -30,6 +30,8 @@ const optionalText = (max: number) => z.string().trim().max(max).nullable();
 
 const rowSchema = z.object({
   name: z.string().trim().min(1).max(255),
+  firstName: z.string().trim().min(1).max(255),
+  lastName: optionalText(255),
   email: z.string().trim().email().max(255).nullable(),
   phone: optionalText(32),
   birthDate: isoDate,
@@ -217,6 +219,8 @@ export async function POST(request: Request) {
                 coachId: user.id,
                 clubId,
                 name: r.name,
+                firstName: r.firstName,
+                lastName: r.lastName,
                 email: r.email,
                 phone: r.phone,
                 birthDate: r.birthDate,

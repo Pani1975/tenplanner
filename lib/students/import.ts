@@ -1,5 +1,6 @@
 import { NIVEL_LEGACY, NIVELES } from "@/lib/exercise-taxonomy";
 import { HOW_FOUND_OPTIONS, type HowFound } from "@/lib/students/membership";
+import { joinFullName, splitFullName } from "@/lib/students/names";
 
 // Importación de alumnos desde un Excel o CSV (Modo gestión del club). Este
 // módulo no usa IA: reconoce las columnas por su cabecera y normaliza cada
@@ -10,19 +11,49 @@ export const IMPORT_MAX_ROWS = 2000;
 
 export const IMPORT_FIELDS = [
   {
-    key: "name",
+    key: "firstName",
     label: "Nombre",
-    required: true,
+    aliases: ["nombre", "name", "nombre de pila", "first name"],
+    example: "Lucía",
+  },
+  {
+    key: "lastName",
+    label: "Apellidos",
     aliases: [
-      "nombre",
+      "apellidos",
+      "apellido",
+      "primer apellido",
+      "apellido 1",
+      "1er apellido",
+      "surname",
+      "last name",
+    ],
+    example: "Pérez García",
+  },
+  {
+    key: "secondLastName",
+    label: "Segundo apellido",
+    inTemplate: false,
+    aliases: ["segundo apellido", "apellido 2", "2o apellido"],
+    example: "García",
+  },
+  {
+    key: "name",
+    label: "Nombre y apellidos (en una columna)",
+    inTemplate: false,
+    aliases: [
       "nombre y apellidos",
       "nombre completo",
+      "apellidos y nombre",
       "alumno",
       "alumna",
       "jugador",
       "jugadora",
       "nombre alumno",
-      "name",
+      "nombre del alumno",
+      "nombre de la alumna",
+      "nombre jugador",
+      "full name",
     ],
     example: "Lucía Pérez García",
   },
@@ -144,9 +175,22 @@ export const IMPORT_FIELDS = [
 
 export type ImportFieldKey = (typeof IMPORT_FIELDS)[number]["key"];
 
+/** Columnas de la plantilla descargable. */
+export const TEMPLATE_FIELDS = IMPORT_FIELDS.filter(
+  (f) => !("inTemplate" in f) || f.inTemplate !== false
+);
+
+/** El nombre se puede dar en Nombre (+ Apellidos) o en una sola columna. */
+export function hasNameColumn(mapping: (ImportFieldKey | null)[]): boolean {
+  return mapping.includes("firstName") || mapping.includes("name");
+}
+
 /** Valores ya normalizados de una fila, listos para la API. */
 export interface ImportStudent {
+  /** Nombre completo (nombre + apellidos). */
   name: string;
+  firstName: string;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
   birthDate: string | null;
@@ -446,8 +490,22 @@ export function buildImportRows(
       return parsed;
     };
 
-    const name = cellText(get(row, "name")).slice(0, 255);
-    if (!name) errors.push("Falta el nombre");
+    // Nombre: de las columnas Nombre + Apellidos (+ segundo apellido) o de
+    // una sola columna con el nombre completo, que se separa.
+    let firstName = cellText(get(row, "firstName"));
+    let lastName: string | null =
+      [cellText(get(row, "lastName")), cellText(get(row, "secondLastName"))]
+        .filter(Boolean)
+        .join(" ") || null;
+    if (!firstName && col("firstName") < 0) {
+      const split = splitFullName(cellText(get(row, "name")));
+      firstName = split.firstName;
+      lastName = split.lastName;
+    }
+    firstName = firstName.slice(0, 255);
+    lastName = lastName?.slice(0, 255) ?? null;
+    const name = joinFullName(firstName, lastName).slice(0, 255);
+    if (!firstName) errors.push("Falta el nombre");
 
     let email = cellText(get(row, "email")).toLowerCase() || null;
     if (email && (!EMAIL.test(email) || email.length > 255)) {
@@ -482,6 +540,8 @@ export function buildImportRows(
 
     const student: ImportStudent = {
       name,
+      firstName,
+      lastName,
       email,
       phone: text("phone", 32),
       birthDate,
@@ -511,7 +571,7 @@ export function buildImportRows(
       notes: text("notes", 2000),
     };
 
-    if (name) {
+    if (firstName) {
       const key = duplicateKey(name, birthDate);
       const prev = seen.get(key);
       if (prev)
