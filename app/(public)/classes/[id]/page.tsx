@@ -71,6 +71,7 @@ function ExerciseCard({
   exercise: ex,
   number,
   numberLabel,
+  durationMinutes,
   classId,
 }: {
   exercise: {
@@ -84,6 +85,8 @@ function ExerciseCard({
   number: number;
   /** "Estación" en las estaciones; sin etiqueta, solo el número. */
   numberLabel?: string;
+  /** Minutos del ejercicio en la clase (si los tiene). */
+  durationMinutes?: number | null;
   classId: string;
 }) {
   return (
@@ -110,6 +113,11 @@ function ExerciseCard({
           <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
             {CATEGORY_LABELS[ex.category] ?? ex.category}
           </span>
+          {durationMinutes ? (
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums">
+              {durationMinutes} min
+            </span>
+          ) : null}
           {ex.videoUrl && (
             <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
               Vídeo
@@ -255,7 +263,11 @@ export default async function ClassDetailPage({
   // vez, y cada bloque de estaciones junto, como "Ejercicio estaciones" con
   // sus estaciones dentro.
   type ExerciseEntry =
-    | { kind: "exercise"; exercise: LinkedExercise }
+    | {
+        kind: "exercise";
+        exercise: LinkedExercise;
+        durationMinutes: number | null;
+      }
     | {
         kind: "stations";
         key: string;
@@ -297,7 +309,11 @@ export default async function ClassDetailPage({
       const exercise = it.exerciseId ? linkedById.get(it.exerciseId) : null;
       if (exercise && !listedExerciseIds.has(exercise.id)) {
         listedExerciseIds.add(exercise.id);
-        classExercises.push({ kind: "exercise", exercise });
+        classExercises.push({
+          kind: "exercise",
+          exercise,
+          durationMinutes: it.durationMinutes,
+        });
       }
     }
   const classExerciseCount = classExercises.reduce(
@@ -804,6 +820,7 @@ export default async function ClassDetailPage({
                   <ExerciseCard
                     exercise={entry.exercise}
                     number={idx + 1}
+                    durationMinutes={entry.durationMinutes}
                     classId={cls.id}
                   />
                 </li>
