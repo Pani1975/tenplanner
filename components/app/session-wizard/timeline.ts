@@ -91,7 +91,7 @@ export function createStationsItem(
   phase: TrainingPhase | null = null,
   stationCount = 4,
   introText = "",
-  /** Duración por estación (la misma para todas), no la suma. */
+  /** Duración total del bloque de estaciones (no la de cada estación). */
   durationMinutes: number | null = null
 ): WizardExercise {
   return {

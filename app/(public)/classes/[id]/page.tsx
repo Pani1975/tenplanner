@@ -66,6 +66,79 @@ const CATEGORY_LABELS: Record<string, string> = {
   "trucos-tecnicos": "Trucos técnicos",
 };
 
+/** Tarjeta de un ejercicio de la clase, con enlace a su ficha. */
+function ExerciseCard({
+  exercise: ex,
+  number,
+  numberLabel,
+  classId,
+}: {
+  exercise: {
+    id: string;
+    name: string;
+    description: string | null;
+    category: string;
+    materials: string[] | null;
+    videoUrl: string | null;
+  };
+  number: number;
+  /** "Estación" en las estaciones; sin etiqueta, solo el número. */
+  numberLabel?: string;
+  classId: string;
+}) {
+  return (
+    <Link
+      href={`/exercises/${ex.id}?fromClass=${classId}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3 shadow-sm transition-colors hover:border-brand/40"
+    >
+      <span
+        className={
+          numberLabel
+            ? "shrink-0 pt-0.5 font-mono text-[10px] uppercase text-muted-foreground/60"
+            : "w-5 shrink-0 pt-0.5 text-right font-mono text-xs text-muted-foreground/60"
+        }
+      >
+        {numberLabel ? `${numberLabel} ${number}` : number}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-foreground">
+          {ex.name}
+        </span>
+        <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            {CATEGORY_LABELS[ex.category] ?? ex.category}
+          </span>
+          {ex.videoUrl && (
+            <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
+              Vídeo
+            </span>
+          )}
+        </span>
+        {ex.description && (
+          <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
+            {ex.description}
+          </span>
+        )}
+        {ex.materials && ex.materials.length > 0 && (
+          <span className="mt-1.5 flex flex-wrap gap-1">
+            {ex.materials.map((m) => (
+              <span
+                key={m}
+                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+              >
+                <Package className="size-2.5 opacity-60" />
+                {m}
+              </span>
+            ))}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
 export default async function ClassDetailPage({
   params,
   searchParams,
@@ -130,6 +203,7 @@ export default async function ClassDetailPage({
   const items = blocks.length
     ? await db
         .select({
+          id: classBlockExercises.id,
           blockId: classBlockExercises.blockId,
           exerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
@@ -176,9 +250,64 @@ export default async function ClassDetailPage({
         .where(inArray(exercises.id, uniqueLinkedIds))
     : [];
   const linkedById = new Map(linkedRows.map((r) => [r.id, r]));
-  const classExercises = uniqueLinkedIds
-    .map((exId) => linkedById.get(exId))
-    .filter((r): r is (typeof linkedRows)[number] => !!r);
+  type LinkedExercise = (typeof linkedRows)[number];
+  // Lista de "Ejercicios" en el orden de la clase: cada ejercicio suelto una
+  // vez, y cada bloque de estaciones junto, como "Ejercicio estaciones" con
+  // sus estaciones dentro.
+  type ExerciseEntry =
+    | { kind: "exercise"; exercise: LinkedExercise }
+    | {
+        kind: "stations";
+        key: string;
+        durationMinutes: number | null;
+        stations: Array<
+          | { kind: "exercise"; exercise: LinkedExercise }
+          | { kind: "text"; text: string }
+        >;
+      };
+  const classExercises: ExerciseEntry[] = [];
+  const listedExerciseIds = new Set<string>();
+  for (const block of blocks)
+    for (const it of items.filter((i) => i.blockId === block.id)) {
+      const stations = (it.stations as StationItemJson[] | null) ?? [];
+      if (resolveItemKind(it) === "stations") {
+        type StationEntry = Extract<
+          ExerciseEntry,
+          { kind: "stations" }
+        >["stations"][number];
+        const group = stations.flatMap((st): StationEntry[] => {
+          const exercise =
+            st.kind === "exercise" && st.exerciseId
+              ? linkedById.get(st.exerciseId)
+              : undefined;
+          if (exercise) return [{ kind: "exercise", exercise }];
+          return st.freeText?.trim()
+            ? [{ kind: "text", text: st.freeText.trim() }]
+            : [];
+        });
+        if (group.length > 0)
+          classExercises.push({
+            kind: "stations",
+            key: it.id,
+            durationMinutes: it.durationMinutes,
+            stations: group,
+          });
+        continue;
+      }
+      const exercise = it.exerciseId ? linkedById.get(it.exerciseId) : null;
+      if (exercise && !listedExerciseIds.has(exercise.id)) {
+        listedExerciseIds.add(exercise.id);
+        classExercises.push({ kind: "exercise", exercise });
+      }
+    }
+  const classExerciseCount = classExercises.reduce(
+    (n, e) =>
+      n +
+      (e.kind === "exercise"
+        ? 1
+        : e.stations.filter((st) => st.kind === "exercise").length),
+    0
+  );
 
   // Favorito = la clase está en al menos una de las listas del monitor
   // (el corazón de la ficha abre ese selector; ver ClassFavoriteToggle).
@@ -619,7 +748,7 @@ export default async function ClassDetailPage({
                               {item.durationMinutes && (
                                 <span className="text-muted-foreground ml-2 text-xs">
                                   · {item.durationMinutes} min
-                                  {itemKind === "stations" ? "/estación" : ""}
+                                  {itemKind === "stations" ? " en total" : ""}
                                 </span>
                               )}
                               {itemKind === "exercise" &&
@@ -665,57 +794,64 @@ export default async function ClassDetailPage({
             <Dumbbell className="size-4 text-brand" />
             <h2 className="font-heading text-xl text-foreground">Ejercicios</h2>
             <span className="text-xs text-muted-foreground">
-              {classExercises.length}
+              {classExerciseCount}
             </span>
           </div>
           <ol className="grid gap-3 sm:grid-cols-2">
-            {classExercises.map((ex, idx) => (
-              <li key={ex.id}>
-                <Link
-                  href={`/exercises/${ex.id}?fromClass=${cls.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3 shadow-sm transition-colors hover:border-brand/40"
+            {classExercises.map((entry, idx) =>
+              entry.kind === "exercise" ? (
+                <li key={entry.exercise.id}>
+                  <ExerciseCard
+                    exercise={entry.exercise}
+                    number={idx + 1}
+                    classId={cls.id}
+                  />
+                </li>
+              ) : (
+                <li
+                  key={entry.key}
+                  className="rounded-lg border border-brand/30 bg-brand/[0.04] p-3 shadow-sm sm:col-span-2"
                 >
-                  <span className="w-5 shrink-0 pt-0.5 text-right font-mono text-xs text-muted-foreground/60">
-                    {idx + 1}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-foreground">
-                      {ex.name}
+                  <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 px-1">
+                    <span className="w-5 shrink-0 text-right font-mono text-xs text-muted-foreground/60">
+                      {idx + 1}
                     </span>
-                    <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                        {CATEGORY_LABELS[ex.category] ?? ex.category}
-                      </span>
-                      {ex.videoUrl && (
-                        <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
-                          Vídeo
-                        </span>
-                      )}
+                    <span className="text-sm font-semibold text-foreground">
+                      Ejercicio estaciones
                     </span>
-                    {ex.description && (
-                      <span className="mt-1.5 block text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                        {ex.description}
-                      </span>
-                    )}
-                    {ex.materials && ex.materials.length > 0 && (
-                      <span className="mt-1.5 flex flex-wrap gap-1">
-                        {ex.materials.map((m) => (
-                          <span
-                            key={m}
-                            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                          >
-                            <Package className="size-2.5 opacity-60" />
-                            {m}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    <span className="text-xs text-muted-foreground">
+                      {entry.stations.length} estaciones
+                      {entry.durationMinutes
+                        ? ` · ${entry.durationMinutes} min en total`
+                        : ""}
+                    </span>
+                  </div>
+                  <ol className="grid gap-2 sm:grid-cols-2">
+                    {entry.stations.map((st, si) => (
+                      <li key={si}>
+                        {st.kind === "exercise" ? (
+                          <ExerciseCard
+                            exercise={st.exercise}
+                            number={si + 1}
+                            numberLabel="Estación"
+                            classId={cls.id}
+                          />
+                        ) : (
+                          <div className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3">
+                            <span className="shrink-0 pt-0.5 font-mono text-[10px] uppercase text-muted-foreground/60">
+                              Estación {si + 1}
+                            </span>
+                            <span className="text-xs leading-relaxed text-foreground/80">
+                              {st.text}
+                            </span>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </li>
+              )
+            )}
           </ol>
         </div>
       )}

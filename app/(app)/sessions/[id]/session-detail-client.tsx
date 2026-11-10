@@ -1082,7 +1082,7 @@ export function SessionDetailClient({
                           <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
                             <Clock className="size-3" />
                             {itemMinutes(item)} min
-                            {item.kind === "stations" ? "/estación" : ""}
+                            {item.kind === "stations" ? " en total" : ""}
                           </span>
                         </div>
                         {item.kind === "stations" && (
