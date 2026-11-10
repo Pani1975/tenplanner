@@ -1475,7 +1475,7 @@ export function StepExercises({
                                           }
                                           title={
                                             isStationsItem(ex)
-                                              ? "Duración de cada estación"
+                                              ? "Duración total de las estaciones"
                                               : "Editar duración"
                                           }
                                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded-lg hover:bg-muted group/dur"
@@ -1484,7 +1484,7 @@ export function StepExercises({
                                           <span>
                                             {effectiveDuration} min
                                             {isStationsItem(ex)
-                                              ? "/estación"
+                                              ? " en total"
                                               : ""}
                                           </span>
                                           <ChevronDown className="size-2.5 opacity-0 group-hover/dur:opacity-100 transition-opacity" />

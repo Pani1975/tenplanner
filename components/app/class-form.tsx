@@ -114,7 +114,7 @@ type BlockItem =
       kind: "stations";
       introText: string;
       stations: StationDraftItem[];
-      /** Duración por estación (la misma para todas), no la suma. */
+      /** Duración total del bloque de estaciones (cuenta una vez en la clase). */
       durationMinutes: number | null;
     };
 
@@ -1555,7 +1555,7 @@ export function ClassForm({
                             placeholder="min"
                             title={
                               item.kind === "stations"
-                                ? "Duración de cada estación"
+                                ? "Duración total de las estaciones"
                                 : undefined
                             }
                             value={item.durationMinutes ?? ""}
@@ -1570,7 +1570,7 @@ export function ClassForm({
                           />
                           {item.kind === "stations" && (
                             <span className="text-[9px] text-muted-foreground">
-                              por estación
+                              en total
                             </span>
                           )}
                         </div>
