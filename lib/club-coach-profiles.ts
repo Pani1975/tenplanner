@@ -1,6 +1,6 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { clubCoachProfiles } from "@/db/schema";
+import { clubCoachProfiles, clubMembers, users } from "@/db/schema";
 import { generateInviteToken } from "@/lib/clubs";
 import {
   COACH_PROFILE_LINK_EXPIRY_DAYS,
@@ -109,4 +109,60 @@ export function profileColumns(data: CoachProfileData) {
     startedTeachingYear: data.startedTeachingYear,
     experience: data.experience,
   };
+}
+
+/**
+ * Fichas de los clubes de los que `userId` es monitor activo, por su email.
+ * La ficha de un monitor con cuenta la mantiene él desde su Perfil.
+ */
+export async function getOwnCoachProfiles(userId: string, email: string) {
+  const clubIds = (
+    await db
+      .select({ clubId: clubMembers.clubId })
+      .from(clubMembers)
+      .where(
+        and(
+          eq(clubMembers.userId, userId),
+          eq(clubMembers.role, "coach"),
+          eq(clubMembers.status, "active")
+        )
+      )
+  ).map((r) => r.clubId);
+  const uniqueClubIds = Array.from(new Set(clubIds));
+  if (uniqueClubIds.length === 0) return { clubIds: [], rows: [] };
+  const rows = await db
+    .select()
+    .from(clubCoachProfiles)
+    .where(
+      and(
+        inArray(clubCoachProfiles.clubId, uniqueClubIds),
+        eq(clubCoachProfiles.email, email.toLowerCase())
+      )
+    )
+    .orderBy(desc(clubCoachProfiles.updatedAt));
+  return { clubIds: uniqueClubIds, rows };
+}
+
+/**
+ * ¿La ficha es de un monitor del club con cuenta que la rellenó él? Entonces
+ * la controla el monitor (desde su Perfil) y el gestor solo la ve.
+ */
+export async function isCoachControlledProfile(
+  clubId: string,
+  row: { email: string; consentGivenAt: Date | null }
+) {
+  if (!row.consentGivenAt) return false;
+  const [member] = await db
+    .select({ id: clubMembers.id })
+    .from(clubMembers)
+    .innerJoin(users, eq(users.id, clubMembers.userId))
+    .where(
+      and(
+        eq(clubMembers.clubId, clubId),
+        eq(clubMembers.status, "active"),
+        sql`lower(${users.email}) = ${row.email.toLowerCase()}`
+      )
+    )
+    .limit(1);
+  return !!member;
 }

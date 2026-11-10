@@ -6,6 +6,7 @@ import { clubCoachProfiles } from "@/db/schema";
 import { requireClubOwner } from "@/lib/club-owner-auth";
 import {
   getClubCoachProfile,
+  isCoachControlledProfile,
   isUniqueViolation,
   profileColumns,
   toCoachProfileView,
@@ -47,6 +48,12 @@ export async function PATCH(request: Request, { params }: Ctx) {
     return NextResponse.json(
       { error: "Ficha no encontrada." },
       { status: 404 }
+    );
+  }
+  if (await isCoachControlledProfile(club.id, current)) {
+    return NextResponse.json(
+      { error: "Este perfil lo mantiene el propio monitor desde su cuenta." },
+      { status: 403 }
     );
   }
 

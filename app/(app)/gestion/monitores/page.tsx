@@ -47,7 +47,7 @@ export default async function ManagementCoachesPage() {
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
             Invita monitores por email. Cuando acepten, tendrán el Modo{" "}
-            {club.name} para trabajar con el club, además de su Modo particular.
+            {club.name} para trabajar con el club, además de su Modo monitor.
           </p>
         </header>
         <ClubOwnerPanel

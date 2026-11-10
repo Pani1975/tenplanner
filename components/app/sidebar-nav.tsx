@@ -223,7 +223,6 @@ const managementNavItems: NavItem[] = [
     icon: CalendarCheck,
   },
   { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
-  { href: "/profile", label: "Perfil", icon: UserCircle },
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
@@ -264,7 +263,9 @@ const CLUB_ONLY_HREFS = new Set([
 
 function navItemsForSpace(
   inClub: boolean,
-  clubMonitorSpace = false
+  clubMonitorSpace = false,
+  /** Cuenta de un club: sin "Perfil" (los datos del club están en Mi club). */
+  clubAccount = false
 ): NavItem[] {
   const labels = spaceLabels(inClub);
   const bySubHref: Record<string, string> = {
@@ -274,9 +275,11 @@ function navItemsForSpace(
     "/classes?tab=favorites": labels.lists,
     "/sessions": labels.sessions,
   };
-  const items = clubMonitorSpace
-    ? navItems.filter((item) => !CLUB_ONLY_HREFS.has(item.href))
-    : navItems;
+  const items = navItems.filter(
+    (item) =>
+      !(clubMonitorSpace && CLUB_ONLY_HREFS.has(item.href)) &&
+      !(clubAccount && item.href === "/profile")
+  );
   return items.map((item) => {
     if (item.href === "/resources") return { ...item, label: labels.resources };
     if (!item.submenu) return item;
@@ -425,7 +428,8 @@ function NavContent({
             !!activeWorkClubId,
             // Modo monitor de un monitor de club (sin alumnos, objetivos ni
             // reservas: eso va en el modo del club).
-            !activeWorkClubId && !clubAccountClubId && workModeClubs.length > 0
+            !activeWorkClubId && !clubAccountClubId && workModeClubs.length > 0,
+            !!clubAccountClubId
           );
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
