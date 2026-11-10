@@ -6,6 +6,7 @@ import {
   type ReportRange,
 } from "@/lib/club-reports";
 import { planChangeReasonLabel } from "@/lib/sessions/plan-change";
+import { howFoundLabel, leftReasonLabel } from "@/lib/students/membership";
 import { ageOn } from "@/lib/students/stats";
 import { statsForSessionIds } from "@/lib/stats/load-training-stats";
 import type { Share, StatAspect, TopExercise } from "@/lib/stats/training-stats";
@@ -99,9 +100,17 @@ export interface ClubDetailReport {
   };
   /** Veces por semana que asiste de media un alumno que ha asistido. */
   weekly: { average: number | null; students: number; weeks: number };
-  signups: { count: number; rows: { name: string; date: string }[] };
-  /** No se guarda cuándo ni por qué se va un alumno: no hay datos de bajas. */
-  departuresTracked: false;
+  signups: {
+    count: number;
+    rows: { name: string; date: string; howFound: string | null }[];
+    /** Cómo conocieron la escuela los alumnos dados de alta en el periodo. */
+    howFound: CountRow[];
+  };
+  departures: {
+    count: number;
+    rows: { name: string; date: string; reason: string | null }[];
+    reasons: CountRow[];
+  };
   weekdays: { label: string; sessions: number; minutes: number }[];
   exercisesByCoach: {
     id: string;
@@ -213,7 +222,15 @@ export async function loadClubDetailReport(
   ] = await Promise.all([
     db.execute<Record<string, unknown>>(sql`
       select st.id, st.name, st.gender, st.birth_date, st.locality, st.created_at,
-        (st.created_at >= ${since}) as is_signup
+        (st.created_at >= ${since}) as is_signup,
+        st.how_found, st.how_found_detail,
+        (st.left_at is not null
+          and st.left_at <= ((${until} - interval '1 microsecond') at time zone ${tz})::date) as is_gone,
+        to_char(st.left_at, 'YYYY-MM-DD') as left_at_text,
+        st.left_reason, st.left_reason_detail,
+        (st.left_at is not null
+          and st.left_at >= (${since} at time zone ${tz})::date
+          and st.left_at <= ((${until} - interval '1 microsecond') at time zone ${tz})::date) as left_in_period
       from students st
       where st.club_id = ${clubId} and st.created_at < ${until}
     `),
@@ -305,8 +322,47 @@ export async function loadClubDetailReport(
   const ages: number[] = [];
   const localities = new Map<string, CountRow>();
   let withoutLocality = 0;
-  const signupRows: { name: string; date: string; at: number }[] = [];
+  const signupRows: {
+    name: string;
+    date: string;
+    at: number;
+    howFound: string | null;
+    howFoundKey: string | null;
+  }[] = [];
+  const departureRows: {
+    name: string;
+    date: string;
+    reason: string | null;
+    detail: string | null;
+  }[] = [];
+  let activeStudents = 0;
   for (const st of studentRows) {
+    const created =
+      st.created_at instanceof Date
+        ? st.created_at
+        : new Date(String(st.created_at));
+    if (st.is_signup === true) {
+      const key = st.how_found ? String(st.how_found) : null;
+      const detail = st.how_found_detail ? String(st.how_found_detail) : null;
+      signupRows.push({
+        name: String(st.name),
+        date: created.toISOString(),
+        at: created.getTime(),
+        howFound: howFoundLabel(key) ?? (detail || null),
+        howFoundKey: key,
+      });
+    }
+    if (st.left_in_period === true) {
+      departureRows.push({
+        name: String(st.name),
+        date: String(st.left_at_text),
+        reason: leftReasonLabel(st.left_reason ? String(st.left_reason) : null),
+        detail: st.left_reason_detail ? String(st.left_reason_detail) : null,
+      });
+    }
+    // Los alumnos que ya se habían dado de baja no cuentan como alumnos.
+    if (st.is_gone === true) continue;
+    activeStudents += 1;
     const g = String(st.gender ?? "");
     gender[g === "male" || g === "female" || g === "other" ? g : "unknown"] += 1;
     const age = ageOn(st.birth_date ? String(st.birth_date) : null, asOf);
@@ -321,17 +377,6 @@ export async function loadClubDetailReport(
       const entry = localities.get(key) ?? { label: locality, count: 0 };
       entry.count += 1;
       localities.set(key, entry);
-    }
-    const created =
-      st.created_at instanceof Date
-        ? st.created_at
-        : new Date(String(st.created_at));
-    if (st.is_signup === true) {
-      signupRows.push({
-        name: String(st.name),
-        date: created.toISOString(),
-        at: created.getTime(),
-      });
     }
   }
   signupRows.sort((a, b) => a.at - b.at);
@@ -368,7 +413,7 @@ export async function loadClubDetailReport(
 
   return {
     students: {
-      total: studentRows.length,
+      total: activeStudents,
       groups: n(groupRows[0]?.total),
       gender,
       ageAverage: ages.length
@@ -384,9 +429,30 @@ export async function loadClubDetailReport(
     weekly: { average: weeklyAverage, students: perStudent.length, weeks },
     signups: {
       count: signupRows.length,
-      rows: signupRows.map(({ name, date }) => ({ name, date })),
+      rows: signupRows.map(({ name, date, howFound }) => ({
+        name,
+        date,
+        howFound,
+      })),
+      howFound: countReasons(
+        signupRows.map((r) => r.howFound),
+        "Sin indicar"
+      ),
     },
-    departuresTracked: false,
+    departures: {
+      count: departureRows.length,
+      rows: departureRows
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((r) => ({
+          name: r.name,
+          date: r.date,
+          reason: r.detail ? `${r.reason ?? "Sin motivo"} · ${r.detail}` : r.reason,
+        })),
+      reasons: countReasons(
+        departureRows.map((r) => r.reason),
+        "Sin motivo indicado"
+      ),
+    },
     weekdays: WEEKDAY_NAMES.map((label, i) => ({
       label,
       sessions: weekdayByDow.get(i + 1)?.sessions ?? 0,

@@ -110,6 +110,8 @@ export async function PUT(request: Request, context: StudentRouteContext) {
       "yearStartedTennis",
       "yearStartedRacketSports",
       "preferredSchedule",
+      "howFound",
+      "leftAt",
       "notes",
       "imageUrl",
     ] as const;
@@ -125,6 +127,20 @@ export async function PUT(request: Request, context: StudentRouteContext) {
     }
     if (d.phone !== undefined) {
       updateValues.phone = d.phone === "" ? null : d.phone;
+    }
+    if (d.howFoundDetail !== undefined) {
+      updateValues.howFoundDetail = d.howFoundDetail || null;
+    }
+    // El motivo de baja solo tiene sentido con fecha de baja: quitar la
+    // fecha (volver a activo) borra también el motivo.
+    if (d.leftAt === null) {
+      updateValues.leftReason = null;
+      updateValues.leftReasonDetail = null;
+    } else {
+      if (d.leftReason !== undefined) updateValues.leftReason = d.leftReason;
+      if (d.leftReasonDetail !== undefined) {
+        updateValues.leftReasonDetail = d.leftReasonDetail || null;
+      }
     }
     if (d.locality !== undefined) {
       const locality = d.locality ? d.locality : null;

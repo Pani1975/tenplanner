@@ -327,27 +327,43 @@ export function ClubReportPdf({
               />
               <StatTile
                 label="Bajas"
-                value="—"
-                hint="Aún no se registran"
-                color="#9CA3AF"
+                value={String(d.departures.count)}
+                color="#EF4444"
               />
             </View>
-            {d.signups.rows.length > 0 && (
-              <View>
+            {d.signups.count > 0 && (
+              <View style={{ marginTop: 4 }}>
+                <Text style={[styles.th, { marginBottom: 3 }]}>
+                  ALTAS · CÓMO NOS CONOCIERON
+                </Text>
                 {d.signups.rows.map((r, i) => (
                   <View key={`${r.name}-${i}`} style={styles.tableRow} wrap={false}>
                     <Text style={{ flex: 1, fontSize: 9 }}>{r.name}</Text>
                     <Text style={{ fontSize: 9, color: "#6B7280" }}>
                       {dateFormat.format(new Date(r.date))}
+                      {r.howFound ? ` · ${r.howFound}` : ""}
                     </Text>
                   </View>
                 ))}
               </View>
             )}
-            <Text style={styles.note}>
-              Las bajas y sus causas todavía no se guardan en la ficha del
-              alumno, por eso no aparecen.
-            </Text>
+            {d.departures.count > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <Text style={[styles.th, { marginBottom: 3 }]}>
+                  BAJAS · MOTIVO
+                </Text>
+                {d.departures.rows.map((r, i) => (
+                  <View key={`${r.name}-${i}`} style={styles.tableRow} wrap={false}>
+                    <Text style={{ flex: 1, fontSize: 9 }}>{r.name}</Text>
+                    <Text style={{ fontSize: 9, color: "#6B7280" }}>
+                      {dateFormat.format(new Date(`${r.date}T12:00:00Z`))}
+                      {r.reason ? ` · ${r.reason}` : ""}
+                    </Text>
+                  </View>
+                ))}
+                <Reasons rows={d.departures.reasons} />
+              </View>
+            )}
           </>
         )}
 

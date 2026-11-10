@@ -190,26 +190,59 @@ export function ReportBlocks({
         />
       </Block>
 
-      <Block title="Altas y bajas" hint={`En ${phrase}.`}>
-        <div className="flex gap-8">
-          <Big value={d.signups.count} label="altas" />
-          <Big value="—" label="bajas (aún no se registran)" />
-        </div>
-        {d.signups.rows.length > 0 && (
-          <ul className="mt-3 divide-y divide-border/60 text-sm">
-            {d.signups.rows.map((r, i) => (
-              <li key={`${r.name}-${i}`} className="flex justify-between py-1.5">
-                <span className="text-foreground/85">{r.name}</span>
-                <span className="text-muted-foreground">
-                  {dateFmt.format(new Date(r.date))}
-                </span>
-              </li>
-            ))}
-          </ul>
+      <Block title="Altas" hint={`Alumnos dados de alta en ${phrase}.`}>
+        <Big value={d.signups.count} label="altas" />
+        {d.signups.count > 0 && (
+          <>
+            <div className="mt-3">
+              <p className="mb-1 text-[11px] font-black uppercase text-foreground/55">
+                Cómo nos conocieron
+              </p>
+              <Bars
+                rows={d.signups.howFound.map((h) => ({
+                  label: h.label,
+                  value: h.count,
+                }))}
+              />
+            </div>
+            <ul className="mt-3 divide-y divide-border/60 text-sm">
+              {d.signups.rows.map((r, i) => (
+                <li
+                  key={`${r.name}-${i}`}
+                  className="flex justify-between gap-3 py-1.5"
+                >
+                  <span className="text-foreground/85">{r.name}</span>
+                  <span className="text-muted-foreground">
+                    {dateFmt.format(new Date(r.date))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
-        <p className="mt-3 text-xs text-muted-foreground">
-          Las bajas y sus causas todavía no se guardan en la ficha del alumno.
-        </p>
+      </Block>
+
+      <Block title="Bajas" hint={`Alumnos dados de baja en ${phrase}.`}>
+        <Big value={d.departures.count} label="bajas" />
+        {d.departures.count > 0 && (
+          <>
+            <Reasons rows={d.departures.reasons} />
+            <ul className="mt-3 divide-y divide-border/60 text-sm">
+              {d.departures.rows.map((r, i) => (
+                <li
+                  key={`${r.name}-${i}`}
+                  className="flex justify-between gap-3 py-1.5"
+                >
+                  <span className="text-foreground/85">{r.name}</span>
+                  <span className="text-right text-muted-foreground">
+                    {dateFmt.format(new Date(`${r.date}T12:00:00Z`))}
+                    {r.reason ? ` · ${r.reason}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </Block>
 
       <Block title="Clases por día de la semana">

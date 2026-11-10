@@ -631,6 +631,13 @@
       "when": 1795500000000,
       "tag": "0089_club_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1795600000000,
+      "tag": "0090_student_alta_baja",
+      "breakpoints": true
     }
   ]
 }

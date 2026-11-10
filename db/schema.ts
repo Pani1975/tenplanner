@@ -525,6 +525,13 @@ export const students = pgTable(
     locality: varchar("locality", { length: 120 }),
     localityLat: doublePrecision("locality_lat"),
     localityLng: doublePrecision("locality_lng"),
+    // Alta: cómo nos conoció (clave de lib/students/membership.ts + detalle).
+    howFound: varchar("how_found", { length: 40 }),
+    howFoundDetail: varchar("how_found_detail", { length: 255 }),
+    // Baja: fecha y motivo (clave + detalle). left_at a null = alumno activo.
+    leftAt: date("left_at"),
+    leftReason: varchar("left_reason", { length: 40 }),
+    leftReasonDetail: varchar("left_reason_detail", { length: 500 }),
     notes: text("notes"),
     imageUrl: text("image_url"),
     profileToken: varchar("profile_token", { length: 128 }).unique(),

@@ -150,13 +150,13 @@ export function rangeQuery(range: ReportRange): URLSearchParams {
 export function rangeBounds(range: ReportRange): { since: SQL; until: SQL } {
   if (range.kind === "preset") {
     return {
-      since: sql`now() - make_interval(days => ${range.days})`,
-      until: sql`now()`,
+      since: sql`(now() - make_interval(days => ${range.days}))`,
+      until: sql`(now())`,
     };
   }
   return {
-    since: sql`((${range.fromDate}::date)::timestamp at time zone ${REPORT_TIME_ZONE})`,
-    until: sql`least(((${range.toDate}::date + 1)::timestamp at time zone ${REPORT_TIME_ZONE}), now())`,
+    since: sql`(((${range.fromDate}::date)::timestamp) at time zone ${REPORT_TIME_ZONE})`,
+    until: sql`least((((${range.toDate}::date + 1)::timestamp) at time zone ${REPORT_TIME_ZONE}), now())`,
   };
 }
 
@@ -237,7 +237,9 @@ export async function loadClubReport(
         (select count(*) from club_invites ci
           where ci.club_id = ${clubId} and ci.status = 'pending'
             and ci.expires_at > now()) as pending_invites,
-        (select count(*) from students st where st.club_id = ${clubId}) as players,
+        (select count(*) from students st
+          where st.club_id = ${clubId}
+            and (st.left_at is null or st.left_at > current_date)) as players,
         (select count(*) from students st
           where st.club_id = ${clubId} and st.created_at >= ${since}
             and st.created_at < ${until}) as new_players,
@@ -278,7 +280,8 @@ export async function loadClubReport(
       select u.id, u.name, u.email,
         (u.id = (select c.owner_id from clubs c where c.id = ${clubId})) as is_owner,
         (select count(*) from students st
-          where st.club_id = ${clubId} and st.coach_id = u.id) as players,
+          where st.club_id = ${clubId} and st.coach_id = u.id
+            and (st.left_at is null or st.left_at > current_date)) as players,
         (select count(*) from done d where d.user_id = u.id) as sessions,
         (select coalesce(sum(d.duration_minutes), 0) from done d
           where d.user_id = u.id) as minutes,
@@ -320,6 +323,7 @@ export async function loadClubReport(
       from students st
       join users u on u.id = st.coach_id
       where st.club_id = ${clubId}
+        and (st.left_at is null or st.left_at > current_date)
       order by st.name
     `),
   ]);

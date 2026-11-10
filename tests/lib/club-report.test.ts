@@ -175,9 +175,20 @@ describe("PDF del informe de gestión", () => {
     weekly: { average: 1.2, students: 4, weeks: 4.3 },
     signups: {
       count: 1,
-      rows: [{ name: "Luis", date: "2026-11-02T10:00:00.000Z" }],
+      rows: [
+        {
+          name: "Luis",
+          date: "2026-11-02T10:00:00.000Z",
+          howFound: "Redes sociales",
+        },
+      ],
+      howFound: [{ label: "Redes sociales", count: 1 }],
     },
-    departuresTracked: false,
+    departures: {
+      count: 1,
+      rows: [{ name: "Marta", date: "2026-10-20", reason: "Motivos económicos" }],
+      reasons: [{ label: "Motivos económicos", count: 1 }],
+    },
     weekdays: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map(
       (label, i) => ({ label, sessions: i % 3, minutes: 60 * (i % 3) })
     ),
