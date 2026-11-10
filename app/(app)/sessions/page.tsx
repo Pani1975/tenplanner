@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { getWorkMode, personalTitle } from "@/lib/work-mode";
+import {
+  getClubMonitorSpaceClubs,
+  getWorkMode,
+  personalTitle,
+} from "@/lib/work-mode";
 import { Suspense } from "react";
 import Link from "next/link";
 import { SessionsBulkList } from "./sessions-bulk-list";
@@ -116,12 +120,32 @@ export default async function SessionsPage({ searchParams }: PageProps) {
     : monitor && clubMembers.some((m) => m.id === monitor)
       ? monitor
       : null;
-  const mineOrClub = sharedWithClubCondition(
+  const ownSpace = sharedWithClubCondition(
     sessionsTable.userId,
     sessionsTable.clubId,
     user.id,
     activeClubId
   );
+  // Modo monitor de un monitor de club: además de las de su espacio, las
+  // sesiones que imparte en sus clubes (marcadas con el nombre del club).
+  const monitorClubs = activeClubId
+    ? null
+    : await getClubMonitorSpaceClubs(user.id);
+  const monitorClubName = new Map(
+    (monitorClubs ?? []).map((c) => [c.id, c.name])
+  );
+  const mineOrClub = monitorClubs
+    ? or(
+        ownSpace,
+        and(
+          inArray(
+            sessionsTable.clubId,
+            monitorClubs.map((c) => c.id)
+          ),
+          taughtByCondition(user.id)
+        )
+      )!
+    : ownSpace;
   const activeFilter: Filter =
     filter === "past" ||
     filter === "upcoming" ||
@@ -211,6 +235,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
       status: sessionsTable.status,
       userId: sessionsTable.userId,
       coachId: sessionCoachColumn,
+      clubId: sessionsTable.clubId,
       authorName: usersTable.name,
     })
     .from(sessionsTable)
@@ -539,11 +564,14 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                       durationMinutes: session.durationMinutes,
                       exerciseCount: exerciseCountMap.get(session.id) ?? 0,
                       favorited: favoritedIds.has(session.id),
-                      // Monitor que la imparte, si no es el propio usuario.
+                      // Monitor que la imparte, si no es el propio usuario;
+                      // en Modo monitor, el club de las sesiones del club.
                       authorName:
-                        session.coachId !== user.id
-                          ? (session.authorName ?? null)
-                          : null,
+                        session.clubId && monitorClubName.has(session.clubId)
+                          ? (monitorClubName.get(session.clubId) ?? null)
+                          : session.coachId !== user.id
+                            ? (session.authorName ?? null)
+                            : null,
                     };
                   })}
                   allIds={allFilteredIds}
