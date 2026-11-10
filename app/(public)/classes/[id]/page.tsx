@@ -39,7 +39,10 @@ import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { classNavQueryString, getFilteredClassIds } from "@/lib/nav/class-nav";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId } from "@/lib/clubs";
-import { classListSpaceCondition } from "@/lib/classes/lists";
+import {
+  classListSpaceCondition,
+  getClassListNavIds,
+} from "@/lib/classes/lists";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { hasClassAnimation } from "@/lib/classes/animation";
 import { LevelBalls } from "@/components/app/level-balls";
@@ -398,11 +401,26 @@ export default async function ClassDetailPage({
   const classNiveles = classValues(cls.niveles, cls.nivel);
   const classAspectos = classValues(cls.aspectosJuego, cls.aspectoJuego);
 
-  const navIds = await getFilteredClassIds(navParams, {
-    userId: user?.id ?? null,
-  });
+  // Desde una lista de clases (?desdeLista=<id>): las flechas recorren esa
+  // lista y se vuelve a las listas. Si no, la búsqueda/filtros de la
+  // Biblioteca o de Mis clases.
+  const fromListRaw = navParams.desdeLista;
+  const fromListId =
+    typeof fromListRaw === "string" && /^[0-9a-f-]{36}$/i.test(fromListRaw)
+      ? fromListRaw
+      : null;
+  const listNavIds = fromListId
+    ? await getClassListNavIds(fromListId, user?.id ?? null)
+    : null;
+  const navIds =
+    listNavIds ??
+    (await getFilteredClassIds(navParams, {
+      userId: user?.id ?? null,
+    }));
   const navIdx = navIds.indexOf(id);
-  const navQs = classNavQueryString(navParams);
+  const navQs = listNavIds
+    ? `desdeLista=${fromListId}`
+    : classNavQueryString(navParams);
   const navSuffix = navQs ? `?${navQs}` : "";
   const prevHref =
     navIdx > 0 ? `/classes/${navIds[navIdx - 1]}${navSuffix}` : null;
@@ -410,7 +428,11 @@ export default async function ClassDetailPage({
     navIdx >= 0 && navIdx < navIds.length - 1
       ? `/classes/${navIds[navIdx + 1]}${navSuffix}`
       : null;
-  const backToSearchHref = navQs ? `/classes?${navQs}` : null;
+  const backToSearchHref = listNavIds
+    ? "/classes?tab=favorites"
+    : navQs
+      ? `/classes?${navQs}`
+      : null;
 
   return (
     <div className="relative min-h-full overflow-hidden bg-[#F4F4F1] px-4 py-6 text-[#050505] dark:bg-[#050505] dark:text-[#F4F4F1] sm:px-6 md:px-10 lg:px-12">
@@ -424,7 +446,10 @@ export default async function ClassDetailPage({
           >
             <ArrowLeft className="size-4" /> Volver a clases
           </Link>
-          <BackToSearchLink href={backToSearchHref} />
+          <BackToSearchLink
+            href={backToSearchHref}
+            label={listNavIds ? "Volver a las listas" : undefined}
+          />
         </div>
         <PrevNextNav
           prevHref={prevHref}
