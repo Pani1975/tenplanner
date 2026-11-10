@@ -213,7 +213,7 @@ export function ReportBlocks({
                 >
                   <span className="text-foreground/85">{r.name}</span>
                   <span className="text-muted-foreground">
-                    {dateFmt.format(new Date(r.date))}
+                    {dateFmt.format(new Date(`${r.date}T12:00:00Z`))}
                   </span>
                 </li>
               ))}

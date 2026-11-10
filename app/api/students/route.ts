@@ -114,6 +114,8 @@ export async function POST(request: Request) {
         locality,
         localityLat: geo?.lat ?? null,
         localityLng: geo?.lng ?? null,
+        // Sin fecha de alta, la base de datos pone la de hoy.
+        ...(d.joinedAt ? { joinedAt: d.joinedAt } : {}),
         howFound: d.howFound ?? null,
         howFoundDetail: d.howFoundDetail || null,
         leftAt: d.leftAt ?? null,

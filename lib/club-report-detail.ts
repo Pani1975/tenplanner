@@ -221,8 +221,9 @@ export async function loadClubDetailReport(
     doneIdRows,
   ] = await Promise.all([
     db.execute<Record<string, unknown>>(sql`
-      select st.id, st.name, st.gender, st.birth_date, st.locality, st.created_at,
-        (st.created_at >= ${since}) as is_signup,
+      select st.id, st.name, st.gender, st.birth_date, st.locality,
+        to_char(st.joined_at, 'YYYY-MM-DD') as joined_text,
+        (st.joined_at >= (${since} at time zone ${tz})::date) as is_signup,
         st.how_found, st.how_found_detail,
         (st.left_at is not null
           and st.left_at <= ((${until} - interval '1 microsecond') at time zone ${tz})::date) as is_gone,
@@ -232,7 +233,8 @@ export async function loadClubDetailReport(
           and st.left_at >= (${since} at time zone ${tz})::date
           and st.left_at <= ((${until} - interval '1 microsecond') at time zone ${tz})::date) as left_in_period
       from students st
-      where st.club_id = ${clubId} and st.created_at < ${until}
+      where st.club_id = ${clubId}
+        and st.joined_at <= ((${until} - interval '1 microsecond') at time zone ${tz})::date
     `),
     db.execute<Record<string, unknown>>(sql`
       select count(*) as total from groups g
@@ -337,17 +339,13 @@ export async function loadClubDetailReport(
   }[] = [];
   let activeStudents = 0;
   for (const st of studentRows) {
-    const created =
-      st.created_at instanceof Date
-        ? st.created_at
-        : new Date(String(st.created_at));
     if (st.is_signup === true) {
       const key = st.how_found ? String(st.how_found) : null;
       const detail = st.how_found_detail ? String(st.how_found_detail) : null;
       signupRows.push({
         name: String(st.name),
-        date: created.toISOString(),
-        at: created.getTime(),
+        date: String(st.joined_text),
+        at: Date.parse(`${st.joined_text}T00:00:00Z`),
         howFound: howFoundLabel(key) ?? (detail || null),
         howFoundKey: key,
       });

@@ -525,6 +525,10 @@ export const students = pgTable(
     locality: varchar("locality", { length: 120 }),
     localityLat: doublePrecision("locality_lat"),
     localityLng: doublePrecision("locality_lng"),
+    // Fecha de alta en la escuela: editable; por defecto, la de creación.
+    joinedAt: date("joined_at")
+      .default(sql`CURRENT_DATE`)
+      .notNull(),
     // Alta: cómo nos conoció (clave de lib/students/membership.ts + detalle).
     howFound: varchar("how_found", { length: 40 }),
     howFoundDetail: varchar("how_found_detail", { length: 255 }),

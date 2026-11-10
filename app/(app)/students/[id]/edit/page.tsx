@@ -86,6 +86,7 @@ export default async function EditStudentPage({ params }: PageProps) {
           phone: student.phone,
           preferredSchedule: student.preferredSchedule,
           locality: student.locality,
+          joinedAt: student.joinedAt,
           howFound: student.howFound as HowFound | null,
           howFoundDetail: student.howFoundDetail,
           leftAt: student.leftAt,

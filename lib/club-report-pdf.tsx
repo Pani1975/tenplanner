@@ -340,7 +340,7 @@ export function ClubReportPdf({
                   <View key={`${r.name}-${i}`} style={styles.tableRow} wrap={false}>
                     <Text style={{ flex: 1, fontSize: 9 }}>{r.name}</Text>
                     <Text style={{ fontSize: 9, color: "#6B7280" }}>
-                      {dateFormat.format(new Date(r.date))}
+                      {dateFormat.format(new Date(`${r.date}T12:00:00Z`))}
                       {r.howFound ? ` · ${r.howFound}` : ""}
                     </Text>
                   </View>

@@ -118,6 +118,12 @@ export const createStudentSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("")),
+  joinedAt: dateStringSchema
+    .refine((v) => !isNaN(new Date(`${v}T00:00:00Z`).getTime()), {
+      message: "La fecha de alta parece incorrecta",
+    })
+    .optional()
+    .nullable(),
   howFound: z.enum(HOW_FOUND_IDS).optional().nullable(),
   howFoundDetail: z
     .string()

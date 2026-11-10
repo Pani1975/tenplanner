@@ -128,6 +128,8 @@ export async function PUT(request: Request, context: StudentRouteContext) {
     if (d.phone !== undefined) {
       updateValues.phone = d.phone === "" ? null : d.phone;
     }
+    // La fecha de alta no puede quedar vacía: un null se ignora.
+    if (d.joinedAt) updateValues.joinedAt = d.joinedAt;
     if (d.howFoundDetail !== undefined) {
       updateValues.howFoundDetail = d.howFoundDetail || null;
     }

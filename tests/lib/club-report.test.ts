@@ -178,7 +178,7 @@ describe("PDF del informe de gestión", () => {
       rows: [
         {
           name: "Luis",
-          date: "2026-11-02T10:00:00.000Z",
+          date: "2026-11-02",
           howFound: "Redes sociales",
         },
       ],

@@ -28,6 +28,7 @@ describe("alta y baja del alumno", () => {
   it("valida cómo nos conoció y la baja al crear o editar", () => {
     const ok = createStudentSchema.safeParse({
       name: "Ana",
+      joinedAt: "2026-09-01",
       howFound: "recomendacion",
       howFoundDetail: "La familia de Pablo",
       leftAt: "2026-10-20",
@@ -42,6 +43,10 @@ describe("alta y baja del alumno", () => {
     ).toBe(false);
     expect(
       createStudentSchema.safeParse({ name: "Ana", leftAt: "20/10/2026" })
+        .success
+    ).toBe(false);
+    expect(
+      createStudentSchema.safeParse({ name: "Ana", joinedAt: "1/9/2026" })
         .success
     ).toBe(false);
     expect(

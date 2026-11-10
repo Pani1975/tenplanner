@@ -97,6 +97,7 @@ const formSchema = z.object({
   phone: z.string().trim().max(32).optional().or(z.literal("")),
   preferredSchedule: z.string().trim().max(500).optional().nullable(),
   locality: z.string().trim().max(120).optional().nullable(),
+  joinedAt: z.string().optional().nullable(),
   howFound: z.string().optional().nullable(),
   howFoundDetail: z.string().trim().max(255).optional().nullable(),
   leftAt: z.string().optional().nullable(),
@@ -158,6 +159,7 @@ export interface StudentFormProps {
     phone?: string | null;
     preferredSchedule?: string | null;
     locality?: string | null;
+    joinedAt?: string | null;
     howFound?: HowFound | null;
     howFoundDetail?: string | null;
     leftAt?: string | null;
@@ -226,6 +228,7 @@ export function StudentForm({
       phone: initialData?.phone ?? "",
       preferredSchedule: initialData?.preferredSchedule ?? "",
       locality: initialData?.locality ?? "",
+      joinedAt: initialData?.joinedAt ?? "",
       howFound: initialData?.howFound ?? "",
       howFoundDetail: initialData?.howFoundDetail ?? "",
       leftAt: initialData?.leftAt ?? "",
@@ -272,6 +275,7 @@ export function StudentForm({
       phone: values.phone?.trim() || null,
       preferredSchedule: values.preferredSchedule?.trim() || null,
       locality: values.locality?.trim() || null,
+      joinedAt: values.joinedAt || null,
       howFound: values.howFound || null,
       howFoundDetail: values.howFoundDetail?.trim() || null,
       leftAt: values.leftAt || null,
@@ -734,6 +738,24 @@ export function StudentForm({
           subtitle="Cómo nos conoció y, si deja la escuela, cuándo y por qué"
         />
         <div className="space-y-5">
+          <div className="space-y-1.5 sm:max-w-xs">
+            <label
+              htmlFor="joinedAt"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Fecha de alta
+              <span className="font-normal text-muted-foreground ml-1">
+                {mode === "create" ? "(si la dejas vacía, hoy)" : ""}
+              </span>
+            </label>
+            <input
+              id="joinedAt"
+              type="date"
+              {...register("joinedAt")}
+              className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+            />
+          </div>
+
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label

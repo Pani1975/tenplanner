@@ -241,8 +241,9 @@ export async function loadClubReport(
           where st.club_id = ${clubId}
             and (st.left_at is null or st.left_at > current_date)) as players,
         (select count(*) from students st
-          where st.club_id = ${clubId} and st.created_at >= ${since}
-            and st.created_at < ${until}) as new_players,
+          where st.club_id = ${clubId}
+            and st.joined_at >= (${since} at time zone ${REPORT_TIME_ZONE})::date
+            and st.joined_at <= ((${until} - interval '1 microsecond') at time zone ${REPORT_TIME_ZONE})::date) as new_players,
         (select count(*) from done) as sessions,
         (select coalesce(sum(duration_minutes), 0) from done) as minutes,
         (select count(*) from sessions s
