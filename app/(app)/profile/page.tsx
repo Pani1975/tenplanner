@@ -10,6 +10,8 @@ import {
 } from "@/db/schema";
 import { and, eq, count, or, sql } from "drizzle-orm";
 import { ProfileClient } from "./profile-client";
+import { OwnCoachProfile } from "./own-coach-profile";
+import { getOwnCoachProfiles } from "@/lib/club-coach-profiles";
 import { WorkModeSwitcher } from "@/components/app/work-mode-switcher";
 import Link from "next/link";
 import { Building2, ChevronRight } from "lucide-react";
@@ -76,6 +78,36 @@ export default async function ProfilePage() {
   ]);
 
   const clubAccountClubId = await getClubAccountClubId(user.id);
+
+  // Perfil de monitor (su ficha): solo si es monitor de algún club y no es
+  // la cuenta de un club. Lo controla él; el gestor lo ve en Gestión.
+  const coachClubs = clubAccountClubId ? [] : clubOptions;
+  const ownCoachProfile =
+    coachClubs.length > 0 && user.email
+      ? await (async () => {
+          const { rows } = await getOwnCoachProfiles(user.id, user.email!);
+          const latest = rows[0];
+          return {
+            clubNames: coachClubs.map((c) => c.name),
+            initial: latest
+              ? {
+                  fullName: latest.fullName,
+                  email: user.email!,
+                  phone: latest.phone,
+                  academicTraining: latest.academicTraining,
+                  tennisTraining: latest.tennisTraining,
+                  availability: latest.availability ?? null,
+                  startedTeachingYear: latest.startedTeachingYear,
+                  experience: latest.experience ?? [],
+                }
+              : {
+                  fullName:
+                    (user.user_metadata?.full_name as string | undefined) ?? "",
+                  email: user.email!,
+                },
+          };
+        })()
+      : null;
 
   // Ficha de identificación del club con el que se trabaja (modo club).
   const [activeClub] = activeClubId
@@ -159,6 +191,13 @@ export default async function ProfilePage() {
             </span>
             <ChevronRight className="size-4 shrink-0 text-foreground/40" />
           </Link>
+        )}
+
+        {ownCoachProfile && (
+          <OwnCoachProfile
+            initial={ownCoachProfile.initial}
+            clubNames={ownCoachProfile.clubNames}
+          />
         )}
 
         <ProfileClient

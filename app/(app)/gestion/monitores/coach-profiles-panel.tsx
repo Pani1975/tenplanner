@@ -233,12 +233,13 @@ export function CoachProfilesPanel({
         <div>
           <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
             <FileText className="size-4" />
-            Fichas de monitores
+            Perfiles de monitores
           </h2>
           <p className="mt-1 max-w-xl text-xs leading-5 text-foreground/55">
             Datos de contacto, formación, disponibilidad y experiencia de cada
-            monitor. Zona privada: solo la ves tú como gestor. Rellénala tú o
-            envía un enlace para que la rellene el propio monitor.
+            monitor. Zona privada: solo la ves tú como gestor. Los monitores con
+            cuenta mantienen su perfil desde su Perfil; para el resto, rellénala
+            tú o envíales un enlace.
           </p>
         </div>
         {creating === null && (
@@ -300,6 +301,10 @@ export function CoachProfilesPanel({
           {profiles.map((profile) => {
             const open = openId === profile.id;
             const editing = editingId === profile.id;
+            // Monitor con cuenta que rellenó su perfil: lo controla él (desde
+            // su Perfil); el gestor solo lo ve.
+            const coachControlled =
+              profile.filledByCoach && accountEmails.has(profile.email);
             return (
               <li
                 key={profile.id}
@@ -335,6 +340,9 @@ export function CoachProfilesPanel({
                   >
                     {profile.status === "pending" ? "Pendiente" : "Completa"}
                   </span>
+                  <span className="shrink-0 text-[11px] font-bold text-foreground/55">
+                    Perfil
+                  </span>
                   <ChevronDown
                     className={cn(
                       "size-4 shrink-0 text-foreground/40 transition-transform",
@@ -364,30 +372,42 @@ export function CoachProfilesPanel({
                           <ProfileSummary profile={profile} />
                         )}
 
+                        {coachControlled && (
+                          <p className="text-xs text-foreground/55">
+                            Este perfil lo mantiene{" "}
+                            {profile.fullName.split(" ")[0]} desde su cuenta; tú
+                            solo puedes verlo.
+                          </p>
+                        )}
+
                         <div className="flex flex-wrap gap-2">
-                          <ActionButton
-                            onClick={() => setEditingId(profile.id)}
-                            icon={<Pencil className="size-3.5" />}
-                          >
-                            {profile.status === "pending"
-                              ? "Rellenar yo"
-                              : "Editar"}
-                          </ActionButton>
-                          <ActionButton
-                            onClick={() => resendLink(profile)}
-                            disabled={busyId === profile.id}
-                            icon={
-                              busyId === profile.id ? (
-                                <Loader2 className="size-3.5 animate-spin" />
-                              ) : (
-                                <Mail className="size-3.5" />
-                              )
-                            }
-                          >
-                            {profile.status === "pending"
-                              ? "Enviar enlace de nuevo"
-                              : "Pedir que la actualice"}
-                          </ActionButton>
+                          {!coachControlled && (
+                            <>
+                              <ActionButton
+                                onClick={() => setEditingId(profile.id)}
+                                icon={<Pencil className="size-3.5" />}
+                              >
+                                {profile.status === "pending"
+                                  ? "Rellenar yo"
+                                  : "Editar"}
+                              </ActionButton>
+                              <ActionButton
+                                onClick={() => resendLink(profile)}
+                                disabled={busyId === profile.id}
+                                icon={
+                                  busyId === profile.id ? (
+                                    <Loader2 className="size-3.5 animate-spin" />
+                                  ) : (
+                                    <Mail className="size-3.5" />
+                                  )
+                                }
+                              >
+                                {profile.status === "pending"
+                                  ? "Enviar enlace de nuevo"
+                                  : "Pedir que la actualice"}
+                              </ActionButton>
+                            </>
+                          )}
                           {profile.linkToken && (
                             <ActionButton
                               onClick={() => copyLink(profile)}
@@ -442,18 +462,10 @@ export function CoachProfilesPanel({
                     {member.email}
                   </span>
                 </span>
-                <span className="flex flex-wrap gap-2">
-                  <ActionButton
-                    onClick={() =>
-                      setCreating({
-                        mode: "direct",
-                        prefill: { fullName: member.name, email: member.email },
-                      })
-                    }
-                    icon={<Pencil className="size-3.5" />}
-                  >
-                    Rellenar ficha
-                  </ActionButton>
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] text-foreground/50">
+                    Lo rellena el monitor desde su Perfil
+                  </span>
                   <ActionButton
                     onClick={() => requestLink(member.name, member.email)}
                     icon={<Mail className="size-3.5" />}
