@@ -53,7 +53,8 @@ export async function POST(request: Request, context: RouteContext) {
       clubId: source.clubId,
     },
     parsedBody.data.target,
-    user.id
+    user.id,
+    parsedBody.data.clubId
   );
   if (!destination.ok)
     return NextResponse.json({ error: destination.error }, { status: 403 });

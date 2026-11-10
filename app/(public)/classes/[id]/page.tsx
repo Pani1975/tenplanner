@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { isTenPlannerMode } from "@/lib/work-mode";
+import { getClubMonitorSpaceClubs, isTenPlannerMode } from "@/lib/work-mode";
 import { notFound } from "next/navigation";
 import { and, asc, avg, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import {
@@ -112,11 +112,14 @@ export default async function ClassDetailPage({
     cls.status === "published"
   )
     copyTargets.push("particular");
+  // "Enviar al club": en el Modo monitor, una clase de su espacio.
+  const sendClubs =
+    user && isOwner && !cls.isLibrary && !cls.clubId
+      ? ((await getClubMonitorSpaceClubs(user.id)) ?? [])
+      : [];
   // La Biblioteca pública solo se edita y se borra en Modo Ten Planner.
   // (la de la plataforma la edita sea quien sea quien la creó).
-  const canEditClass = cls.isLibrary
-    ? !!user && inTenPlanner
-    : isOwner;
+  const canEditClass = cls.isLibrary ? !!user && inTenPlanner : isOwner;
 
   const blocks = await db
     .select()
@@ -382,6 +385,7 @@ export default async function ClassDetailPage({
                 kind="class"
                 id={cls.id}
                 targets={copyTargets}
+                sendClubs={sendClubs}
                 tone="dark"
                 inClub={!!activeWorkClubId}
               />

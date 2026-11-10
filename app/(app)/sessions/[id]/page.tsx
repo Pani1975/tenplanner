@@ -38,6 +38,7 @@ import {
   sessionNavQueryString,
 } from "@/lib/nav/session-nav";
 import { canEditSession } from "@/lib/sessions/permissions";
+import { getClubMonitorSpaceClubs } from "@/lib/work-mode";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -189,6 +190,12 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
             .where(eq(users.id, sessionCoachId))
             .limit(1)
         )[0]?.name ?? null);
+
+  // "Enviar al club": una sesión de su espacio propio, en el Modo monitor.
+  const sendClubs =
+    session.userId === user.id && !session.clubId
+      ? ((await getClubMonitorSpaceClubs(user.id)) ?? [])
+      : [];
 
   const favoritedIds = new Set(favRows.map((f) => f.exerciseId));
 
@@ -421,6 +428,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       backToSearchHref={backToSearchHref}
       isOwner={isOwner}
       authorName={authorName}
+      sendClubs={sendClubs}
       session={{
         id: session.id,
         title: session.title,

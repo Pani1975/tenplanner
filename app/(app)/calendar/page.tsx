@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { getWorkMode, personalTitle } from "@/lib/work-mode";
+import {
+  getClubMonitorSpaceClubIds,
+  getWorkMode,
+  personalTitle,
+} from "@/lib/work-mode";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -10,7 +14,7 @@ import {
   groups as groupsTable,
   users as usersTable,
 } from "@/db/schema";
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, or } from "drizzle-orm";
 import { CalendarClient } from "./calendar-client";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -75,12 +79,26 @@ export default async function CalendarPage({ searchParams }: PageProps) {
   const monitorFilter =
     monitor && clubMembers.some((m) => m.id === monitor) ? monitor : null;
 
-  const sessionsVisibility = sharedWithClubCondition(
+  // En el Modo monitor de un monitor de club se ven también las sesiones
+  // que imparte en sus clubes (solo él puede abrirlas y moverlas).
+  const monitorClubIds = activeClubId
+    ? null
+    : await getClubMonitorSpaceClubIds(user.id);
+  const ownSessions = sharedWithClubCondition(
     sessionsTable.userId,
     sessionsTable.clubId,
     user.id,
     activeClubId
   );
+  const sessionsVisibility = monitorClubIds
+    ? or(
+        ownSessions,
+        and(
+          inArray(sessionsTable.clubId, monitorClubIds),
+          taughtByCondition(user.id)
+        )
+      )!
+    : ownSessions;
   const eventsVisibility = calendarEventsVisibility(
     user.id,
     activeClubId,

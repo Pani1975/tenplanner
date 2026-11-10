@@ -11,12 +11,21 @@ import {
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { getActiveClubIds } from "@/lib/clubs";
+import { canTagWithClub, getActiveClubIds } from "@/lib/clubs";
+import {
+  remapExerciseId,
+  remapStations,
+  sendPrivateExercisesToClub,
+  stationExerciseIds,
+} from "@/lib/club-transfer";
 import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 const schema = z.object({
   scheduledAt: z.string().datetime(),
   title: z.string().trim().min(1).max(255).optional(),
+  // "Enviar al club": copia una sesión del espacio propio del monitor (Modo
+  // monitor) al club del que es monitor. La imparte él.
+  toClubId: z.string().uuid().optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -72,6 +81,19 @@ export async function POST(request: Request, ctx: Ctx) {
     .limit(1);
   if (!original)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const toClubId = parsed.data.toClubId ?? null;
+  if (toClubId) {
+    if (original.clubId || original.userId !== user.id)
+      return NextResponse.json(
+        { error: "Solo puedes enviar al club sesiones de tu espacio." },
+        { status: 403 }
+      );
+    if (!(await canTagWithClub(user.id, toClubId)))
+      return NextResponse.json(
+        { error: "No eres monitor de ese club." },
+        { status: 403 }
+      );
+  }
   const [editableOriginal] = await db
     .select({ id: sessions.id })
     .from(sessions)
@@ -109,6 +131,21 @@ export async function POST(request: Request, ctx: Ctx) {
       : [];
 
   const newId = await db.transaction(async (tx) => {
+    // Al enviarla al club, sus ejercicios privados van también al club.
+    const exerciseMap = toClubId
+      ? await sendPrivateExercisesToClub(
+          tx,
+          [
+            ...items.flatMap((i) => [
+              i.exerciseId,
+              ...stationExerciseIds(i.stations),
+            ]),
+            ...legacyExercises.map((e) => e.exerciseId),
+          ],
+          user.id,
+          toClubId
+        )
+      : new Map<string, string>();
     const [created] = await tx
       .insert(sessions)
       .values({
@@ -120,15 +157,16 @@ export async function POST(request: Request, ctx: Ctx) {
         objective: original.objective,
         material: original.material,
         observations: original.observations,
-        sourceClassId: original.sourceClassId,
+        // Clase y lugar del espacio propio: el club no los ve.
+        sourceClassId: toClubId ? null : original.sourceClassId,
         intensity: original.intensity,
         tags: original.tags,
         location: original.location,
-        placeId: original.placeId,
+        placeId: toClubId ? null : original.placeId,
         // Mismo espacio (club o particular), grupo y deporte que el original:
         // sin esto la copia caía en el modo particular y no se veía en el club.
-        clubId: original.clubId,
-        groupId: original.groupId,
+        clubId: toClubId ?? original.clubId,
+        groupId: toClubId ? null : original.groupId,
         sport: original.sport,
         // Si quien duplica puede editar la original, mantiene el monitor;
         // si es otro monitor del club, la copia la imparte él.
@@ -152,13 +190,13 @@ export async function POST(request: Request, ctx: Ctx) {
         await tx.insert(sessionBlockItems).values(
           blockItems.map((item) => ({
             blockId: newBlock.id,
-            exerciseId: item.exerciseId,
+            exerciseId: remapExerciseId(item.exerciseId, exerciseMap),
             exerciseName: item.exerciseName,
             exerciseDescription: item.exerciseDescription,
             freeText: item.freeText,
             title: item.title,
             kind: item.kind,
-            stations: item.stations,
+            stations: remapStations(item.stations, exerciseMap),
             aspectoJuego: item.aspectoJuego,
             orderIndex: item.orderIndex,
             durationMinutes: item.durationMinutes,
@@ -172,7 +210,7 @@ export async function POST(request: Request, ctx: Ctx) {
       await tx.insert(sessionExercises).values(
         legacyExercises.map((e) => ({
           sessionId: created.id,
-          exerciseId: e.exerciseId,
+          exerciseId: remapExerciseId(e.exerciseId, exerciseMap),
           orderIndex: e.orderIndex,
           durationMinutes: e.durationMinutes,
           notes: e.notes,
@@ -182,7 +220,7 @@ export async function POST(request: Request, ctx: Ctx) {
       );
     }
 
-    if (students.length > 0) {
+    if (students.length > 0 && !toClubId) {
       await tx.insert(sessionStudents).values(
         students.map((s) => ({
           sessionId: created.id,
