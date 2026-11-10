@@ -17,9 +17,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getClubAccountClubId } from "@/lib/clubs";
 import {
   loadClubReport,
-  parseReportPeriod,
+  parseReportRange,
+  rangeQuery,
+  reportToday,
   REPORT_PERIODS,
 } from "@/lib/club-reports";
+import {
+  loadClubDetailReport,
+  REPORT_SECTIONS,
+} from "@/lib/club-report-detail";
+import { GenerateReportButton } from "@/components/app/gestion/generate-report-button";
+import { ReportBlocks } from "@/components/app/gestion/report-blocks";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Gestión" };
@@ -70,7 +78,7 @@ function MetricCard({
 export default async function ManagementPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string }>;
+  searchParams: Promise<{ periodo?: string; desde?: string; hasta?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -82,22 +90,29 @@ export default async function ManagementPage({
   const clubId = await getClubAccountClubId(user.id);
   if (!clubId) notFound();
 
-  const { periodo } = await searchParams;
-  const period = parseReportPeriod(periodo);
-  const [[club], report] = await Promise.all([
+  const query = await searchParams;
+  const range = parseReportRange(query);
+  const [[club], report, detail] = await Promise.all([
     db
       .select({ name: clubs.name })
       .from(clubs)
       .where(eq(clubs.id, clubId))
       .limit(1),
-    loadClubReport(clubId, period),
+    loadClubReport(clubId, range),
+    loadClubDetailReport(clubId, range),
   ]);
   const dateFmt = new Intl.DateTimeFormat("es-ES", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-  const periodText = PERIOD_LABELS[period];
+  // Fechas por defecto al pasar a "Personalizado": los últimos 30 días.
+  const today = reportToday();
+  const defaultFrom = new Date(Date.now() - 29 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const customFrom = range.kind === "custom" ? range.fromDate : defaultFrom;
+  const customTo = range.kind === "custom" ? range.toDate : today;
 
   return (
     <div className="tp-page">
@@ -117,28 +132,87 @@ export default async function ManagementPage({
           </p>
         </header>
 
-        <nav
-          aria-label="Periodo"
-          className="flex flex-wrap items-center gap-2 text-sm"
-        >
-          <span className="text-xs font-black uppercase text-foreground/55">
-            Periodo
-          </span>
-          {REPORT_PERIODS.map((p) => (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <nav
+            aria-label="Periodo"
+            className="flex flex-wrap items-center gap-2 text-sm"
+          >
+            <span className="text-xs font-black uppercase text-foreground/55">
+              Periodo
+            </span>
+            {REPORT_PERIODS.map((p) => (
+              <Link
+                key={p}
+                href={p === 30 ? "/gestion" : `/gestion?periodo=${p}`}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 font-semibold transition-colors",
+                  range.kind === "preset" && p === range.period
+                    ? "border-brand bg-brand/10 text-foreground"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {PERIOD_LABELS[p]}
+              </Link>
+            ))}
             <Link
-              key={p}
-              href={p === 30 ? "/gestion" : `/gestion?periodo=${p}`}
+              href={`/gestion?periodo=personalizado&desde=${customFrom}&hasta=${customTo}`}
               className={cn(
                 "rounded-full border px-3 py-1.5 font-semibold transition-colors",
-                p === period
+                range.kind === "custom"
                   ? "border-brand bg-brand/10 text-foreground"
                   : "border-border text-muted-foreground hover:bg-muted"
               )}
             >
-              {PERIOD_LABELS[p]}
+              Personalizado
             </Link>
-          ))}
-        </nav>
+          </nav>
+          <GenerateReportButton
+            sections={REPORT_SECTIONS.map((sec) => ({
+              id: sec.id,
+              label: sec.label,
+            }))}
+            periodQuery={rangeQuery(range).toString()}
+            periodLabel={range.label}
+          />
+        </div>
+
+        {range.kind === "custom" && (
+          <form
+            method="get"
+            action="/gestion"
+            className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4 text-sm"
+          >
+            <input type="hidden" name="periodo" value="personalizado" />
+            <label className="flex flex-col gap-1 text-xs font-black uppercase text-foreground/55">
+              Desde
+              <input
+                type="date"
+                name="desde"
+                defaultValue={customFrom}
+                max={today}
+                required
+                className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal normal-case text-foreground"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-black uppercase text-foreground/55">
+              Hasta
+              <input
+                type="date"
+                name="hasta"
+                defaultValue={customTo}
+                max={today}
+                required
+                className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal normal-case text-foreground"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-10 rounded-full bg-foreground px-5 text-sm font-black text-background"
+            >
+              Aplicar
+            </button>
+          </form>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
@@ -161,13 +235,13 @@ export default async function ManagementPage({
             label="Alumnos"
             icon={Users}
             value={report.players}
-            hint={`${report.newPlayers} alta(s) en los últimos ${periodText}.`}
+            hint={`${report.newPlayers} alta(s) en ${range.phrase}.`}
           />
           <MetricCard
             label="Sesiones impartidas"
             icon={CalendarCheck}
             value={report.sessions}
-            hint={`Últimos ${periodText}${report.cancelled > 0 ? ` · ${report.cancelled} cancelada(s)` : ""}.`}
+            hint={`En ${range.phrase}${report.cancelled > 0 ? ` · ${report.cancelled} cancelada(s)` : ""}.`}
           />
           <MetricCard
             label="Horas de clase"
@@ -185,7 +259,7 @@ export default async function ManagementPage({
             label="Objetivos conseguidos"
             icon={Target}
             value={report.objectives}
-            hint={`Objetivos marcados como conseguidos en los últimos ${periodText}.`}
+            hint={`Objetivos marcados como conseguidos en ${range.phrase}.`}
           />
           <MetricCard
             label="Próximas sesiones"
@@ -198,7 +272,7 @@ export default async function ManagementPage({
         <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-black text-foreground">Monitores</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Sesiones y horas de los últimos {periodText}.
+            Sesiones y horas en {range.phrase}.
           </p>
           {report.coachRows.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
@@ -275,7 +349,7 @@ export default async function ManagementPage({
         <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-black text-foreground">Alumnos</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Asistencia de los últimos {periodText} y objetivos conseguidos (en
+            Asistencia en {range.phrase} y objetivos conseguidos (en
             total y en el periodo).
           </p>
           {report.playerRows.length === 0 ? (
@@ -327,6 +401,8 @@ export default async function ManagementPage({
             </div>
           )}
         </section>
+
+        <ReportBlocks detail={detail} phrase={range.phrase} />
       </div>
     </div>
   );

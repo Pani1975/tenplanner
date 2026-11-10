@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 
 // Informes del Modo gestión (solo la cuenta del club): actividad de los
@@ -15,11 +15,142 @@ import { db } from "@/db";
 export const REPORT_PERIODS = [30, 90, 365] as const;
 export type ReportPeriod = (typeof REPORT_PERIODS)[number];
 
-export function parseReportPeriod(value: unknown): ReportPeriod {
-  const n = Number(value);
-  return (REPORT_PERIODS as readonly number[]).includes(n)
-    ? (n as ReportPeriod)
-    : 30;
+/** Zona horaria con la que se cortan los días de un periodo personalizado. */
+export const REPORT_TIME_ZONE = "Atlantic/Canary";
+
+const MAX_CUSTOM_DAYS = 366 * 5;
+
+/**
+ * Periodo de un informe: uno de los fijos (30 días, 3 meses, 12 meses hasta
+ * ahora) o uno personalizado entre dos fechas (ambas incluidas).
+ */
+export type ReportRange =
+  | {
+      kind: "preset";
+      period: ReportPeriod;
+      days: number;
+      /** "30 días" */
+      label: string;
+      /** "los últimos 30 días" */
+      phrase: string;
+    }
+  | {
+      kind: "custom";
+      /** YYYY-MM-DD, ambas incluidas. */
+      fromDate: string;
+      toDate: string;
+      days: number;
+      label: string;
+      phrase: string;
+    };
+
+const PRESET_LABELS: Record<ReportPeriod, string> = {
+  30: "30 días",
+  90: "3 meses",
+  365: "12 meses",
+};
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function validIsoDate(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const m = ISO_DATE.exec(value);
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.toISOString().slice(0, 10) === value ? value : null;
+}
+
+function dayNumber(isoDate: string) {
+  return Math.round(Date.parse(`${isoDate}T00:00:00Z`) / 86_400_000);
+}
+
+/** Fecha de hoy (YYYY-MM-DD) en la zona horaria de los informes. */
+export function reportToday(now = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: REPORT_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+function shortDate(isoDate: string) {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+/**
+ * Lee el periodo de la URL: `periodo=30|90|365|personalizado` y, para el
+ * personalizado, `desde` y `hasta` (YYYY-MM-DD). Si algo no es válido, 30
+ * días. Un fin futuro se recorta a hoy y un rango invertido se da la vuelta.
+ */
+export function parseReportRange(
+  params: { periodo?: unknown; desde?: unknown; hasta?: unknown },
+  now = new Date()
+): ReportRange {
+  const preset = (period: ReportPeriod): ReportRange => ({
+    kind: "preset",
+    period,
+    days: period,
+    label: PRESET_LABELS[period],
+    phrase: `los últimos ${PRESET_LABELS[period]}`,
+  });
+
+  if (params.periodo === "personalizado") {
+    const today = reportToday(now);
+    let from = validIsoDate(params.desde);
+    let to = validIsoDate(params.hasta);
+    if (!from || !to) return preset(30);
+    if (from > to) [from, to] = [to, from];
+    if (to > today) to = today;
+    if (from > to) return preset(30);
+    const days = dayNumber(to) - dayNumber(from) + 1;
+    if (days > MAX_CUSTOM_DAYS) return preset(30);
+    const label = `${shortDate(from)} – ${shortDate(to)}`;
+    return {
+      kind: "custom",
+      fromDate: from,
+      toDate: to,
+      days,
+      label,
+      phrase: `el periodo ${label}`,
+    };
+  }
+
+  const n = Number(params.periodo);
+  return preset(
+    (REPORT_PERIODS as readonly number[]).includes(n) ? (n as ReportPeriod) : 30
+  );
+}
+
+/** Parámetros de URL que describen un periodo (para enlaces y el PDF). */
+export function rangeQuery(range: ReportRange): URLSearchParams {
+  const q = new URLSearchParams();
+  if (range.kind === "custom") {
+    q.set("periodo", "personalizado");
+    q.set("desde", range.fromDate);
+    q.set("hasta", range.toDate);
+  } else if (range.period !== 30) {
+    q.set("periodo", String(range.period));
+  }
+  return q;
+}
+
+/**
+ * Límites del periodo como expresiones SQL. `until` nunca pasa de "ahora":
+ * lo futuro no se ha impartido.
+ */
+export function rangeBounds(range: ReportRange): { since: SQL; until: SQL } {
+  if (range.kind === "preset") {
+    return {
+      since: sql`now() - make_interval(days => ${range.days})`,
+      until: sql`now()`,
+    };
+  }
+  return {
+    since: sql`((${range.fromDate}::date)::timestamp at time zone ${REPORT_TIME_ZONE})`,
+    until: sql`least(((${range.toDate}::date + 1)::timestamp at time zone ${REPORT_TIME_ZONE}), now())`,
+  };
 }
 
 export type ClubCoachRow = {
@@ -49,7 +180,7 @@ export type ClubPlayerRow = {
 };
 
 export type ClubReport = {
-  period: ReportPeriod;
+  range: ReportRange;
   coaches: number;
   pendingInvites: number;
   players: number;
@@ -80,16 +211,16 @@ function iso(v: unknown): string | null {
 
 export async function loadClubReport(
   clubId: string,
-  period: ReportPeriod
+  range: ReportRange
 ): Promise<ClubReport> {
-  const since = sql`now() - make_interval(days => ${period})`;
+  const { since, until } = rangeBounds(range);
 
   const [[summary], coachRows, playerRows] = await Promise.all([
     db.execute<Record<string, unknown>>(sql`
       with done as (
         select s.id, s.duration_minutes from sessions s
         where s.club_id = ${clubId}
-          and s.scheduled_at >= ${since} and s.scheduled_at < now()
+          and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
       )
       select
@@ -101,12 +232,13 @@ export async function loadClubReport(
             and ci.expires_at > now()) as pending_invites,
         (select count(*) from students st where st.club_id = ${clubId}) as players,
         (select count(*) from students st
-          where st.club_id = ${clubId} and st.created_at >= ${since}) as new_players,
+          where st.club_id = ${clubId} and st.created_at >= ${since}
+            and st.created_at < ${until}) as new_players,
         (select count(*) from done) as sessions,
         (select coalesce(sum(duration_minutes), 0) from done) as minutes,
         (select count(*) from sessions s
           where s.club_id = ${clubId} and s.status = 'cancelled'
-            and s.scheduled_at >= ${since} and s.scheduled_at < now()) as cancelled,
+            and s.scheduled_at >= ${since} and s.scheduled_at < ${until}) as cancelled,
         (select count(*) from sessions s
           where s.club_id = ${clubId} and s.status <> 'cancelled'
             and s.scheduled_at >= now()
@@ -118,7 +250,8 @@ export async function loadClubReport(
         (select count(*) from student_objectives so
           join students st on st.id = so.student_id
           where st.club_id = ${clubId} and so.achieved
-            and so.achieved_at >= ${since}) as objectives
+            and so.achieved_at >= ${since}
+            and so.achieved_at < ${until}) as objectives
     `),
     db.execute<Record<string, unknown>>(sql`
       with coach_ids as (
@@ -132,7 +265,7 @@ export async function loadClubReport(
       done as (
         select s.id, s.user_id, s.duration_minutes, s.scheduled_at from sessions s
         where s.club_id = ${clubId}
-          and s.scheduled_at >= ${since} and s.scheduled_at < now()
+          and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
       )
       select u.id, u.name, u.email,
@@ -161,7 +294,7 @@ export async function loadClubReport(
       with done as (
         select s.id from sessions s
         where s.club_id = ${clubId}
-          and s.scheduled_at >= ${since} and s.scheduled_at < now()
+          and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
       )
       select st.id, st.name, st.player_level, u.name as coach_name,
@@ -175,7 +308,8 @@ export async function loadClubReport(
           where so.student_id = st.id and so.achieved) as objectives,
         (select count(*) from student_objectives so
           where so.student_id = st.id and so.achieved
-            and so.achieved_at >= ${since}) as objectives_period
+            and so.achieved_at >= ${since}
+            and so.achieved_at < ${until}) as objectives_period
       from students st
       join users u on u.id = st.coach_id
       where st.club_id = ${clubId}
@@ -184,7 +318,7 @@ export async function loadClubReport(
   ]);
 
   return {
-    period,
+    range,
     coaches: n(summary?.coaches),
     pendingInvites: n(summary?.pending_invites),
     players: n(summary?.players),
