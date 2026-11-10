@@ -451,18 +451,15 @@ export function SessionDetailClient({
   const router = useRouter();
   const [sendingTo, setSendingTo] = useState<string | null>(null);
 
-  // Envía una copia de la sesión al club (misma fecha); el original se
-  // queda en el espacio propio del monitor.
+  // Mueve la sesión al club: pasa a ser una sesión del club que imparte él
+  // (la sigue viendo en su espacio). No se duplica.
   async function sendToClub(club: { id: string; name: string }) {
     setSendingTo(club.id);
     try {
-      const res = await fetch(`/api/sessions/${session.id}/duplicate`, {
+      const res = await fetch(`/api/sessions/${session.id}/send-to-club`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduledAt: new Date(session.scheduledAt).toISOString(),
-          toClubId: club.id,
-        }),
+        body: JSON.stringify({ clubId: club.id }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -470,6 +467,7 @@ export function SessionDetailClient({
         return;
       }
       toast.success(`Sesión enviada a ${club.name}`);
+      router.refresh();
     } finally {
       setSendingTo(null);
     }
@@ -828,7 +826,7 @@ export function SessionDetailClient({
               type="button"
               onClick={() => void sendToClub(club)}
               disabled={sendingTo !== null}
-              title="Se envía una copia al club; el original sigue en tu espacio"
+              title="La sesión pasa al club; la impartes tú y la sigues viendo en tu espacio"
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:opacity-60 dark:bg-white/[0.035]"
             >
               {sendingTo === club.id ? (
