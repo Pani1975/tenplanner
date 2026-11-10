@@ -3,12 +3,9 @@ import {
   canUserCreateClub,
   getOwnedClub,
   getCoachMemberships,
-  listClubRoster,
 } from "@/lib/clubs";
-import { getActiveSport } from "@/lib/sports";
 import { SPORT_LABELS } from "@/lib/sport-constants";
 import { redirect } from "next/navigation";
-import { ClubOwnerPanel } from "./club-owner-panel";
 import { ClubIdentityForm } from "@/components/app/club-identity-form";
 import { clubIdentityFromRow, getClubStats } from "@/lib/club-profile";
 import { NewClubForm } from "./new-club-form";
@@ -34,10 +31,9 @@ export default async function ClubPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [ownedClub, coachOf, activeSport] = await Promise.all([
+  const [ownedClub, coachOf] = await Promise.all([
     getOwnedClub(user.id),
     getCoachMemberships(user.id),
-    getActiveSport(user.id),
   ]);
 
   // Un club se crea con su propia cuenta ("Como Club" al registrarse); un
@@ -45,10 +41,7 @@ export default async function ClubPage() {
   const canCreateClub = await canUserCreateClub(user.id, user.user_metadata);
 
   if (ownedClub) {
-    const [{ members, invites }, stats] = await Promise.all([
-      listClubRoster(ownedClub.id),
-      getClubStats(ownedClub.id),
-    ]);
+    const stats = await getClubStats(ownedClub.id);
     return (
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
         <div>
@@ -57,9 +50,8 @@ export default async function ClubPage() {
             {ownedClub.name}
           </h1>
           <p className="mt-2 text-sm leading-6 text-foreground/62">
-            Invita monitores por email. Cuando acepten, tendrás acceso
-            compartido a sus sesiones, alumnos, grupos y calendario de ese
-            deporte — cada uno conserva su propio panel.
+            Datos, fotos e instalaciones del club. Los monitores se dan de alta
+            en Gestión → Monitores.
           </p>
         </div>
         <ClubIdentityForm
@@ -69,24 +61,6 @@ export default async function ClubPage() {
           canEdit
           stats={stats}
           initial={clubIdentityFromRow(ownedClub, user.email)}
-        />
-        <div className="flex items-center justify-between gap-3 rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
-          <div>
-            <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
-              Objetivos del club
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-foreground/62">
-              Adapta los objetivos de tenis a la metodología del club. Lo ven
-              todos los alumnos del club.
-            </p>
-          </div>
-          <ObjectivesLink clubId={ownedClub.id} />
-        </div>
-        <ClubOwnerPanel
-          club={ownedClub}
-          initialMembers={members}
-          initialInvites={invites}
-          defaultSport={activeSport}
         />
         {coachOf.length > 0 && (
           <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
