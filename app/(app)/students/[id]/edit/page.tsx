@@ -73,6 +73,8 @@ export default async function EditStudentPage({ params }: PageProps) {
         studentId={student.id}
         initialData={{
           name: student.name,
+          firstName: student.firstName,
+          lastName: student.lastName,
           email: student.email,
           gender: student.gender as Gender | null,
           birthDate: student.birthDate,

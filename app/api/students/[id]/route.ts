@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { joinFullName, splitFullName } from "@/lib/students/names";
 import { db } from "@/db";
 import { students } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
@@ -84,6 +85,8 @@ export async function PUT(request: Request, context: StudentRouteContext) {
     const [existing] = await db
       .select({
         id: students.id,
+        firstName: students.firstName,
+        lastName: students.lastName,
         locality: students.locality,
         localityLat: students.localityLat,
       })
@@ -98,8 +101,31 @@ export async function PUT(request: Request, context: StudentRouteContext) {
 
     const updateValues: Record<string, unknown> = {};
 
+    // Nombre: con firstName/lastName se recalcula el nombre completo; con
+    // solo name (p. ej. desde otras pantallas) se separa automáticamente.
+    if (d.firstName !== undefined || d.lastName !== undefined) {
+      const firstName = d.firstName ?? existing.firstName ?? "";
+      const lastName =
+        d.lastName !== undefined
+          ? d.lastName?.trim() || null
+          : existing.lastName;
+      if (!firstName) {
+        return NextResponse.json(
+          { error: "El nombre es obligatorio" },
+          { status: 400 }
+        );
+      }
+      updateValues.firstName = firstName;
+      updateValues.lastName = lastName;
+      updateValues.name = joinFullName(firstName, lastName);
+    } else if (d.name !== undefined) {
+      const split = splitFullName(d.name);
+      updateValues.name = d.name;
+      updateValues.firstName = split.firstName;
+      updateValues.lastName = split.lastName;
+    }
+
     const fields = [
-      "name",
       "gender",
       "birthDate",
       "heightCm",

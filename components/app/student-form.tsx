@@ -20,6 +20,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { splitFullName } from "@/lib/students/names";
 import {
   HOW_FOUND_OPTIONS,
   LEFT_REASON_OPTIONS,
@@ -45,7 +46,8 @@ type PlayerLevel =
   | "adultos_medio_alto";
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
+  firstName: z.string().trim().min(1, "El nombre es obligatorio").max(255),
+  lastName: z.string().trim().max(255).optional().nullable(),
   email: z
     .string()
     .trim()
@@ -146,6 +148,8 @@ export interface StudentFormProps {
   studentId?: string;
   initialData?: {
     name?: string;
+    firstName?: string | null;
+    lastName?: string | null;
     email?: string | null;
     gender?: Gender | null;
     birthDate?: string | null;
@@ -212,7 +216,15 @@ export function StudentForm({
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: initialData?.name ?? "",
+      // Fichas antiguas sin nombre y apellidos separados: se separan aquí.
+      firstName:
+        initialData?.firstName ??
+        splitFullName(initialData?.name).firstName ??
+        "",
+      lastName:
+        initialData?.firstName != null
+          ? (initialData?.lastName ?? "")
+          : (splitFullName(initialData?.name).lastName ?? ""),
       email: initialData?.email ?? "",
       gender: initialData?.gender ?? null,
       birthDate: initialData?.birthDate ?? "",
@@ -246,7 +258,8 @@ export function StudentForm({
     const method = mode === "create" ? "POST" : "PUT";
 
     const payload = {
-      name: values.name.trim(),
+      firstName: values.firstName.trim(),
+      lastName: values.lastName?.trim() || null,
       email: values.email ? values.email : null,
       gender: values.gender ?? null,
       birthDate: values.birthDate || null,
@@ -322,25 +335,45 @@ export function StudentForm({
           subtitle="Información básica del alumno"
         />
         <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="name"
-              className="block text-sm font-semibold text-foreground"
-            >
-              Nombre completo
-            </label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Ej: Carmen García"
-              autoComplete="off"
-              aria-invalid={!!errors.name}
-              {...register("name")}
-              className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Nombre
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                placeholder="Ej: Carmen"
+                autoComplete="off"
+                aria-invalid={!!errors.firstName}
+                {...register("firstName")}
+                className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+              {errors.firstName && (
+                <p className="text-xs text-destructive">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-semibold text-foreground"
+              >
+                Apellidos
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                placeholder="Ej: García López"
+                autoComplete="off"
+                {...register("lastName")}
+                className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
+              />
+            </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">

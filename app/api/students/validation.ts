@@ -40,12 +40,19 @@ const optionalImageUrlSchema = z
       "La URL de foto debe ser http(s) y pertenecer a Supabase, Pexels, Google o GitHub.",
   });
 
-export const createStudentSchema = z.object({
+const studentFieldsSchema = z.object({
+  /** Nombre completo. Si llegan firstName/lastName, se recalcula con ellos. */
   name: z
     .string()
     .trim()
     .min(1, "El nombre es obligatorio")
     .max(255, "Máximo 255 caracteres"),
+  firstName: z
+    .string()
+    .trim()
+    .min(1, "El nombre es obligatorio")
+    .max(255, "Máximo 255 caracteres"),
+  lastName: z.string().trim().max(255, "Máximo 255 caracteres").nullable(),
   email: z
     .string()
     .trim()
@@ -153,7 +160,15 @@ export const createStudentSchema = z.object({
   imageUrl: optionalImageUrlSchema.optional().nullable(),
 });
 
-export const updateStudentSchema = createStudentSchema
+/** Alta: hace falta el nombre (firstName, o name con el nombre completo). */
+export const createStudentSchema = studentFieldsSchema
+  .partial({ name: true, firstName: true, lastName: true })
+  .refine((v) => !!v.firstName || !!v.name, {
+    message: "El nombre es obligatorio",
+    path: ["firstName"],
+  });
+
+export const updateStudentSchema = studentFieldsSchema
   .partial()
   .refine((payload) => Object.keys(payload).length > 0, {
     message: "At least one field is required for update",

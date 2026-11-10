@@ -8,6 +8,7 @@ import {
 } from "ai";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { splitFullName } from "@/lib/students/names";
 import { db } from "@/db";
 import {
   users,
@@ -1286,6 +1287,7 @@ ${profile ? buildUserContext(profile, sessionCount) : "Sin datos"}
               .values({
                 coachId: user.id,
                 name,
+                ...splitFullName(name),
                 playerLevel: playerLevel ?? null,
                 notes: notes ?? null,
               })
