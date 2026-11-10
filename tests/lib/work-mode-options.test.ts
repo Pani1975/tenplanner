@@ -47,7 +47,7 @@ describe("workModeOptions", () => {
     ).toEqual(["Modo CT Tenerife", "Modo gestión"]);
   });
 
-  it("monitor invitado: el club y particular", () => {
+  it("monitor invitado: el club y su Modo monitor", () => {
     expect(
       names(
         workModeOptions({
@@ -56,7 +56,7 @@ describe("workModeOptions", () => {
           clubAccountClubId: null,
         })
       )
-    ).toEqual(["Modo CT Tenerife", "Modo particular"]);
+    ).toEqual(["Modo CT Tenerife", "Modo monitor"]);
   });
 
   it("monitor sin club: solo particular", () => {

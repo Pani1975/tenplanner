@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { clubs, users } from "@/db/schema";
-import { canTagWithClub, getClubAccountClubId } from "@/lib/clubs";
+import {
+  canTagWithClub,
+  getClubAccountClubId,
+  getCoachMemberships,
+} from "@/lib/clubs";
 import type { WorkMode } from "@/lib/work-mode-labels";
 
 export * from "@/lib/work-mode-labels";
@@ -137,4 +142,38 @@ export async function resetToDefaultWorkMode(userId: string) {
       activeClubId: clubId,
     })
     .where(eq(users.id, userId));
+}
+
+/**
+ * Modo monitor de alguien que pertenece a uno o más clubes: su espacio
+ * propio y privado (el club no entra). Ahí prepara ejercicios, clases y
+ * sesiones y los envía al club, pero no lleva alumnos, grupos, objetivos ni
+ * reservas de pistas: eso está en el modo del club. Devuelve los ids de sus
+ * clubes, o null si no está en ese espacio.
+ */
+export async function getClubMonitorSpaceClubIds(
+  userId: string
+): Promise<string[] | null> {
+  const clubs = await getClubMonitorSpaceClubs(userId);
+  return clubs ? clubs.map((c) => c.id) : null;
+}
+
+/** Como getClubMonitorSpaceClubIds, con el nombre de cada club. */
+export async function getClubMonitorSpaceClubs(
+  userId: string
+): Promise<{ id: string; name: string }[] | null> {
+  const mode = await getWorkMode(userId);
+  if (mode.kind !== "particular") return null;
+  const memberships = await getCoachMemberships(userId);
+  return memberships.length > 0
+    ? memberships.map((m) => ({ id: m.club.id, name: m.club.name }))
+    : null;
+}
+
+/**
+ * En el Modo monitor de un monitor de club, los apartados del club (alumnos,
+ * grupos, objetivos, reservas) no existen: se vuelve al inicio.
+ */
+export async function redirectIfClubMonitorSpace(userId: string) {
+  if (await getClubMonitorSpaceClubIds(userId)) redirect("/dashboard");
 }

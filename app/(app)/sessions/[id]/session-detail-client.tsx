@@ -34,7 +34,9 @@ import {
   Play,
   CalendarClock,
   BookmarkPlus,
+  Send,
 } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { SessionDateDialog } from "@/components/app/session-date-dialog";
 import { SessionFavoriteToggle } from "@/components/app/session-favorite-toggle";
@@ -184,6 +186,8 @@ interface Props {
   isOwner?: boolean;
   /** Monitor que imparte la sesión, si no es quien la ve. */
   authorName?: string | null;
+  /** "Enviar al club" (Modo monitor): clubes a los que se puede enviar. */
+  sendClubs?: { id: string; name: string }[];
 }
 
 export interface SessionBlockData {
@@ -442,8 +446,34 @@ export function SessionDetailClient({
   backToSearchHref = null,
   isOwner = true,
   authorName = null,
+  sendClubs = [],
 }: Props) {
   const router = useRouter();
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+
+  // Envía una copia de la sesión al club (misma fecha); el original se
+  // queda en el espacio propio del monitor.
+  async function sendToClub(club: { id: string; name: string }) {
+    setSendingTo(club.id);
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduledAt: new Date(session.scheduledAt).toISOString(),
+          toClubId: club.id,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(json.error ?? "No se pudo enviar. Inténtalo de nuevo.");
+        return;
+      }
+      toast.success(`Sesión enviada a ${club.name}`);
+    } finally {
+      setSendingTo(null);
+    }
+  }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -792,6 +822,23 @@ export function SessionDetailClient({
               <span className="hidden sm:inline">Eliminar</span>
             </button>
           )}
+          {sendClubs.map((club) => (
+            <button
+              key={club.id}
+              type="button"
+              onClick={() => void sendToClub(club)}
+              disabled={sendingTo !== null}
+              title="Se envía una copia al club; el original sigue en tu espacio"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:opacity-60 dark:bg-white/[0.035]"
+            >
+              {sendingTo === club.id ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Send className="size-3.5" />
+              )}
+              <span>Enviar a {club.name}</span>
+            </button>
+          ))}
           {authorName && (
             <span className="inline-flex items-center rounded-full border border-foreground/15 bg-foreground/5 px-3 py-2 text-sm font-semibold text-foreground/60">
               Imparte {authorName}

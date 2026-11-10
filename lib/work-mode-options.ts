@@ -8,7 +8,8 @@
 //   de lo de una cuenta de club, el Modo administrador (lo público).
 // - Administrador sin club: Modo administrador, los clubes a los que
 //   pertenece y Modo particular.
-// - Monitor: Modo particular y el modo de cada club que le ha invitado.
+// - Monitor: Modo particular; si algún club le ha invitado, el modo de cada
+//   club y su espacio propio pasa a llamarse "Modo monitor".
 
 export const MODE_PARTICULAR = "particular";
 export const MODE_ADMIN = "tenplanner";
@@ -60,7 +61,10 @@ export function workModeOptions({
       ...clubOptions,
       particular,
     ];
-  return [...clubOptions, particular];
+  // Monitor de uno o más clubes: su espacio propio es el "Modo monitor".
+  if (clubOptions.length > 0)
+    return [...clubOptions, { ...particular, name: "monitor" }];
+  return [particular];
 }
 
 /** Clave del modo activo a partir del estado del servidor. */

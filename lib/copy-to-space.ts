@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getActiveWorkClubId } from "@/lib/clubs";
+import { canTagWithClub, getActiveWorkClubId } from "@/lib/clubs";
 
 /**
  * Destino de "Copiar a mi espacio" para ejercicios y clases:
@@ -9,9 +9,13 @@ import { getActiveWorkClubId } from "@/lib/clubs";
  *   (allí la copia la ven todos los miembros del club).
  * - "particular": una ficha que el propio monitor creó en el espacio de un
  *   club, a su espacio particular (solo él la verá).
+ * - "club" ("Enviar al club"): una ficha de su espacio propio (Modo monitor)
+ *   al club `clubId` del que es monitor. La copia es del club; el original
+ *   sigue en su espacio privado.
  */
 export const copyTargetSchema = z.object({
-  target: z.enum(["active", "particular"]).default("active"),
+  target: z.enum(["active", "particular", "club"]).default("active"),
+  clubId: z.string().uuid().optional(),
 });
 
 export type CopyTargetValue = z.infer<typeof copyTargetSchema>["target"];
@@ -29,8 +33,21 @@ export type CopySource = {
 export async function resolveCopyDestination(
   source: CopySource,
   target: CopyTargetValue,
-  userId: string
+  userId: string,
+  targetClubId?: string
 ): Promise<{ ok: true; clubId: string | null } | { ok: false; error: string }> {
+  if (target === "club") {
+    if (source.clubId || source.createdBy !== userId) {
+      return {
+        ok: false,
+        error: "Solo puedes enviar al club lo que creaste en tu espacio.",
+      };
+    }
+    if (!targetClubId || !(await canTagWithClub(userId, targetClubId))) {
+      return { ok: false, error: "No eres monitor de ese club." };
+    }
+    return { ok: true, clubId: targetClubId };
+  }
   if (target === "particular") {
     if (!source.clubId || source.createdBy !== userId) {
       return {

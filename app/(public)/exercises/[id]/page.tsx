@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { isTenPlannerMode } from "@/lib/work-mode";
+import { getClubMonitorSpaceClubs, isTenPlannerMode } from "@/lib/work-mode";
 import { db } from "@/db";
 import { exercises, users, exerciseRatings } from "@/db/schema";
 import { and, eq, avg, count } from "drizzle-orm";
@@ -102,6 +102,11 @@ export default async function ExercisePage({
   if (user && !inTenPlanner && isPublicExercise) copyTargets.push("active");
   if (user && !inTenPlanner && isOwner && exercise.clubId)
     copyTargets.push("particular");
+  // "Enviar al club": en el Modo monitor, un ejercicio de su espacio.
+  const sendClubs =
+    user && isOwner && !exercise.clubId && !isPublicExercise
+      ? ((await getClubMonitorSpaceClubs(user.id)) ?? [])
+      : [];
 
   const publicExercisesEnabled = await getBooleanSetting(
     "feature.public_exercises_enabled"
@@ -130,6 +135,7 @@ export default async function ExercisePage({
     <ExerciseDetailClient
       canEdit={canEdit}
       copyTargets={copyTargets}
+      sendClubs={sendClubs}
       inClub={inClub}
       isAdmin={isAdmin}
       canPublish={inTenPlanner}

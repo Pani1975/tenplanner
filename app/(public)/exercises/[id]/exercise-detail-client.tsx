@@ -201,6 +201,7 @@ export function ExerciseDetailClient({
   exercise,
   canEdit = false,
   copyTargets = [],
+  sendClubs = [],
   inClub = false,
   isAdmin = false,
   canPublish = false,
@@ -219,6 +220,7 @@ export function ExerciseDetailClient({
   exercise: ExerciseData;
   canEdit?: boolean;
   copyTargets?: CopyTarget[];
+  sendClubs?: { id: string; name: string }[];
   inClub?: boolean;
   isAdmin?: boolean;
   /** Admin en Modo Ten Planner: puede tocar la Biblioteca pública. */
@@ -510,12 +512,13 @@ export function ExerciseDetailClient({
               <span className="sm:hidden">Solo admins</span>
             </div>
           ) : null}
-          {copyTargets.length > 0 && (
+          {(copyTargets.length > 0 || sendClubs.length > 0) && (
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <CopyToSpaceButton
                 kind="exercise"
                 id={exercise.id}
                 targets={copyTargets}
+                sendClubs={sendClubs}
                 inClub={inClub}
                 className="flex-1 sm:flex-none"
               />
@@ -838,7 +841,9 @@ export function ExerciseDetailClient({
             </div>
           )}
 
-          {diagram && <ExerciseDiagramAnimated diagram={diagram} maxWidth={300} />}
+          {diagram && (
+            <ExerciseDiagramAnimated diagram={diagram} maxWidth={300} />
+          )}
 
           {exercise.steps && exercise.steps.length > 0 && (
             <div>

@@ -253,7 +253,19 @@ const familyNavItems: NavItem[] = [
 
 // En modo club, los apartados propios se nombran como del club ("Clases
 // club"…) en vez de "Mis…" — ver lib/space-labels.ts.
-function navItemsForSpace(inClub: boolean): NavItem[] {
+// Apartados que solo existen en el modo del club: en el Modo monitor de un
+// monitor que pertenece a un club no aparecen (ver
+// getClubMonitorSpaceClubIds en lib/work-mode.ts).
+const CLUB_ONLY_HREFS = new Set([
+  "/students",
+  "/objetivos",
+  "/reservas-pistas",
+]);
+
+function navItemsForSpace(
+  inClub: boolean,
+  clubMonitorSpace = false
+): NavItem[] {
   const labels = spaceLabels(inClub);
   const bySubHref: Record<string, string> = {
     "/exercises?tab=mine": labels.exercises,
@@ -262,7 +274,10 @@ function navItemsForSpace(inClub: boolean): NavItem[] {
     "/classes?tab=favorites": labels.lists,
     "/sessions": labels.sessions,
   };
-  return navItems.map((item) => {
+  const items = clubMonitorSpace
+    ? navItems.filter((item) => !CLUB_ONLY_HREFS.has(item.href))
+    : navItems;
+  return items.map((item) => {
     if (item.href === "/resources") return { ...item, label: labels.resources };
     if (!item.submenu) return item;
     const submenu = item.submenu.map((sub) =>
@@ -406,7 +421,12 @@ function NavContent({
       ? platformNavItems
       : managementMode
         ? managementNavItems
-        : navItemsForSpace(!!activeWorkClubId);
+        : navItemsForSpace(
+            !!activeWorkClubId,
+            // Modo monitor de un monitor de club (sin alumnos, objetivos ni
+            // reservas: eso va en el modo del club).
+            !activeWorkClubId && !clubAccountClubId && workModeClubs.length > 0
+          );
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
   const initials = displayName

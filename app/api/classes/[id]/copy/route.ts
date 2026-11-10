@@ -9,6 +9,12 @@ import {
   omitKeys,
   resolveCopyDestination,
 } from "@/lib/copy-to-space";
+import {
+  remapExerciseId,
+  remapStations,
+  sendPrivateExercisesToClub,
+  stationExerciseIds,
+} from "@/lib/club-transfer";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -52,7 +58,8 @@ export async function POST(request: Request, context: RouteContext) {
       clubId: source.clubId,
     },
     parsedBody.data.target,
-    user.id
+    user.id,
+    parsedBody.data.clubId
   );
   if (!destination.ok)
     return NextResponse.json({ error: destination.error }, { status: 403 });
@@ -78,6 +85,19 @@ export async function POST(request: Request, context: RouteContext) {
   const content = omitKeys(source, ["id", "createdAt", "updatedAt"]);
 
   const copyId = await db.transaction(async (tx) => {
+    // "Enviar al club": sus ejercicios privados van también al club.
+    const exerciseMap =
+      parsedBody.data.target === "club" && destination.clubId
+        ? await sendPrivateExercisesToClub(
+            tx,
+            items.flatMap((i) => [
+              i.exerciseId,
+              ...stationExerciseIds(i.stations),
+            ]),
+            user.id,
+            destination.clubId
+          )
+        : new Map<string, string>();
     const [copy] = await tx
       .insert(classes)
       .values({
@@ -101,6 +121,8 @@ export async function POST(request: Request, context: RouteContext) {
           blockItems.map((item) => ({
             ...omitKeys(item, ["id", "blockId"]),
             blockId: newBlock.id,
+            exerciseId: remapExerciseId(item.exerciseId, exerciseMap),
+            stations: remapStations(item.stations, exerciseMap),
           }))
         );
       }
