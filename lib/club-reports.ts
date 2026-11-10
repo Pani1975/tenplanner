@@ -206,9 +206,10 @@ function n(v: unknown) {
   return Number(v ?? 0);
 }
 
+/** % (0-100) con dos decimales, o null si no hay nada anotado. */
 function pct(present: unknown, marked: unknown): number | null {
   const m = n(marked);
-  return m > 0 ? Math.round((n(present) / m) * 100) : null;
+  return m > 0 ? Math.round((n(present) / m) * 10_000) / 100 : null;
 }
 
 function iso(v: unknown): string | null {
@@ -268,12 +269,13 @@ export async function loadClubReport(
         select cm.user_id from club_members cm
         where cm.club_id = ${clubId} and cm.role = 'coach' and cm.status = 'active'
         union
-        select s.user_id from sessions s where s.club_id = ${clubId}
+        select coalesce(s.coach_id, s.user_id) from sessions s where s.club_id = ${clubId}
         union
         select st.coach_id from students st where st.club_id = ${clubId}
       ),
       done as (
-        select s.id, s.user_id, s.duration_minutes, s.scheduled_at from sessions s
+        select s.id, coalesce(s.coach_id, s.user_id) as user_id, s.duration_minutes,
+          s.scheduled_at from sessions s
         where s.club_id = ${clubId}
           and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
@@ -287,7 +289,7 @@ export async function loadClubReport(
         (select coalesce(sum(d.duration_minutes), 0) from done d
           where d.user_id = u.id) as minutes,
         (select count(*) from sessions s
-          where s.club_id = ${clubId} and s.user_id = u.id
+          where s.club_id = ${clubId} and coalesce(s.coach_id, s.user_id) = u.id
             and s.status <> 'cancelled' and s.scheduled_at >= now()
             and s.scheduled_at < now() + interval '30 days') as upcoming,
         (select count(*) filter (where ss.attended) from session_students ss
@@ -295,7 +297,7 @@ export async function loadClubReport(
         (select count(*) filter (where ss.attended is not null) from session_students ss
           join done d on d.id = ss.session_id where d.user_id = u.id) as marked,
         (select max(s.scheduled_at) from sessions s
-          where s.club_id = ${clubId} and s.user_id = u.id
+          where s.club_id = ${clubId} and coalesce(s.coach_id, s.user_id) = u.id
             and s.status <> 'cancelled' and s.scheduled_at < now()) as last_session
       from users u
       where u.id in (select user_id from coach_ids)

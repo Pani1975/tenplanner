@@ -1917,6 +1917,31 @@ export const clubs = pgTable(
   (t) => [index("clubs_owner_id_idx").on(t.ownerId)]
 );
 
+// Plantillas del informe de gestión del club: nombre y lista de datos
+// (ids de lib/club-report/catalog.ts). El periodo se elige al generarlo.
+export const reportTemplates = pgTable(
+  "report_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    name: varchar("name", { length: 120 }).notNull(),
+    metrics: jsonb("metrics").$type<string[]>().default([]).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("report_templates_club_id_idx").on(t.clubId)]
+);
+
 // Club membership — one row per (club, user). The owner also gets a row
 // here (role "owner") so membership checks don't need a special case.
 export const clubMembers = pgTable(
