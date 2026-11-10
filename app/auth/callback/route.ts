@@ -101,6 +101,8 @@ export async function GET(request: Request) {
                     website: normalizeWebsite(
                       metaText(user.user_metadata?.club_website)
                     ),
+                    // Email del club: el de la cuenta (editable en Mi club).
+                    email: user.email?.toLowerCase() ?? null,
                   })
                   .returning();
                 await tx.insert(clubMembers).values({
