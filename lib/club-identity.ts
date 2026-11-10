@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-// Ficha de identificación del club (Perfil, en modo club). Sin dependencias
-// de servidor: la usan también los componentes cliente.
+// Ficha del club ("Mi club"): identificación, contacto, fotos, vídeos e
+// instalaciones. Sin dependencias de servidor: la usan también los
+// componentes cliente.
 
 export const COURT_TYPES = [
   { id: "tierra", label: "Tierra" },
@@ -14,19 +15,48 @@ export const COURT_TYPES = [
 export type CourtTypeId = (typeof COURT_TYPES)[number]["id"];
 export type Courts = Partial<Record<CourtTypeId, number>>;
 
+export const MAX_CLUB_PHOTOS = 12;
+export const MAX_CLUB_VIDEOS = 6;
+
 export type ClubIdentity = {
+  /** Nombre del club: es el que sale en las cabeceras del modo club. */
   name: string;
   fullName: string | null;
   address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  coverImageUrl: string | null;
+  photos: string[];
+  videos: string[];
   courts: Courts | null;
+  padelCourts: number | null;
+  hasCafeteria: boolean | null;
+  hasParking: boolean | null;
   foundedYear: number | null;
 };
 
 const courtCount = z.number().int().min(0).max(999);
 
+const httpUrl = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine((v) => /^https?:\/\//i.test(v), "Enlace no válido");
+
 export const clubIdentitySchema = z.object({
+  name: z.string().trim().min(2, "El nombre del club es obligatorio").max(255),
   fullName: z.string().trim().max(255).nullable(),
   address: z.string().trim().max(500).nullable(),
+  phone: z.string().trim().max(50).nullable(),
+  email: z.string().trim().email("El email del club no es válido").max(255),
+  website: z.string().trim().max(255).nullable(),
+  coverImageUrl: httpUrl.nullable(),
+  photos: z.array(httpUrl).max(MAX_CLUB_PHOTOS),
+  videos: z.array(httpUrl).max(MAX_CLUB_VIDEOS),
+  padelCourts: courtCount.nullable(),
+  hasCafeteria: z.boolean().nullable(),
+  hasParking: z.boolean().nullable(),
   courts: z
     .object(
       Object.fromEntries(

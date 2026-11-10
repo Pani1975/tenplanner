@@ -1886,6 +1886,15 @@ export const clubs = pgTable(
     // Número de pistas por tipo de superficie; ver lib/club-identity.ts.
     courts: jsonb("courts").$type<Partial<Record<string, number>>>(),
     foundedYear: integer("founded_year"),
+    // Ficha del club en "Mi club" (lib/club-identity.ts).
+    email: varchar("email", { length: 255 }),
+    coverImageUrl: text("cover_image_url"),
+    photos: jsonb("photos").$type<string[]>(),
+    // Enlaces de vídeo (YouTube u otros).
+    videos: jsonb("videos").$type<string[]>(),
+    padelCourts: integer("padel_courts"),
+    hasCafeteria: boolean("has_cafeteria"),
+    hasParking: boolean("has_parking"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

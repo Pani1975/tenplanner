@@ -11,7 +11,8 @@ import {
 import { and, eq, count, or, sql } from "drizzle-orm";
 import { ProfileClient } from "./profile-client";
 import { WorkModeSwitcher } from "@/components/app/work-mode-switcher";
-import { ClubIdentityForm } from "@/components/app/club-identity-form";
+import Link from "next/link";
+import { Building2, ChevronRight } from "lucide-react";
 import { SportSwitcher } from "@/components/app/sport-switcher";
 import {
   getActiveWorkClubId,
@@ -138,21 +139,26 @@ export default async function ProfilePage() {
           />
         )}
 
-        {/* La ficha del club es del modo del club; el Espacio gestión solo
+        {/* La ficha del club está en "Mi club"; el Espacio gestión solo
             muestra los datos de la persona gestora. */}
         {activeClub && !(clubAccountClubId && dbUser[0]?.managementMode) && (
-          <ClubIdentityForm
-            key={activeClub.updatedAt.toISOString()}
-            clubId={activeClub.id}
-            canEdit={activeClubIsOwner}
-            initial={{
-              name: activeClub.name,
-              fullName: activeClub.fullName,
-              address: activeClub.address,
-              courts: activeClub.courts ?? null,
-              foundedYear: activeClub.foundedYear,
-            }}
-          />
+          <Link
+            href="/club"
+            className="tp-panel flex items-center gap-3 p-5 transition-colors hover:border-brand/50"
+          >
+            <Building2 className="size-5 shrink-0 text-brand" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black uppercase text-foreground">
+                Ficha del club · {activeClub.name}
+              </span>
+              <span className="mt-1 block text-xs text-foreground/55">
+                {activeClubIsOwner
+                  ? "Datos, fotos, vídeos e instalaciones del club: edítalos en Mi club."
+                  : "Datos, fotos, vídeos e instalaciones del club, en Mi club."}
+              </span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-foreground/40" />
+          </Link>
         )}
 
         <ProfileClient

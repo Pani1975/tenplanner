@@ -4,12 +4,17 @@ import { z } from "zod";
 import { db } from "@/db";
 import { clubMembers, clubs } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { clubIdentitySchema, normalizeCourts } from "@/lib/club-identity";
+import {
+  cleanOptionalText,
+  clubIdentitySchema,
+  normalizeCourts,
+  normalizeWebsite,
+} from "@/lib/club-identity";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// Ficha de identificación del club: nombre completo, dirección, pistas por
-// tipo y año de fundación. La edita el propietario del club.
+// Ficha del club ("Mi club"): nombre (el de las cabeceras), contacto, fotos,
+// vídeos, instalaciones y año de fundación. La edita el propietario del club.
 export async function PATCH(request: Request, ctx: Ctx) {
   const supabase = await createClient();
   const {
@@ -31,7 +36,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const parsed = clubIdentitySchema.safeParse(body);
   if (!parsed.success)
     return NextResponse.json(
-      { error: parsed.error.flatten() },
+      {
+        error:
+          parsed.error.issues[0]?.message ?? "Revisa los datos de la ficha.",
+      },
       { status: 422 }
     );
 
@@ -57,9 +65,19 @@ export async function PATCH(request: Request, ctx: Ctx) {
   await db
     .update(clubs)
     .set({
+      name: d.name,
       fullName: d.fullName || null,
       address: d.address || null,
+      phone: cleanOptionalText(d.phone, 50),
+      email: d.email.toLowerCase(),
+      website: normalizeWebsite(d.website),
+      coverImageUrl: d.coverImageUrl || null,
+      photos: d.photos.length > 0 ? d.photos : null,
+      videos: d.videos.length > 0 ? d.videos : null,
       courts: normalizeCourts(d.courts),
+      padelCourts: d.padelCourts || null,
+      hasCafeteria: d.hasCafeteria,
+      hasParking: d.hasParking,
       foundedYear: d.foundedYear,
     })
     .where(eq(clubs.id, id));

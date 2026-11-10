@@ -99,6 +99,8 @@ export async function POST(request: Request) {
         address: cleanOptionalText(parsed.data.address, 500),
         phone: cleanOptionalText(parsed.data.phone, 50),
         website: normalizeWebsite(parsed.data.website),
+        // Email del club: por defecto el de la cuenta (editable en Mi club).
+        email: user.email?.toLowerCase() ?? null,
       })
       .returning();
 
