@@ -16,6 +16,7 @@ import { getActiveWorkClubId } from "@/lib/clubs";
 import { normalizeTags } from "@/lib/tags";
 import { DEFAULT_BLOCK_ITEM_DURATION } from "@/lib/block-items";
 import { hasSessionAnimation } from "@/lib/classes/animation";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -35,7 +36,7 @@ export async function POST(_request: Request, ctx: Ctx) {
   const [session] = await db
     .select()
     .from(sessions)
-    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+    .where(and(eq(sessions.id, id), await editableSessionCondition(user.id)))
     .limit(1);
   if (!session)
     return NextResponse.json(

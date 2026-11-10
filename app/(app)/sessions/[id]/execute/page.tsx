@@ -6,6 +6,7 @@ import { asc, eq } from "drizzle-orm";
 import { loadSessionPlan } from "@/lib/sessions/plan";
 import { getExerciseDiagrams } from "@/lib/exercise-diagrams";
 import { ExecuteSessionClient } from "./execute-client";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -28,7 +29,7 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
     .limit(1);
 
   if (!sessionRow) notFound();
-  if (sessionRow.userId !== user.id) notFound();
+  if (!(await canEditSession(user.id, sessionRow))) notFound();
 
   const studentRows = await db
     .select({

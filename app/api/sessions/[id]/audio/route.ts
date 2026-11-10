@@ -14,6 +14,7 @@ import {
   removeSessionAudio,
   signSessionAudioUrls,
 } from "@/lib/session-audio";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -46,7 +47,11 @@ async function authorize(context: RouteContext): Promise<Auth> {
     };
 
   const [session] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, parsed.data.id))
     .limit(1);
@@ -55,7 +60,7 @@ async function authorize(context: RouteContext): Promise<Auth> {
       ok: false,
       response: NextResponse.json({ error: "Not found" }, { status: 404 }),
     };
-  if (session.userId !== user.id)
+  if (!(await canEditSession(user.id, session)))
     return {
       ok: false,
       response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),

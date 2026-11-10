@@ -336,6 +336,12 @@ export const sessions = pgTable(
     userId: uuid("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
+    // Monitor que imparte la sesión (puede no ser quien la creó: el gestor
+    // del club la crea y se la asigna). null = la imparte el creador.
+    // Ver lib/sessions/permissions.ts.
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     objective: text("objective"),
     material: text("material"),
     observations: text("observations"),
@@ -393,6 +399,7 @@ export const sessions = pgTable(
     index("sessions_club_id_idx").on(t.clubId),
     index("sessions_sport_idx").on(t.sport),
     index("sessions_group_id_idx").on(t.groupId),
+    index("sessions_coach_id_idx").on(t.coachId),
   ]
 );
 

@@ -26,6 +26,10 @@ import {
 } from "@/lib/calendar-events";
 import { CalendarDays, Download, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  sessionCoachColumn,
+  taughtByCondition,
+} from "@/lib/sessions/permissions";
 
 // Sessions loaded into the calendar are limited to this window to keep
 // initial payload bounded. User can navigate the UI within this range.
@@ -91,15 +95,18 @@ export default async function CalendarPage({ searchParams }: PageProps) {
       durationMinutes: sessionsTable.durationMinutes,
       status: sessionsTable.status,
       userId: sessionsTable.userId,
+      coachId: sessionCoachColumn,
+      clubId: sessionsTable.clubId,
       groupId: sessionsTable.groupId,
       authorName: usersTable.name,
     })
     .from(sessionsTable)
-    .leftJoin(usersTable, eq(usersTable.id, sessionsTable.userId))
+    // Nombre del monitor que la imparte (coach_id o, si no hay, el creador).
+    .leftJoin(usersTable, eq(usersTable.id, sessionCoachColumn))
     .where(
       and(
         sessionsVisibility,
-        monitorFilter ? eq(sessionsTable.userId, monitorFilter) : undefined,
+        monitorFilter ? taughtByCondition(monitorFilter) : undefined,
         gte(sessionsTable.scheduledAt, windowStart),
         lte(sessionsTable.scheduledAt, windowEnd)
       )
@@ -186,10 +193,15 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     canEdit: h.userId === user.id || (!!h.clubId && ownedClub?.id === h.clubId),
   }));
 
-  const serialized = sessions.map((s) => ({
+  const serialized = sessions.map(({ clubId, coachId, ...s }) => ({
     ...s,
     scheduledAt: s.scheduledAt.toISOString(),
-    authorName: s.userId !== user.id ? (s.authorName ?? null) : null,
+    authorName: coachId !== user.id ? (s.authorName ?? null) : null,
+    // La mueven quien la creó, quien la imparte y el gestor del club.
+    canEdit:
+      s.userId === user.id ||
+      coachId === user.id ||
+      (!!clubId && ownedClub?.id === clubId),
   }));
 
   const serializedEvents = events.map((e) => ({

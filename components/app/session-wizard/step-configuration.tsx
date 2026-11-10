@@ -30,6 +30,8 @@ interface StepConfigurationProps {
   errors: Partial<Record<keyof WizardState, string>>;
   places: { id: string; name: string }[];
   monitorName?: string;
+  /** Monitores del club: si hay, se elige quién imparte la sesión. */
+  coaches?: { id: string; name: string }[];
   hideRecurrence?: boolean;
 }
 
@@ -168,6 +170,7 @@ export function StepConfiguration({
   errors,
   places = [],
   monitorName,
+  coaches = [],
   hideRecurrence = false,
 }: StepConfigurationProps) {
   const [studentsOpen, setStudentsOpen] = useState(false);
@@ -221,15 +224,38 @@ export function StepConfiguration({
           )}
         </div>
 
-        {monitorName && (
+        {coaches.length > 0 ? (
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">
-              Entrenador
+            <label
+              htmlFor="coachId"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Monitor que la imparte
             </label>
-            <div className="flex h-11 cursor-not-allowed items-center rounded-xl border border-border bg-muted/40 px-4 text-sm text-foreground/80">
-              {monitorName}
-            </div>
+            <select
+              id="coachId"
+              value={state.coachId ?? ""}
+              onChange={(e) => update({ coachId: e.target.value || null })}
+              className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
+            >
+              {coaches.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
+        ) : (
+          monitorName && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-foreground">
+                Entrenador
+              </label>
+              <div className="flex h-11 cursor-not-allowed items-center rounded-xl border border-border bg-muted/40 px-4 text-sm text-foreground/80">
+                {monitorName}
+              </div>
+            </div>
+          )
         )}
 
         <div className="border-t border-border/40" />

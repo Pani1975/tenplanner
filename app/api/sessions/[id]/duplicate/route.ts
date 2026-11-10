@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
@@ -11,6 +11,8 @@ import {
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
+import { getActiveClubIds } from "@/lib/clubs";
+import { editableSessionCondition } from "@/lib/sessions/permissions";
 
 const schema = z.object({
   scheduledAt: z.string().datetime(),
@@ -50,13 +52,31 @@ export async function POST(request: Request, ctx: Ctx) {
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 422 });
 
+  // Puede duplicarla quien puede editarla y, además, cualquier monitor del
+  // club al que pertenece la sesión (la copia es suya, para aprovecharla).
+  const [editable, activeClubIds] = await Promise.all([
+    editableSessionCondition(user.id),
+    getActiveClubIds(user.id),
+  ]);
   const [original] = await db
     .select()
     .from(sessions)
-    .where(and(eq(sessions.id, id), eq(sessions.userId, user.id)))
+    .where(
+      and(
+        eq(sessions.id, id),
+        activeClubIds.length > 0
+          ? or(editable, inArray(sessions.clubId, activeClubIds))
+          : editable
+      )
+    )
     .limit(1);
   if (!original)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const [editableOriginal] = await db
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(and(eq(sessions.id, id), editable))
+    .limit(1);
 
   const [blocks, legacyExercises, students] = await Promise.all([
     db
@@ -110,6 +130,9 @@ export async function POST(request: Request, ctx: Ctx) {
         clubId: original.clubId,
         groupId: original.groupId,
         sport: original.sport,
+        // Si quien duplica puede editar la original, mantiene el monitor;
+        // si es otro monitor del club, la copia la imparte él.
+        coachId: editableOriginal ? original.coachId : null,
         status: "scheduled",
       })
       .returning({ id: sessions.id });

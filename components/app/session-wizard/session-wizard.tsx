@@ -58,6 +58,10 @@ interface SessionWizardProps {
   initialScheduledAt?: string;
   places?: { id: string; name: string }[];
   monitorName?: string;
+  /** Monitores del club (modo club): se elige quién imparte la sesión. */
+  coaches?: { id: string; name: string }[];
+  /** Monitor preseleccionado (al crear, el propio usuario). */
+  initialCoachId?: string | null;
   allowDraftRestore?: boolean;
   /** Editar una sesión existente (también las pasadas). */
   edit?: {
@@ -331,6 +335,8 @@ export function SessionWizard({
   initialScheduledAt,
   places = [],
   monitorName,
+  coaches = [],
+  initialCoachId = null,
   allowDraftRestore = true,
   edit,
 }: SessionWizardProps) {
@@ -364,7 +370,7 @@ export function SessionWizard({
       initialStudentIds,
       initialScheduledAt,
     });
-    if (!edit) return base;
+    if (!edit) return { ...base, coachId: initialCoachId };
     const merged = { ...base, ...edit.initialState };
     // Una duración guardada distinta de la del plan se fijó a mano.
     const planMinutes = hasPlanContent(merged)
@@ -711,6 +717,7 @@ export function SessionWizard({
             location: state.location.trim() || null,
             placeId: state.placeId,
             groupId: state.groupId ?? null,
+            ...(coaches.length > 0 ? { coachId: state.coachId ?? null } : {}),
             studentIds: state.studentIds,
             exercises: exercisesPayload,
             blocks: blocksPayload,
@@ -762,6 +769,7 @@ export function SessionWizard({
             location: state.location.trim() || null,
             placeId: state.placeId,
             groupId: state.groupId ?? null,
+            ...(coaches.length > 0 ? { coachId: state.coachId ?? null } : {}),
             studentIds: state.studentIds,
             exercises: exercisesPayload,
             blocks: blocksPayload,
@@ -974,6 +982,7 @@ export function SessionWizard({
             errors={visibleErrors}
             places={places}
             monitorName={monitorName}
+            coaches={coaches}
             hideRecurrence={isEdit}
           />
         ) : (

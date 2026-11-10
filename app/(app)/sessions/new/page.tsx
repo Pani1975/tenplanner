@@ -26,7 +26,11 @@ import type {
   WizardSessionBlock,
 } from "@/components/app/session-wizard/types";
 import { getBooleanSetting } from "@/lib/app-settings";
-import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  getActiveWorkClubId,
+  getClubMembersDirectory,
+  sharedWithClubCondition,
+} from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { loadSessionPlan } from "@/lib/sessions/plan";
@@ -97,6 +101,14 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     user.user_metadata?.full_name ||
     user.email ||
     "Monitor";
+  // En modo club se elige qué monitor imparte la sesión (por defecto, uno
+  // mismo).
+  const workClubId = await getActiveWorkClubId(user.id);
+  const clubCoaches = workClubId
+    ? (await getClubMembersDirectory([workClubId])).sort((a, b) =>
+        a.name.localeCompare(b.name, "es")
+      )
+    : [];
 
   // Todos los ejercicios del deporte activo (antes se cortaba en 200 por
   // orden alfabético y mezclando deportes). El paso de ejercicios solo pinta
@@ -567,6 +579,8 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialScheduledAt={initialScheduledAt}
               places={coachPlaces}
               monitorName={monitorName}
+              coaches={clubCoaches}
+              initialCoachId={clubCoaches.length > 0 ? user.id : null}
               allowDraftRestore={allowDraftRestore}
             />
           </Suspense>

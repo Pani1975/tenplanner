@@ -44,9 +44,11 @@ interface SessionData {
   durationMinutes: number;
   userId?: string;
   groupId?: string | null;
-  /** Nombre de quien la creó, solo cuando no es del usuario actual
+  /** Monitor que la imparte, solo cuando no es el usuario actual
    * (compartida vía club). */
   authorName?: string | null;
+  /** Puede moverla (la creó, la imparte o es el gestor del club). */
+  canEdit?: boolean;
 }
 
 interface CalendarClientProps {
@@ -844,19 +846,17 @@ export function CalendarClient({
                                     key={`s-${item.session.id}`}
                                     href={`/sessions/${item.session.id}`}
                                     draggable={
-                                      !currentUserId ||
-                                      item.session.userId === currentUserId
+                                      !currentUserId || !!item.session.canEdit
                                     }
                                     data-session-drag-id={
-                                      !currentUserId ||
-                                      item.session.userId === currentUserId
+                                      !currentUserId || !!item.session.canEdit
                                         ? item.session.id
                                         : undefined
                                     }
                                     onDragStart={(e) => {
                                       if (
                                         currentUserId &&
-                                        item.session.userId !== currentUserId
+                                        !item.session.canEdit
                                       ) {
                                         e.preventDefault();
                                         return;
@@ -1068,21 +1068,14 @@ export function CalendarClient({
                         <Link
                           key={`s-${item.session.id}`}
                           href={`/sessions/${item.session.id}`}
-                          draggable={
-                            !currentUserId ||
-                            item.session.userId === currentUserId
-                          }
+                          draggable={!currentUserId || !!item.session.canEdit}
                           data-session-drag-id={
-                            !currentUserId ||
-                            item.session.userId === currentUserId
+                            !currentUserId || !!item.session.canEdit
                               ? item.session.id
                               : undefined
                           }
                           onDragStart={(e) => {
-                            if (
-                              currentUserId &&
-                              item.session.userId !== currentUserId
-                            ) {
+                            if (currentUserId && !item.session.canEdit) {
                               e.preventDefault();
                               return;
                             }

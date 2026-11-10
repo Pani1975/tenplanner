@@ -18,6 +18,7 @@ import {
   blockOrderFromPhase,
   phaseFromBlockOrder,
 } from "@/lib/sessions/plan";
+import { canEditSession } from "@/lib/sessions/permissions";
 
 // Añade ejercicios de la biblioteca al final de un bloque de una sesión ya
 // creada, sin tocar lo que la sesión ya tenía.
@@ -55,7 +56,11 @@ export async function POST(request: Request, context: RouteContext) {
   const { exerciseIds, blockOrder } = parsed.data;
 
   const [session] = await db
-    .select({ userId: sessions.userId })
+    .select({
+      userId: sessions.userId,
+      coachId: sessions.coachId,
+      clubId: sessions.clubId,
+    })
     .from(sessions)
     .where(eq(sessions.id, sessionId))
     .limit(1);
@@ -65,7 +70,7 @@ export async function POST(request: Request, context: RouteContext) {
       { status: 404 }
     );
   }
-  if (session.userId !== user.id) {
+  if (!(await canEditSession(user.id, session))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
