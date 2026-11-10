@@ -16,6 +16,7 @@ import { GenerateProfileLinkButton } from "./generate-profile-link";
 import { GuardiansPanel } from "./guardians-panel";
 import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
+import { howFoundLabel, leftReasonLabel } from "@/lib/students/membership";
 import {
   getActiveWorkClubId,
   getOwnedClub,
@@ -338,6 +339,11 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 {student.name}
               </h1>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-3 text-[12px] tabular-nums">
+                {student.leftAt && (
+                  <span className="rounded-full bg-red-500/20 px-3 py-1 text-[10px] font-black uppercase text-red-200">
+                    De baja desde {formatDay(student.leftAt)}
+                  </span>
+                )}
                 {level && (
                   <span className="rounded-full bg-white/8 px-3 py-1 text-[10px] font-black uppercase text-white/62">
                     {LEVEL_CODE[level]} · {LEVEL_LABEL[level]}
@@ -449,6 +455,47 @@ export default async function StudentDetailPage({ params }: PageProps) {
                     : "—"
                 }
               />
+            </dl>
+
+            <p className="mt-6 mb-2 text-[10px] font-black uppercase text-foreground/50">
+              Alta y baja
+            </p>
+            <dl className="grid grid-cols-2 divide-x divide-y divide-[#050505]/10 border-y border-[#050505]/10 dark:divide-white/10 dark:border-white/10 md:grid-cols-3">
+              <InfoRow
+                label="Fecha de alta"
+                value={formatDay(student.joinedAt)}
+              />
+              <InfoRow
+                label="Cómo nos conoció"
+                value={
+                  [howFoundLabel(student.howFound), student.howFoundDetail]
+                    .filter(Boolean)
+                    .join(" · ") || "—"
+                }
+              />
+              <InfoRow
+                label="Estado"
+                value={student.leftAt ? "De baja" : "Activo"}
+              />
+              {student.leftAt && (
+                <>
+                  <InfoRow
+                    label="Fecha de baja"
+                    value={formatDay(student.leftAt)}
+                  />
+                  <InfoRow
+                    label="Motivo de la baja"
+                    value={
+                      [
+                        leftReasonLabel(student.leftReason),
+                        student.leftReasonDetail,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—"
+                    }
+                  />
+                </>
+              )}
             </dl>
             {student.notes && (
               <div className="mt-6">
@@ -786,6 +833,17 @@ function StatCell({
       </p>
     </div>
   );
+}
+
+/** "05 nov 2026" a partir de una fecha YYYY-MM-DD (sin desfase horario). */
+function formatDay(isoDate: string | null) {
+  if (!isoDate) return "—";
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDate}T12:00:00Z`));
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
