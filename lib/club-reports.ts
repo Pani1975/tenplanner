@@ -74,6 +74,13 @@ export function reportToday(now = new Date()): string {
   }).format(now);
 }
 
+/** Fecha (YYYY-MM-DD) de hace `days` días, contando desde hoy. */
+export function reportDaysAgo(days: number, now = new Date()): string {
+  const d = new Date(`${reportToday(now)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 function shortDate(isoDate: string) {
   const [y, m, d] = isoDate.split("-");
   return `${d}/${m}/${y}`;

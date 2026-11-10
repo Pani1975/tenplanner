@@ -19,6 +19,7 @@ import {
   loadClubReport,
   parseReportRange,
   rangeQuery,
+  reportDaysAgo,
   reportToday,
   REPORT_PERIODS,
 } from "@/lib/club-reports";
@@ -108,9 +109,7 @@ export default async function ManagementPage({
   });
   // Fechas por defecto al pasar a "Personalizado": los últimos 30 días.
   const today = reportToday();
-  const defaultFrom = new Date(Date.now() - 29 * 86_400_000)
-    .toISOString()
-    .slice(0, 10);
+  const defaultFrom = reportDaysAgo(29);
   const customFrom = range.kind === "custom" ? range.fromDate : defaultFrom;
   const customTo = range.kind === "custom" ? range.toDate : today;
 
