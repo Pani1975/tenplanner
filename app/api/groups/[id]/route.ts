@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { isValidScheduleEntry, sortSchedule } from "@/lib/groups/schedule";
+import { isLevelOfSport } from "@/lib/skill-levels";
+import { loadSkillLevels } from "@/lib/skill-levels-repo";
 
 async function ensureGroupsEnabled() {
   const groupsEnabled = await getBooleanSetting("feature.groups_enabled");
@@ -42,6 +44,9 @@ const updateSchema = z.object({
   weeklySchedule: z.array(scheduleEntrySchema).max(7).nullable().optional(),
   // Objetivos de trabajo del grupo (texto libre, uno por línea).
   objetivos: z.string().max(4000).nullable().optional(),
+  // Nivel por defecto (código de skill_levels de la escala del deporte del
+  // grupo); null lo quita.
+  defaultLevel: z.string().trim().min(1).max(32).nullable().optional(),
 });
 
 export async function GET(_req: Request, ctx: Ctx) {
@@ -116,7 +121,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     );
 
   const [existing] = await db
-    .select({ coachId: groups.coachId })
+    .select({ coachId: groups.coachId, sport: groups.sport })
     .from(groups)
     .where(eq(groups.id, id))
     .limit(1);
@@ -127,11 +132,22 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
   const { studentIds, weeklySchedule, ...fields } = parsed.data;
 
+  if (fields.defaultLevel) {
+    const levels = await loadSkillLevels();
+    if (!isLevelOfSport(levels, fields.defaultLevel, existing.sport)) {
+      return NextResponse.json(
+        { error: "Nivel desconocido para el deporte del grupo" },
+        { status: 422 }
+      );
+    }
+  }
+
   await db.transaction(async (tx) => {
     if (
       fields.name !== undefined ||
       fields.description !== undefined ||
       fields.objetivos !== undefined ||
+      fields.defaultLevel !== undefined ||
       weeklySchedule !== undefined
     ) {
       await tx
@@ -143,6 +159,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
             : {}),
           ...(fields.objetivos !== undefined
             ? { objetivos: fields.objetivos?.trim() || null }
+            : {}),
+          ...(fields.defaultLevel !== undefined
+            ? { defaultLevel: fields.defaultLevel }
             : {}),
           ...(weeklySchedule !== undefined
             ? {

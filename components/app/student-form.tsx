@@ -30,20 +30,8 @@ import {
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
-type PlayerLevel =
-  | "beginner"
-  | "amateur"
-  | "intermediate"
-  | "advanced"
-  | "competitive"
-  | "descubrimiento"
-  | "desarrollo"
-  | "consolidacion"
-  | "especializacion"
-  | "precompeticion"
-  | "competicion"
-  | "adultos_iniciacion"
-  | "adultos_medio_alto";
+// Código de skill_levels; la API comprueba que exista.
+type PlayerLevel = string;
 
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "El nombre es obligatorio").max(255),
@@ -70,24 +58,7 @@ const formSchema = z.object({
     .optional()
     .nullable(),
   dominantHand: z.enum(["left", "right"]).optional().nullable(),
-  playerLevel: z
-    .enum([
-      "beginner",
-      "amateur",
-      "intermediate",
-      "advanced",
-      "competitive",
-      "descubrimiento",
-      "desarrollo",
-      "consolidacion",
-      "especializacion",
-      "precompeticion",
-      "competicion",
-      "adultos_iniciacion",
-      "adultos_medio_alto",
-    ])
-    .optional()
-    .nullable(),
+  playerLevel: z.string().max(30).optional().nullable(),
   yearsExperience: z
     .union([z.coerce.number().int().min(0).max(80), z.literal("")])
     .optional()
@@ -131,14 +102,12 @@ const LEVELS: { id: PlayerLevel; label: string; desc: string }[] = [
   { id: "competicion", label: "Competición", desc: "14-18 años" },
 ];
 
-// Niveles legacy que pueden venir en datos antiguos. Se muestran si están
-// activos pero no se ofrecen como nueva selección.
+// Niveles válidos que ya no se ofrecen como nueva selección; se muestran si
+// el alumno los tiene. (Los antiguos intermediate/advanced se normalizaron
+// en la migración 0094.)
 const LEGACY_LEVEL_LABELS: Record<string, string> = {
-  beginner: "Principiante (legacy)",
-  amateur: "Amateur (legacy)",
-  intermediate: "Intermedio (legacy)",
-  advanced: "Avanzado (legacy)",
-  competitive: "Competitivo (legacy)",
+  familiarizacion: "Familiarización",
+  rendimiento: "Rendimiento",
   adultos_iniciacion: "Adultos iniciación (legacy)",
   adultos_medio_alto: "Adultos medio-alto (legacy)",
 };

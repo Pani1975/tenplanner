@@ -27,6 +27,9 @@ import { GroupEditDetails } from "./group-edit-details";
 import { AssignClassToGroupButton } from "@/components/app/assign-class-to-group-button";
 import { GroupScheduleEditor } from "./group-schedule-editor";
 import { GroupObjectivesEditor } from "./group-objectives-editor";
+import { GroupDefaultLevelEditor } from "./group-default-level-editor";
+import { skillLevelsForSport } from "@/lib/skill-levels";
+import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -169,6 +172,8 @@ export default async function GroupDetailPage({ params }: PageProps) {
     .limit(1);
 
   if (!group) notFound();
+
+  const groupLevels = skillLevelsForSport(await loadSkillLevels(), group.sport);
 
   const isOwner = group.coachId === user.id;
   const authorName = isOwner
@@ -368,6 +373,16 @@ export default async function GroupDetailPage({ params }: PageProps) {
           <GroupScheduleEditor
             groupId={id}
             initialSchedule={group.weeklySchedule}
+          />
+
+          <GroupDefaultLevelEditor
+            groupId={id}
+            initialLevel={group.defaultLevel}
+            levels={groupLevels.map(({ code, labelEs }) => ({
+              code,
+              labelEs,
+            }))}
+            canEdit={isOwner}
           />
 
           <div className="grid gap-4 lg:grid-cols-2">

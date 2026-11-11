@@ -4,6 +4,7 @@ import {
   varchar,
   text,
   integer,
+  smallint,
   timestamp,
   pgEnum,
   json,
@@ -121,6 +122,30 @@ export const sportEnum = pgEnum("sport", [
   "pickleball",
   "tenis_playa",
 ]);
+
+// Escalera de niveles (migración 0094). Catálogo: solo cambia con
+// migraciones. `position` ordena dentro de (sport, track); track "base" o
+// "adultos". Ver lib/skill-levels.ts.
+export const skillLevels = pgTable(
+  "skill_levels",
+  {
+    code: varchar("code", { length: 32 }).primaryKey(),
+    sport: sportEnum("sport").default("tenis").notNull(),
+    track: varchar("track", { length: 16 }).default("base").notNull(),
+    position: smallint("position").notNull(),
+    labelEs: varchar("label_es", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique("skill_levels_sport_track_position_uniq").on(
+      t.sport,
+      t.track,
+      t.position
+    ),
+  ]
+);
 
 // Users — id references auth.users(id) managed by Supabase Auth
 export const users = pgTable(
@@ -545,7 +570,11 @@ export const students = pgTable(
     heightCm: integer("height_cm"),
     weightKg: integer("weight_kg"),
     dominantHand: varchar("dominant_hand", { length: 10 }), // "left" | "right"
-    playerLevel: varchar("player_level", { length: 30 }), // ahora admite los 8 niveles PMV
+    // Código de skill_levels (FK desde la migración 0094). null = sin nivel.
+    playerLevel: varchar("player_level", { length: 30 }).references(
+      () => skillLevels.code,
+      { onDelete: "set null", onUpdate: "cascade" }
+    ),
     yearsExperience: integer("years_experience"),
     yearStartedTennis: integer("year_started_tennis"),
     yearStartedRacketSports: integer("year_started_racket_sports"),
@@ -796,6 +825,12 @@ export const groups = pgTable(
     // Objetivos de trabajo del grupo: texto libre, uno por línea. Se pueden
     // cargar del catálogo de Objetivos o escribir a mano.
     objetivos: text("objetivos"),
+    // Nivel por defecto del grupo (código de skill_levels): respaldo cuando
+    // los asistentes del día no tienen nivel. null = sin definir.
+    defaultLevel: varchar("default_level", { length: 32 }).references(
+      () => skillLevels.code,
+      { onDelete: "set null", onUpdate: "cascade" }
+    ),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

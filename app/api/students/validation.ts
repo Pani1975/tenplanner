@@ -2,26 +2,34 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAllowedImageUrl } from "@/lib/url-safety";
 import { HOW_FOUND_IDS, LEFT_REASON_IDS } from "@/lib/students/membership";
+import { invalidSkillLevelCodes } from "@/lib/skill-levels-repo";
 
 export const genderSchema = z.enum(["male", "female", "other"]);
 export const dominantHandSchema = z.enum(["left", "right"]);
-export const playerLevelSchema = z.enum([
-  // Legacy (compat con datos existentes)
-  "beginner",
-  "amateur",
-  "intermediate",
-  "advanced",
-  "competitive",
-  // PMV 260506 — niveles por edad
-  "descubrimiento",
-  "desarrollo",
-  "consolidacion",
-  "especializacion",
-  "precompeticion",
-  "competicion",
-  "adultos_iniciacion",
-  "adultos_medio_alto",
-]);
+// Código de nivel. Que exista se comprueba contra la tabla skill_levels con
+// rejectInvalidPlayerLevels (la columna tiene FK desde la migración 0094).
+export const playerLevelSchema = z.string().trim().min(1).max(30);
+
+/** 400 si algún nivel no existe en skill_levels; null si todos valen. */
+export async function rejectInvalidPlayerLevels(
+  codes: readonly (string | null | undefined)[]
+): Promise<NextResponse | null> {
+  const invalid = await invalidSkillLevelCodes(codes);
+  if (invalid.length === 0) return null;
+  return NextResponse.json(
+    {
+      error: "Validation failed",
+      details: [
+        {
+          path: "playerLevel",
+          message: `Nivel desconocido: ${invalid.join(", ")}`,
+          code: "invalid_level",
+        },
+      ],
+    },
+    { status: 400 }
+  );
+}
 
 export const studentIdParamsSchema = z.object({
   id: z.string().uuid("El ID del alumno debe ser un UUID válido"),

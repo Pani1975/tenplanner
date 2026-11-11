@@ -1269,13 +1269,18 @@ ${profile ? buildUserContext(profile, sessionCount) : "Sin datos"}
           "Crea un perfil de alumno rápido con nombre y nivel. Usar solo cuando el entrenador confirme que quiere crear un alumno.",
         inputSchema: z.object({
           name: z.string().describe("Nombre del alumno"),
+          // Códigos de skill_levels (antes solo admitía la escala antigua,
+          // que la FK de la migración 0094 ya no acepta).
           playerLevel: z
             .enum([
-              "beginner",
-              "amateur",
-              "intermediate",
-              "advanced",
-              "competitive",
+              "descubrimiento",
+              "desarrollo",
+              "consolidacion",
+              "especializacion",
+              "precompeticion",
+              "competicion",
+              "adultos_iniciacion",
+              "adultos_medio_alto",
             ])
             .optional(),
           notes: z.string().optional(),

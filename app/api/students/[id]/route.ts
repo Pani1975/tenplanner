@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { geocodeLocality } from "@/lib/geo/geocode";
 import {
+  rejectInvalidPlayerLevels,
   studentIdParamsSchema,
   updateStudentSchema,
   zodValidationErrorResponse,
@@ -80,6 +81,10 @@ export async function PUT(request: Request, context: StudentRouteContext) {
 
   const parsedBody = updateStudentSchema.safeParse(body);
   if (!parsedBody.success) return zodValidationErrorResponse(parsedBody.error);
+  const badLevel = await rejectInvalidPlayerLevels([
+    parsedBody.data.playerLevel,
+  ]);
+  if (badLevel) return badLevel;
 
   try {
     const [existing] = await db

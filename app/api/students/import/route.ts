@@ -13,7 +13,7 @@ import {
   IMPORT_MAX_ROWS,
   normalizeText,
 } from "@/lib/students/import";
-import { playerLevelSchema } from "../validation";
+import { playerLevelSchema, rejectInvalidPlayerLevels } from "../validation";
 
 // Importación de alumnos en bloque desde un Excel o CSV ya leído en el
 // navegador. Solo la cuenta del club (gestor). Sin IA: el servidor vuelve a
@@ -97,6 +97,11 @@ export async function POST(request: Request) {
     );
   }
   const { rows, dryRun } = parsed.data;
+
+  const badLevel = await rejectInvalidPlayerLevels(
+    rows.map((r) => r.playerLevel)
+  );
+  if (badLevel) return badLevel;
 
   try {
     // Alumnos que ya existen en el club: mismo nombre y fecha de
