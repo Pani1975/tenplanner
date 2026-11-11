@@ -568,26 +568,15 @@ export default async function DashboardPage() {
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
       <div className="flex w-full flex-col gap-8 px-4 py-6 sm:px-6 md:px-10 md:py-8">
-        <header
-          className={
-            workMode.kind === "club"
-              ? "tp-hero-panel relative overflow-hidden rounded-lg p-5 text-white sm:p-6"
-              : "relative overflow-hidden rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_18px_60px_rgba(5,5,5,0.06)] dark:border-white/10 dark:bg-white/[0.045] sm:p-6"
-          }
-        >
+        {/* Cabecera negra en todos los modos (particular y club). */}
+        <header className="tp-hero-panel relative overflow-hidden rounded-lg p-5 text-white sm:p-6">
           <div
             aria-hidden
             className="court-grid pointer-events-none absolute inset-0 opacity-45 dark:opacity-25"
           />
           <div className="relative flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p
-                className={
-                  workMode.kind === "club"
-                    ? "mb-2 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[12px] font-semibold text-[#050505]"
-                    : "mb-2 inline-flex rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[12px] font-semibold text-foreground/60 dark:bg-[#050505]/70"
-                }
-              >
+              <p className="mb-2 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[12px] font-semibold text-[#050505]">
                 {formatLongDate(now)}
               </p>
               {workMode.kind === "club" ? (
@@ -611,7 +600,7 @@ export default async function DashboardPage() {
                 Nueva sesión
               </Link>
             ) : (
-              <span className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-muted/30 px-4 text-[13px] text-foreground/45">
+              <span className="inline-flex h-10 items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 text-[13px] text-white/55">
                 <Lock className="size-4" />
                 Sesiones bloqueadas
               </span>
