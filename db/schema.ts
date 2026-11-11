@@ -162,6 +162,10 @@ export const users = pgTable(
     // estadísticas de monitores y alumnos del club, y gestión de monitores.
     // Solo consulta; activeClubId sigue apuntando a su club.
     managementMode: boolean("management_mode").default(false).notNull(),
+    // DEPRECADO: no usar. Columna de la migración 0066_user_ten_planner_mode,
+    // que sigue en producción. El "Modo Ten Planner" se deduce hoy de
+    // isPlatformAccount y adminMode (ver app/(app)/layout.tsx).
+    tenPlannerMode: boolean("ten_planner_mode").default(false).notNull(),
     // Deporte activo: el contexto que filtra todo lo que el usuario ve y
     // crea (sesiones, biblioteca, grupos...). Se elige y cambia desde el
     // selector de deporte, no por elemento. Independiente de activeClubId:
@@ -194,6 +198,10 @@ export const exercises = pgTable(
     // (una AnimationScene de lib/classes/animation.ts). Null = se deduce
     // del texto.
     animationScene: varchar("animation_scene", { length: 24 }),
+    // Existe en producción y ningún código la usa todavía (la animación sale
+    // de animationScene y del texto). Se declara para que schema.ts coincida
+    // con la base; no borrar.
+    animation: json("animation"),
     steps: json("steps").$type<Array<{ title: string; description: string }>>(),
     materials: json("materials").$type<string[]>(),
     imageUrl: text("image_url"),
@@ -263,6 +271,19 @@ export const exercises = pgTable(
     index("exercises_autoria_idx").on(t.autoria),
     index("exercises_sport_idx").on(t.sport),
     index("exercises_club_id_idx").on(t.clubId),
+    // Índices creados por migraciones SQL (0010, 0015, 0017, 0027) que ya
+    // existen en producción; se declaran aquí para que schema.ts los refleje.
+    index("exercises_name_trgm_idx").using("gin", t.name.op("gin_trgm_ops")),
+    index("exercises_formato_idx").on(t.formato),
+    index("exercises_tipo_actividad_idx").on(t.tipoActividad),
+    index("exercises_tipo_pelota_idx").on(t.tipoPelota),
+    index("exercises_num_jugadores_idx").on(t.numJugadores),
+    index("exercises_niveles_gin_idx").using("gin", t.niveles),
+    index("exercises_aspectos_juego_gin_idx").using("gin", t.aspectosJuego),
+    index("exercises_parametros_gin_idx").using("gin", t.parametros),
+    index("exercises_tipos_actividad_gin_idx").using("gin", t.tiposActividad),
+    index("exercises_fases_gin_idx").using("gin", t.fases),
+    index("exercises_tipo_competicion_gin_idx").using("gin", t.tipoCompeticion),
   ]
 );
 
@@ -375,6 +396,10 @@ export const sessions = pgTable(
     coachComment: text("coach_comment"),
     // Valoración global de la clase (1-5), obligatoria al terminar la sesión en marcha.
     coachRating: integer("coach_rating"),
+    // DEPRECADO: no usar. Viene de la migración 0084 de s-pl; existe en
+    // producción, nunca se ha rellenado. La valoración de la sesión es
+    // coachRating. Ver docs/f1-plan.md ("Tres campos de valoración").
+    sessionRating: integer("session_rating"),
     // Cierre: ¿se dio tal y como estaba planificada? (null = sin responder)
     // y motivo del cambio (clave de lib/sessions/plan-change.ts, opcional).
     planFollowed: boolean("plan_followed"),
@@ -400,6 +425,9 @@ export const sessions = pgTable(
     index("sessions_sport_idx").on(t.sport),
     index("sessions_group_id_idx").on(t.groupId),
     index("sessions_coach_id_idx").on(t.coachId),
+    // Ya existen en producción (migraciones 0015 y 0026).
+    index("sessions_source_class_id_idx").on(t.sourceClassId),
+    index("sessions_title_trgm_idx").using("gin", t.title.op("gin_trgm_ops")),
   ]
 );
 
@@ -565,6 +593,8 @@ export const students = pgTable(
     index("students_coach_id_idx").on(t.coachId),
     index("students_coach_name_idx").on(t.coachId, t.name),
     index("students_club_id_idx").on(t.clubId),
+    // Ya existe en producción (migración 0015).
+    index("students_name_trgm_idx").using("gin", t.name.op("gin_trgm_ops")),
   ]
 );
 
@@ -1091,7 +1121,10 @@ export const classes = pgTable(
     // Autoría de la clase: "ten_planner" | "libre" | el id de un
     // monitor/academia dado de alta (p. ej. "academia_christian_larsen").
     // Mismo campo/semántica que exercises.autoria (ver comentario allí).
-    autoria: varchar("autoria", { length: 64 }).default("libre"),
+    // En producción es varchar(100) NOT NULL con default 'ten_planner'; la
+    // app sigue mandando "libre" si no se indica otra (no cambiar sin revisar
+    // quién crea clases sin autoría).
+    autoria: varchar("autoria", { length: 100 }).default("libre").notNull(),
     // null = clase particular. Se asigna cuando el monitor crea esta clase
     // en nombre de un club al que está vinculado.
     clubId: uuid("club_id").references(() => clubs.id, {
@@ -1701,7 +1734,8 @@ export const classDraftsRelations = relations(classDrafts, ({ one }) => ({
 // Landing page editable content (admin-managed copy)
 export const landingContent = pgTable("landing_content", {
   key: varchar("key", { length: 80 }).primaryKey(),
-  value: json("value").$type<unknown>().notNull(),
+  // jsonb en producción.
+  value: jsonb("value").$type<unknown>().notNull(),
   type: varchar("type", { length: 20 }).notNull().default("string"),
   label: varchar("label", { length: 200 }),
   updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -1770,6 +1804,20 @@ export const aiDocumentEmbeddings = pgTable(
     index("ai_doc_embeddings_owner_source_idx").on(t.ownerId, t.source),
     index("ai_doc_embeddings_source_id_idx").on(t.source, t.sourceId),
     index("ai_doc_embeddings_hash_idx").on(t.contentHash),
+    // Creados por la migración 0022; ya existen en producción.
+    uniqueIndex("ai_doc_embeddings_global_source_uniq")
+      .on(t.source, t.sourceId)
+      .where(sql`${t.ownerId} IS NULL`),
+    uniqueIndex("ai_doc_embeddings_owner_source_uniq")
+      .on(t.ownerId, t.source, t.sourceId)
+      .where(sql`${t.ownerId} IS NOT NULL`),
+    // OJO: producción sigue con vector(1536) y este índice de la 0022 porque
+    // la migración 0083 (Voyage, 1024 dim.) nunca se aplicó allí. Ver
+    // docs/handoff.md.
+    index("ai_doc_embeddings_embedding_hnsw_idx").using(
+      "hnsw",
+      t.embedding.op("vector_cosine_ops")
+    ),
   ]
 );
 
