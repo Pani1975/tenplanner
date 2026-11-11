@@ -4,7 +4,6 @@ import {
   desc,
   eq,
   gte,
-  ilike,
   inArray,
   lte,
   or,
@@ -36,6 +35,7 @@ import {
   zodValidationErrorResponse,
 } from "./validation";
 import { getActiveSport } from "@/lib/sports";
+import { exerciseSearchCondition } from "@/lib/exercises/search";
 
 function internalServerError() {
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -148,7 +148,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
-    whereConditions.push(ilike(exercises.name, `%${search}%`));
+    const searchWhere = exerciseSearchCondition(search);
+    if (searchWhere) whereConditions.push(searchWhere);
   }
 
   if (formato?.length)

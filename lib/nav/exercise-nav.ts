@@ -9,7 +9,6 @@ import {
   asc,
   desc,
   eq,
-  ilike,
   inArray,
   or,
   sql,
@@ -27,6 +26,7 @@ import {
 } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
+import { exerciseSearchCondition } from "@/lib/exercises/search";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -228,10 +228,7 @@ export async function getFilteredExerciseIds(
   if (activeDifficulty !== "all")
     conditions.push(eq(exercisesTable.difficulty, activeDifficulty));
   if (searchTerm) {
-    const searchWhere = or(
-      ilike(exercisesTable.name, `%${searchTerm}%`),
-      ilike(exercisesTable.description, `%${searchTerm}%`)
-    );
+    const searchWhere = exerciseSearchCondition(searchTerm);
     if (searchWhere) conditions.push(searchWhere);
   }
   if (activeFormato.length > 0)
