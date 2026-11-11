@@ -6,7 +6,11 @@ import { students, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { geocodeLocality } from "@/lib/geo/geocode";
-import { createStudentSchema, zodValidationErrorResponse } from "./validation";
+import {
+  createStudentSchema,
+  rejectInvalidPlayerLevels,
+  zodValidationErrorResponse,
+} from "./validation";
 
 function internalServerError() {
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -82,6 +86,9 @@ export async function POST(request: Request) {
   }
 
   const d = parsed.data;
+
+  const badLevel = await rejectInvalidPlayerLevels([d.playerLevel]);
+  if (badLevel) return badLevel;
 
   try {
     await ensureUser(user);
