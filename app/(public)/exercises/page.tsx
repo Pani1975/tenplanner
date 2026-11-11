@@ -13,7 +13,6 @@ import {
   and,
   count,
   eq,
-  ilike,
   inArray,
   or,
   sql,
@@ -23,6 +22,7 @@ import {
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { spaceLabels } from "@/lib/space-labels";
 import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
+import { exerciseSearchCondition } from "@/lib/exercises/search";
 import { FavoriteToggle } from "@/components/app/favorite-toggle";
 import { AddToSessionButton } from "@/components/app/add-to-session-dialog";
 import { AddToClassButton } from "@/components/app/add-to-class-dialog";
@@ -359,10 +359,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     if (activeDifficulty !== "all")
       listConditions.push(eq(exercisesTable.difficulty, activeDifficulty));
     if (searchTerm) {
-      const searchWhere = or(
-        ilike(exercisesTable.name, `%${searchTerm}%`),
-        ilike(exercisesTable.description, `%${searchTerm}%`)
-      );
+      const searchWhere = exerciseSearchCondition(searchTerm);
       if (searchWhere) listConditions.push(searchWhere);
     }
 
@@ -529,7 +526,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       })
       .from(exercisesTable)
       .where(listWhere)
-      .orderBy(...exerciseOrderBy(activeSort))
+      .orderBy(...exerciseOrderBy(activeSort, searchTerm))
       .limit(PAGE_SIZE + 1)
       .offset(offset),
     db.select({ total: count() }).from(exercisesTable).where(allVisibleWhere),

@@ -9,7 +9,6 @@ import {
   asc,
   desc,
   eq,
-  ilike,
   inArray,
   or,
   sql,
@@ -27,6 +26,10 @@ import {
 } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
+import {
+  exerciseSearchCondition,
+  exerciseSearchNameRank,
+} from "@/lib/exercises/search";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -85,7 +88,13 @@ const POPULARITY_SQL = sql`(select count(*)::int from session_exercises se where
  * page's display query and the nav-ids query so pagination and Next/Previous
  * always reflect the same order the coach sees on screen.
  */
-export function exerciseOrderBy(sort: ExerciseSort) {
+export function exerciseOrderBy(sort: ExerciseSort, searchTerm = "") {
+  // Con texto en el buscador y el orden por defecto, primero los ejercicios
+  // cuyo nombre contiene lo buscado; si no, quedan mezclados con los que
+  // solo lo llevan en etiquetas o descripción.
+  const nameRank =
+    sort === "alpha" ? exerciseSearchNameRank(searchTerm) : undefined;
+  if (nameRank) return [nameRank, asc(exercisesTable.name)];
   switch (sort) {
     case "popular":
       return [sql`${POPULARITY_SQL} desc`, asc(exercisesTable.name)];
@@ -228,10 +237,7 @@ export async function getFilteredExerciseIds(
   if (activeDifficulty !== "all")
     conditions.push(eq(exercisesTable.difficulty, activeDifficulty));
   if (searchTerm) {
-    const searchWhere = or(
-      ilike(exercisesTable.name, `%${searchTerm}%`),
-      ilike(exercisesTable.description, `%${searchTerm}%`)
-    );
+    const searchWhere = exerciseSearchCondition(searchTerm);
     if (searchWhere) conditions.push(searchWhere);
   }
   if (activeFormato.length > 0)
@@ -345,7 +351,7 @@ export async function getFilteredExerciseIds(
     .select({ id: exercisesTable.id })
     .from(exercisesTable)
     .where(where)
-    .orderBy(...exerciseOrderBy(sort))
+    .orderBy(...exerciseOrderBy(sort, searchTerm))
     .limit(2000);
 
   return rows.map((r) => r.id);
