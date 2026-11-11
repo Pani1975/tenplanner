@@ -81,6 +81,7 @@ export type AnimationScene =
   | "circuit"
   | "minitennis"
   | "neutral"
+  | "talk"
   | "rest"
   | "cooldown";
 
@@ -180,6 +181,7 @@ export const ANIMATION_SCENES: readonly AnimationScene[] = [
   "circuit",
   "minitennis",
   "neutral",
+  "talk",
   "rest",
   "cooldown",
 ];
@@ -210,11 +212,29 @@ function sceneFor(
   blockCount: number,
   isRest: boolean,
   kind: BlockItemKind,
-  text: string
+  title: string,
+  body: string
 ): AnimationScene {
   if (isRest) return "rest";
-  const t = text.toLowerCase();
   if (kind === "stations") return "stations";
+  const isFirst = blockPos === 0 && blockCount > 1;
+  const isLast = blockPos === blockCount - 1 && blockCount > 1;
+  // El título manda (es lo más concreto); si no dice nada, la descripción.
+  return (
+    sceneFromText(title.toLowerCase(), isFirst, isLast, true) ??
+    sceneFromText(`${title} ${body}`.toLowerCase(), isFirst, isLast, false) ??
+    // Sin organización reconocible: cesta con el monitor; al final de la
+    // clase, la charla de cierre.
+    (isLast ? "talk" : "neutral")
+  );
+}
+
+function sceneFromText(
+  t: string,
+  isFirst: boolean,
+  isLast: boolean,
+  isTitle: boolean
+): AnimationScene | null {
   const isGame = /\bvidas\b|eliminad/.test(t);
   // Ejercicios con organización propia, en cualquier bloque.
   // (En la torre/tee "espejo" describe las sombras, no el ejercicio.)
@@ -227,23 +247,41 @@ function sceneFor(
     /\b(rey|reina) de la pista|\bpuntos? en (el|los) cuadros? de saque/.test(t)
   )
     return "points";
-  if (blockPos === 0 && blockCount > 1) {
-    if (/pelote[oa]n?\b|\bpelotear\b/.test(t)) return "pairs";
-    if (/\baros?\b/.test(t) && /\bequipos?\b|relevo/.test(t)) return "relay";
-    // Sin una pista clara, mejor no inventar la organización.
-    if (/\bcorr|carrera|movilidad|trote|desplazamiento/.test(t))
-      return "warmup";
-    return "neutral";
-  }
-  if (blockPos === blockCount - 1 && blockCount > 1) {
-    if (!/estiramiento/.test(t) && isGame) return "game";
-    if (/estira|respira|relaj|calma|\bcorro\b/.test(t)) return "cooldown";
-    return "neutral";
-  }
+  // Charla, pizarra, objetivos o trabajo mental sin pelota.
+  if (
+    /pizarra|charla|visualiza|reflexi|autoan[aá]lisis|objetivo del d[ií]a|compromiso|\bfrase\b|en dos palabras|\bdiario\b|rutina mental|plan de partido|repaso de|puesta en com[uú]n|\bvalores\b|comunicaci[oó]n con/.test(
+      t
+    ) &&
+    !/\bpelotea|\bcesta\b|\bpuntos?\b.*\bjuega/.test(t)
+  )
+    return "talk";
+  if (/estira|respira|relaj|vuelta a la calma|\bcorro\b|masaje/.test(t))
+    return "cooldown";
+  if (isFirst && /pelote[oa]n?\b|\bpelotear\b/.test(t)) return "pairs";
+  if (/\brelevos?\b/.test(t) || (/\baros?\b/.test(t) && /\bequipos?\b/.test(t)))
+    return "relay";
+  if (/malabar|toques|(sobre|encima de) las cuerdas|autotoque/.test(t))
+    return "juggle";
+  if (
+    /\bpilla|\bpillar|persecuci|\bpolic[ií]as\b|\bladrones\b|atrapa(r)? a/.test(
+      t
+    )
+  )
+    return "tag";
+  if (
+    !(isTitle && /raqueta|pelota|\bbola\b/.test(t)) &&
+    /escalera|coordinaci|sprint|pliometr|\bcore\b|\bfuerza\b|saltos?\b|comba|\bgomas?\b|movilidad|equilibrio|activaci[oó]n f[ií]sica|circuito|autocargas|preventiv|\bhombro\b/.test(
+      t
+    )
+  )
+    return isFirst ? "warmup" : "circuit";
+  if (isFirst && /\bcorr(e|er|en|iendo)\b|carrera|trote|desplazamiento/.test(t))
+    return "warmup";
   if (/\btorre\b|\btee\b/.test(t)) return "tee";
   // "zona de servicio" es solo un lugar de la pista, no un saque.
   if (
     /\bsaque\b|\bsacar[aá]n?\b|\bsirven\b/.test(t) ||
+    (isTitle && /\brestos?\b/.test(t)) ||
     /(?<!zona de )\bservicio\b/.test(t)
   )
     return "serve";
@@ -252,14 +290,32 @@ function sceneFor(
   if (/guiad|mano sobre|acompaña/.test(t)) return "guided";
   if (/\bsombra\b/.test(t)) return "shadow";
   if (isGame) return "game";
-  if (/malabar|toques|(sobre|encima de) las cuerdas|equilibrio/.test(t))
-    return "juggle";
+  if (/mini-?tenis|cuadros? de saque/.test(t)) return "minitennis";
+  if (
+    /\bvoleas?\b|\bvolear\b|\bremates?\b|\bglobos?\b|\ben la red\b|aproximaci/.test(
+      t
+    )
+  )
+    return "volley";
+  if (
+    /\bpartidos?\b|\bpuntos?\b|\bdobles\b|\bjuegos?\b|\bset\b|tie-?break|\bmarcador\b|\bventaja\b/.test(
+      t
+    )
+  )
+    return "match";
+  if (/\bcesta\b|\bcesto\b/.test(t)) return "neutral";
+  if (
+    /pelote[oa]n?\b|\bpelotear\b|\bcruzad|\bparalelo|\brally\b|intercambio/.test(
+      t
+    )
+  )
+    return "pairs";
   if (
     /\b(monitor|entrenador|profesor)\b/.test(t) &&
     /\blanz|aliment|\benv[ií]a/.test(t)
   )
     return "rally";
-  return "neutral";
+  return null;
 }
 
 const LABEL_RE = /^([A-ZÁÉÍÓÚÑa-záéíóúñ][\wÁÉÍÓÚÑáéíóúñ ]{1,22}):\s+(.+)$/;
@@ -402,13 +458,7 @@ export function buildAnimationTimeline(
         scene:
           !isRest && isAnimationScene(item.animationScene)
             ? item.animationScene
-            : sceneFor(
-                blockPos,
-                ordered.length,
-                isRest,
-                kind,
-                `${title} ${body}`
-              ),
+            : sceneFor(blockPos, ordered.length, isRest, kind, title, body),
         minutes,
         classStartMin: classMin,
         ...(!isRest && item.diagram ? { diagram: item.diagram } : {}),
