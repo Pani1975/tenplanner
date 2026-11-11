@@ -15,7 +15,27 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ShareButton } from "@/components/app/share-button";
-import { DiagramClip } from "@/components/app/exercise-diagram-clip";
+import {
+  DiagramLayer,
+  diagramCaption,
+} from "@/components/app/exercise-diagram-clip";
+import {
+  BallMarker,
+  BlockStripe,
+  COURT,
+  CoachMarker,
+  ConeMarker,
+  CourtBase,
+  H,
+  MID_Y,
+  NET_X,
+  SERVICE_LEFT_X,
+  SERVICE_RIGHT,
+  SINGLES_BOTTOM,
+  SINGLES_TOP,
+  StudentMarker,
+  W,
+} from "@/components/app/class-court";
 import { cn } from "@/lib/utils";
 import {
   buildAnimationTimeline,
@@ -339,6 +359,7 @@ export function ClassAnimationPlayer({
   const clockMin = classMinuteAt(timeline, t);
   const ended = t >= timeline.totalSeconds;
   const blockCount = new Set(steps.map((s) => s.blockIndex)).size;
+  const ballColor = ballColorFor(name);
 
   // Saltar a la actividad anterior / siguiente. "Anterior" vuelve al
   // principio de la actual si ya se lleva un rato en ella.
@@ -407,21 +428,14 @@ export function ClassAnimationPlayer({
       <div className="grid gap-4 px-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         {/* Pista animada */}
         <div className="relative self-start overflow-hidden rounded-lg border border-white/10 bg-[#0B1A2B]">
-          {phase === "steps" && step?.diagram ? (
-            <DiagramClip
-              diagram={step.diagram}
-              time={reduceMotion ? 0 : t - step.start}
-            />
-          ) : (
-            <Court
-              timeline={timeline}
-              t={t}
-              step={step}
-              phase={phase}
-              ballColor={ballColorFor(name)}
-              reduceMotion={reduceMotion}
-            />
-          )}
+          <Court
+            timeline={timeline}
+            t={t}
+            step={step}
+            phase={phase}
+            ballColor={ballColor}
+            reduceMotion={reduceMotion}
+          />
           <AnimatePresence>
             {phase === "outro" && (
               <motion.div
@@ -446,8 +460,14 @@ export function ClassAnimationPlayer({
               </motion.div>
             )}
           </AnimatePresence>
-          <SceneLegend
-            scene={phase === "steps" && step && !step.diagram ? step.scene : null}
+          <CourtCaption
+            text={
+              phase !== "steps" || !step
+                ? null
+                : step.diagram
+                  ? diagramCaption(step.diagram, t - step.start)
+                  : (SCENE_LEGEND[step.scene] ?? null)
+            }
           />
         </div>
 
@@ -733,27 +753,33 @@ const SCENE_LEGEND: Partial<Record<AnimationScene, string>> = {
   match: "Puntos desde el fondo · el resto espera turno",
   circuit: "Circuito de coordinación",
   minitennis: "Minitenis en los cuadros de saque",
+  neutral: "Cesta: el monitor lanza y el alumno golpea; rotan en fila",
+  talk: "Charla con el monitor en la pizarra",
   rest: "Descanso",
   cooldown: "Estiramientos en corro",
 };
 
-function SceneLegend({ scene }: { scene: AnimationScene | null }) {
+/**
+ * Pie de la pista: qué organización se ve (escena genérica) o la frase del
+ * esquema del ejercicio. Mismo sitio y estilo en todas las actividades.
+ */
+function CourtCaption({ text }: { text: string | null }) {
   return (
-    <div className="pointer-events-none absolute left-2 top-2 flex items-center gap-2">
-      <AnimatePresence mode="wait">
-        {scene && SCENE_LEGEND[scene] && (
+    <p className="flex min-h-[2.6em] items-center justify-center px-3 pb-2 pt-1.5 text-center text-xs font-medium leading-snug text-white/80">
+      <AnimatePresence mode="wait" initial={false}>
+        {text && (
           <motion.span
-            key={scene}
-            initial={{ opacity: 0, y: -4 }}
+            key={text}
+            initial={{ opacity: 0, y: 3 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="rounded-full bg-[#050505]/70 px-2 py-0.5 text-[10.5px] font-semibold text-white/85"
+            transition={{ duration: 0.2 }}
           >
-            {SCENE_LEGEND[scene]}
+            {text}
           </motion.span>
         )}
       </AnimatePresence>
-    </div>
+    </p>
   );
 }
 
@@ -761,17 +787,6 @@ function SceneLegend({ scene }: { scene: AnimationScene | null }) {
 // Pista (SVG) — escenas calculadas a partir del tiempo, sin estado
 // ---------------------------------------------------------------------
 
-const W = 400;
-const H = 210;
-const COURT = { x: 40, y: 30, w: 320, h: 150 };
-const NET_X = COURT.x + COURT.w / 2;
-const MID_Y = COURT.y + COURT.h / 2;
-/** Líneas laterales de individuales (el pasillo de dobles queda fuera). */
-const SINGLES_TOP = COURT.y + COURT.h * 0.125;
-const SINGLES_BOTTOM = COURT.y + COURT.h * 0.875;
-/** Líneas de saque de cada campo. */
-const SERVICE_LEFT_X = COURT.x + COURT.w * 0.22;
-const SERVICE_RIGHT = COURT.x + COURT.w * 0.78;
 const STUDENTS = 4;
 
 type Pt = { x: number; y: number };
@@ -850,6 +865,10 @@ interface SceneFrame {
   alleys?: boolean;
   /** Textos sobre la pista (p. ej. "+1", "Reina"). */
   labels?: { at: Pt; text: string; opacity: number }[];
+  /** Cesta de bolas del monitor. */
+  basket?: Pt;
+  /** Pizarra del monitor; `ink` (0-1) es cuánto lleva dibujado. */
+  board?: Pt & { ink: number };
 }
 
 // --- Reina de la pista: secuencia de golpes por variante ---------------
@@ -1636,13 +1655,80 @@ function sceneFrame(
       };
     }
     case "neutral": {
-      // Sin organización concreta: los alumnos esperan junto al monitor
-      // mientras se explica el ejercicio.
-      const students = Array.from({ length: STUDENTS }, (_, i) => ({
-        x: NET_X + 40 + i * 26,
-        y: MID_Y + (still ? 0 : Math.sin(tt * 1.4 + i) * 2),
-      }));
-      return { coach: { x: NET_X - 10, y: MID_Y }, students, balls: [] };
+      // Cesta: el monitor, cerca y con la cesta, lanza al primero de la fila;
+      // golpea, la bola cruza la red y pasa al final de la fila. Así cada
+      // actividad sin organización propia se ve como un ejercicio de golpeo.
+      const coach = { x: NET_X + 34, y: MID_Y - 6 };
+      const spot = { x: NET_X + 78, y: MID_Y + 10 };
+      const queue = (k: number) => ({
+        x: NET_X + 112 + k * 18,
+        y: COURT.y + COURT.h - 18,
+      });
+      const target = { x: COURT.x + 70, y: MID_Y - 26 };
+      const cycleLen = 2.4;
+      const turn = Math.floor(tt / cycleLen);
+      const c = (tt % cycleLen) / cycleLen;
+      const students = Array.from({ length: STUDENTS }, (_, i) => {
+        // Puesto de cada alumno en la fila en este turno (0 = golpea).
+        const pos = (i - turn + STUDENTS * 1000) % STUDENTS;
+        const prevPos = (pos + 1) % STUDENTS;
+        const at = (k: number) => (k === 0 ? spot : queue(k - 1));
+        // Al empezar el turno cada uno avanza un puesto.
+        const move = ease(c / 0.25);
+        if (still) return at(pos);
+        if (pos === STUDENTS - 1) {
+          // El que acaba de golpear vuelve rodeando por fuera.
+          const from = at(0);
+          const to = at(pos);
+          const mid = { x: (from.x + to.x) / 2 + 10, y: COURT.y + COURT.h + 8 };
+          return move < 0.5
+            ? lerpPt(from, mid, move * 2)
+            : lerpPt(mid, to, (move - 0.5) * 2);
+        }
+        return lerpPt(at(prevPos), at(pos), move);
+      });
+      const basket = { x: coach.x + 12, y: coach.y + 12 };
+      let balls: SceneFrame["balls"] = [];
+      if (!still) {
+        if (c >= 0.25 && c < 0.55)
+          balls = [airFlight(coach, spot, (c - 0.25) / 0.3, 10)];
+        else if (c >= 0.55 && c < 0.95)
+          balls = [flight(spot, target, (c - 0.55) / 0.4, 30)];
+      }
+      return {
+        coach,
+        students,
+        balls,
+        basket,
+        cones: [target],
+      };
+    }
+    case "talk": {
+      // Charla en la pizarra: alumnos sentados en semicírculo atendiendo y
+      // el monitor explica dibujando.
+      const board = { x: NET_X - 46, y: MID_Y - 30 };
+      const coach = {
+        x: board.x + 30 + (still ? 0 : Math.sin(tt * 0.9) * 6),
+        y: board.y + 18,
+      };
+      const students = Array.from({ length: STUDENTS }, (_, i) => {
+        const a = Math.PI * (0.15 + (0.7 * i) / (STUDENTS - 1));
+        return {
+          x: board.x + Math.cos(a) * 62 + 10,
+          y:
+            board.y +
+            20 +
+            Math.sin(a) * 58 +
+            (still ? 0 : Math.sin(tt * 2 + i) * 1.2),
+        };
+      });
+      const ink = still ? 1 : (tt % 6) / 5;
+      return {
+        coach,
+        students,
+        balls: [],
+        board: { ...board, ink: Math.min(1, ink) },
+      };
     }
     case "rest": {
       // Todos al banco, junto a la red.
@@ -1698,20 +1784,26 @@ function Court({
 }) {
   const steps = timeline.steps;
   const idx = step ? steps.indexOf(step) : -1;
+  const diagram = phase === "steps" && step?.diagram ? step.diagram : null;
   const scene: AnimationScene | "idle" =
     phase === "steps" && step ? step.scene : "idle";
-  const prevScene: AnimationScene | "idle" =
-    idx > 0 ? steps[idx - 1].scene : "idle";
+  const prevStep = idx > 0 ? steps[idx - 1] : null;
+  const prevScene: AnimationScene | "idle" = prevStep ? prevStep.scene : "idle";
 
   // Cada escena empieza desde su principio al llegar a la actividad.
   const localT = step ? Math.max(0, t - step.start) : t;
   let frame = sceneFrame(scene, localT, reduceMotion);
-  // Transición suave entre escenas: los jugadores se desplazan a su nueva
-  // posición en lugar de saltar; bolas y material aparecen al llegar.
-  if (step && prevScene !== scene && !reduceMotion) {
+  // Transición suave entre escenas genéricas: los jugadores se desplazan a
+  // su nueva posición en lugar de saltar; bolas y material aparecen al llegar.
+  if (
+    step &&
+    !diagram &&
+    !prevStep?.diagram &&
+    prevScene !== scene &&
+    !reduceMotion
+  ) {
     const p = ease((t - step.start) / BLEND_SECONDS);
     if (p < 1) {
-      const prevStep = steps[idx - 1];
       const prev = sceneFrame(
         prevScene,
         prevStep ? t - prevStep.start : t,
@@ -1740,96 +1832,47 @@ function Court({
       role="img"
       aria-label={step ? `${step.blockTitle}: ${step.title}` : "Pista"}
     >
-      {/* Pista */}
-      <g opacity={dim ? 0.45 : 1} style={{ transition: "opacity 400ms" }}>
-        <rect
-          x={COURT.x - 18}
-          y={COURT.y - 16}
-          width={COURT.w + 36}
-          height={COURT.h + 32}
-          rx={6}
-          fill="#123456"
-        />
-        <rect
-          x={COURT.x}
-          y={COURT.y}
-          width={COURT.w}
-          height={COURT.h}
-          fill="#1D5A96"
-          stroke="#fff"
-          strokeOpacity={0.9}
-          strokeWidth={2}
-        />
-        {[0.22, 0.78].map((f) => (
-          <line
-            key={f}
-            x1={COURT.x + COURT.w * f}
-            x2={COURT.x + COURT.w * f}
-            y1={SINGLES_TOP}
-            y2={SINGLES_BOTTOM}
-            stroke="#fff"
-            strokeOpacity={0.6}
-            strokeWidth={1.5}
-          />
-        ))}
-        <line
-          x1={COURT.x + COURT.w * 0.22}
-          x2={COURT.x + COURT.w * 0.78}
-          y1={MID_Y}
-          y2={MID_Y}
-          stroke="#fff"
-          strokeOpacity={0.6}
-          strokeWidth={1.5}
-        />
-        {/* Líneas de individuales: delimitan los pasillos de dobles */}
-        {[SINGLES_TOP, SINGLES_BOTTOM].map((y) => (
-          <line
-            key={y}
-            x1={COURT.x}
-            x2={COURT.x + COURT.w}
-            y1={y}
-            y2={y}
-            stroke="#fff"
-            strokeOpacity={0.6}
-            strokeWidth={1.5}
-          />
-        ))}
-        {frame.alleys &&
-          [COURT.y, SINGLES_BOTTOM].map((y) => (
-            <rect
-              key={`a${y}`}
-              x={COURT.x}
-              y={y}
-              width={COURT.w}
-              height={SINGLES_TOP - COURT.y}
-              fill="#D6FF38"
-              opacity={0.16}
-            />
-          ))}
-        {/* Red */}
-        <line
-          x1={NET_X}
-          x2={NET_X}
-          y1={COURT.y - 8}
-          y2={COURT.y + COURT.h + 8}
-          stroke="#F4F4F1"
-          strokeWidth={3}
-          strokeDasharray="2 2"
-        />
-        <circle cx={NET_X} cy={COURT.y - 8} r={3} fill="#F4F4F1" />
-        <circle cx={NET_X} cy={COURT.y + COURT.h + 8} r={3} fill="#F4F4F1" />
-      </g>
+      <CourtBase dim={dim} alleys={!diagram && frame.alleys} />
+      <BlockStripe color={accent} />
 
-      {/* Indicador del bloque actual */}
-      <rect
-        x={0}
-        y={H - 4}
-        width={W}
-        height={4}
-        fill={accent}
-        style={{ transition: "fill 300ms" }}
-      />
+      {diagram ? (
+        <DiagramLayer
+          diagram={diagram}
+          time={reduceMotion ? 0 : localT}
+          ballColor={ballColor}
+        />
+      ) : (
+        <SceneLayer frame={frame} ballColor={ballColor} />
+      )}
 
+      {/* Descanso: gota de agua */}
+      {dim && (
+        <g
+          transform={`translate(${NET_X} ${MID_Y - 4}) scale(${
+            reduceMotion ? 1 : 1 + Math.sin(t * 4) * 0.08
+          })`}
+        >
+          <circle r={26} fill="#050505" opacity={0.55} />
+          <path
+            d="M0 -15 C 8 -4, 11 2, 11 6 A 11 11 0 0 1 -11 6 C -11 2, -8 -4, 0 -15 Z"
+            fill="#7DD3FC"
+          />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+/** Jugadores, bolas y material de una escena genérica. */
+function SceneLayer({
+  frame,
+  ballColor,
+}: {
+  frame: SceneFrame;
+  ballColor: string;
+}) {
+  return (
+    <g>
       {/* Material: aros y conos */}
       {frame.rings?.map((r, i) => (
         <circle
@@ -1843,13 +1886,7 @@ function Court({
         />
       ))}
       {frame.cones?.map((c, i) => (
-        <path
-          key={`c${i}`}
-          d={`M ${c.x} ${c.y - 7} L ${c.x + 6} ${c.y + 5} L ${c.x - 6} ${c.y + 5} Z`}
-          fill="#F97316"
-          stroke="#050505"
-          strokeWidth={1}
-        />
+        <ConeMarker key={`c${i}`} x={c.x} y={c.y} />
       ))}
 
       {/* Material: aro (diana) y torre/tee */}
@@ -1882,8 +1919,55 @@ function Court({
           />
         </g>
       )}
+      {frame.basket && (
+        <g>
+          <rect
+            x={frame.basket.x - 8}
+            y={frame.basket.y - 6}
+            width={16}
+            height={12}
+            rx={2}
+            fill="#0F766E"
+            stroke="#CCFBF1"
+            strokeWidth={1}
+          />
+          <circle
+            cx={frame.basket.x - 3}
+            cy={frame.basket.y - 1}
+            r={3}
+            fill={ballColor}
+          />
+          <circle
+            cx={frame.basket.x + 3}
+            cy={frame.basket.y + 1.5}
+            r={3}
+            fill={ballColor}
+          />
+        </g>
+      )}
+      {frame.board && (
+        <g>
+          <rect
+            x={frame.board.x - 22}
+            y={frame.board.y - 15}
+            width={44}
+            height={30}
+            rx={2}
+            fill="#F4F4F1"
+            stroke="#050505"
+            strokeWidth={1}
+          />
+          <path
+            d={`M ${frame.board.x - 15} ${frame.board.y + 6} q 8 -16 16 -4 t 13 -6`}
+            fill="none"
+            stroke="#1D5A96"
+            strokeWidth={1.6}
+            strokeDasharray={`${frame.board.ink * 60} 60`}
+          />
+        </g>
+      )}
 
-      {/* Bolas */}
+      {/* Sombras de las bolas */}
       {frame.balls.map(
         (b, i) =>
           b.shadow && (
@@ -1901,58 +1985,14 @@ function Court({
 
       {/* Alumnos */}
       {frame.students.map((s, i) => (
-        <g key={i}>
-          <circle
-            cx={s.x}
-            cy={s.y}
-            r={8}
-            fill="#F4F4F1"
-            stroke="#050505"
-            strokeWidth={1.5}
-          />
-          <text
-            x={s.x}
-            y={s.y + 3}
-            textAnchor="middle"
-            fontSize={9}
-            fontWeight={700}
-            fill="#050505"
-          >
-            {i + 1}
-          </text>
-        </g>
+        <StudentMarker key={i} x={s.x} y={s.y} label={String(i + 1)} />
       ))}
 
       {/* Monitor */}
-      <circle
-        cx={frame.coach.x}
-        cy={frame.coach.y}
-        r={9.5}
-        fill="#D6FF38"
-        stroke="#050505"
-        strokeWidth={1.5}
-      />
-      <text
-        x={frame.coach.x}
-        y={frame.coach.y + 3.5}
-        textAnchor="middle"
-        fontSize={9}
-        fontWeight={800}
-        fill="#050505"
-      >
-        M
-      </text>
+      <CoachMarker x={frame.coach.x} y={frame.coach.y} />
 
       {frame.balls.map((b, i) => (
-        <circle
-          key={`b${i}`}
-          cx={b.ball.x}
-          cy={b.ball.y}
-          r={4.5}
-          fill={ballColor}
-          stroke="#fff"
-          strokeWidth={1}
-        />
+        <BallMarker key={`b${i}`} x={b.ball.x} y={b.ball.y} color={ballColor} />
       ))}
 
       {frame.labels?.map((l, i) => (
@@ -1971,21 +2011,6 @@ function Court({
           {l.text}
         </text>
       ))}
-
-      {/* Descanso: gota de agua */}
-      {dim && (
-        <g
-          transform={`translate(${NET_X} ${MID_Y - 4}) scale(${
-            reduceMotion ? 1 : 1 + Math.sin(t * 4) * 0.08
-          })`}
-        >
-          <circle r={26} fill="#050505" opacity={0.55} />
-          <path
-            d="M0 -15 C 8 -4, 11 2, 11 6 A 11 11 0 0 1 -11 6 C -11 2, -8 -4, 0 -15 Z"
-            fill="#7DD3FC"
-          />
-        </g>
-      )}
-    </svg>
+    </g>
   );
 }

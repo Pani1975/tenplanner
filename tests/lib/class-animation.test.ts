@@ -296,8 +296,9 @@ describe("escenas de la sesión 261016_Galácticas", () => {
       "alley",
       "elevator",
       "points",
-      // "Recogida de pelotas" no es una vuelta a la calma: escena neutra.
-      "neutral",
+      // "Recogida de pelotas" no es una vuelta a la calma: en el último
+      // bloque, sin organización reconocible, se ve la charla de cierre.
+      "talk",
     ]);
   });
 });
