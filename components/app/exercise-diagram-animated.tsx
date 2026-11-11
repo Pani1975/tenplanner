@@ -363,16 +363,14 @@ function AnimatedPlayer({
   const timeline = useMemo(() => buildTimeline(diagram), [diagram]);
   const scene = useMemo(() => {
     // Los conos que derriba la pelota los dibuja el fotograma.
+    // `knock` guarda la posición del cono entre los conos del esquema.
     const knocked = new Set(timeline.steps.flatMap((s) => s.knock ?? []));
-    let cone = -1;
+    const cones = diagram.elements.filter((e) => e.t === "cone");
     return buildScene({
       ...diagram,
       elements: diagram.elements.filter((e) => {
         if (STATIC_KINDS.has(e.t)) return false;
-        if (e.t === "cone") {
-          cone += 1;
-          return !knocked.has(cone);
-        }
+        if (e.t === "cone") return !knocked.has(cones.indexOf(e));
         return true;
       }),
     });

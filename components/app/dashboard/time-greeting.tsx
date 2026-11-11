@@ -24,7 +24,7 @@ export function TimeGreeting({
   );
 
   return (
-    <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
+    <h1 className="font-heading text-3xl font-semibold text-white sm:text-4xl">
       {greeting}, <span className="text-brand">{name}</span>
     </h1>
   );

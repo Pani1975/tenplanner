@@ -1,85 +1,67 @@
 import { describe, expect, it } from "vitest";
-import { PgDialect } from "drizzle-orm/pg-core";
 import {
-  exerciseSearchCondition,
   normalizeSearchText,
-  searchVariants,
-  singularize,
-  tokenizeSearch,
+  parseExerciseSearch,
+  stemSearchWord,
 } from "@/lib/exercises/search";
 
 describe("normalizeSearchText", () => {
   it("quita tildes, mayúsculas y signos", () => {
-    expect(normalizeSearchText("  Revés ¡Aproximación!  ")).toBe(
-      "reves aproximacion"
+    expect(normalizeSearchText("¡Revés CRUZADO!")).toBe("reves cruzado");
+    expect(normalizeSearchText("Aproximación/Coordinación")).toBe(
+      "aproximacion coordinacion"
     );
-    expect(normalizeSearchText("Niño")).toBe("nino");
+    expect(normalizeSearchText("niño")).toBe("nino");
   });
 });
 
-describe("tokenizeSearch", () => {
-  it("separa palabras y quita las vacías", () => {
-    expect(tokenizeSearch("Vuelta a la calma")).toEqual(["vuelta", "calma"]);
-    expect(tokenizeSearch("dejada  globo dejada")).toEqual(["dejada", "globo"]);
+describe("stemSearchWord", () => {
+  it("reduce plurales a una raíz que encuentra singular y plural", () => {
+    expect(stemSearchWord("voleas")).toBe("volea");
+    expect(stemSearchWord("globos")).toBe("globo");
+    expect(stemSearchWord("reveses")).toBe("reves");
+    expect(stemSearchWord("aproximaciones")).toBe("aproximacion");
+    // "reves" ya es singular; "reve" encontraría también "breve".
+    expect(stemSearchWord("reves")).toBe("reves");
+    expect(stemSearchWord("tenis")).toBe("tenis");
   });
 
-  it("si solo hay palabras vacías, las busca tal cual", () => {
-    expect(tokenizeSearch("de la")).toEqual(["de", "la"]);
-  });
-
-  it("una búsqueda vacía no da palabras", () => {
-    expect(tokenizeSearch("  ¿? ")).toEqual([]);
-  });
-});
-
-describe("singularize", () => {
-  it("quita el plural", () => {
-    expect(singularize("voleas")).toBe("volea");
-    expect(singularize("reveses")).toBe("reves");
-    expect(singularize("golpes")).toBe("golp");
-    expect(singularize("paredes")).toBe("pared");
-  });
-
-  it("no toca palabras cortas ni números", () => {
-    expect(singularize("reves")).toBe("reve");
-    expect(singularize("tres")).toBe("tre");
-    expect(singularize("dos")).toBe("dos");
-    expect(singularize("10")).toBe("10");
+  it("no toca palabras cortas", () => {
+    expect(stemSearchWord("dos")).toBe("dos");
+    expect(stemSearchWord("red")).toBe("red");
   });
 });
 
-describe("searchVariants", () => {
-  it("añade sinónimos", () => {
-    expect(searchVariants("smash").sort()).toEqual(["remate", "smash"]);
-    expect(searchVariants("drive")).toContain("derecha");
-    expect(searchVariants("servicio")).toContain("saque");
-    expect(searchVariants("cancha")).toContain("pista");
+describe("parseExerciseSearch", () => {
+  it("separa palabras (AND) y quita palabras vacías", () => {
+    expect(parseExerciseSearch("dejada globo")).toEqual([
+      ["dejada"],
+      ["globo"],
+    ]);
+    expect(parseExerciseSearch("cesta de la volea")).toEqual([
+      ["cesta", "canasto", "cesto"],
+      ["volea"],
+    ]);
   });
 
-  it("encuentra sinónimos también en plural", () => {
-    expect(searchVariants("smashes")).toContain("remate");
+  it("añade sinónimos en las dos direcciones", () => {
+    expect(parseExerciseSearch("smash")).toEqual([["smash", "remate"]]);
+    // "remat" es subcadena de "remate" y "remates".
+    expect(parseExerciseSearch("remates")).toEqual([["remat", "smash"]]);
+    expect(parseExerciseSearch("cestos")).toEqual([
+      ["cesto", "cesta", "canasto"],
+    ]);
+    expect(parseExerciseSearch("Servicio")).toEqual([["servicio", "saque"]]);
+    expect(parseExerciseSearch("drive")).toEqual([["drive", "derecha"]]);
   });
 
-  it("sin sinónimos, solo la raíz", () => {
-    expect(searchVariants("voleas")).toContain("volea");
-    expect(searchVariants("coordinacion")).toEqual(["coordinacion"]);
-  });
-});
-
-describe("exerciseSearchCondition", () => {
-  const dialect = new PgDialect();
-
-  it("sin palabras no filtra", () => {
-    expect(exerciseSearchCondition("   ")).toBeUndefined();
+  it("solo produce letras, cifras y guiones (nada de comodines LIKE)", () => {
+    const all = parseExerciseSearch("50% _x_ \\ calentamiento").flat();
+    for (const v of all) expect(v).toMatch(/^[a-z0-9-]+$/);
   });
 
-  it("exige todas las palabras, cada una con sus variantes", () => {
-    const cond = exerciseSearchCondition("dejada smash");
-    expect(cond).toBeDefined();
-    const { sql, params } = dialect.sqlToQuery(cond!);
-    expect(sql).toContain(" and ");
-    expect(params).toEqual(
-      expect.arrayContaining(["%dejada%", "%drop%", "%remate%", "%smash%"])
-    );
+  it("devuelve vacío si no queda ninguna palabra útil", () => {
+    expect(parseExerciseSearch("  de la  ")).toEqual([]);
+    expect(parseExerciseSearch("¿?")).toEqual([]);
   });
 });
