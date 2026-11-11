@@ -675,6 +675,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         {a.label}
                       </label>
                     ))}
+                    {/* En el móvil el desplegable tapa el botón Filtrar:
+                        se aplica desde aquí mismo. */}
+                    <button
+                      type="submit"
+                      className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
+                    >
+                      Aplicar
+                    </button>
                   </div>
                 </details>
               </div>
@@ -709,6 +717,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         {g.label}
                       </label>
                     ))}
+                    {/* En el móvil el desplegable tapa el botón Filtrar:
+                        se aplica desde aquí mismo. */}
+                    <button
+                      type="submit"
+                      className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
+                    >
+                      Aplicar
+                    </button>
                   </div>
                 </details>
               </div>
@@ -743,6 +759,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         {g.label}
                       </label>
                     ))}
+                    {/* En el móvil el desplegable tapa el botón Filtrar:
+                        se aplica desde aquí mismo. */}
+                    <button
+                      type="submit"
+                      className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
+                    >
+                      Aplicar
+                    </button>
                   </div>
                 </details>
               </div>

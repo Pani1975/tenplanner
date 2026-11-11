@@ -7,7 +7,6 @@ import {
   asc,
   desc,
   eq,
-  ilike,
   inArray,
   or,
   sql,
@@ -26,6 +25,7 @@ import { getActiveSport } from "@/lib/sports";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { spaceLabels } from "@/lib/space-labels";
 import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
+import { exerciseSearchCondition } from "@/lib/exercises/search";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import { ExerciseListPdf, type PdfExercise } from "@/lib/exercises/pdf";
@@ -289,10 +289,7 @@ export async function GET(request: Request) {
   if (activeDifficulty !== "all")
     conditions.push(eq(exercisesTable.difficulty, activeDifficulty));
   if (searchTerm) {
-    const searchWhere = or(
-      ilike(exercisesTable.name, `%${searchTerm}%`),
-      ilike(exercisesTable.description, `%${searchTerm}%`)
-    );
+    const searchWhere = exerciseSearchCondition(searchTerm);
     if (searchWhere) conditions.push(searchWhere);
   }
   if (activeFormato.length > 0)
