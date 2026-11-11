@@ -20,10 +20,7 @@ describe("normalizeSearchText", () => {
 describe("tokenizeSearch", () => {
   it("separa palabras y quita las vacías", () => {
     expect(tokenizeSearch("Vuelta a la calma")).toEqual(["vuelta", "calma"]);
-    expect(tokenizeSearch("dejada  globo dejada")).toEqual([
-      "dejada",
-      "globo",
-    ]);
+    expect(tokenizeSearch("dejada  globo dejada")).toEqual(["dejada", "globo"]);
   });
 
   it("si solo hay palabras vacías, las busca tal cual", () => {
