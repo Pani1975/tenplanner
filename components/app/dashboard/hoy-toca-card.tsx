@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
-import { HOY_TOCA } from "@/lib/session-engine/messages";
+import { HOY_TOCA, MONTAR } from "@/lib/session-engine/messages";
 import {
   buildProposal,
   findNextTraining,
@@ -69,12 +69,20 @@ export async function HoyTocaCard({
           <CalendarClock className="size-5 text-brand" />
           {HOY_TOCA.alreadyHave(next.groupName)}
         </h2>
-        <Link
-          href={`/sessions/${next.existingSessionId}`}
-          className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
-        >
-          {HOY_TOCA.openSession}
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href={`/sessions/${next.existingSessionId}`}
+            className="inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
+          >
+            {HOY_TOCA.openSession}
+          </Link>
+          <Link
+            href={`/sessions/new/montar?group=${next.groupId}&session=${next.existingSessionId}`}
+            className="inline-flex min-h-11 items-center rounded-full border border-foreground/15 px-4 text-sm font-bold text-foreground hover:bg-muted"
+          >
+            {MONTAR.designWithTenPlanner}
+          </Link>
+        </div>
       </section>
     );
   }

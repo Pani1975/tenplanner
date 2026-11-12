@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, asc, count, eq, gte, inArray, lt, ne } from "drizzle-orm";
-import { ArrowLeft, CalendarClock, Sparkles, Users } from "lucide-react";
+import { and, asc, count, eq, gte, inArray, ne } from "drizzle-orm";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  CalendarClock,
+  ChevronRight,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { groups, groupStudents, sessions } from "@/db/schema";
@@ -10,37 +17,95 @@ import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import {
   nextScheduleOccurrenceInZone,
+  zonedTimeToUtc,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
 import {
   buildProposal,
+  countSessionItems,
   ENGINE_TIME_ZONE,
   localDateKey,
 } from "@/lib/session-engine/today";
-import { HOY_TOCA, MONTAR } from "@/lib/session-engine/messages";
+import { MONTAR } from "@/lib/session-engine/messages";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { HoyTocaClient } from "@/components/app/dashboard/hoy-toca-client";
+import { OtherDatePicker } from "./other-date-picker";
 
 interface PageProps {
-  searchParams: Promise<{ group?: string }>;
+  searchParams: Promise<{ group?: string; session?: string; at?: string }>;
 }
 
 const CARD =
   "rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_12px_36px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]";
+const ROW =
+  "flex min-h-11 w-full items-center gap-3 rounded-lg border border-[#050505]/10 bg-white px-4 py-3 text-left transition-colors hover:border-[#D6FF38]/70 hover:bg-[#D6FF38]/10 dark:border-white/10 dark:bg-white/[0.045]";
 
-/** Próximo entreno del grupo; sin horario, la próxima hora en punto. */
-function nextAt(schedule: GroupScheduleEntry[] | null, now: Date): Date {
-  const at = nextScheduleOccurrenceInZone(schedule, now, ENGINE_TIME_ZONE, 60);
-  if (at) return at;
-  const d = new Date(now);
-  d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
-  return d;
+const WHEN = new Intl.DateTimeFormat("es-ES", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: ENGINE_TIME_ZONE,
+});
+
+/** "YYYY-MM-DDTHH:mm" (hora de Madrid) → instante. */
+function parseLocalAt(value: string | undefined): Date | null {
+  const m = value?.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!m) return null;
+  const [y, mo, d, hh, mm] = m.slice(1).map(Number);
+  return zonedTimeToUtc(y, mo, d, hh, mm, ENGINE_TIME_ZONE);
+}
+
+/** Instante → "YYYY-MM-DDTHH:mm" en hora de Madrid. */
+function toLocalAt(d: Date): string {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: ENGINE_TIME_ZONE,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .formatToParts(d)
+      .map((x) => [x.type, x.value])
+  );
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
+/** Próximos entrenos del horario del grupo que aún no tienen sesión. */
+function freeOccurrences(
+  schedule: GroupScheduleEntry[] | null,
+  taken: Date[],
+  now: Date,
+  max = 2
+): Date[] {
+  const out: Date[] = [];
+  let from = now;
+  for (let i = 0; i < 12 && out.length < max; i++) {
+    const at = nextScheduleOccurrenceInZone(
+      schedule,
+      from,
+      ENGINE_TIME_ZONE,
+      0
+    );
+    if (!at) break;
+    const busy = taken.some(
+      (t) => Math.abs(t.getTime() - at.getTime()) < 12 * 3600_000
+    );
+    if (!busy) out.push(at);
+    from = new Date(at.getTime() + 60_000);
+  }
+  return out;
 }
 
 /**
- * "Que la diseñe Ten Planner": el monitor elige un grupo y el motor (F1)
- * monta la clase de su próximo entreno con la misma tarjeta del panel.
+ * "Que la diseñe Ten Planner": el monitor elige un grupo y para qué clase
+ * (una sesión ya programada, un próximo entreno sin sesión u otro día) y el
+ * motor (F1) le propone la clase con el nivel y el historial del grupo. Si
+ * la acepta, sustituye los ejercicios de esa sesión o crea una nueva.
  */
 export default async function MontarSessionPage({ searchParams }: PageProps) {
   const supabase = await createClient();
@@ -61,7 +126,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
     );
   }
 
-  const [activeClubId, sport, { group: groupParam }] = await Promise.all([
+  const [activeClubId, sport, params] = await Promise.all([
     getActiveWorkClubId(user.id),
     getActiveSport(user.id),
     searchParams,
@@ -88,41 +153,63 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
     .orderBy(asc(groups.name));
 
   const now = new Date();
-  const selected = groupParam
-    ? (rows.find((g) => g.id === groupParam) ?? null)
+  const selected = params.group
+    ? (rows.find((g) => g.id === params.group) ?? null)
     : null;
 
   let body: React.ReactNode;
 
-  if (selected) {
-    const at = nextAt(selected.schedule, now);
-    const [existing] = await db
-      .select({ id: sessions.id })
-      .from(sessions)
-      .where(
-        and(
-          eq(sessions.groupId, selected.id),
-          gte(sessions.scheduledAt, new Date(at.getTime() - 12 * 3600_000)),
-          lt(sessions.scheduledAt, new Date(at.getTime() + 12 * 3600_000)),
-          ne(sessions.status, "cancelled")
-        )
-      )
-      .limit(1);
+  if (selected && (params.session || params.at)) {
+    // ── Paso 3: la propuesta para una sesión o un día concretos ──
+    const back = (
+      <Link
+        href={`/sessions/new/montar?group=${selected.id}`}
+        className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        {MONTAR.changeWhen}
+      </Link>
+    );
 
-    if (existing) {
+    let at: Date | null = null;
+    let target: { id: string; title: string; itemCount: number } | undefined;
+    if (params.session) {
+      const [s] = await db
+        .select({
+          id: sessions.id,
+          title: sessions.title,
+          scheduledAt: sessions.scheduledAt,
+        })
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.id, params.session),
+            eq(sessions.groupId, selected.id),
+            ne(sessions.status, "cancelled")
+          )
+        )
+        .limit(1);
+      if (s) {
+        at = s.scheduledAt;
+        const counts = await countSessionItems([s.id]);
+        target = {
+          id: s.id,
+          title: s.title,
+          itemCount: counts.get(s.id) ?? 0,
+        };
+      }
+    } else {
+      at = parseLocalAt(params.at);
+    }
+
+    if (!at) {
       body = (
-        <section className={CARD}>
-          <h2 className="flex items-center gap-2 text-lg font-black text-foreground">
-            <CalendarClock className="size-5 text-brand" />
-            {HOY_TOCA.alreadyHave(selected.name)}
-          </h2>
-          <Link
-            href={`/sessions/${existing.id}`}
-            className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
-          >
-            {HOY_TOCA.openSession}
-          </Link>
-        </section>
+        <div className="flex flex-col gap-3">
+          {back}
+          <p className="text-sm text-muted-foreground">
+            {MONTAR.sessionNotFound}
+          </p>
+        </div>
       );
     } else {
       const date = localDateKey(at);
@@ -134,20 +221,51 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
         focus: "auto",
         attendeeIds: null,
       });
-      body = proposal ? (
-        <HoyTocaClient
-          key={selected.id}
-          initial={proposal}
-          date={date}
-          scheduledAt={at.toISOString()}
-          kicker={MONTAR.kicker}
-        />
-      ) : (
-        <p className="text-sm text-muted-foreground">{MONTAR.notFound}</p>
+      body = (
+        <div className="flex flex-col gap-3">
+          {back}
+          {proposal ? (
+            <HoyTocaClient
+              key={`${selected.id}-${target?.id ?? toLocalAt(at)}`}
+              initial={proposal}
+              date={date}
+              scheduledAt={at.toISOString()}
+              kicker={MONTAR.kicker}
+              targetSession={target}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">{MONTAR.notFound}</p>
+          )}
+        </div>
       );
     }
+  } else if (selected) {
+    // ── Paso 2: ¿para qué clase? ──
+    const upcoming = await db
+      .select({
+        id: sessions.id,
+        title: sessions.title,
+        scheduledAt: sessions.scheduledAt,
+      })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.groupId, selected.id),
+          eq(sessions.status, "scheduled"),
+          gte(sessions.scheduledAt, new Date(now.getTime() - 3600_000))
+        )
+      )
+      .orderBy(asc(sessions.scheduledAt))
+      .limit(6);
+    const counts = await countSessionItems(upcoming.map((s) => s.id));
+    const free = freeOccurrences(
+      selected.schedule,
+      upcoming.map((s) => s.scheduledAt),
+      now
+    );
+
     body = (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-5">
         <Link
           href="/sessions/new/montar"
           className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
@@ -155,7 +273,71 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
           <ArrowLeft className="size-4" />
           {MONTAR.otherGroup}
         </Link>
-        {body}
+        <h2 className="font-heading text-xl text-foreground">
+          {MONTAR.whenTitle}{" "}
+          <span className="text-muted-foreground">· {selected.name}</span>
+        </h2>
+
+        <section className="space-y-2">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            {MONTAR.scheduled}
+          </h3>
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {MONTAR.nothingUpcoming}
+            </p>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {MONTAR.scheduledHint}
+              </p>
+              {upcoming.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/sessions/new/montar?group=${selected.id}&session=${s.id}`}
+                  className={ROW}
+                >
+                  <CalendarCheck className="size-4 shrink-0 text-brand" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-foreground first-letter:uppercase">
+                      {WHEN.format(s.scheduledAt)}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {s.title} · {MONTAR.itemCount(counts.get(s.id) ?? 0)}
+                    </span>
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-foreground/30" />
+                </Link>
+              ))}
+            </>
+          )}
+        </section>
+
+        {free.length > 0 && (
+          <section className="space-y-2">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {MONTAR.freeDays}
+            </h3>
+            {free.map((d) => (
+              <Link
+                key={d.toISOString()}
+                href={`/sessions/new/montar?group=${selected.id}&at=${toLocalAt(d)}`}
+                className={ROW}
+              >
+                <CalendarClock className="size-4 shrink-0 text-brand" />
+                <span className="min-w-0 flex-1 text-sm font-bold text-foreground first-letter:uppercase">
+                  {WHEN.format(d)}
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-foreground/30" />
+              </Link>
+            ))}
+          </section>
+        )}
+
+        <OtherDatePicker
+          groupId={selected.id}
+          schedule={selected.schedule ?? []}
+        />
       </div>
     );
   } else if (rows.length === 0) {
@@ -171,6 +353,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
       </section>
     );
   } else {
+    // ── Paso 1: elegir el grupo ──
     const counts = await db
       .select({ groupId: groupStudents.groupId, n: count() })
       .from(groupStudents)
@@ -182,20 +365,12 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
       )
       .groupBy(groupStudents.groupId);
     const countBy = new Map(counts.map((c) => [c.groupId, c.n]));
-    const fmt = new Intl.DateTimeFormat("es-ES", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: ENGINE_TIME_ZONE,
-    });
     body = (
       <section>
         <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {MONTAR.chooseGroup}
         </h2>
-        {groupParam && (
+        {params.group && (
           <p className="mb-3 text-sm text-destructive">{MONTAR.notFound}</p>
         )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -221,7 +396,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground first-letter:uppercase">
                   <CalendarClock className="size-3.5" />
-                  {at ? fmt.format(at) : MONTAR.noSchedule}
+                  {at ? WHEN.format(at) : MONTAR.noSchedule}
                 </p>
               </Link>
             );

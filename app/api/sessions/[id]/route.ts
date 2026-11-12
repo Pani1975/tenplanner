@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import { after } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
@@ -523,6 +523,8 @@ export async function PUT(request: Request, context: RouteContext) {
       studentIds,
       tags,
       durationManual,
+      generation,
+      absentStudentIds,
       ...sessionFields
     } = parsedBody.data;
 
@@ -625,6 +627,12 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const updateValues: Record<string, unknown> = {};
+    // Plan diseñado por Ten Planner (motor F1) sobre una sesión existente.
+    if (generation) {
+      updateValues.generatedBy = "auto_v1";
+      updateValues.generationInput = generation.input;
+      updateValues.generationTrace = generation.trace ?? null;
+    }
     // Una sesión completada que se edita vuelve a "pendiente": se marcará
     // otra vez como completada (con su cierre) cuando corresponda.
     if (reopenIfCompleted && existing.status === "completed") {
@@ -949,6 +957,22 @@ export async function PUT(request: Request, context: RouteContext) {
             .insert(sessionStudents)
             .values(toAdd.map((studentId) => ({ sessionId: id, studentId })));
         }
+      }
+
+      // "No vienen" previstos al diseñar la clase con Ten Planner: solo se
+      // marcan los que aún no tenían asistencia anotada. Solo cuentan como
+      // falta si la sesión llega a completarse (lib/sessions/attendance.ts).
+      if (session && absentStudentIds && absentStudentIds.length > 0) {
+        await tx
+          .update(sessionStudents)
+          .set({ attended: false })
+          .where(
+            and(
+              eq(sessionStudents.sessionId, id),
+              inArray(sessionStudents.studentId, absentStudentIds),
+              isNull(sessionStudents.attended)
+            )
+          );
       }
 
       return session;

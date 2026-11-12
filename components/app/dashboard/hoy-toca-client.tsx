@@ -22,6 +22,7 @@ import {
   BLOCK_TITLES,
   FOCUS_LABELS,
   HOY_TOCA,
+  MONTAR,
   INTENSITY_LABELS,
   SLOT_LABELS,
 } from "@/lib/session-engine/messages";
@@ -71,12 +72,19 @@ export function HoyTocaClient({
   date,
   scheduledAt,
   kicker = HOY_TOCA.kicker,
+  targetSession,
 }: {
   initial: Proposal;
   date: string;
   scheduledAt: string;
   /** Rótulo de sección (por defecto "Hoy toca"). */
   kicker?: string;
+  /**
+   * Sesión ya programada a la que va la propuesta: al aceptarla se
+   * sustituyen sus ejercicios (con aviso si tenía). Sin ella, se crea una
+   * sesión nueva.
+   */
+  targetSession?: { id: string; title: string; itemCount: number };
 }) {
   const router = useRouter();
   const group = initial.group;
@@ -96,6 +104,7 @@ export function HoyTocaClient({
   const [variant, setVariant] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmReplace, setConfirmReplace] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const total = useMemo(
@@ -244,6 +253,36 @@ export function HoyTocaClient({
     const absentStudentIds = group.students
       .map((s) => s.id)
       .filter((id) => !attendees.has(id));
+    const generation = {
+      input: { ...lastInput, attendeeIds: [...attendees] },
+      trace: { explanations: plan.explanations, slots: plan.trace },
+    };
+
+    // Sesión ya programada: se sustituye su plan con la edición normal de
+    // sesión (mismos permisos y misma lógica que el asistente).
+    if (targetSession) {
+      try {
+        const res = await fetch(`/api/sessions/${targetSession.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blocks,
+            durationMinutes: total,
+            durationManual: true,
+            intensity: INTENSITY_VALUE[intensity],
+            absentStudentIds,
+            generation,
+          }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        router.push(`/sessions/${targetSession.id}`);
+      } catch {
+        setError(HOY_TOCA.saveError);
+        setSaving(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/sessions", {
         method: "POST",
@@ -264,10 +303,7 @@ export function HoyTocaClient({
           blocks,
           createdVia: "engine",
           absentStudentIds,
-          generation: {
-            input: { ...lastInput, attendeeIds: [...attendees] },
-            trace: { explanations: plan.explanations, slots: plan.trace },
-          },
+          generation,
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
@@ -306,6 +342,14 @@ export function HoyTocaClient({
         <span className="font-semibold text-foreground">{group.name}</span> ·{" "}
         {when}
       </p>
+      {targetSession && (
+        <p className="mt-1 text-sm font-semibold text-foreground">
+          {MONTAR.forSession(targetSession.title)} ·{" "}
+          <span className="font-normal text-muted-foreground">
+            {MONTAR.itemCount(targetSession.itemCount)}
+          </span>
+        </p>
+      )}
 
       <div className="mt-4 space-y-3">
         {group.students.length > 0 ? (
@@ -560,6 +604,43 @@ export function HoyTocaClient({
 
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 
+      {confirmReplace && targetSession && (
+        <div
+          role="alertdialog"
+          aria-labelledby="replace-warning"
+          className="mt-4 rounded-md border border-[#FB8C00]/40 bg-[#FB8C00]/10 p-3"
+        >
+          <p
+            id="replace-warning"
+            className="text-sm font-semibold text-foreground"
+          >
+            {MONTAR.replaceWarning(
+              targetSession.itemCount,
+              targetSession.title
+            )}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmReplace(false);
+                void save();
+              }}
+              className="inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
+            >
+              {MONTAR.confirmReplace}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmReplace(false)}
+              className="inline-flex min-h-11 items-center rounded-full border border-foreground/15 px-4 text-sm font-bold text-foreground hover:bg-muted"
+            >
+              {MONTAR.cancel}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
@@ -576,12 +657,24 @@ export function HoyTocaClient({
         </button>
         <button
           type="button"
-          onClick={save}
-          disabled={!!busy || saving || items.length === 0}
+          onClick={() => {
+            // Sustituir el contenido de una sesión que ya tiene ejercicios
+            // pide confirmación antes.
+            if (targetSession && targetSession.itemCount > 0) {
+              setConfirmReplace(true);
+              return;
+            }
+            void save();
+          }}
+          disabled={!!busy || saving || confirmReplace || items.length === 0}
           className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-sm font-bold text-[#050505] hover:bg-[#c8ef2f] disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
-          {saving ? HOY_TOCA.saving : HOY_TOCA.save}
+          {saving
+            ? HOY_TOCA.saving
+            : targetSession
+              ? MONTAR.useInSession
+              : HOY_TOCA.save}
         </button>
       </div>
     </section>
