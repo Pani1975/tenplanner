@@ -87,9 +87,24 @@ export function ImportTextDialog({
     try {
       let init: RequestInit;
       if (file) {
+        // Se leen los bytes antes de enviar: así se detecta un archivo que el
+        // navegador no puede leer (p. ej. uno de OneDrive sin descargar) y se
+        // manda una copia en memoria en vez de una referencia al disco.
+        const bytes = await file.arrayBuffer();
+        if (bytes.byteLength === 0) {
+          setError(
+            "El navegador no puede leer el archivo (llega vacío). Si está en OneDrive o la nube, descárgalo al equipo y vuelve a elegirlo."
+          );
+          return;
+        }
         const form = new FormData();
         form.append("kind", kind);
-        form.append("file", file);
+        form.append(
+          "file",
+          new File([bytes], file.name, {
+            type: file.type || "application/octet-stream",
+          })
+        );
         // Con archivo, el texto son indicaciones opcionales.
         form.append("text", text);
         init = { method: "POST", body: form };
