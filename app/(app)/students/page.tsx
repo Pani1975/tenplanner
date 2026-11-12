@@ -1,7 +1,19 @@
 import Link from "next/link";
-import { getWorkMode, personalTitle } from "@/lib/work-mode";
+import {
+  getWorkMode,
+  isStudentsLimited,
+  personalTitle,
+} from "@/lib/work-mode";
 import { redirect } from "next/navigation";
-import { and, asc, count, eq, ilike, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  ilike,
+  inArray,
+  type SQL,
+} from "drizzle-orm";
 import {
   Plus,
   Search,
@@ -12,7 +24,14 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { students as studentsTable, users as usersTable } from "@/db/schema";
+import {
+  groupStudents as groupStudentsTable,
+  groups as groupsTable,
+  students as studentsTable,
+  users as usersTable,
+} from "@/db/schema";
+import { loadSkillLevels } from "@/lib/skill-levels-repo";
+import { WEEKDAY_LABELS } from "@/lib/groups/schedule";
 import {
   getActiveWorkClubId,
   getClubAccountClubId,
@@ -77,9 +96,13 @@ export default async function StudentsPage({ searchParams }: PageProps) {
     Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
 
-  const [activeClubId, clubAccountId] = await Promise.all([
+  const [activeClubId, clubAccountId, limited] = await Promise.all([
     getActiveWorkClubId(user.id),
     getClubAccountClubId(user.id),
+    // La cuenta del club, en su modo club (no en gestión), solo ve los datos
+    // básicos del alumno: nombre, nacimiento, nivel, grupos y días de clase.
+    // Los datos personales están en el Modo gestión.
+    isStudentsLimited(user.id),
   ]);
   const clubMembers = activeClubId
     ? await getClubMembersDirectory([activeClubId])
@@ -131,6 +154,48 @@ export default async function StudentsPage({ searchParams }: PageProps) {
   }));
   const totalStudents = Number(totalRows[0]?.total ?? 0);
 
+  const levelLabels = new Map(
+    (await loadSkillLevels()).map((l) => [l.code, l.labelEs])
+  );
+  const groupsByStudent = new Map<string, { names: string[]; days: number[] }>();
+  if (limited && activeClubId && filtered.length > 0) {
+    const rows = await db
+      .select({
+        studentId: groupStudentsTable.studentId,
+        name: groupsTable.name,
+        schedule: groupsTable.weeklySchedule,
+      })
+      .from(groupStudentsTable)
+      .innerJoin(groupsTable, eq(groupsTable.id, groupStudentsTable.groupId))
+      .where(
+        and(
+          inArray(
+            groupStudentsTable.studentId,
+            filtered.map((s) => s.id)
+          ),
+          eq(groupsTable.clubId, activeClubId)
+        )
+      )
+      .orderBy(asc(groupsTable.name));
+    for (const r of rows) {
+      const entry = groupsByStudent.get(r.studentId) ?? {
+        names: [],
+        days: [],
+      };
+      entry.names.push(r.name);
+      for (const e of r.schedule ?? []) {
+        if (!entry.days.includes(e.weekday)) entry.days.push(e.weekday);
+      }
+      groupsByStudent.set(r.studentId, entry);
+    }
+  }
+  const birthFormatter = new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
   function buildHrefWithMonitor(m?: string) {
     const p = new URLSearchParams();
     if (searchTerm) p.set("q", searchTerm);
@@ -168,7 +233,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {clubAccountId && (
+            {clubAccountId && !limited && (
               <Link
                 href="/students/importar"
                 className="inline-flex h-11 items-center gap-2 rounded-full border border-white/25 px-4 text-[13px] font-black text-white transition-colors hover:bg-white/10"
@@ -177,7 +242,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
                 Importar desde Excel
               </Link>
             )}
-            {totalStudents > 0 && (
+            {totalStudents > 0 && !limited && (
               <Link
                 href="/students/new"
                 className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-[13px] font-black text-[#050505] transition-transform hover:-translate-y-0.5"
@@ -223,7 +288,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
         )}
 
         {/* Estadísticas: niveles, edades, grupos y procedencia */}
-        {totalStudents > 0 && (
+        {totalStudents > 0 && !limited && (
           <StudentsStatsSection
             stats={stats}
             reportHref={`/api/students/stats/pdf${monitorFilter ? `?monitor=${monitorFilter}` : ""}`}
@@ -300,6 +365,43 @@ export default async function StudentsPage({ searchParams }: PageProps) {
               {filtered.map((student, idx) => {
                 const level = student.playerLevel as PlayerLevel | null;
                 const n = String(idx + 1).padStart(3, "0");
+                if (limited) {
+                  const info = groupsByStudent.get(student.id);
+                  const days = [...(info?.days ?? [])]
+                    .sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+                    .map((d) => WEEKDAY_LABELS[d])
+                    .join(", ");
+                  return (
+                    <li
+                      key={student.id}
+                      className="grid gap-x-6 gap-y-1 border-b border-[#050505]/10 px-4 py-4 last:border-b-0 sm:grid-cols-[minmax(0,2fr)_1fr_1fr_minmax(0,1.5fr)_1fr] dark:border-white/10"
+                    >
+                      <p className="truncate text-[15px] font-black text-foreground">
+                        {student.name}
+                      </p>
+                      <p className="text-[12px] text-foreground/70">
+                        {student.birthDate
+                          ? birthFormatter.format(
+                              new Date(`${student.birthDate}T00:00:00Z`)
+                            )
+                          : "Sin fecha de nacimiento"}
+                      </p>
+                      <p className="text-[12px] text-foreground/70">
+                        {student.playerLevel
+                          ? (levelLabels.get(student.playerLevel) ??
+                            LEVEL_LABEL[level as PlayerLevel] ??
+                            student.playerLevel)
+                          : "Sin nivel"}
+                      </p>
+                      <p className="truncate text-[12px] text-foreground/70">
+                        {info?.names.length ? info.names.join(", ") : "Sin grupo"}
+                      </p>
+                      <p className="text-[12px] text-foreground/70">
+                        {days || "Sin días"}
+                      </p>
+                    </li>
+                  );
+                }
                 return (
                   <li
                     key={student.id}

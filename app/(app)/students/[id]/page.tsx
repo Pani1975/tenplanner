@@ -6,6 +6,7 @@ import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { Pencil, ClipboardList, Clock, Flame, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { db } from "@/db";
 import { clubs, students, sessionStudents, sessions, users } from "@/db/schema";
 import { cn } from "@/lib/utils";
@@ -105,6 +106,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  await redirectIfStudentsLimited(user.id);
 
   const activeClubId = await getActiveWorkClubId(user.id);
   const [student] = await db

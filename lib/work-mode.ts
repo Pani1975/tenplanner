@@ -145,6 +145,24 @@ export async function resetToDefaultWorkMode(userId: string) {
 }
 
 /**
+ * En el modo del club (no en gestión) los alumnos se ven solo con sus datos
+ * básicos: las fichas, altas e importaciones son del Modo gestión. Vuelve a
+ * la lista de alumnos si se entra a una de esas páginas.
+ */
+export async function redirectIfStudentsLimited(userId: string) {
+  if (await isStudentsLimited(userId)) redirect("/students");
+}
+
+/** ¿Es la cuenta de un club en su modo club, sin gestión? (alumnos limitados) */
+export async function isStudentsLimited(userId: string) {
+  const [mode, accountClubId] = await Promise.all([
+    getWorkMode(userId),
+    getClubAccountClubId(userId),
+  ]);
+  return !!accountClubId && mode.kind === "club" && !mode.management;
+}
+
+/**
  * Modo monitor de alguien que pertenece a uno o más clubes: su espacio
  * propio y privado (el club no entra). Ahí prepara ejercicios, clases y
  * sesiones y los envía al club, pero no lleva alumnos, grupos, objetivos ni

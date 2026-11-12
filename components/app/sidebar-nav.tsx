@@ -278,7 +278,10 @@ function navItemsForSpace(
   const items = navItems.filter(
     (item) =>
       !(clubMonitorSpace && CLUB_ONLY_HREFS.has(item.href)) &&
-      !(clubAccount && item.href === "/profile")
+      !(clubAccount && item.href === "/profile") &&
+      // Los mensajes del club se escriben solo desde el Modo gestión: hay
+      // mensajes que los monitores no deben leer.
+      !(clubAccount && item.href === "/mensajes")
   );
   return items.map((item) => {
     if (item.href === "/resources") return { ...item, label: labels.resources };
