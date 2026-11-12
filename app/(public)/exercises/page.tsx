@@ -30,6 +30,7 @@ import { ExerciseFilters } from "@/components/app/exercise-filters";
 import { ExerciseListsSection } from "@/components/app/exercise-lists-section";
 import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { ExerciseDraftsPanel } from "@/components/app/exercise-drafts-panel";
+import { ImportTextDialog } from "@/components/app/import-text-dialog";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveSport } from "@/lib/sports";
@@ -787,13 +788,26 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               </div>
               <div>
                 {user && exerciseCreationEnabled ? (
-                  <Link
-                    href="/exercises/new"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-[13px] font-black text-[#050505] transition hover:bg-white"
-                  >
-                    <Plus className="size-4" />
-                    Nuevo ejercicio
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(activeTab === "mine" || activeTab === "drafts") && (
+                      <ImportTextDialog
+                        kind="exercises"
+                        allowFile={!!activeWorkClubId}
+                        spaceLabel={
+                          activeWorkClubId
+                            ? "el espacio de tu club"
+                            : "tu espacio"
+                        }
+                      />
+                    )}
+                    <Link
+                      href="/exercises/new"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-[13px] font-black text-[#050505] transition hover:bg-white"
+                    >
+                      <Plus className="size-4" />
+                      Nuevo ejercicio
+                    </Link>
+                  </div>
                 ) : user ? (
                   <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/14 bg-white/[0.04] px-5 text-[13px] font-semibold text-white/45">
                     <Lock className="size-4" />

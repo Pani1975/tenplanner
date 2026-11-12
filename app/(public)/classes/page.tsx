@@ -1,6 +1,7 @@
 import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import Link from "next/link";
+import { ImportTextDialog } from "@/components/app/import-text-dialog";
 import {
   eq,
   or,
@@ -433,13 +434,24 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 )}
               </div>
               {user && (
-                <Link
-                  href="/classes/new"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-[13px] font-black text-[#050505] transition hover:bg-white"
-                >
-                  <Plus className="size-4" />
-                  Nueva clase
-                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(activeTab === "mine" || activeTab === "drafts") && (
+                    <ImportTextDialog
+                      kind="classes"
+                      allowFile={!!activeClubId}
+                      spaceLabel={
+                        activeClubId ? "el espacio de tu club" : "tu espacio"
+                      }
+                    />
+                  )}
+                  <Link
+                    href="/classes/new"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-[13px] font-black text-[#050505] transition hover:bg-white"
+                  >
+                    <Plus className="size-4" />
+                    Nueva clase
+                  </Link>
+                </div>
               )}
             </div>
           </div>
