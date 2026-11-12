@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { ensureAccountFromSignup } from "@/lib/club-signup";
 import {
   getActiveWorkClubId,
   getClubOptionsForUser,
@@ -72,6 +73,10 @@ export async function PATCH(request: Request) {
     );
 
   if ("mode" in parsed.data && parsed.data.mode === "default") {
+    // Se llama al iniciar sesión: si la cuenta se registró como club y el
+    // club no llegó a crearse (p. ej. confirmó el correo en otro
+    // dispositivo), se crea ahora.
+    await ensureAccountFromSignup(user);
     await resetToDefaultWorkMode(user.id);
     return NextResponse.json({ ok: true });
   }
