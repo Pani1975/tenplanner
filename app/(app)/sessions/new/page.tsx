@@ -61,6 +61,10 @@ interface PageProps {
     at?: string;
     /** "Que la diseñe Ten Planner": la propuesta se prepara en el Paso 2. */
     disenar?: string;
+    /** Respuestas de "Antes de la propuesta". */
+    dur?: string;
+    obj?: string;
+    lugar?: string;
   }>;
 }
 
@@ -152,6 +156,10 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     group: groupIdParam,
     at: atParam,
     disenar: disenarParam,
+    dur: durParam,
+    obj: objParam,
+    lugar: lugarParam,
+    step: stepParam,
   } = await searchParams;
 
   // Fecha/hora ya calculada por quien nos trae aquí (p. ej. el próximo día
@@ -452,6 +460,11 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           : undefined;
   // "Que la diseñe Ten Planner" (desde /sessions/new/montar): con grupo.
   const disenar = disenarParam === "1" && !!fromGroup;
+  const durNum = Number(durParam);
+  const disenarDuration =
+    Number.isFinite(durNum) && durNum >= 10 && durNum <= 240
+      ? Math.round(durNum)
+      : undefined;
   const allowDraftRestore =
     !disenar && !fromSession && !fromClass && preSelected.length === 0;
   const noPreload =
@@ -584,7 +597,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialObjective={
                 fromSession?.objective ??
                 fromClass?.objetivos ??
-                (disenar ? (fromGroup?.objetivos ?? undefined) : undefined)
+                (disenar
+                  ? ((objParam?.trim() || fromGroup?.objetivos) ?? undefined)
+                  : undefined)
               }
               initialMaterial={
                 fromSession?.material ?? fromClass?.material ?? undefined
@@ -602,13 +617,23 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialGroupName={fromGroup?.name}
               initialStudentIds={fromGroupStudentIds}
               initialScheduledAt={initialScheduledAt}
+              initialPlaceId={
+                disenar &&
+                lugarParam &&
+                coachPlaces.some((p) => p.id === lugarParam)
+                  ? lugarParam
+                  : undefined
+              }
               places={coachPlaces}
               monitorName={monitorName}
               coaches={clubCoaches}
               initialCoachId={clubCoaches.length > 0 ? user.id : null}
               allowDraftRestore={allowDraftRestore}
+              initialDurationMinutes={disenar ? disenarDuration : undefined}
               engine={
-                disenar && fromGroup ? { groupId: fromGroup.id } : undefined
+                disenar && fromGroup
+                  ? { groupId: fromGroup.id, autoStart: stepParam === "2" }
+                  : undefined
               }
             />
           </Suspense>

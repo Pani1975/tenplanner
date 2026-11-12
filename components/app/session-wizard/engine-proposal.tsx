@@ -16,6 +16,8 @@ export type EngineConfig = {
   groupId: string;
   /** Edición de una sesión con ejercicios: cuántos se sustituyen. */
   replacesCount?: number;
+  /** Abrir ya en el Paso 2 y preparar la propuesta al cargar. */
+  autoStart?: boolean;
 };
 
 type EngineInfo = {
@@ -227,6 +229,12 @@ export function EngineProposalBanner({
             <Sparkles className="size-3.5 text-brand" />
             {MONTAR.kicker}
           </p>
+          {busy && explanations.length === 0 && (
+            <p className="mt-2 flex items-center gap-2 text-sm text-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              {MONTAR.preparing}
+            </p>
+          )}
           <ul className="mt-2 space-y-1 text-sm text-foreground">
             {explanations.map((t) => (
               <li key={t} className="flex gap-2">

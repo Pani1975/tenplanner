@@ -61,6 +61,8 @@ interface SessionWizardProps {
   initialStudentIds?: string[];
   /** "YYYY-MM-DDTHH:mm" ya calculado (p. ej. próximo día habitual del grupo). */
   initialScheduledAt?: string;
+  /** Duración ya decidida (p. ej. en "Antes de la propuesta"). */
+  initialDurationMinutes?: number;
   places?: { id: string; name: string }[];
   monitorName?: string;
   /** Monitores del club (modo club): se elige quién imparte la sesión. */
@@ -175,6 +177,7 @@ function createInitialState({
   initialGroupName,
   initialStudentIds,
   initialScheduledAt,
+  initialDurationMinutes,
 }: Pick<
   SessionWizardProps,
   | "initialExercises"
@@ -191,6 +194,7 @@ function createInitialState({
   | "initialGroupName"
   | "initialStudentIds"
   | "initialScheduledAt"
+  | "initialDurationMinutes"
 >): WizardState {
   const scheduledAt = initialScheduledAt ?? defaultScheduledAt();
   // Si la sesión viene preasignada a un grupo (p. ej. "Asignar clase" desde
@@ -202,7 +206,7 @@ function createInitialState({
       ? sessionCode(new Date(scheduledAt), initialGroupName ?? "")
       : (initialTitle ?? ""),
     scheduledAt,
-    durationMinutes: 60,
+    durationMinutes: initialDurationMinutes ?? 60,
     location: initialLocation ?? "",
     placeId: initialPlaceId ?? null,
     objective: initialObjective ?? "",
@@ -343,6 +347,7 @@ export function SessionWizard({
   initialGroupName,
   initialStudentIds,
   initialScheduledAt,
+  initialDurationMinutes,
   places = [],
   monitorName,
   coaches = [],
@@ -380,6 +385,7 @@ export function SessionWizard({
       initialGroupName,
       initialStudentIds,
       initialScheduledAt,
+      initialDurationMinutes,
     });
     if (!edit) return { ...base, coachId: initialCoachId };
     const merged = { ...base, ...edit.initialState };
@@ -523,6 +529,14 @@ export function SessionWizard({
     update,
     availableExercises,
   });
+
+  // Viniendo de "Antes de la propuesta" se entra directo en el Paso 2: la
+  // propuesta se prepara al abrir.
+  useEffect(() => {
+    if (engine?.autoStart && step === 2) void proposal.ensure();
+    // Solo al montar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSaveDraft() {
     if (!draftReadyRef.current || submittedRef.current) return;
@@ -1016,9 +1030,9 @@ export function SessionWizard({
           />
         ) : (
           <div className="space-y-4">
-            {engine && proposal.info && (
+            {engine && (proposal.info || proposal.busy || proposal.error) && (
               <EngineProposalBanner
-                explanations={proposal.info.explanations}
+                explanations={proposal.info?.explanations ?? []}
                 busy={proposal.busy}
                 error={proposal.error}
                 replacesCount={engine.replacesCount}

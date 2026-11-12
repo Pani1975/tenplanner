@@ -22,11 +22,14 @@ import {
 } from "@/lib/groups/schedule";
 import {
   countSessionItems,
+  loadBeforeProposalContext,
   ENGINE_TIME_ZONE,
 } from "@/lib/session-engine/today";
-import { MONTAR } from "@/lib/session-engine/messages";
+import { ANTES, MONTAR } from "@/lib/session-engine/messages";
+import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { OtherDatePicker } from "./other-date-picker";
+import { BeforeProposalForm } from "./before-proposal-form";
 
 interface PageProps {
   searchParams: Promise<{ group?: string; session?: string; at?: string }>;
@@ -157,10 +160,23 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
   let body: React.ReactNode;
 
   if (selected && (params.session || params.at)) {
-    // ── Paso 3: el asistente de sesión, con la propuesta en el Paso 2 ──
+    // ── Paso 3: antes de la propuesta (duración, objetivos y lugar) ──
+    let target: {
+      at: Date;
+      baseHref: string;
+      durationMinutes: number | null;
+      placeId: string | null;
+      objective: string | null;
+    } | null = null;
     if (params.session) {
       const [s] = await db
-        .select({ id: sessions.id })
+        .select({
+          id: sessions.id,
+          scheduledAt: sessions.scheduledAt,
+          durationMinutes: sessions.durationMinutes,
+          placeId: sessions.placeId,
+          objective: sessions.objective,
+        })
         .from(sessions)
         .where(
           and(
@@ -170,29 +186,85 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
           )
         )
         .limit(1);
-      if (s) redirect(`/sessions/${s.id}/edit?disenar=1`);
-    } else if (parseLocalAt(params.at)) {
-      const qs = new URLSearchParams({
-        group: selected.id,
-        at: params.at!,
-        disenar: "1",
-      });
-      redirect(`/sessions/new?${qs.toString()}`);
+      if (s) {
+        target = {
+          at: s.scheduledAt,
+          baseHref: `/sessions/${s.id}/edit`,
+          durationMinutes: s.durationMinutes,
+          placeId: s.placeId,
+          objective: s.objective,
+        };
+      }
+    } else {
+      const at = parseLocalAt(params.at);
+      if (at) {
+        const qs = new URLSearchParams({ group: selected.id, at: params.at! });
+        target = {
+          at,
+          baseHref: `/sessions/new?${qs.toString()}`,
+          durationMinutes: null,
+          placeId: null,
+          objective: null,
+        };
+      }
     }
-    body = (
-      <div className="flex flex-col gap-3">
-        <Link
-          href={`/sessions/new/montar?group=${selected.id}`}
-          className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          {MONTAR.changeWhen}
-        </Link>
-        <p className="text-sm text-muted-foreground">
-          {MONTAR.sessionNotFound}
-        </p>
-      </div>
+
+    const back = (
+      <Link
+        href={`/sessions/new/montar?group=${selected.id}`}
+        className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        {MONTAR.changeWhen}
+      </Link>
     );
+
+    if (!target) {
+      body = (
+        <div className="flex flex-col gap-3">
+          {back}
+          <p className="text-sm text-muted-foreground">
+            {MONTAR.sessionNotFound}
+          </p>
+        </div>
+      );
+    } else {
+      const ctx = await loadBeforeProposalContext(user.id, selected.id);
+      const groupObjectives = (ctx.groupObjetivos ?? "")
+        .split(/\r?\n/)
+        .map((l) => l.replace(/^[\s•·\-*]+/, "").trim())
+        .filter(Boolean);
+      body = (
+        <div className="flex flex-col gap-4">
+          {back}
+          <section className={CARD}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {ANTES.title}
+            </p>
+            <h2 className="mt-1 font-heading text-xl text-foreground">
+              {selected.name}{" "}
+              <span className="text-muted-foreground">
+                · {WHEN.format(target.at)}
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {ANTES.level(ctx.levelLabel)} · {ANTES.history(ctx.historyCount)}
+            </p>
+            <div className="mt-5">
+              <BeforeProposalForm
+                baseHref={target.baseHref}
+                defaultDuration={target.durationMinutes ?? ctx.usualDuration}
+                defaultObjectives={target.objective ?? ""}
+                suggestions={groupObjectives}
+                places={ctx.places}
+                defaultPlaceId={target.placeId}
+                defaultBall={ballFromLevels([ctx.levelCode])}
+              />
+            </div>
+          </section>
+        </div>
+      );
+    }
   } else if (selected) {
     // ── Paso 2: ¿para qué clase? ──
     const upcoming = await db

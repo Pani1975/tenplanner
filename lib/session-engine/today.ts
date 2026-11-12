@@ -1,21 +1,37 @@
 // "Hoy toca": próximo entreno del monitor y propuesta del motor para él.
 // Lo usan la tarjeta del panel (al cargar) y POST /api/sessions/generate.
 
-import { and, count, eq, gte, inArray, isNotNull, lt, ne } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lt,
+  ne,
+} from "drizzle-orm";
 import { db } from "@/db";
 import {
+  groupStudents,
   groups,
+  places,
   sessionBlockItems,
   sessionBlocks,
   sessionExercises,
   sessions,
+  students,
 } from "@/db/schema";
 import { sharedWithClubCondition } from "@/lib/clubs";
 import {
   nextScheduleOccurrenceInZone,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import { generateSession } from "./index";
+import { levelLabel, resolveGroupLevel } from "./level";
 import { loadEngineData, loadEngineGroup, type EngineGroup } from "./repo-db";
 import type {
   Duration,
@@ -214,5 +230,75 @@ export async function buildProposal(
     },
     input,
     plan,
+  };
+}
+
+export type BeforeProposalContext = {
+  levelCode: string;
+  levelLabel: string;
+  /** Sesiones completadas del grupo (su historial). */
+  historyCount: number;
+  /** Duración habitual: mediana de sus últimas sesiones, o 60. */
+  usualDuration: number;
+  groupObjetivos: string | null;
+  places: { id: string; name: string }[];
+};
+
+/** Datos para la pantalla "Antes de la propuesta". */
+export async function loadBeforeProposalContext(
+  userId: string,
+  groupId: string
+): Promise<BeforeProposalContext> {
+  const [groupRow, members, levels, history, recent, placeRows] =
+    await Promise.all([
+      db
+        .select({
+          objetivos: groups.objetivos,
+          defaultLevel: groups.defaultLevel,
+        })
+        .from(groups)
+        .where(eq(groups.id, groupId))
+        .limit(1),
+      db
+        .select({ playerLevel: students.playerLevel })
+        .from(groupStudents)
+        .innerJoin(students, eq(groupStudents.studentId, students.id))
+        .where(eq(groupStudents.groupId, groupId)),
+      loadSkillLevels(),
+      db
+        .select({ n: count() })
+        .from(sessions)
+        .where(
+          and(eq(sessions.groupId, groupId), eq(sessions.status, "completed"))
+        ),
+      db
+        .select({ d: sessions.durationMinutes })
+        .from(sessions)
+        .where(
+          and(eq(sessions.groupId, groupId), ne(sessions.status, "cancelled"))
+        )
+        .orderBy(desc(sessions.scheduledAt))
+        .limit(5),
+      db
+        .select({ id: places.id, name: places.name })
+        .from(places)
+        .where(eq(places.coachId, userId))
+        .orderBy(asc(places.name)),
+    ]);
+  const level = resolveGroupLevel(
+    levels,
+    members.map((m) => m.playerLevel),
+    groupRow[0]?.defaultLevel ?? null
+  );
+  const durations = recent.map((r) => r.d).sort((a, b) => a - b);
+  const usualDuration =
+    durations.length > 0 ? durations[Math.floor(durations.length / 2)] : 60;
+  return {
+    levelCode: level.code,
+    levelLabel: levelLabel(levels, level.code),
+    historyCount: Number(history[0]?.n ?? 0),
+    usualDuration,
+    groupObjetivos: groupRow[0]?.objetivos ?? null,
+    places: placeRows,
   };
 }
