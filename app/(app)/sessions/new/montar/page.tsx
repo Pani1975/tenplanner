@@ -39,7 +39,7 @@ function nextAt(schedule: GroupScheduleEntry[] | null, now: Date): Date {
 }
 
 /**
- * "Que la monte Ten Planner": el monitor elige un grupo y el motor (F1)
+ * "Que la diseñe Ten Planner": el monitor elige un grupo y el motor (F1)
  * monta la clase de su próximo entreno con la misma tarjeta del panel.
  */
 export default async function MontarSessionPage({ searchParams }: PageProps) {

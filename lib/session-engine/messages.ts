@@ -115,9 +115,9 @@ export const HOY_TOCA = {
   noStudents: "Este grupo aún no tiene alumnos.",
 } as const;
 
-/** Textos de "Que la monte Ten Planner" en nueva sesión (elegir grupo). */
+/** Textos de "Que la diseñe Ten Planner" en nueva sesión (elegir grupo). */
 export const MONTAR = {
-  title: "Que la monte Ten Planner",
+  title: "Que la diseñe Ten Planner",
   subtitle: "Elige el grupo y la monta con su nivel y su historial.",
   kicker: "Próximo entreno",
   chooseGroup: "Elige el grupo",
