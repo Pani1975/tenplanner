@@ -59,11 +59,13 @@ export function explainLevel(levelLabel: string, source: LevelSource): string {
 
 export function explainAutoFocus(
   focusLabel: string,
-  reason: "menos" | "turno"
+  reason: "menos" | "turno" | "objetivos"
 ): string {
+  if (reason === "objetivos")
+    return `Foco en ${focusLabel}: es el golpe que nombran los objetivos de la sesión.`;
   return reason === "menos"
-    ? `Automático: ${focusLabel}, el golpe que menos ha trabajado el grupo en las últimas sesiones.`
-    : `Automático: ${focusLabel}, por turno (aún no hay sesiones completadas del grupo).`;
+    ? `Foco en ${focusLabel}: el golpe que menos ha trabajado el grupo en las últimas sesiones.`
+    : `Foco en ${focusLabel}: por turno (aún no hay sesiones completadas del grupo).`;
 }
 
 export function explainIntensity(intensity: Intensity): string {
@@ -153,6 +155,12 @@ export const MONTAR = {
   confirmReplace: "Sí, sustituir",
   cancel: "No",
   designWithTenPlanner: "Que la diseñe Ten Planner",
+  changeProposal: "Cambiar la propuesta",
+  preparing: "Preparando la propuesta…",
+  replacesNote: (n: number) =>
+    n === 1
+      ? "Sustituye el ejercicio que tenía la sesión. Si no te convence, sal sin guardar."
+      : `Sustituye los ${n} ejercicios que tenía la sesión. Si no te convence, sal sin guardar.`,
 } as const;
 
 export const REPEATED_WARNING =

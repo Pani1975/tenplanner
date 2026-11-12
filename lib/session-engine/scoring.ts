@@ -2,6 +2,7 @@
 // mejores, no el mejor siempre: "Otra propuesta" da algo distinto sin caer
 // en lo mediocre).
 
+import type { ObjectiveFocus } from "./objectives";
 import type { Slot } from "./skeleton";
 import type { EngineExercise, Focus, Intensity } from "./types";
 
@@ -15,6 +16,8 @@ export type ScoreContext = {
   /** Propuesta anterior ("Otra propuesta" debe cambiar). */
   previousIds: Set<string>;
   prev: EngineExercise | null;
+  /** Golpes y aspectos de los objetivos de la sesión. */
+  objectives?: ObjectiveFocus;
 };
 
 const PREFERRED_CARACTER: Record<Intensity, string> = {
@@ -42,6 +45,12 @@ export function scoreExercise(
     ex.caracter.includes(PREFERRED_CARACTER[ctx.intensity])
   )
     s += 1;
+  // Objetivos de la sesión: más puntos a lo que trabajan.
+  if (ctx.objectives) {
+    if (ex.golpes.some((g) => (ctx.objectives!.golpes as string[]).includes(g)))
+      s += 1;
+    if (ex.aspectos.some((a) => ctx.objectives!.aspectos.includes(a))) s += 1;
+  }
   if (ctx.recent3.has(ex.id)) s -= 4;
   else if (ctx.recent8.has(ex.id)) s -= 2;
   if (ctx.previousIds.has(ex.id)) s -= 6;

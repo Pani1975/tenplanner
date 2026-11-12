@@ -59,6 +59,8 @@ interface PageProps {
     fromClass?: string;
     group?: string;
     at?: string;
+    /** "Que la diseñe Ten Planner": la propuesta se prepara en el Paso 2. */
+    disenar?: string;
   }>;
 }
 
@@ -149,6 +151,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     fromClass: fromClassId,
     group: groupIdParam,
     at: atParam,
+    disenar: disenarParam,
   } = await searchParams;
 
   // Fecha/hora ya calculada por quien nos trae aquí (p. ej. el próximo día
@@ -161,12 +164,13 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   // Preasignar un grupo (p. ej. desde "Asignar clase" en la ficha de grupo):
   // precarga el grupo y a sus alumnos, igual que si se eligieran a mano en
   // el paso de alumnos.
-  let fromGroup: { id: string; name: string } | null = null;
+  let fromGroup: { id: string; name: string; objetivos: string | null } | null =
+    null;
   let fromGroupStudentIds: string[] = [];
   if (groupIdParam) {
     const groupActiveClubId = await getActiveWorkClubId(user.id);
     const [grp] = await db
-      .select({ id: groups.id, name: groups.name })
+      .select({ id: groups.id, name: groups.name, objetivos: groups.objetivos })
       .from(groups)
       .where(
         and(
@@ -446,9 +450,12 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         : preSelected.length > 0
           ? preSelected
           : undefined;
+  // "Que la diseñe Ten Planner" (desde /sessions/new/montar): con grupo.
+  const disenar = disenarParam === "1" && !!fromGroup;
   const allowDraftRestore =
-    !fromSession && !fromClass && preSelected.length === 0;
-  const noPreload = !fromSession && !fromClass && preSelected.length === 0;
+    !disenar && !fromSession && !fromClass && preSelected.length === 0;
+  const noPreload =
+    !disenar && !fromSession && !fromClass && preSelected.length === 0;
 
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
@@ -575,7 +582,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialExercises={initialExercises}
               initialTitle={fromSession?.title ?? fromClass?.name}
               initialObjective={
-                fromSession?.objective ?? fromClass?.objetivos ?? undefined
+                fromSession?.objective ??
+                fromClass?.objetivos ??
+                (disenar ? (fromGroup?.objetivos ?? undefined) : undefined)
               }
               initialMaterial={
                 fromSession?.material ?? fromClass?.material ?? undefined
@@ -598,6 +607,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               coaches={clubCoaches}
               initialCoachId={clubCoaches.length > 0 ? user.id : null}
               allowDraftRestore={allowDraftRestore}
+              engine={
+                disenar && fromGroup ? { groupId: fromGroup.id } : undefined
+              }
             />
           </Suspense>
         </div>

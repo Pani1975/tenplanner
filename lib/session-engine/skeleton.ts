@@ -6,7 +6,7 @@ import type { Duration, Intensity, Phase, SlotKind } from "./types";
 
 export type Slot = { kind: SlotKind; phase: Phase; minutes: number };
 
-const BASE: Record<Duration, [SlotKind, number][]> = {
+const BASE: Record<30 | 45 | 60 | 90, [SlotKind, number][]> = {
   30: [
     ["activation", 5],
     ["tecnica", 10],
@@ -51,14 +51,40 @@ const INTENSITY_SHIFT: Record<Intensity, number> = {
   alta: 0.25,
 };
 
+/** Plantilla más cercana a la duración pedida. */
+function templateFor(duration: number): 30 | 45 | 60 | 90 {
+  const keys = [30, 45, 60, 90] as const;
+  return keys.reduce((best, k) =>
+    Math.abs(k - duration) < Math.abs(best - duration) ? k : best
+  );
+}
+
+/**
+ * Esqueleto para cualquier duración (la de la sesión en el calendario): se
+ * toma la plantilla más cercana y se escalan sus minutos para que sumen
+ * exactamente la duración pedida.
+ */
 export function buildSkeleton(
   duration: Duration,
   intensity: Intensity
 ): Slot[] {
-  const slots: Slot[] = BASE[duration].map(([kind, minutes]) => ({
+  const template = BASE[templateFor(duration)];
+  const base = template.reduce((n, [, m]) => n + m, 0);
+  const scaled = template.map(([, m]) =>
+    Math.max(2, Math.round((m * duration) / base))
+  );
+  // Ajuste fino para que la suma sea exacta (sobre los huecos centrales).
+  let diff = duration - scaled.reduce((n, m) => n + m, 0);
+  for (let i = 1; diff !== 0 && i < 1000; i++) {
+    const idx = 1 + (i % Math.max(1, scaled.length - 2));
+    if (diff < 0 && scaled[idx] <= 2) continue;
+    scaled[idx] += diff > 0 ? 1 : -1;
+    diff += diff > 0 ? -1 : 1;
+  }
+  const slots: Slot[] = template.map(([kind], i) => ({
     kind,
     phase: phaseOf(kind),
-    minutes,
+    minutes: scaled[i],
   }));
   const shift = INTENSITY_SHIFT[intensity];
   if (shift === 0) return slots;

@@ -18,6 +18,7 @@ import {
   SLOT_LABELS,
 } from "./messages";
 import { seededRandom } from "./rng";
+import { parseObjectives, type ObjectiveFocus } from "./objectives";
 import { pickWithSeed, scoreExercise } from "./scoring";
 import { buildSkeleton, type Slot } from "./skeleton";
 import type {
@@ -39,13 +40,18 @@ const AUTO_GOLPES: Golpe[] = ["derecha", "reves", "saque", "volea", "resto"];
 export function resolveFocus(
   focus: Focus,
   data: EngineData,
-  rand: () => number
+  rand: () => number,
+  objectives: ObjectiveFocus = { golpes: [], aspectos: [] }
 ): {
   focus: Exclude<Focus, "auto">;
   wasAuto: boolean;
-  reason?: "menos" | "turno";
+  reason?: "menos" | "turno" | "objetivos";
 } {
   if (focus !== "auto") return { focus, wasAuto: false };
+  // Los objetivos de la sesión mandan: el primer golpe que nombran.
+  if (objectives.golpes.length > 0) {
+    return { focus: objectives.golpes[0], wasAuto: true, reason: "objetivos" };
+  }
   const counts = data.recentGolpeCounts ?? {};
   const anyHistory = AUTO_GOLPES.some((g) => (counts[g] ?? 0) > 0);
   if (!anyHistory) {
@@ -74,10 +80,12 @@ export function generateSession(
   );
   // El foco automático depende de la semilla base (grupo + fecha), no de la
   // variante de "Otra propuesta" ("base#2"), para que no cambie de golpe.
+  const objectives = parseObjectives(input.objectives);
   const focusInfo = resolveFocus(
     input.focus,
     data,
-    seededRandom(input.seed.split("#")[0])
+    seededRandom(input.seed.split("#")[0]),
+    objectives
   );
   const focus = focusInfo.focus;
 
@@ -144,6 +152,7 @@ export function generateSession(
         recent8,
         previousIds,
         prev,
+        objectives,
       }),
     }));
     const pick = pickWithSeed(scored, rand);
@@ -213,7 +222,8 @@ export function generateSession(
   explanations.push(
     explainLevel(levelLabel(data.levels, level.code), level.source)
   );
-  explanations.push(explainIntensity(input.intensity));
+  if (input.intensity !== "media")
+    explanations.push(explainIntensity(input.intensity));
   for (const it of items) {
     if (it.relaxStep > 0 && it.relaxStep <= MAX_RELAX_STEP) {
       explanations.push(explainRelax(SLOT_LABELS[it.kind], it.relaxStep));

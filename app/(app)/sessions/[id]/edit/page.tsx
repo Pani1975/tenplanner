@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
   exercises,
+  groups,
   places,
   sessionStudents,
   sessions,
@@ -25,9 +26,14 @@ import { getClubMembersDirectory } from "@/lib/clubs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  /** disenar=1: "Que la diseñe Ten Planner" sobre esta sesión. */
+  searchParams: Promise<{ disenar?: string }>;
 }
 
-export default async function EditSessionPage({ params }: PageProps) {
+export default async function EditSessionPage({
+  params,
+  searchParams,
+}: PageProps) {
   const supabase = await createClient();
   const {
     data: { session: authSession },
@@ -35,7 +41,10 @@ export default async function EditSessionPage({ params }: PageProps) {
   const user = authSession?.user ?? null;
   if (!user) redirect("/login");
 
-  const { id } = await params;
+  const [{ id }, { disenar: disenarParam }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
 
   const [sessionRow] = await db
     .select()
@@ -94,6 +103,20 @@ export default async function EditSessionPage({ params }: PageProps) {
         .limit(2000),
     ]);
 
+  // "Que la diseñe Ten Planner": solo en sesiones de un grupo. Si la sesión
+  // no tiene objetivos, se proponen los del grupo.
+  const disenar = disenarParam === "1" && !!sessionRow.groupId;
+  const groupObjetivos =
+    disenar && !sessionRow.objective?.trim()
+      ? ((
+          await db
+            .select({ objetivos: groups.objetivos })
+            .from(groups)
+            .where(eq(groups.id, sessionRow.groupId!))
+            .limit(1)
+        )[0]?.objetivos ?? "")
+      : null;
+
   const monitorName =
     userRow[0]?.name ||
     user.user_metadata?.full_name ||
@@ -144,6 +167,14 @@ export default async function EditSessionPage({ params }: PageProps) {
               monitorName={monitorName}
               coaches={clubCoaches}
               allowDraftRestore={false}
+              engine={
+                disenar && sessionRow.groupId
+                  ? {
+                      groupId: sessionRow.groupId,
+                      replacesCount: plan.items.length,
+                    }
+                  : undefined
+              }
               edit={{
                 sessionId: id,
                 initialState: {
@@ -154,7 +185,7 @@ export default async function EditSessionPage({ params }: PageProps) {
                   placeId: sessionRow.placeId ?? null,
                   groupId: sessionRow.groupId ?? null,
                   coachId: sessionRow.coachId ?? sessionRow.userId,
-                  objective: sessionRow.objective ?? "",
+                  objective: groupObjetivos ?? sessionRow.objective ?? "",
                   material: sessionRow.material ?? "",
                   observations: sessionRow.observations ?? "",
                   sourceClassId: sessionRow.sourceClassId ?? null,

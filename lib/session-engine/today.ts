@@ -61,6 +61,24 @@ export type NextTraining = {
   existingSessionId: string | null;
 };
 
+/** "YYYY-MM-DDTHH:mm" de un instante en la zona del motor (para el asistente). */
+export function localDateTimeKey(at: Date): string {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: ENGINE_TIME_ZONE,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .formatToParts(at)
+      .map((x) => [x.type, x.value])
+  );
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
 /** Fecha local (YYYY-MM-DD) de un instante en la zona del motor. */
 export function localDateKey(at: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -143,6 +161,7 @@ export type ProposalRequest = {
   focus: Focus;
   /** null = todos los alumnos del grupo. */
   attendeeIds: string[] | null;
+  objectives?: string | null;
   pinned?: GenerateInput["pinned"];
   previousIds?: string[];
   slotAdjust?: GenerateInput["slotAdjust"];
@@ -176,6 +195,7 @@ export async function buildProposal(
     durationMinutes: req.durationMinutes,
     intensity: req.intensity,
     focus: req.focus,
+    objectives: req.objectives ?? null,
     attendeeIds,
     pinned: req.pinned,
     previousIds: req.previousIds,
