@@ -3,15 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Loader2, Pencil, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { WeeklySchedulePicker } from "@/components/app/weekly-schedule-picker";
 import {
   WEEKDAY_LABELS,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
-
-// Lunes primero en el selector (más natural aquí), aunque weekday sigue
-// siendo 0=domingo..6=sábado por debajo (igual que el resto de la app).
-const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /**
  * Días (y hora) en que el grupo tiene clase habitualmente. Esto es lo que
@@ -43,23 +39,6 @@ export function GroupScheduleEditor({
     );
     setError(null);
     setOpen(true);
-  }
-
-  function toggleDay(weekday: number) {
-    setSchedule((prev) => {
-      const next = new Map(prev);
-      if (next.has(weekday)) next.delete(weekday);
-      else next.set(weekday, "17:00");
-      return next;
-    });
-  }
-
-  function setTime(weekday: number, time: string) {
-    setSchedule((prev) => {
-      const next = new Map(prev);
-      next.set(weekday, time);
-      return next;
-    });
   }
 
   async function save() {
@@ -148,41 +127,7 @@ export function GroupScheduleEditor({
                 partir de esto, aunque siempre podrás cambiarla o añadir un
                 día suelto.
               </p>
-              {DISPLAY_ORDER.map((weekday) => {
-                const label = WEEKDAY_LABELS[weekday];
-                const active = schedule.has(weekday);
-                return (
-                  <div
-                    key={weekday}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border px-4 py-2.5 transition-colors",
-                      active
-                        ? "border-[#D6FF38] bg-[#D6FF38]/10"
-                        : "border-foreground/10"
-                    )}
-                  >
-                    <label className="flex flex-1 cursor-pointer items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={() => toggleDay(weekday)}
-                        className="size-4 accent-[#D6FF38]"
-                      />
-                      <span className="text-sm font-bold text-foreground">
-                        {label}
-                      </span>
-                    </label>
-                    {active && (
-                      <input
-                        type="time"
-                        value={schedule.get(weekday)}
-                        onChange={(e) => setTime(weekday, e.target.value)}
-                        className="h-9 rounded-lg border border-foreground/15 bg-background px-2 text-sm text-foreground focus:border-brand/50 focus:outline-none"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+              <WeeklySchedulePicker value={schedule} onChange={setSchedule} />
               {error && (
                 <p className="text-sm font-medium text-destructive">{error}</p>
               )}
