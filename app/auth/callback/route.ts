@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { clubMembers, clubs, users } from "@/db/schema";
-import { getOwnedClub } from "@/lib/clubs";
-import { cleanOptionalText, normalizeWebsite } from "@/lib/club-identity";
+import { users } from "@/db/schema";
+import { createClubFromSignup } from "@/lib/club-signup";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { resetToDefaultWorkMode } from "@/lib/work-mode";
-
-function metaText(value: unknown) {
-  return typeof value === "string" ? value : null;
-}
 
 function safeNext(raw: string | null): string {
   const fallback = "/dashboard";
@@ -70,55 +65,15 @@ export async function GET(request: Request) {
           });
         }
 
-        // Club sign-up that needed email confirmation: the club couldn't be
-        // created at submit time (no users row yet), so finish it here.
-        const clubName = user.user_metadata?.club_name;
-        if (typeof clubName === "string" && clubName.trim().length >= 2) {
-          try {
-            const existing = await getOwnedClub(user.id);
-            if (!existing) {
-              const seatsRaw = user.user_metadata?.club_seats;
-              const seats =
-                typeof seatsRaw === "string" && seatsRaw.trim()
-                  ? Number(seatsRaw)
-                  : null;
-              await db.transaction(async (tx) => {
-                const [club] = await tx
-                  .insert(clubs)
-                  .values({
-                    name: clubName.trim(),
-                    ownerId: user.id,
-                    plannedCoachSeats:
-                      seats !== null && Number.isFinite(seats) ? seats : null,
-                    address: cleanOptionalText(
-                      metaText(user.user_metadata?.club_address),
-                      500
-                    ),
-                    phone: cleanOptionalText(
-                      metaText(user.user_metadata?.club_phone),
-                      50
-                    ),
-                    website: normalizeWebsite(
-                      metaText(user.user_metadata?.club_website)
-                    ),
-                    // Email del club: el de la cuenta (editable en Mi club).
-                    email: user.email?.toLowerCase() ?? null,
-                  })
-                  .returning();
-                await tx.insert(clubMembers).values({
-                  clubId: club.id,
-                  userId: user.id,
-                  role: "owner",
-                  status: "active",
-                });
-              });
-            }
-          } catch (error) {
-            console.error("Error creating club during auth callback", {
-              userId: user.id,
-              error,
-            });
-          }
+        // Alta de club que necesitó confirmar el correo: el club no se pudo
+        // crear al enviar el formulario (aún no había fila en users).
+        try {
+          await createClubFromSignup(user);
+        } catch (error) {
+          console.error("Error creating club during auth callback", {
+            userId: user.id,
+            error,
+          });
         }
 
         // Cada inicio de sesión empieza en el modo por defecto de la cuenta.
