@@ -16,7 +16,7 @@ type Router = { refresh: () => void };
 
 const MODE_HOME: Record<string, string> = {
   [MODE_ADMIN]: "/informes",
-  [MODE_MANAGEMENT]: "/gestion",
+  [MODE_MANAGEMENT]: "/gestion/panel",
 };
 
 export function goAfterModeChange(

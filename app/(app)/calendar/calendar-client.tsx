@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   CalendarDays,
   CalendarOff,
+  CheckCircle2,
+  Circle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -28,6 +30,8 @@ import {
   type CalendarEventData,
 } from "@/components/app/event-dialog";
 import { HolidayDialog } from "@/components/app/holiday-dialog";
+import { TaskDialog } from "@/components/app/task-dialog";
+import type { ManagementTaskData } from "@/lib/management-tasks";
 import { DayAgenda } from "@/components/app/day-agenda";
 import {
   holidayAppliesTo,
@@ -60,7 +64,22 @@ interface CalendarClientProps {
   /** Id del usuario actual — una sesión/evento de otro monitor (compartido
    * vía club) no se puede arrastrar ni editar desde aquí, solo abrir. */
   currentUserId?: string;
+  /** Modo gestión: el calendario del club más las tareas y eventos del gestor. */
+  management?: boolean;
+  /** Tareas del Modo gestión (solo con `management`). */
+  tasks?: ManagementTaskData[];
+  /** Monitores del club, para elegir responsable de una tarea. */
+  coaches?: { id: string; name: string }[];
 }
+
+/** Qué calendario se ve en el Modo gestión. */
+type Scope = "club" | "gestion" | "both";
+
+const SCOPE_LABELS: Record<Scope, string> = {
+  club: "Calendario del club",
+  gestion: "Calendario de gestión",
+  both: "Ambos",
+};
 
 type DayItem =
   | { kind: "session"; time: Date; session: SessionData }
@@ -90,6 +109,15 @@ const MONTHS = [
   "Noviembre",
   "Diciembre",
 ];
+
+/** Azul: evento del club. Violeta: evento de gestión. Ámbar: tarea. */
+function eventColor(event: CalendarEventData) {
+  if (event.taskId)
+    return "bg-[#b45309]/15 text-[#92400e] hover:bg-[#b45309] hover:text-white dark:text-[#fbbf77]";
+  if (event.management)
+    return "bg-[#7c3aed]/15 text-[#6d28d9] hover:bg-[#7c3aed] hover:text-white dark:text-[#c4b5fd]";
+  return "bg-[#2563eb]/15 text-[#1d4ed8] hover:bg-[#2563eb] hover:text-white dark:text-[#93b9ff]";
+}
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -146,6 +174,9 @@ export function CalendarClient({
   holidays: initialHolidays = [],
   groups = [],
   currentUserId,
+  management = false,
+  tasks: initialTasks = [],
+  coaches = [],
 }: CalendarClientProps) {
   const router = useRouter();
   const today = new Date();
@@ -193,6 +224,93 @@ export function CalendarClient({
   );
   const [holidayError, setHolidayError] = useState<string | null>(null);
 
+  // Tareas de gestión (ámbar) y qué calendario se ve en el Modo gestión.
+  const [tasks, setTasks] = useState(initialTasks);
+  const [taskDialog, setTaskDialog] = useState<{
+    task: ManagementTaskData | null;
+    date?: string | null;
+  } | null>(null);
+  const [scope, setScope] = useState<Scope>("both");
+
+  // En el Modo gestión se puede ver solo el calendario del club (sesiones,
+  // eventos del club y festivos), solo el de gestión (lo que el gestor
+  // añade: eventos y tareas) o ambos. Fuera de gestión todo es del club.
+  const showClub = !management || scope !== "gestion";
+  const showGestion = management && scope !== "club";
+  const scopedSessions = showClub ? sessions : [];
+  const scopedHolidays = showClub ? holidays : [];
+  const taskEvents: CalendarEventData[] = tasks
+    .filter((t) => t.dueDate)
+    .map((t) => {
+      const at = new Date(`${t.dueDate}T09:00:00`).toISOString();
+      return {
+        id: `task-${t.id}`,
+        taskId: t.id,
+        title: `${t.done ? "✓" : "☐"} ${t.title}`,
+        description: t.description,
+        startAt: at,
+        endAt: at,
+        userId: currentUserId,
+        management: true,
+        authorName: t.responsibleLabel,
+      };
+    });
+  const scopedEvents = [
+    ...events.filter((e) => (e.management ? showGestion : showClub)),
+    ...(showGestion ? taskEvents : []),
+  ];
+
+  function openEvent(event: CalendarEventData) {
+    if (event.taskId) {
+      setTaskDialog({ task: tasks.find((t) => t.id === event.taskId) ?? null });
+    } else {
+      setEventDialog({ event });
+    }
+  }
+
+  function requestDeleteEvent(event: CalendarEventData) {
+    // Las tareas se eliminan desde su diálogo.
+    if (event.taskId) openEvent(event);
+    else setEventToDelete(event);
+  }
+
+  function handleTaskSaved(saved: ManagementTaskData, jump = true) {
+    setTasks((prev) =>
+      prev.some((t) => t.id === saved.id)
+        ? prev.map((t) => (t.id === saved.id ? saved : t))
+        : [...prev, saved]
+    );
+    if (jump && saved.dueDate) {
+      const d = new Date(`${saved.dueDate}T00:00:00`);
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
+      setSelectedDay(d.getDate());
+      setFocusDate(d);
+    }
+    router.refresh();
+  }
+
+  async function toggleTaskDone(task: ManagementTaskData) {
+    const res = await fetch(`/api/management-tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        notifyEmail: task.notifyEmail,
+        responsibleKind: task.responsibleKind,
+        responsibleUserId: task.responsibleUserId,
+        responsibleText: task.responsibleText,
+        done: !task.done,
+      }),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { data: ManagementTaskData };
+      handleTaskSaved(json.data, false);
+    }
+  }
+
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
@@ -201,13 +319,13 @@ export function CalendarClient({
   // no solo el mes visible, para poder alimentar las vistas de semana y
   // año sin volver a pedir datos al servidor.
   const sessionsByDateKey = new Map<string, SessionData[]>();
-  for (const s of sessions) {
+  for (const s of scopedSessions) {
     const k = dateKey(new Date(s.scheduledAt));
     if (!sessionsByDateKey.has(k)) sessionsByDateKey.set(k, []);
     sessionsByDateKey.get(k)!.push(s);
   }
   const eventsByDateKey = new Map<string, CalendarEventData[]>();
-  for (const e of events) {
+  for (const e of scopedEvents) {
     const k = dateKey(new Date(e.startAt));
     if (!eventsByDateKey.has(k)) eventsByDateKey.set(k, []);
     eventsByDateKey.get(k)!.push(e);
@@ -215,7 +333,7 @@ export function CalendarClient({
 
   // Cada festivo se expande a sus días (con tope por si el rango es absurdo).
   const holidaysByDateKey = new Map<string, CalendarHolidayData[]>();
-  for (const h of holidays) {
+  for (const h of scopedHolidays) {
     const cursor = new Date(`${h.startDate}T00:00:00`);
     const last = new Date(`${h.endDate}T00:00:00`);
     for (let i = 0; i < 400 && cursor <= last; i++) {
@@ -637,6 +755,111 @@ export function CalendarClient({
 
   return (
     <div className="space-y-6">
+      {management && (
+        <>
+          <div
+            role="group"
+            aria-label="Qué calendario ver"
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 dark:border-white/10 dark:bg-white/[0.045]"
+          >
+            <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
+              Ver
+            </span>
+            {(["club", "gestion", "both"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={scope === s}
+                onClick={() => setScope(s)}
+                className={cn(
+                  "inline-flex h-8 items-center rounded-full px-3 text-[13px] font-semibold transition-colors",
+                  scope === s
+                    ? "bg-[#050505] text-white dark:bg-[#D6FF38] dark:text-[#050505]"
+                    : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                )}
+              >
+                {SCOPE_LABELS[s]}
+              </button>
+            ))}
+          </div>
+
+          <section className="tp-panel space-y-3 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
+                Tareas de gestión
+              </h2>
+              <button
+                type="button"
+                onClick={() => setTaskDialog({ task: null })}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#b45309] px-3.5 text-[13px] font-black text-white transition-colors hover:bg-[#92400e]"
+              >
+                <Plus className="size-3.5" />
+                Nueva tarea
+              </button>
+            </div>
+            {tasks.length === 0 ? (
+              <p className="text-sm text-foreground/55">
+                Aún no hay tareas. Crea la primera: solo la ves tú, en el Modo
+                gestión.
+              </p>
+            ) : (
+              <ul className="divide-y divide-[#050505]/10 dark:divide-white/10">
+                {[...tasks]
+                  .sort(
+                    (a, b) =>
+                      Number(a.done) - Number(b.done) ||
+                      (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999")
+                  )
+                  .map((t) => (
+                    <li key={t.id} className="flex items-center gap-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => void toggleTaskDone(t)}
+                        aria-label={
+                          t.done ? "Marcar como pendiente" : "Marcar como hecha"
+                        }
+                        className="shrink-0 text-[#b45309]"
+                      >
+                        {t.done ? (
+                          <CheckCircle2 className="size-5" />
+                        ) : (
+                          <Circle className="size-5" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTaskDialog({ task: t })}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p
+                          className={cn(
+                            "truncate text-sm font-bold text-foreground",
+                            t.done && "line-through opacity-55"
+                          )}
+                        >
+                          {t.title}
+                        </p>
+                        <p className="truncate text-xs text-foreground/55">
+                          {t.dueDate
+                            ? new Intl.DateTimeFormat("es-ES", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              }).format(new Date(`${t.dueDate}T00:00:00`))
+                            : "Sin fecha"}
+                          {" · "}
+                          {t.responsibleLabel}
+                          {t.notifyEmail ? " · aviso por correo" : ""}
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+
       {/* Calendar header */}
       <div className="tp-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center justify-between gap-3 sm:justify-start">
@@ -704,6 +927,19 @@ export function CalendarClient({
                 <CalendarDays className="size-4 text-[#2563eb]" />
                 Nuevo evento
               </DropdownMenuItem>
+              {management && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTaskDialog({
+                      task: null,
+                      date: dateKey(defaultDateForNewEvent()),
+                    })
+                  }
+                >
+                  <CheckCircle2 className="size-4 text-[#b45309]" />
+                  Nueva tarea
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => setHolidayDialog({ holiday: null })}
               >
@@ -899,14 +1135,17 @@ export function CalendarClient({
                                         item.event.userId !== currentUserId
                                       )
                                         return;
-                                      setEventDialog({ event: item.event });
+                                      openEvent(item.event);
                                     }}
                                     title={
                                       item.event.authorName
                                         ? `${item.event.title} · ${item.event.authorName}`
                                         : item.event.title
                                     }
-                                    className="block w-full truncate rounded-full bg-[#2563eb]/15 px-1.5 py-0.5 text-left text-[10px] font-bold leading-tight text-[#1d4ed8] transition-colors hover:bg-[#2563eb] hover:text-white dark:text-[#93b9ff]"
+                                    className={cn(
+                                      "block w-full truncate rounded-full px-1.5 py-0.5 text-left text-[10px] font-bold leading-tight transition-colors",
+                                      eventColor(item.event)
+                                    )}
                                   >
                                     {item.event.title}
                                     {item.event.authorName && (
@@ -949,8 +1188,8 @@ export function CalendarClient({
               }
               onDeleteSession={(s) => setToDelete(s)}
               deletingSessionId={deletingId}
-              onEditEvent={(e) => setEventDialog({ event: e })}
-              onDeleteEvent={(e) => setEventToDelete(e)}
+              onEditEvent={openEvent}
+              onDeleteEvent={requestDeleteEvent}
               deletingEventId={deletingEventId}
               deleteError={deleteError}
               eventError={eventError}
@@ -983,8 +1222,8 @@ export function CalendarClient({
           }
           onDeleteSession={(s) => setToDelete(s)}
           deletingSessionId={deletingId}
-          onEditEvent={(e) => setEventDialog({ event: e })}
-          onDeleteEvent={(e) => setEventToDelete(e)}
+          onEditEvent={openEvent}
+          onDeleteEvent={requestDeleteEvent}
           deletingEventId={deletingEventId}
           deleteError={deleteError}
           eventError={eventError}
@@ -1115,14 +1354,17 @@ export function CalendarClient({
                               item.event.userId !== currentUserId
                             )
                               return;
-                            setEventDialog({ event: item.event });
+                            openEvent(item.event);
                           }}
                           title={
                             item.event.authorName
                               ? `${item.event.title} · ${item.event.authorName}`
                               : item.event.title
                           }
-                          className="block w-full truncate rounded-full bg-[#2563eb]/15 px-2 py-1 text-left text-[11px] font-bold leading-tight text-[#1d4ed8] transition-colors hover:bg-[#2563eb] hover:text-white dark:text-[#93b9ff]"
+                          className={cn(
+                            "block w-full truncate rounded-full px-2 py-1 text-left text-[11px] font-bold leading-tight transition-colors",
+                            eventColor(item.event)
+                          )}
                         >
                           {item.event.title}
                           {item.event.authorName && (
@@ -1181,6 +1423,24 @@ export function CalendarClient({
             if (!open) setEventDialog(null);
           }}
           onSaved={handleEventSaved}
+        />
+      )}
+
+      {taskDialog && (
+        <TaskDialog
+          key={taskDialog.task?.id ?? "new"}
+          task={taskDialog.task}
+          defaultDate={taskDialog.date}
+          coaches={coaches}
+          open
+          onOpenChange={(open) => {
+            if (!open) setTaskDialog(null);
+          }}
+          onSaved={(t) => handleTaskSaved(t)}
+          onDeleted={(id) => {
+            setTasks((prev) => prev.filter((t) => t.id !== id));
+            router.refresh();
+          }}
         />
       )}
 

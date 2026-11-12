@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import {
   getClubMonitorSpaceClubIds,
+  getManagementClubId,
   getWorkMode,
   personalTitle,
 } from "@/lib/work-mode";
@@ -12,8 +13,10 @@ import {
   calendarEvents as calendarEventsTable,
   calendarHolidays as calendarHolidaysTable,
   groups as groupsTable,
+  managementTasks as managementTasksTable,
   users as usersTable,
 } from "@/db/schema";
+import { serializeTask } from "@/lib/management-tasks";
 import { and, asc, eq, gte, inArray, lte, or } from "drizzle-orm";
 import { CalendarClient } from "./calendar-client";
 import { FeatureLocked } from "@/components/app/feature-locked";
@@ -141,6 +144,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
       endAt: calendarEventsTable.endAt,
       clubId: calendarEventsTable.clubId,
       userId: calendarEventsTable.userId,
+      management: calendarEventsTable.management,
       authorName: usersTable.name,
     })
     .from(calendarEventsTable)
@@ -229,9 +233,32 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     authorName: e.userId !== user.id ? (e.authorName ?? null) : null,
   }));
 
+  // Modo gestión: tareas del gestor y monitores del club para asignarlas.
+  const managementClubId = await getManagementClubId(user.id);
+  const [taskRows, taskCoaches] = managementClubId
+    ? await Promise.all([
+        db
+          .select({
+            task: managementTasksTable,
+            coachName: usersTable.name,
+          })
+          .from(managementTasksTable)
+          .leftJoin(
+            usersTable,
+            eq(usersTable.id, managementTasksTable.responsibleUserId)
+          )
+          .where(eq(managementTasksTable.clubId, managementClubId))
+          .orderBy(asc(managementTasksTable.dueDate)),
+        getClubMembersDirectory([managementClubId]),
+      ])
+    : [[], []];
+  const clubName = ownedClub?.name ?? "Club";
+  const tasks = taskRows.map((r) =>
+    serializeTask(r.task, r.coachName ?? null, clubName)
+  );
+
   const total = serialized.length;
   const totalEvents = serializedEvents.length;
-  const totalHolidays = serializedHolidays.length;
 
   return (
     <div className="tp-page">
@@ -306,29 +333,17 @@ export default async function CalendarPage({ searchParams }: PageProps) {
             ))}
           </div>
         )}
-        {total === 0 && totalEvents === 0 && totalHolidays === 0 ? (
-          <div className="tp-panel flex flex-col items-center justify-center gap-4 border-dashed py-20 text-center">
-            <p className="max-w-xs text-sm leading-6 text-foreground/55">
-              Aún no tienes sesiones ni eventos planificados. Crea el primero
-              para verlo aquí.
-            </p>
-            <Link
-              href="/sessions/new"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground transition-opacity hover:opacity-90"
-            >
-              <Plus className="size-4" />
-              Crear primera sesión
-            </Link>
-          </div>
-        ) : (
-          <CalendarClient
-            sessions={serialized}
-            events={serializedEvents}
-            holidays={serializedHolidays}
-            groups={spaceGroups}
-            currentUserId={user.id}
-          />
-        )}
+        {/* Siempre se ve el calendario, aunque aún no haya nada en él. */}
+        <CalendarClient
+          sessions={serialized}
+          events={serializedEvents}
+          holidays={serializedHolidays}
+          groups={spaceGroups}
+          currentUserId={user.id}
+          management={!!managementClubId}
+          tasks={tasks}
+          coaches={taskCoaches.filter((m) => m.id !== user.id)}
+        />
       </div>
     </div>
   );
