@@ -218,6 +218,7 @@ const managementNavItems: NavItem[] = [
     feature: "calendar",
   },
   { href: "/students", label: "Alumnos", icon: Users },
+  { href: "/groups", label: "Grupos", icon: Users2, feature: "groups" },
   {
     href: "/reservas-pistas",
     label: "Reservas de pistas",
