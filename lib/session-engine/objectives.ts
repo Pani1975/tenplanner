@@ -220,12 +220,12 @@ function tagsOf(words: string[]): ObjectiveTags {
   for (const [s, keys] of SITUATION_KEYS)
     if (hasKey(words, keys)) tags.situaciones.push(s);
   tags.competitivo = hasKey(words, COMPETITIVE_KEYS);
-  // Un golpe o un parámetro sin aspecto nombrado es trabajo técnico.
-  if (
-    tags.aspectos.length === 0 &&
-    (tags.golpes.length > 0 || tags.parametros.length > 0)
-  ) {
-    tags.aspectos.push("tecnica");
+  // Sin aspecto nombrado: atacar o defender es trabajo táctico; un golpe
+  // o un parámetro, técnico.
+  if (tags.aspectos.length === 0) {
+    if (tags.situaciones.length > 0) tags.aspectos.push("tactica");
+    else if (tags.golpes.length > 0 || tags.parametros.length > 0)
+      tags.aspectos.push("tecnica");
   }
   return tags;
 }
