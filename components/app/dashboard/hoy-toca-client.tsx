@@ -70,10 +70,13 @@ export function HoyTocaClient({
   initial,
   date,
   scheduledAt,
+  kicker = HOY_TOCA.kicker,
 }: {
   initial: Proposal;
   date: string;
   scheduledAt: string;
+  /** Rótulo de sección (por defecto "Hoy toca"). */
+  kicker?: string;
 }) {
   const router = useRouter();
   const group = initial.group;
@@ -291,7 +294,7 @@ export function HoyTocaClient({
       className="rounded-lg border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04] sm:p-6"
     >
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        {HOY_TOCA.kicker}
+        {kicker}
       </p>
       <h2
         id="hoy-toca-title"

@@ -115,5 +115,20 @@ export const HOY_TOCA = {
   noStudents: "Este grupo aún no tiene alumnos.",
 } as const;
 
+/** Textos de "Que la monte Ten Planner" en nueva sesión (elegir grupo). */
+export const MONTAR = {
+  title: "Que la monte Ten Planner",
+  subtitle: "Elige el grupo y la monta con su nivel y su historial.",
+  kicker: "Próximo entreno",
+  chooseGroup: "Elige el grupo",
+  noSchedule: "Sin días de clase: se monta para hoy",
+  students: (n: number) => (n === 1 ? "1 alumno" : `${n} alumnos`),
+  noGroups:
+    "Aún no tienes grupos de este deporte. Crea uno y Ten Planner te montará la clase.",
+  goGroups: "Ir a grupos",
+  otherGroup: "Cambiar de grupo",
+  notFound: "No se ha encontrado ese grupo.",
+} as const;
+
 export const REPEATED_WARNING =
   "Aviso: algún ejercicio se repite de las 3 últimas sesiones porque no había otro que encajara.";
