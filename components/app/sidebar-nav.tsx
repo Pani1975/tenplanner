@@ -524,8 +524,18 @@ function NavContent({
               feature,
               allLabel,
             }) => {
+              // Solo el enlace más específico: /gestion/panel no marca
+              // también /gestion (Informes).
+              const matches = (h: string) =>
+                pathname === h || pathname.startsWith(h + "/");
               const isActive =
-                pathname === href || pathname.startsWith(href + "/");
+                matches(href) &&
+                !items.some(
+                  (other) =>
+                    other.href.length > href.length &&
+                    other.href.startsWith(href + "/") &&
+                    matches(other.href)
+                );
               const activeIdx = submenu
                 ? activeSubmenuIndex(
                     href,
