@@ -361,6 +361,7 @@ describe("objetivos escritos por el monitor", () => {
       "• Defender con bolas altas\nJugar puntos atacando la red\nPasarlo bien"
     );
     expect(lines[0].situaciones).toContain("defensa");
+    expect(lines[0].aspectos).toEqual(["tactica"]);
     expect(lines[0].parametros).toContain("altura");
     expect(lines[1].competitivo).toBe(true);
     expect(lines[1].situaciones).toContain("ataque");
