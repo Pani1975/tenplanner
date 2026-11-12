@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
@@ -9,22 +9,38 @@ import { Toaster } from "@/components/ui/sonner";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+// Fuentes alojadas en el proyecto (app/fonts, licencia OFL): así la
+// compilación no depende de descargarlas de Google, que fallaba a veces.
+// Son fuentes variables, solo el alfabeto latino (cubre el español).
+const plusJakartaSans = localFont({
+  src: "./fonts/plus-jakarta-sans-latin-wght-normal.woff2",
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400 700", // como antes: 400-700 (un 900 se queda en 700)
+  display: "swap",
 });
 
-const fraunces = Fraunces({
+const fraunces = localFont({
+  src: [
+    {
+      path: "./fonts/fraunces-latin-wght-normal.woff2",
+      style: "normal",
+      weight: "300 700",
+    },
+    {
+      path: "./fonts/fraunces-latin-wght-italic.woff2",
+      style: "italic",
+      weight: "300 700",
+    },
+  ],
   variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["300", "400", "600", "700"],
-  style: ["normal", "italic"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-latin-wght-normal.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
 const isProd = process.env.NODE_ENV === "production";
