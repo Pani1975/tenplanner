@@ -246,12 +246,15 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
         id: sessions.id,
         title: sessions.title,
         scheduledAt: sessions.scheduledAt,
+        status: sessions.status,
       })
       .from(sessions)
       .where(
         and(
           eq(sessions.groupId, selected.id),
-          eq(sessions.status, "scheduled"),
+          // También las ya marcadas como completadas aunque sean futuras:
+          // ocupan ese entreno (no se ofrece como día libre).
+          ne(sessions.status, "cancelled"),
           gte(sessions.scheduledAt, new Date(now.getTime() - 3600_000))
         )
       )
@@ -304,6 +307,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
                       {s.title} · {MONTAR.itemCount(counts.get(s.id) ?? 0)}
+                      {s.status === "completed" && ` · ${MONTAR.completed}`}
                     </span>
                   </span>
                   <ChevronRight className="size-4 shrink-0 text-foreground/30" />
