@@ -445,6 +445,31 @@ export function sanitizeClass(
   };
 }
 
+export const IMPORT_MAX_INSTRUCTIONS = 2000;
+
+/**
+ * Entrada de una importación: texto O archivo. Con archivo el texto es
+ * opcional y se usa como indicaciones extra (p. ej. «solo las clases de
+ * la 2.ª hoja»); sin archivo se exige el texto a importar.
+ */
+export function validateImportInput(
+  hasFile: boolean,
+  input: unknown
+):
+  | { ok: true; text: string | null }
+  | { ok: false; error: string } {
+  if (!hasFile) return validateImportText(input);
+  const text = typeof input === "string" ? input.trim() : "";
+  if (!text) return { ok: true, text: null };
+  if (text.length > IMPORT_MAX_INSTRUCTIONS) {
+    return {
+      ok: false,
+      error: `Las indicaciones son demasiado largas. El máximo es ${IMPORT_MAX_INSTRUCTIONS.toLocaleString("es-ES")} caracteres.`,
+    };
+  }
+  return { ok: true, text };
+}
+
 /** Texto de entrada válido: recortado y dentro del límite. */
 export function validateImportText(
   input: unknown

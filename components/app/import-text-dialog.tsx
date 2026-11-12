@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { IMPORT_MAX_CHARS } from "@/lib/import/schema";
+import { IMPORT_MAX_CHARS, validateImportInput } from "@/lib/import/schema";
 import type { ImportedClass, ImportedExercise } from "@/lib/import/schema";
 
 type Kind = "exercises" | "classes";
@@ -77,6 +77,11 @@ export function ImportTextDialog({
   }
 
   async function convert() {
+    const checked = validateImportInput(!!file, text);
+    if (!checked.ok) {
+      setError(checked.error);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -85,6 +90,8 @@ export function ImportTextDialog({
         const form = new FormData();
         form.append("kind", kind);
         form.append("file", file);
+        // Con archivo, el texto son indicaciones opcionales.
+        form.append("text", text);
         init = { method: "POST", body: form };
       } else {
         init = {
@@ -199,8 +206,14 @@ export function ImportTextDialog({
               placeholder={copy.placeholder}
               rows={12}
               maxLength={IMPORT_MAX_CHARS + 1000}
-              disabled={busy || !!file}
+              disabled={busy}
             />
+            {file && (
+              <p className="text-xs text-muted-foreground">
+                Se importará el archivo «{file.name}». Lo que escribas arriba
+                se usa solo como indicaciones extra (opcional).
+              </p>
+            )}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span
                 className={text.length > IMPORT_MAX_CHARS ? "text-red-600" : ""}

@@ -25,7 +25,14 @@ export type UploadResult =
 const SCANNED_NOTE =
   "Los PDF escaneados o hechos con fotos pueden leerse mal: revisa con cuidado cada borrador.";
 
-export async function readUpload(file: File): Promise<UploadResult> {
+/** Lo mínimo que se usa de un File (el de formData() puede no ser el global). */
+export type UploadFile = {
+  name: string;
+  size: number;
+  arrayBuffer(): Promise<ArrayBuffer>;
+};
+
+export async function readUpload(file: UploadFile): Promise<UploadResult> {
   const meta = validateUploadMeta(file.name, file.size);
   if (!meta.ok) return { ok: false, error: meta.error, status: 400 };
 

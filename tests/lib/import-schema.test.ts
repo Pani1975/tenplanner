@@ -7,6 +7,7 @@ import {
   sanitizeClass,
   sanitizeExercise,
   validateImportText,
+  validateImportInput,
   type AiClass,
   type AiExercise,
 } from "@/lib/import/schema";
@@ -132,5 +133,27 @@ describe("validateImportText", () => {
     expect(validateImportText("hola").ok).toBe(false);
     expect(validateImportText("a".repeat(IMPORT_MAX_CHARS + 1)).ok).toBe(false);
     expect(validateImportText("Ejercicio de derecha cruzada 10 min").ok).toBe(true);
+  });
+});
+
+describe("validateImportInput", () => {
+  it("archivo sin texto es válido (texto = indicaciones opcionales)", () => {
+    expect(validateImportInput(true, "")).toEqual({ ok: true, text: null });
+    expect(validateImportInput(true, undefined)).toEqual({ ok: true, text: null });
+    expect(validateImportInput(true, "  solo la clase 2  ")).toEqual({
+      ok: true,
+      text: "solo la clase 2",
+    });
+  });
+  it("archivo con indicaciones demasiado largas da error", () => {
+    expect(validateImportInput(true, "a".repeat(2001)).ok).toBe(false);
+  });
+  it("sin archivo y sin texto es un error", () => {
+    const r = validateImportInput(false, "   ");
+    expect(r.ok).toBe(false);
+    expect(r.ok === false && r.error).toMatch(/Escribe o pega/);
+  });
+  it("sin archivo, con texto válido", () => {
+    expect(validateImportInput(false, "Ejercicio de derecha cruzada 10 min").ok).toBe(true);
   });
 });
