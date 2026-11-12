@@ -301,12 +301,31 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
-    // Solo el tipo de error: nunca el contenido del documento.
-    console.error("[import-text] fallo", error instanceof Error ? error.name : "desconocido");
+    // Nunca el contenido del documento: solo tipo, código HTTP y el mensaje
+    // (corto) del proveedor.
+    const name = error instanceof Error ? error.name : "desconocido";
+    const status =
+      typeof (error as { statusCode?: unknown })?.statusCode === "number"
+        ? (error as { statusCode: number }).statusCode
+        : null;
+    const message =
+      error instanceof Error ? error.message.slice(0, 200) : "";
+    console.error("[import-text] fallo", name, status, message);
+    let reason = "";
+    if (status === 401 || status === 403) {
+      reason = " (la clave de Anthropic de este entorno no es válida)";
+    } else if (/credit balance/i.test(message)) {
+      reason = " (la cuenta de Anthropic no tiene saldo)";
+    } else if (status === 429 || status === 529) {
+      reason = " (Anthropic está saturado)";
+    } else if (status === 404) {
+      reason = " (el modelo de IA configurado no existe)";
+    } else if (status === 400) {
+      reason = " (Anthropic rechazó la petición)";
+    }
     return NextResponse.json(
       {
-        error:
-          "No he podido convertir el texto. Inténtalo de nuevo en un momento; esta importación no cuenta en tu límite.",
+        error: `No he podido convertir el texto${reason}. Inténtalo de nuevo en un momento; esta importación no cuenta en tu límite.`,
       },
       { status: 502 }
     );
