@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { db } from "@/db";
 import { students } from "@/db/schema";
 import { StudentForm } from "@/components/app/student-form";
@@ -38,6 +39,7 @@ export default async function EditStudentPage({ params }: PageProps) {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  await redirectIfStudentsLimited(user.id);
 
   const [student] = await db
     .select()

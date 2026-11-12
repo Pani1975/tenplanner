@@ -9,6 +9,8 @@ import {
   Users2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getClubAccountClubId } from "@/lib/clubs";
+import { getWorkMode } from "@/lib/work-mode";
 import {
   getMessagingContext,
   listRecipientOptions,
@@ -57,6 +59,15 @@ export default async function MensajesPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // La cuenta del club lee y envía mensajes solo desde el Modo gestión.
+  const [accountClubId, mode] = await Promise.all([
+    getClubAccountClubId(user.id),
+    getWorkMode(user.id),
+  ]);
+  if (accountClubId && mode.kind === "club" && !mode.management) {
+    redirect("/dashboard");
+  }
 
   const [ctx, familyOnly] = await Promise.all([
     getMessagingContext(user.id).catch(() => null),

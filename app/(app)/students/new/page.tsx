@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { StudentForm } from "@/components/app/student-form";
 
 export default async function NewStudentPage() {
@@ -11,6 +12,7 @@ export default async function NewStudentPage() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  await redirectIfStudentsLimited(user.id);
 
   return (
     <div className="w-full px-4 py-8 sm:px-6 md:px-10">

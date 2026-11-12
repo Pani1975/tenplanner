@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, FileSpreadsheet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getClubAccountClubId } from "@/lib/clubs";
+import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { StudentImport } from "@/components/app/students/student-import";
 
 export const metadata = { title: "Importar alumnos" };
@@ -17,6 +18,7 @@ export default async function ImportStudentsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   if (!(await getClubAccountClubId(user.id))) notFound();
+  await redirectIfStudentsLimited(user.id);
 
   return (
     <div className="tp-page">
