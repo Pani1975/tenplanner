@@ -21,6 +21,10 @@ export interface CalendarEventData {
   /** Nombre de quien lo creó, solo cuando no es del usuario actual
    * (compartido vía club). */
   authorName?: string | null;
+  /** Creado desde el Modo gestión: solo lo ve el gestor. */
+  management?: boolean;
+  /** Si es una tarea de gestión mostrada en el calendario, su id. */
+  taskId?: string;
 }
 
 function pad(n: number) {

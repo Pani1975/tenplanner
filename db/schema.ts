@@ -1382,6 +1382,51 @@ export const calendarEvents = pgTable(
   ]
 );
 
+// Tareas del Modo gestión: las crea y ve solo el gestor del club (su dueño).
+// Responsable: un monitor del club, el propio club u otra persona en texto.
+// Con notify_email, un cron diario avisa por correo al gestor (notified_at
+// evita repetirlo).
+export const managementTasks = pgTable(
+  "management_tasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clubId: uuid("club_id")
+      .references(() => clubs.id, { onDelete: "cascade" })
+      .notNull(),
+    createdBy: uuid("created_by")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    dueDate: date("due_date", { mode: "string" }),
+    notifyEmail: boolean("notify_email").default(false).notNull(),
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    responsibleKind: varchar("responsible_kind", { length: 10 })
+      .$type<"coach" | "club" | "other">()
+      .default("club")
+      .notNull(),
+    responsibleUserId: uuid("responsible_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    responsibleText: varchar("responsible_text", { length: 255 }),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("management_tasks_club_due_idx").on(t.clubId, t.dueDate),
+    check(
+      "management_tasks_responsible_kind_chk",
+      sql`${t.responsibleKind} IN ('coach', 'club', 'other')`
+    ),
+  ]
+);
+
 // Festivos del calendario (rango de fechas sin hora). Los crea el club o un
 // monitor. groupId null = todo el espacio (club o particular); con groupId,
 // solo ese grupo. Una sesión que cae en festivo se marca "no se imparte" en
