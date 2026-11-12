@@ -146,7 +146,10 @@ export const MONTAR = {
   forSession: (title: string) => `Para la sesión «${title}»`,
   useInSession: "Usar en esta sesión",
   replaceWarning: (n: number, title: string) =>
-    `Se sustituirán ${n === 1 ? "el ejercicio" : `los ${n} ejercicios`} de «${title}» por esta propuesta.`,
+    n === 1
+      ? `Se sustituirá el ejercicio de «${title}» por esta propuesta.`
+      : `Se sustituirán los ${n} ejercicios de «${title}» por esta propuesta.`,
+  completed: "completada",
   confirmReplace: "Sí, sustituir",
   cancel: "No",
   designWithTenPlanner: "Que la diseñe Ten Planner",
