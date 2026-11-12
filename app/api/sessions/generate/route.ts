@@ -11,15 +11,13 @@ import { buildProposal } from "@/lib/session-engine/today";
 const bodySchema = z.object({
   groupId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  durationMinutes: z.union([
-    z.literal(30),
-    z.literal(45),
-    z.literal(60),
-    z.literal(90),
-  ]),
-  intensity: z.enum(["suave", "media", "alta"]),
-  focus: z.enum(["auto", "tactica", "fisico", ...GOLPES]),
-  attendeeIds: z.array(z.string().uuid()).max(100).nullable(),
+  // Duración de la sesión (la del calendario / paso 1 del asistente).
+  durationMinutes: z.number().int().min(10).max(240),
+  intensity: z.enum(["suave", "media", "alta"]).default("media"),
+  focus: z.enum(["auto", "tactica", "fisico", ...GOLPES]).default("auto"),
+  attendeeIds: z.array(z.string().uuid()).max(100).nullable().default(null),
+  // Objetivos de la sesión (uno por línea): orientan la propuesta.
+  objectives: z.string().max(4000).nullable().optional(),
   pinned: z
     .array(
       z.object({

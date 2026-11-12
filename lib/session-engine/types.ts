@@ -19,7 +19,8 @@ export type Golpe = (typeof GOLPES)[number];
 export type Phase = "activation" | "main" | "cooldown";
 export type Intensity = "suave" | "media" | "alta";
 export type Focus = "auto" | Golpe | "tactica" | "fisico";
-export type Duration = 30 | 45 | 60 | 90;
+/** Minutos de la sesión (la del calendario; antes solo 30/45/60/90). */
+export type Duration = number;
 export const DURATIONS: readonly Duration[] = [30, 45, 60, 90];
 
 /** Papel de cada hueco de la clase. */
@@ -56,6 +57,8 @@ export type GenerateInput = {
   focus: Focus;
   /** Alumnos que vienen hoy (por defecto, todos los del grupo). */
   attendeeIds: string[];
+  /** Objetivos de la sesión (texto, uno por línea): orientan la propuesta. */
+  objectives?: string | null;
   /** Ejercicios fijados: "Otra propuesta" no los toca. */
   pinned?: { slotIndex: number; exerciseId: string; minutes?: number }[];
   /** Ejercicios de la propuesta anterior, para que "Otra propuesta" cambie. */

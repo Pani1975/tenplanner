@@ -11,6 +11,7 @@ import {
   Dumbbell,
   ExternalLink,
   RefreshCw,
+  Shuffle,
   Filter,
   GripVertical,
   LayoutGrid,
@@ -111,6 +112,14 @@ interface StepExercisesProps {
   availableExercises: AvailableExercise[];
   /** Se llama justo antes de abrir la ficha de un ejercicio (guardar borrador). */
   onBeforeLeave?: () => void;
+  /**
+   * "Que la diseñe Ten Planner": cambia automáticamente un ejercicio de la
+   * propuesta por otro adecuado para ese hueco. Solo se muestra en los
+   * items para los que canAutoChange devuelve true.
+   */
+  onAutoChange?: (flatIdx: number) => void;
+  canAutoChange?: (ex: WizardExercise) => boolean;
+  autoChangingIdx?: number | null;
 }
 
 function formatMinutes(minutes: number) {
@@ -150,6 +159,9 @@ export function StepExercises({
   update,
   availableExercises,
   onBeforeLeave,
+  onAutoChange,
+  canAutoChange,
+  autoChangingIdx = null,
 }: StepExercisesProps) {
   const [libraryExercises, setLibraryExercises] = useState(availableExercises);
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
@@ -1522,6 +1534,25 @@ export function StepExercises({
                                           <ExternalLink className="size-3.5" />
                                         </NextLink>
                                       )}
+
+                                    {onAutoChange && canAutoChange?.(ex) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => onAutoChange(flatIdx)}
+                                        disabled={autoChangingIdx !== null}
+                                        title="Cambiar por otro ejercicio adecuado (Ten Planner)"
+                                        className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                                      >
+                                        {autoChangingIdx === flatIdx ? (
+                                          <Loader2 className="size-3 animate-spin" />
+                                        ) : (
+                                          <Shuffle className="size-3" />
+                                        )}
+                                        <span className="hidden sm:inline">
+                                          Cambiar
+                                        </span>
+                                      </button>
+                                    )}
 
                                     <button
                                       type="button"

@@ -18,6 +18,11 @@ import {
 import { defaultScheduledAt } from "./defaults";
 import { ProgressIndicator } from "./progress-indicator";
 import { StepConfiguration } from "./step-configuration";
+import {
+  EngineProposalBanner,
+  useEngineProposal,
+  type EngineConfig,
+} from "./engine-proposal";
 import { StepExercises } from "./step-exercises";
 import { computeSessionDates, sessionCode } from "./recurrence";
 import {
@@ -63,6 +68,11 @@ interface SessionWizardProps {
   /** Monitor preseleccionado (al crear, el propio usuario). */
   initialCoachId?: string | null;
   allowDraftRestore?: boolean;
+  /**
+   * "Que la diseñe Ten Planner": al pasar al Paso 2 el motor rellena los
+   * ejercicios con el nivel y el historial del grupo y los objetivos.
+   */
+  engine?: EngineConfig;
   /** Editar una sesión existente (también las pasadas). */
   edit?: {
     sessionId: string;
@@ -339,6 +349,7 @@ export function SessionWizard({
   initialCoachId = null,
   allowDraftRestore = true,
   edit,
+  engine,
 }: SessionWizardProps) {
   const isEdit = !!edit;
   const router = useRouter();
@@ -506,6 +517,13 @@ export function SessionWizard({
     setState((prev) => ({ ...prev, ...patch }));
   }
 
+  const proposal = useEngineProposal({
+    engine,
+    state,
+    update,
+    availableExercises,
+  });
+
   async function handleSaveDraft() {
     if (!draftReadyRef.current || submittedRef.current) return;
 
@@ -604,10 +622,15 @@ export function SessionWizard({
     setShowErrors(false);
   }
 
-  function onNext() {
+  async function onNext() {
     if (!canProceed) {
       setShowErrors(true);
       return;
+    }
+    // "Que la diseñe Ten Planner": la propuesta se prepara con lo del Paso 1.
+    if (step === 1 && engine) {
+      const ok = await proposal.ensure();
+      if (!ok) return;
     }
 
     goToStep(step + 1);
@@ -721,6 +744,9 @@ export function SessionWizard({
             studentIds: state.studentIds,
             exercises: exercisesPayload,
             blocks: blocksPayload,
+            ...(proposal.generation()
+              ? { generation: proposal.generation() }
+              : {}),
           }),
         });
         if (!res.ok) {
@@ -773,6 +799,9 @@ export function SessionWizard({
             studentIds: state.studentIds,
             exercises: exercisesPayload,
             blocks: blocksPayload,
+            ...(proposal.generation()
+              ? { createdVia: "engine", generation: proposal.generation() }
+              : {}),
           }),
         });
         if (!res.ok) break;
@@ -986,12 +1015,28 @@ export function SessionWizard({
             hideRecurrence={isEdit}
           />
         ) : (
-          <StepExercises
-            state={state}
-            update={update}
-            availableExercises={availableExercises}
-            onBeforeLeave={() => void saveDraftRef.current()}
-          />
+          <div className="space-y-4">
+            {engine && proposal.info && (
+              <EngineProposalBanner
+                explanations={proposal.info.explanations}
+                busy={proposal.busy}
+                error={proposal.error}
+                replacesCount={engine.replacesCount}
+                onRegenerate={proposal.regenerate}
+              />
+            )}
+            <StepExercises
+              state={state}
+              update={update}
+              availableExercises={availableExercises}
+              onBeforeLeave={() => void saveDraftRef.current()}
+              onAutoChange={
+                engine ? (idx) => void proposal.changeItem(idx) : undefined
+              }
+              canAutoChange={proposal.canChange}
+              autoChangingIdx={proposal.changingIdx}
+            />
+          </div>
         )}
       </div>
 

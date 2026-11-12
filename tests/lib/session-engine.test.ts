@@ -7,6 +7,7 @@ import {
 } from "@/lib/session-engine";
 import { fitDurations } from "@/lib/session-engine/fit";
 import { resolveGroupLevel } from "@/lib/session-engine/level";
+import { parseObjectives } from "@/lib/session-engine/objectives";
 import { buildSkeleton } from "@/lib/session-engine/skeleton";
 import type { SkillLevel } from "@/lib/skill-levels";
 
@@ -291,5 +292,44 @@ describe("fitDurations", () => {
       40
     );
     expect(m[0] + m[1]).toBe(40);
+  });
+});
+
+describe("duración libre y objetivos", () => {
+  it.each([20, 55, 75, 120])("cualquier duración suma exacto (%i min)", (d) => {
+    const plan = generateSession(input({ durationMinutes: d }), data());
+    expect(plan.durationMinutes).toBe(d);
+    expect(plan.items.every((it) => it.minutes >= 1)).toBe(true);
+  });
+
+  it("los objetivos eligen el foco automático y lo explican", () => {
+    const plan = generateSession(
+      input({
+        focus: "auto",
+        objectives:
+          "Controlar peloteo\nDominar situaciones de juego\nConseguir seguridad en el servicio",
+      }),
+      data({ recentGolpeCounts: { saque: 9, derecha: 0 } })
+    );
+    expect(plan.focus).toBe("saque");
+    expect(plan.explanations[0]).toContain("objetivos");
+  });
+});
+
+describe("parseObjectives", () => {
+  it("saca golpes y aspectos del texto", () => {
+    const r = parseObjectives(
+      "Controlar peloteo\nDominar situaciones de juego\nConseguir seguridad en el servicio"
+    );
+    expect(r.golpes).toEqual(["saque"]);
+    expect(r.aspectos).toEqual(
+      expect.arrayContaining(["tecnica", "tactica", "mental"])
+    );
+  });
+
+  it("'red' es volea solo si no hay otro golpe", () => {
+    expect(parseObjectives("Subir a la red").golpes).toEqual(["volea"]);
+    expect(parseObjectives("Remate cerca de la red").golpes).toEqual(["remate"]);
+    expect(parseObjectives("").golpes).toEqual([]);
   });
 });

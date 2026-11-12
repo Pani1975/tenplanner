@@ -143,6 +143,7 @@ export type ProposalRequest = {
   focus: Focus;
   /** null = todos los alumnos del grupo. */
   attendeeIds: string[] | null;
+  objectives?: string | null;
   pinned?: GenerateInput["pinned"];
   previousIds?: string[];
   slotAdjust?: GenerateInput["slotAdjust"];
@@ -176,6 +177,7 @@ export async function buildProposal(
     durationMinutes: req.durationMinutes,
     intensity: req.intensity,
     focus: req.focus,
+    objectives: req.objectives ?? null,
     attendeeIds,
     pinned: req.pinned,
     previousIds: req.previousIds,
