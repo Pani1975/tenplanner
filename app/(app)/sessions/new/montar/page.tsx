@@ -17,6 +17,7 @@ import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import {
   nextScheduleOccurrenceInZone,
+  scheduleMinutesForDate,
   zonedTimeToUtc,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
@@ -202,7 +203,12 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
         target = {
           at,
           baseHref: `/sessions/new?${qs.toString()}`,
-          durationMinutes: null,
+          // La duración sale del horario del grupo (inicio–fin) si ese día
+          // tiene clase fija; si no, la habitual.
+          durationMinutes: scheduleMinutesForDate(
+            selected.schedule as GroupScheduleEntry[] | null,
+            at
+          ),
           placeId: null,
           objective: null,
         };

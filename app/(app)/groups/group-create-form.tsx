@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Users } from "lucide-react";
-import { WeeklySchedulePicker } from "@/components/app/weekly-schedule-picker";
+import {
+  slotsAreValid,
+  slotsToSchedule,
+  WeeklySchedulePicker,
+  type ScheduleSlot,
+} from "@/components/app/weekly-schedule-picker";
 
 export function GroupCreateForm() {
   const router = useRouter();
@@ -11,13 +16,15 @@ export function GroupCreateForm() {
   const [description, setDescription] = useState("");
   // Días de clase y hora (weekday 0=domingo..6=sábado → "HH:MM"): obligatorio
   // al menos uno, para que "Asignar clase" proponga sola la próxima fecha.
-  const [schedule, setSchedule] = useState<Map<number, string>>(new Map());
+  const [schedule, setSchedule] = useState<Map<number, ScheduleSlot>>(
+    new Map()
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || schedule.size === 0) return;
+    if (!name.trim() || !slotsAreValid(schedule)) return;
     setSaving(true);
     setError(null);
     const res = await fetch("/api/groups", {
@@ -26,9 +33,7 @@ export function GroupCreateForm() {
       body: JSON.stringify({
         name: name.trim(),
         description: description.trim() || undefined,
-        weeklySchedule: Array.from(schedule.entries()).map(
-          ([weekday, time]) => ({ weekday, time })
-        ),
+        weeklySchedule: slotsToSchedule(schedule),
       }),
     });
     setSaving(false);
@@ -76,7 +81,8 @@ export function GroupCreateForm() {
           Días y hora de clase <span className="text-brand">*</span>
         </label>
         <p className="text-xs text-foreground/50">
-          Marca los días de la semana en que juega este grupo y a qué hora.
+          Marca los días de la semana en que juega este grupo, con la hora de
+          inicio y la de finalización de la clase.
         </p>
         <WeeklySchedulePicker value={schedule} onChange={setSchedule} />
       </div>
@@ -87,7 +93,7 @@ export function GroupCreateForm() {
       )}
       <button
         type="submit"
-        disabled={saving || !name.trim() || schedule.size === 0}
+        disabled={saving || !name.trim() || !slotsAreValid(schedule)}
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground shadow-sm transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {saving ? (

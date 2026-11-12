@@ -12,7 +12,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
-import { isValidScheduleEntry, sortSchedule } from "@/lib/groups/schedule";
+import { sortSchedule } from "@/lib/groups/schedule";
+import { scheduleEntrySchema } from "@/lib/groups/schedule-schema";
 import { isLevelOfSport } from "@/lib/skill-levels";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
 
@@ -26,15 +27,6 @@ async function ensureGroupsEnabled() {
 }
 
 type Ctx = { params: Promise<{ id: string }> };
-
-const scheduleEntrySchema = z
-  .object({
-    weekday: z.number().int().min(0).max(6),
-    time: z
-      .string()
-      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida (HH:MM)"),
-  })
-  .refine((v) => isValidScheduleEntry(v), { message: "Entrada inválida" });
 
 const updateSchema = z.object({
   name: z.string().min(1).max(255).optional(),

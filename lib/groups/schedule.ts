@@ -9,6 +9,62 @@
 export interface GroupScheduleEntry {
   weekday: number;
   time: string;
+  /**
+   * Hora de finalización ("HH:MM"), posterior a `time`. Opcional solo para los
+   * horarios guardados antes de pedirla; los nuevos siempre la llevan.
+   */
+  endTime?: string;
+}
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** "17:00" + 90 → "18:30" (se queda en el mismo día: tope 23:59). */
+export function addMinutesToTime(time: string, minutes: number): string {
+  const total = Math.min(toMinutes(time) + minutes, 23 * 60 + 59);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
+}
+
+/** Duración en minutos de una entrada del horario, o null si no tiene hora de fin. */
+export function scheduleEntryMinutes(
+  entry: Pick<GroupScheduleEntry, "time" | "endTime">
+): number | null {
+  if (!entry.endTime) return null;
+  const minutes = toMinutes(entry.endTime) - toMinutes(entry.time);
+  return minutes > 0 ? minutes : null;
+}
+
+/**
+ * Duración (minutos) de la clase del horario que cae en el día de `at`, visto
+ * en `timeZone`, o null si ese día no está en el horario o no tiene hora de fin.
+ */
+export function scheduleMinutesForDate(
+  schedule: GroupScheduleEntry[] | null | undefined,
+  at: Date,
+  timeZone = "Europe/Madrid"
+): number | null {
+  if (!schedule || schedule.length === 0) return null;
+  const short = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    timeZone,
+  }).format(at);
+  const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
+    short
+  );
+  const entry = schedule.find((e) => e.weekday === weekday);
+  return entry ? scheduleEntryMinutes(entry) : null;
+}
+
+/** "17:00" o "17:00–18:30" según tenga hora de fin. */
+export function formatScheduleTimes(
+  entry: Pick<GroupScheduleEntry, "time" | "endTime">
+): string {
+  return entry.endTime ? `${entry.time}–${entry.endTime}` : entry.time;
 }
 
 export const WEEKDAY_LABELS = [
@@ -31,7 +87,11 @@ export function isValidScheduleEntry(
     entry.weekday >= 0 &&
     entry.weekday <= 6 &&
     typeof entry.time === "string" &&
-    /^([01]\d|2[0-3]):[0-5]\d$/.test(entry.time)
+    HHMM.test(entry.time) &&
+    (entry.endTime === undefined ||
+      (typeof entry.endTime === "string" &&
+        HHMM.test(entry.endTime) &&
+        toMinutes(entry.endTime) > toMinutes(entry.time)))
   );
 }
 
