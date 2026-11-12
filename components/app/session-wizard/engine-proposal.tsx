@@ -10,11 +10,7 @@ import { Info, Loader2, Shuffle, Sparkles } from "lucide-react";
 import { MONTAR } from "@/lib/session-engine/messages";
 import type { PlanItem } from "@/lib/session-engine/types";
 import type { Proposal } from "@/lib/session-engine/today";
-import type {
-  AvailableExercise,
-  WizardExercise,
-  WizardState,
-} from "./types";
+import type { AvailableExercise, WizardExercise, WizardState } from "./types";
 
 export type EngineConfig = {
   groupId: string;
@@ -102,7 +98,8 @@ export function useEngineProposal({
       const p = await call({ variant, previousIds });
       if (!p) return false;
       const slotByExercise: Record<string, number> = {};
-      for (const it of p.plan.items) slotByExercise[it.exerciseId] = it.slotIndex;
+      for (const it of p.plan.items)
+        slotByExercise[it.exerciseId] = it.slotIndex;
       triedRef.current = {};
       setInfo({
         key: stepOneKey(state),
@@ -145,7 +142,11 @@ export function useEngineProposal({
   }
 
   function canChange(ex: WizardExercise): boolean {
-    return !!info && (ex.kind ?? "exercise") === "exercise" && ex.exerciseId in info.slotByExercise;
+    return (
+      !!info &&
+      (ex.kind ?? "exercise") === "exercise" &&
+      ex.exerciseId in info.slotByExercise
+    );
   }
 
   /** "Cambiar": otro ejercicio adecuado para ese hueco; el resto se queda. */
@@ -192,7 +193,17 @@ export function useEngineProposal({
     return { input: info.input as Record<string, unknown>, trace: info.trace };
   }
 
-  return { info, busy, error, changingIdx, ensure, regenerate, canChange, changeItem, generation };
+  return {
+    info,
+    busy,
+    error,
+    changingIdx,
+    ensure,
+    regenerate,
+    canChange,
+    changeItem,
+    generation,
+  };
 }
 
 export function EngineProposalBanner({
@@ -237,7 +248,11 @@ export function EngineProposalBanner({
           disabled={busy}
           className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-foreground/15 bg-background px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
         >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Shuffle className="size-4" />}
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Shuffle className="size-4" />
+          )}
           {MONTAR.changeProposal}
         </button>
       </div>

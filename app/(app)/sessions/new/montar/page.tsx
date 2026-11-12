@@ -21,14 +21,11 @@ import {
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
 import {
-  buildProposal,
   countSessionItems,
   ENGINE_TIME_ZONE,
-  localDateKey,
 } from "@/lib/session-engine/today";
 import { MONTAR } from "@/lib/session-engine/messages";
 import { FeatureLocked } from "@/components/app/feature-locked";
-import { HoyTocaClient } from "@/components/app/dashboard/hoy-toca-client";
 import { OtherDatePicker } from "./other-date-picker";
 
 interface PageProps {
@@ -160,26 +157,10 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
   let body: React.ReactNode;
 
   if (selected && (params.session || params.at)) {
-    // ── Paso 3: la propuesta para una sesión o un día concretos ──
-    const back = (
-      <Link
-        href={`/sessions/new/montar?group=${selected.id}`}
-        className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        {MONTAR.changeWhen}
-      </Link>
-    );
-
-    let at: Date | null = null;
-    let target: { id: string; title: string; itemCount: number } | undefined;
+    // ── Paso 3: el asistente de sesión, con la propuesta en el Paso 2 ──
     if (params.session) {
       const [s] = await db
-        .select({
-          id: sessions.id,
-          title: sessions.title,
-          scheduledAt: sessions.scheduledAt,
-        })
+        .select({ id: sessions.id })
         .from(sessions)
         .where(
           and(
@@ -189,56 +170,29 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
           )
         )
         .limit(1);
-      if (s) {
-        at = s.scheduledAt;
-        const counts = await countSessionItems([s.id]);
-        target = {
-          id: s.id,
-          title: s.title,
-          itemCount: counts.get(s.id) ?? 0,
-        };
-      }
-    } else {
-      at = parseLocalAt(params.at);
-    }
-
-    if (!at) {
-      body = (
-        <div className="flex flex-col gap-3">
-          {back}
-          <p className="text-sm text-muted-foreground">
-            {MONTAR.sessionNotFound}
-          </p>
-        </div>
-      );
-    } else {
-      const date = localDateKey(at);
-      const proposal = await buildProposal(user.id, activeClubId, {
-        groupId: selected.id,
-        date,
-        durationMinutes: 60,
-        intensity: "media",
-        focus: "auto",
-        attendeeIds: null,
+      if (s) redirect(`/sessions/${s.id}/edit?disenar=1`);
+    } else if (parseLocalAt(params.at)) {
+      const qs = new URLSearchParams({
+        group: selected.id,
+        at: params.at!,
+        disenar: "1",
       });
-      body = (
-        <div className="flex flex-col gap-3">
-          {back}
-          {proposal ? (
-            <HoyTocaClient
-              key={`${selected.id}-${target?.id ?? toLocalAt(at)}`}
-              initial={proposal}
-              date={date}
-              scheduledAt={at.toISOString()}
-              kicker={MONTAR.kicker}
-              targetSession={target}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">{MONTAR.notFound}</p>
-          )}
-        </div>
-      );
+      redirect(`/sessions/new?${qs.toString()}`);
     }
+    body = (
+      <div className="flex flex-col gap-3">
+        <Link
+          href={`/sessions/new/montar?group=${selected.id}`}
+          className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          {MONTAR.changeWhen}
+        </Link>
+        <p className="text-sm text-muted-foreground">
+          {MONTAR.sessionNotFound}
+        </p>
+      </div>
+    );
   } else if (selected) {
     // ── Paso 2: ¿para qué clase? ──
     const upcoming = await db

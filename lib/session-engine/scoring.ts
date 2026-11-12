@@ -47,7 +47,8 @@ export function scoreExercise(
     s += 1;
   // Objetivos de la sesión: más puntos a lo que trabajan.
   if (ctx.objectives) {
-    if (ex.golpes.some((g) => (ctx.objectives!.golpes as string[]).includes(g))) s += 1;
+    if (ex.golpes.some((g) => (ctx.objectives!.golpes as string[]).includes(g)))
+      s += 1;
     if (ex.aspectos.some((a) => ctx.objectives!.aspectos.includes(a))) s += 1;
   }
   if (ctx.recent3.has(ex.id)) s -= 4;

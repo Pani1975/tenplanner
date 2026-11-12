@@ -30,7 +30,14 @@ const ASPECT_KEYS: [string, string[]][] = [
   ],
   [
     "fisico",
-    ["fisico", "coordinacion", "agilidad", "desplazamiento", "velocidad", "resistencia"],
+    [
+      "fisico",
+      "coordinacion",
+      "agilidad",
+      "desplazamiento",
+      "velocidad",
+      "resistencia",
+    ],
   ],
   ["mental", ["mental", "concentracion", "confianza", "seguridad", "atencion"]],
 ];
@@ -40,7 +47,9 @@ function hasKey(words: string[], keys: string[]): boolean {
 }
 
 /** Golpes y aspectos que aparecen en los objetivos, en orden de aparición. */
-export function parseObjectives(text: string | null | undefined): ObjectiveFocus {
+export function parseObjectives(
+  text: string | null | undefined
+): ObjectiveFocus {
   const golpes: Golpe[] = [];
   const aspectos: string[] = [];
   for (const line of (text ?? "").split(/\r?\n/)) {
@@ -50,7 +59,8 @@ export function parseObjectives(text: string | null | undefined): ObjectiveFocus
       // "red" solo cuenta como volea si no hay otro golpe en la línea.
       if (g === "volea" && !words.some((w) => w.startsWith("volea"))) {
         if (!words.includes("red")) continue;
-        if (GOLPE_KEYS.some(([o, k]) => o !== "volea" && hasKey(words, k))) continue;
+        if (GOLPE_KEYS.some(([o, k]) => o !== "volea" && hasKey(words, k)))
+          continue;
       } else if (!hasKey(words, keys)) continue;
       if (!golpes.includes(g)) golpes.push(g);
     }

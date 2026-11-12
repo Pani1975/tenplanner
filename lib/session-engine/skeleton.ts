@@ -70,7 +70,9 @@ export function buildSkeleton(
 ): Slot[] {
   const template = BASE[templateFor(duration)];
   const base = template.reduce((n, [, m]) => n + m, 0);
-  const scaled = template.map(([, m]) => Math.max(2, Math.round((m * duration) / base)));
+  const scaled = template.map(([, m]) =>
+    Math.max(2, Math.round((m * duration) / base))
+  );
   // Ajuste fino para que la suma sea exacta (sobre los huecos centrales).
   let diff = duration - scaled.reduce((n, m) => n + m, 0);
   for (let i = 1; diff !== 0 && i < 1000; i++) {

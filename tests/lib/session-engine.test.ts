@@ -329,7 +329,9 @@ describe("parseObjectives", () => {
 
   it("'red' es volea solo si no hay otro golpe", () => {
     expect(parseObjectives("Subir a la red").golpes).toEqual(["volea"]);
-    expect(parseObjectives("Remate cerca de la red").golpes).toEqual(["remate"]);
+    expect(parseObjectives("Remate cerca de la red").golpes).toEqual([
+      "remate",
+    ]);
     expect(parseObjectives("").golpes).toEqual([]);
   });
 });
