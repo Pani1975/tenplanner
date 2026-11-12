@@ -792,6 +792,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     {(activeTab === "mine" || activeTab === "drafts") && (
                       <ImportTextDialog
                         kind="exercises"
+                        allowFile={!!activeWorkClubId}
                         spaceLabel={
                           activeWorkClubId
                             ? "el espacio de tu club"

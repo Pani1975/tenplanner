@@ -24,6 +24,8 @@ interface Props {
   /** Nombre del espacio donde se guardará: "tu espacio" o el del club. */
   spaceLabel: string;
   className?: string;
+  /** Permite subir un PDF, Excel o CSV (por ahora solo en la zona del club). */
+  allowFile?: boolean;
 }
 
 const COPY = {
@@ -49,7 +51,12 @@ function nameOf(item: Item) {
   return item.name;
 }
 
-export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
+export function ImportTextDialog({
+  kind,
+  spaceLabel,
+  className,
+  allowFile = false,
+}: Props) {
   const router = useRouter();
   const copy = COPY[kind];
   const [open, setOpen] = useState(false);
@@ -58,9 +65,13 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [notes, setNotes] = useState<string[]>([]);
 
   function reset() {
     setText("");
+    setFile(null);
+    setNotes([]);
     setItems(null);
     setError(null);
   }
@@ -69,13 +80,23 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/import-text", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, text }),
-      });
+      let init: RequestInit;
+      if (file) {
+        const form = new FormData();
+        form.append("kind", kind);
+        form.append("file", file);
+        init = { method: "POST", body: form };
+      } else {
+        init = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind, text }),
+        };
+      }
+      const res = await fetch("/api/import-text", init);
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
+        notes?: string[];
         exercises?: ImportedExercise[];
         classes?: ImportedClass[];
         remaining?: number;
@@ -86,6 +107,7 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
       }
       setItems((kind === "exercises" ? data.exercises : data.classes) ?? []);
       setRemaining(data.remaining ?? null);
+      setNotes(data.notes ?? []);
     } catch {
       setError("No hay conexión. Comprueba tu red e inténtalo de nuevo.");
     } finally {
@@ -177,7 +199,7 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
               placeholder={copy.placeholder}
               rows={12}
               maxLength={IMPORT_MAX_CHARS + 1000}
-              disabled={busy}
+              disabled={busy || !!file}
             />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span
@@ -186,8 +208,29 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
                 {text.length.toLocaleString("es-ES")} /{" "}
                 {IMPORT_MAX_CHARS.toLocaleString("es-ES")} caracteres
               </span>
-              <span>Solo texto por ahora (PDF y Excel, más adelante).</span>
+              {!allowFile && (
+                <span>Solo texto por ahora (PDF y Excel, más adelante).</span>
+              )}
             </div>
+            {allowFile && (
+              <div className="space-y-1 rounded-lg border border-dashed p-3">
+                <label className="text-sm font-medium" htmlFor="import-file">
+                  O sube un documento (PDF, Excel o CSV)
+                </label>
+                <input
+                  id="import-file"
+                  type="file"
+                  accept=".pdf,.xlsx,.csv,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  disabled={busy}
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Máximo 4 MB (PDF hasta 30 páginas). El archivo no se guarda:
+                  solo se usa para generar los borradores.
+                </p>
+              </div>
+            )}
             {error ? (
               <p role="alert" className="text-sm text-red-600">
                 {error}
@@ -196,7 +239,7 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
             <Button
               type="button"
               onClick={convert}
-              disabled={busy || text.trim().length === 0}
+              disabled={busy || (!file && text.trim().length === 0)}
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               {busy ? "Convirtiendo…" : "Convertir"}
@@ -210,6 +253,15 @@ export function ImportTextDialog({ kind, spaceLabel, className }: Props) {
               quita lo que no quieras; el resto de campos podrás ajustarlo
               al abrir cada borrador.
             </p>
+            {notes.map((n) => (
+              <p
+                key={n}
+                role="note"
+                className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+              >
+                {n}
+              </p>
+            ))}
             <ul className="space-y-3">
               {items.map((item, i) => (
                 <li key={i} className="space-y-2 rounded-lg border p-3">

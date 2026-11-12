@@ -438,6 +438,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                   {(activeTab === "mine" || activeTab === "drafts") && (
                     <ImportTextDialog
                       kind="classes"
+                      allowFile={!!activeClubId}
                       spaceLabel={
                         activeClubId ? "el espacio de tu club" : "tu espacio"
                       }
