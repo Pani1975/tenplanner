@@ -15,7 +15,7 @@ import "./globals.css";
 const plusJakartaSans = localFont({
   src: "./fonts/plus-jakarta-sans-latin-wght-normal.woff2",
   variable: "--font-sans",
-  weight: "200 800",
+  weight: "400 700", // como antes: 400-700 (un 900 se queda en 700)
   display: "swap",
 });
 
@@ -24,12 +24,12 @@ const fraunces = localFont({
     {
       path: "./fonts/fraunces-latin-wght-normal.woff2",
       style: "normal",
-      weight: "100 900",
+      weight: "300 700",
     },
     {
       path: "./fonts/fraunces-latin-wght-italic.woff2",
       style: "italic",
-      weight: "100 900",
+      weight: "300 700",
     },
   ],
   variable: "--font-heading",
