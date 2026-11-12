@@ -119,15 +119,37 @@ export const HOY_TOCA = {
 export const MONTAR = {
   title: "Que la diseñe Ten Planner",
   subtitle: "Elige el grupo y la monta con su nivel y su historial.",
-  kicker: "Próximo entreno",
+  kicker: "Propuesta de Ten Planner",
   chooseGroup: "Elige el grupo",
-  noSchedule: "Sin días de clase: se monta para hoy",
+  noSchedule: "Sin días de clase fijados",
   students: (n: number) => (n === 1 ? "1 alumno" : `${n} alumnos`),
   noGroups:
-    "Aún no tienes grupos de este deporte. Crea uno y Ten Planner te montará la clase.",
+    "Aún no tienes grupos de este deporte. Crea uno y Ten Planner te diseñará la clase.",
   goGroups: "Ir a grupos",
   otherGroup: "Cambiar de grupo",
   notFound: "No se ha encontrado ese grupo.",
+  // Elegir para qué sesión o día es la propuesta.
+  whenTitle: "¿Para qué clase?",
+  scheduled: "Sesiones ya programadas",
+  scheduledHint:
+    "Si la aceptas, la propuesta sustituye los ejercicios de esa sesión.",
+  freeDays: "Próximos entrenos sin sesión",
+  otherDate: "Otro día",
+  otherDateHint: "Elige el día en el calendario; se creará una sesión nueva.",
+  pickDay: "Diseñar para este día",
+  itemCount: (n: number) =>
+    n === 0 ? "Sin ejercicios" : n === 1 ? "1 ejercicio" : `${n} ejercicios`,
+  nothingUpcoming: "Este grupo no tiene sesiones programadas.",
+  changeWhen: "Elegir otra clase",
+  sessionNotFound: "No se ha encontrado esa sesión.",
+  // Aceptar sobre una sesión que ya existe.
+  forSession: (title: string) => `Para la sesión «${title}»`,
+  useInSession: "Usar en esta sesión",
+  replaceWarning: (n: number, title: string) =>
+    `Se sustituirán ${n === 1 ? "el ejercicio" : `los ${n} ejercicios`} de «${title}» por esta propuesta.`,
+  confirmReplace: "Sí, sustituir",
+  cancel: "No",
+  designWithTenPlanner: "Que la diseñe Ten Planner",
 } as const;
 
 export const REPEATED_WARNING =

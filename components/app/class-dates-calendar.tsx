@@ -37,11 +37,17 @@ export function ClassDatesCalendar({
   busy,
   error,
   onConfirm,
+  single = false,
+  confirmLabel,
 }: {
   schedule: GroupScheduleEntry[];
   busy?: boolean;
   error?: string | null;
   onConfirm: (dates: Date[]) => void;
+  /** Solo se puede elegir un día (p. ej. "Que la diseñe Ten Planner"). */
+  single?: boolean;
+  /** Texto del botón (por defecto "Continuar" / "Crear sesiones"). */
+  confirmLabel?: string;
 }) {
   const today = startOfToday();
   const [viewMonth, setViewMonth] = useState(
@@ -53,9 +59,7 @@ export function ClassDatesCalendar({
     for (const entry of schedule) map.set(entry.weekday, entry.time);
     return map;
   }, [schedule]);
-  const [time, setTime] = useState(
-    () => schedule[0]?.time ?? "17:00"
-  );
+  const [time, setTime] = useState(() => schedule[0]?.time ?? "17:00");
 
   const weeks = useMemo(() => {
     const firstOfMonth = new Date(
@@ -82,6 +86,7 @@ export function ClassDatesCalendar({
   function toggleDay(d: Date) {
     const key = dateKey(d);
     setSelected((prev) => {
+      if (single) return prev.has(key) ? new Set() : new Set([key]);
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -90,7 +95,9 @@ export function ClassDatesCalendar({
   }
 
   function changeMonth(delta: number) {
-    setViewMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+    setViewMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1)
+    );
   }
 
   function confirm() {
@@ -152,7 +159,9 @@ export function ClassDatesCalendar({
                 className={cn(
                   "relative flex aspect-square items-center justify-center rounded-lg text-sm font-semibold transition-colors",
                   !inMonth && "text-foreground/20",
-                  inMonth && !isSelected && "text-foreground/80 hover:bg-foreground/10",
+                  inMonth &&
+                    !isSelected &&
+                    "text-foreground/80 hover:bg-foreground/10",
                   isPast && inMonth && !isSelected && "text-foreground/35",
                   isSelected && "bg-[#D6FF38] text-[#050505]"
                 )}
@@ -200,7 +209,7 @@ export function ClassDatesCalendar({
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6FF38] py-2.5 text-sm font-bold text-[#050505] disabled:opacity-50"
       >
         {busy && <Loader2 className="size-4 animate-spin" />}
-        {selected.size > 1 ? "Crear sesiones" : "Continuar"}
+        {confirmLabel ?? (selected.size > 1 ? "Crear sesiones" : "Continuar")}
       </button>
     </div>
   );

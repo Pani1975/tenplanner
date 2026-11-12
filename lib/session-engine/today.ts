@@ -1,9 +1,15 @@
 // "Hoy toca": próximo entreno del monitor y propuesta del motor para él.
 // Lo usan la tarjeta del panel (al cargar) y POST /api/sessions/generate.
 
-import { and, eq, gte, isNotNull, lt, ne } from "drizzle-orm";
+import { and, count, eq, gte, inArray, isNotNull, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { groups, sessions } from "@/db/schema";
+import {
+  groups,
+  sessionBlockItems,
+  sessionBlocks,
+  sessionExercises,
+  sessions,
+} from "@/db/schema";
 import { sharedWithClubCondition } from "@/lib/clubs";
 import {
   nextScheduleOccurrenceInZone,
@@ -20,6 +26,32 @@ import type {
 } from "./types";
 
 export const ENGINE_TIME_ZONE = "Europe/Madrid";
+
+/** Nº de ejercicios/actividades de cada sesión (bloques; si no, legado). */
+export async function countSessionItems(
+  sessionIds: string[]
+): Promise<Map<string, number>> {
+  const out = new Map<string, number>(sessionIds.map((id) => [id, 0]));
+  if (sessionIds.length === 0) return out;
+  const [blockRows, legacyRows] = await Promise.all([
+    db
+      .select({ sessionId: sessionBlocks.sessionId, n: count() })
+      .from(sessionBlockItems)
+      .innerJoin(sessionBlocks, eq(sessionBlockItems.blockId, sessionBlocks.id))
+      .where(inArray(sessionBlocks.sessionId, sessionIds))
+      .groupBy(sessionBlocks.sessionId),
+    db
+      .select({ sessionId: sessionExercises.sessionId, n: count() })
+      .from(sessionExercises)
+      .where(inArray(sessionExercises.sessionId, sessionIds))
+      .groupBy(sessionExercises.sessionId),
+  ]);
+  for (const r of legacyRows) out.set(r.sessionId, Number(r.n));
+  // Los bloques mandan cuando existen (son la estructura canónica).
+  for (const r of blockRows)
+    if (Number(r.n) > 0) out.set(r.sessionId, Number(r.n));
+  return out;
+}
 
 export type NextTraining = {
   groupId: string;

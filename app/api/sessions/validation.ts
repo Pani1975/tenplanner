@@ -235,6 +235,16 @@ export const updateSessionSchema = z
     // Editar desde el asistente una sesión ya completada la devuelve a
     // pendiente (salvo al editarla justo al cerrarla porque cambió).
     reopenIfCompleted: z.boolean().optional(),
+    // "Que la diseñe Ten Planner" sobre una sesión ya programada: traza del
+    // motor y alumnos marcados como "no vienen" (attended = false si aún no
+    // estaban anotados).
+    generation: z
+      .object({
+        input: z.record(z.string(), z.unknown()),
+        trace: z.unknown(),
+      })
+      .optional(),
+    absentStudentIds: z.array(z.string().uuid()).max(100).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field is required for update",
