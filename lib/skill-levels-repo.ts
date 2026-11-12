@@ -3,9 +3,17 @@ import { db } from "@/db";
 import { skillLevels } from "@/db/schema";
 import type { SkillLevel } from "@/lib/skill-levels";
 
+// Catálogo que solo cambia con migraciones: se guarda en memoria unos minutos.
+const LEVELS_TTL_MS = 10 * 60_000;
+let levelsCache: { at: number; rows: Promise<SkillLevel[]> } | null = null;
+
 /** Todos los niveles de la tabla skill_levels. */
 export async function loadSkillLevels(): Promise<SkillLevel[]> {
-  return db
+  const now = Date.now();
+  if (levelsCache && now - levelsCache.at < LEVELS_TTL_MS) {
+    return levelsCache.rows;
+  }
+  const rows = db
     .select({
       code: skillLevels.code,
       sport: skillLevels.sport,
@@ -13,7 +21,13 @@ export async function loadSkillLevels(): Promise<SkillLevel[]> {
       position: skillLevels.position,
       labelEs: skillLevels.labelEs,
     })
-    .from(skillLevels);
+    .from(skillLevels)
+    .then((r) => r as SkillLevel[]);
+  levelsCache = { at: now, rows };
+  rows.catch(() => {
+    levelsCache = null;
+  });
+  return rows;
 }
 
 /** Códigos de la lista que no existen en skill_levels (sin repetir). */
