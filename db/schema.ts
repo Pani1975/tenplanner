@@ -433,6 +433,14 @@ export const sessions = pgTable(
     // en el bucket privado "session-audio" y duración en segundos.
     coachAudioPath: text("coach_audio_path"),
     coachAudioSeconds: integer("coach_audio_seconds"),
+    // Motor "Monta la clase" (migración 0095): versión del motor ("auto_v1")
+    // o null, la entrada (GenerateInput) y la traza para explicar y depurar.
+    generatedBy: varchar("generated_by", { length: 16 }),
+    generationInput: jsonb("generation_input"),
+    generationTrace: jsonb("generation_trace"),
+    // Vía de creación (ver SessionCreatedVia en lib/sessions/created-via.ts).
+    // null = anterior a la medición.
+    createdVia: varchar("created_via", { length: 16 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

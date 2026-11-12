@@ -1177,6 +1177,7 @@ ${profile ? buildUserContext(profile, sessionCount) : "Sin datos"}
             const [session] = await db
               .insert(sessions)
               .values({
+                createdVia: "dr_planner",
                 title,
                 description: description ?? null,
                 scheduledAt: parsedScheduledAt,

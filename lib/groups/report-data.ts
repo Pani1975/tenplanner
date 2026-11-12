@@ -1,3 +1,4 @@
+import { effectiveAttended } from "@/lib/sessions/attendance";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -108,9 +109,9 @@ export async function loadGroupReportData(
             )
           );
 
-  const { stats: training, studentHours } = await loadGroupTrainingStats(
-    groupId
-  );
+  const statusById = new Map(groupSessions.map((s) => [s.id, s.status]));
+  const { stats: training, studentHours } =
+    await loadGroupTrainingStats(groupId);
 
   return {
     groupName: group.name,
@@ -118,7 +119,11 @@ export async function loadGroupReportData(
     generatedAt: now,
     report: buildGroupReport({
       sessions: groupSessions,
-      records,
+      // Un "no viene" previsto solo es falta si la sesión se completó.
+      records: records.map((r) => ({
+        ...r,
+        attended: effectiveAttended(r.attended, statusById.get(r.sessionId)),
+      })),
       members,
       now,
     }),

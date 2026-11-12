@@ -471,7 +471,11 @@ export async function POST(request: Request) {
     studentIds,
     exercises: exerciseItems,
     blocks,
+    createdVia,
+    absentStudentIds,
+    generation,
   } = parsedBody.data;
+  const isEngine = createdVia === "engine";
 
   // El club ya no se elige por elemento: se etiqueta automáticamente con
   // el modo de trabajo activo del usuario (ver /api/account/work-mode).
@@ -658,6 +662,10 @@ export async function POST(request: Request) {
           clubId: clubId ?? null,
           coachId,
           sport: sessionSport,
+          createdVia: createdVia ?? "wizard",
+          generatedBy: isEngine ? "auto_v1" : null,
+          generationInput: isEngine ? (generation?.input ?? null) : null,
+          generationTrace: isEngine ? (generation?.trace ?? null) : null,
         })
         .returning();
 
@@ -741,10 +749,14 @@ export async function POST(request: Request) {
       }
 
       if (linkedStudentIds.size > 0) {
+        // "No vienen" previsto al montar la clase: attended = false. Solo
+        // cuenta como falta si la sesión llega a completarse.
+        const absent = new Set(absentStudentIds ?? []);
         await tx.insert(sessionStudents).values(
           Array.from(linkedStudentIds).map((studentId) => ({
             sessionId: session.id,
             studentId,
+            ...(absent.has(studentId) ? { attended: false } : {}),
           }))
         );
       }

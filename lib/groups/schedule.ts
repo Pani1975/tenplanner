@@ -39,7 +39,9 @@ export function sortSchedule(
   schedule: GroupScheduleEntry[]
 ): GroupScheduleEntry[] {
   return [...schedule].sort((a, b) =>
-    a.weekday !== b.weekday ? a.weekday - b.weekday : a.time.localeCompare(b.time)
+    a.weekday !== b.weekday
+      ? a.weekday - b.weekday
+      : a.time.localeCompare(b.time)
   );
 }
 
@@ -69,6 +71,96 @@ export function nextScheduleOccurrence(
     }
 
     if (!best || candidate.getTime() < best.getTime()) best = candidate;
+  }
+  return best;
+}
+
+/** Partes de fecha/hora de `date` en una zona horaria. */
+function zonedParts(date: Date, timeZone: string) {
+  const f = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    weekday: "short",
+  });
+  const p = Object.fromEntries(
+    f.formatToParts(date).map((x) => [x.type, x.value])
+  );
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return {
+    year: Number(p.year),
+    month: Number(p.month),
+    day: Number(p.day),
+    hour: Number(p.hour),
+    minute: Number(p.minute),
+    second: Number(p.second),
+    weekday: weekdays.indexOf(p.weekday as string),
+  };
+}
+
+/** Instante UTC de una fecha/hora de pared en una zona horaria. */
+export function zonedTimeToUtc(
+  y: number,
+  m: number,
+  d: number,
+  hh: number,
+  mm: number,
+  timeZone: string
+): Date {
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  const p = zonedParts(new Date(guess), timeZone);
+  const asUtc = Date.UTC(
+    p.year,
+    p.month - 1,
+    p.day,
+    p.hour,
+    p.minute,
+    p.second
+  );
+  return new Date(guess - (asUtc - guess));
+}
+
+/**
+ * Como nextScheduleOccurrence, pero en el servidor: interpreta el horario
+ * en `timeZone` (por defecto, España peninsular) y no en la zona del
+ * proceso. `graceMinutes` deja ver como "próxima" una clase que empezó
+ * hace poco.
+ */
+export function nextScheduleOccurrenceInZone(
+  schedule: GroupScheduleEntry[] | null | undefined,
+  from: Date = new Date(),
+  timeZone = "Europe/Madrid",
+  graceMinutes = 0
+): Date | null {
+  if (!schedule || schedule.length === 0) return null;
+  const limit = from.getTime() - graceMinutes * 60_000;
+  const today = zonedParts(from, timeZone);
+  let best: Date | null = null;
+  for (const entry of schedule) {
+    const [hh, mm] = entry.time.split(":").map((n) => parseInt(n, 10));
+    if (Number.isNaN(hh) || Number.isNaN(mm)) continue;
+    for (const extra of [0, 7]) {
+      const days = ((entry.weekday - today.weekday + 7) % 7) + extra;
+      const base = new Date(
+        Date.UTC(today.year, today.month - 1, today.day + days)
+      );
+      const at = zonedTimeToUtc(
+        base.getUTCFullYear(),
+        base.getUTCMonth() + 1,
+        base.getUTCDate(),
+        hh,
+        mm,
+        timeZone
+      );
+      if (at.getTime() <= limit) continue;
+      if (!best || at.getTime() < best.getTime()) best = at;
+      break;
+    }
   }
   return best;
 }

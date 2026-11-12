@@ -37,6 +37,7 @@ import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { isFamilyOnlyUser } from "@/lib/family";
 import { isFamilyAccountType } from "@/lib/family-account";
+import { HoyTocaCard } from "@/components/app/dashboard/hoy-toca-card";
 
 function formatDayMonth(date: Date) {
   return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
@@ -73,6 +74,17 @@ function SectionTitle({ title, id }: { title: string; id?: string }) {
       <span className="size-2 rounded-full bg-[#D6FF38] shadow-[0_0_0_4px_rgba(214,255,56,0.16)]" />
       {title}
     </h2>
+  );
+}
+
+function HoyTocaSkeleton() {
+  return (
+    <section className="rounded-lg border border-foreground/12 bg-card p-5 sm:p-6">
+      <Skeleton className="h-3 w-20 rounded-full" />
+      <Skeleton className="mt-2 h-6 w-64 rounded-lg" />
+      <Skeleton className="mt-4 h-11 w-full rounded-lg" />
+      <Skeleton className="mt-3 h-24 w-full rounded-lg" />
+    </section>
   );
 }
 
@@ -607,6 +619,14 @@ export default async function DashboardPage() {
             )}
           </div>
         </header>
+
+        {/* "Hoy toca": la clase del próximo entreno ya montada (F1). */}
+        <Suspense fallback={<HoyTocaSkeleton />}>
+          <HoyTocaCard
+            userId={user.id}
+            sessionCreationEnabled={sessionCreationEnabled}
+          />
+        </Suspense>
 
         <Suspense fallback={<DashboardBodySkeleton />}>
           <DashboardBody

@@ -666,6 +666,13 @@
       "when": 1796000000000,
       "tag": "0094_skill_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1796100000000,
+      "tag": "0095_session_generation",
+      "breakpoints": true
     }
   ]
 }

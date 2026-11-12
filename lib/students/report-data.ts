@@ -1,3 +1,4 @@
+import { effectiveAttended } from "@/lib/sessions/attendance";
 import { and, asc, eq, gte, lt, lte, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { sessionStudents, sessions, students } from "@/db/schema";
@@ -66,7 +67,7 @@ export async function loadStudentReport(
     .limit(1);
   if (!student) return null;
 
-  const [rows, stats, objectives] = await Promise.all([
+  const [rawRows, stats, objectives] = await Promise.all([
     db
       .select({
         scheduledAt: sessions.scheduledAt,
@@ -74,6 +75,7 @@ export async function loadStudentReport(
         durationMinutes: sessions.durationMinutes,
         objective: sessions.objective,
         attended: sessionStudents.attended,
+        status: sessions.status,
         feedback: sessionStudents.feedback,
       })
       .from(sessionStudents)
@@ -95,6 +97,11 @@ export async function loadStudentReport(
     }),
   ]);
 
+  // Un "no viene" solo es falta si la sesión se completó.
+  const rows = rawRows.map(({ status, ...r }) => ({
+    ...r,
+    attended: effectiveAttended(r.attended, status),
+  }));
   const attended = rows.filter((r) => r.attended === true).length;
   const absent = rows.filter((r) => r.attended === false).length;
   const recorded = attended + absent;

@@ -147,6 +147,7 @@ export async function POST(
   const [newSession] = await db
     .insert(sessions)
     .values({
+      createdVia: "template",
       userId: user.id,
       title: template.title,
       description: template.description,

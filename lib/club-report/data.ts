@@ -200,7 +200,9 @@ export async function loadClubReportData(
     `),
     db.execute<Record<string, unknown>>(sql`
       with ${doneCte}
-      select ss.session_id, ss.student_id, ss.attended
+      select ss.session_id, ss.student_id,
+        -- Un "no viene" solo es falta si la sesión se completó (lib/sessions/attendance.ts).
+        (case when ss.attended = false and d.status <> 'completed' then null else ss.attended end) as attended
       from session_students ss join done d on d.id = ss.session_id
     `),
     db.execute<Record<string, unknown>>(sql`

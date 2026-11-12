@@ -1,3 +1,4 @@
+import { effectiveAttended } from "@/lib/sessions/attendance";
 import { db } from "@/db";
 import {
   sessions,
@@ -152,6 +153,7 @@ export async function getStudentAnalytics(
       intensity: sessions.intensity,
       tags: sessions.tags,
       attended: sessionStudents.attended,
+      status: sessions.status,
     })
     .from(sessionStudents)
     .innerJoin(sessions, eq(sessionStudents.sessionId, sessions.id))
@@ -181,8 +183,9 @@ export async function getStudentAnalytics(
   const attendedCount = allSessionsRows.filter(
     (s) => s.attended === true
   ).length;
+  // Un "no viene" previsto solo es falta si la sesión se completó.
   const trackedCount = allSessionsRows.filter(
-    (s) => s.attended !== null
+    (s) => effectiveAttended(s.attended, s.status) !== null
   ).length;
   const attendanceRate =
     trackedCount > 0 ? Math.round((attendedCount / trackedCount) * 100) : null;

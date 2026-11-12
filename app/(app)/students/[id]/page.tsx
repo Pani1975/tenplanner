@@ -198,9 +198,9 @@ export default async function StudentDetailPage({ params }: PageProps) {
         upcomingCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= now())`,
         // Misma definición que "Tiempo jugado" (lib/stats/load-training-stats):
         // sesiones pasadas, no canceladas y a las que el alumno no faltó.
-        playedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND ${sessionStudents.attended} IS NOT FALSE)`,
-        playedMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND ${sessionStudents.attended} IS NOT FALSE), 0)`,
-        pastWithAttendanceCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} IS NOT NULL)`,
+        playedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND (${sessionStudents.attended} IS NOT FALSE OR ${sessions.status} <> 'completed'))`,
+        playedMinutes: sql<number>`COALESCE(SUM(${sessions.durationMinutes}) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessions.status} <> 'cancelled' AND (${sessionStudents.attended} IS NOT FALSE OR ${sessions.status} <> 'completed')), 0)`,
+        pastWithAttendanceCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND (${sessionStudents.attended} = true OR (${sessionStudents.attended} = false AND ${sessions.status} = 'completed')))`,
         attendedCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} < now() AND ${sessionStudents.attended} = true)`,
         last30PastCount: sql<number>`COUNT(*) FILTER (WHERE ${sessions.scheduledAt} >= (now() - INTERVAL '30 days') AND ${sessions.scheduledAt} < now())`,
       })
