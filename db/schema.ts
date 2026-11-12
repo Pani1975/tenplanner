@@ -2497,3 +2497,21 @@ export const announcementReadsRelations = relations(
     }),
   })
 );
+
+// Importar texto con Ten Planner: una fila por importación, para limitar las
+// importaciones por usuario y día (migración 0097).
+export const textImports = pgTable(
+  "text_imports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    kind: varchar("kind", { length: 16 }).notNull(), // exercises | classes
+    chars: integer("chars").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("text_imports_user_created_idx").on(t.userId, t.createdAt)]
+);
