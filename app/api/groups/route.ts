@@ -8,26 +8,14 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { sortSchedule, type GroupScheduleEntry } from "@/lib/groups/schedule";
+import { weeklyScheduleSchema } from "@/lib/groups/schedule-schema";
 
 const createSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().optional(),
-  // Días de la semana y hora de clase: al crear un grupo hace falta al menos
-  // uno (sin repetir día).
-  weeklySchedule: z
-    .array(
-      z.object({
-        weekday: z.number().int().min(0).max(6),
-        time: z
-          .string()
-          .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida (HH:MM)"),
-      })
-    )
-    .min(1, "Indica al menos un día de clase")
-    .max(7)
-    .refine((v) => new Set(v.map((e) => e.weekday)).size === v.length, {
-      message: "Día repetido",
-    }),
+  // Días de la semana con hora de inicio y de finalización: al crear un grupo
+  // hace falta al menos un día (sin repetir).
+  weeklySchedule: weeklyScheduleSchema,
 });
 
 export async function GET(request: Request) {

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   WEEKDAY_LABELS,
+  formatScheduleTimes,
   sortSchedule,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
@@ -195,7 +196,7 @@ export function ClassDatesCalendar({
           <span className="mr-1 inline-block size-1.5 rounded-full bg-brand" />
           Días habituales de este grupo:{" "}
           {sortSchedule(schedule)
-            .map((e) => `${WEEKDAY_LABELS[e.weekday]} ${e.time}`)
+            .map((e) => `${WEEKDAY_LABELS[e.weekday]} ${formatScheduleTimes(e)}`)
             .join(" · ")}
         </p>
       )}

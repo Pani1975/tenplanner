@@ -3,8 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Loader2, Pencil, X } from "lucide-react";
-import { WeeklySchedulePicker } from "@/components/app/weekly-schedule-picker";
 import {
+  scheduleToSlots,
+  slotsAreValid,
+  slotsToSchedule,
+  WeeklySchedulePicker,
+  type ScheduleSlot,
+} from "@/components/app/weekly-schedule-picker";
+import {
+  formatScheduleTimes,
   WEEKDAY_LABELS,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
@@ -23,8 +30,8 @@ export function GroupScheduleEditor({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [schedule, setSchedule] = useState<Map<number, string>>(
-    new Map((initialSchedule ?? []).map((e) => [e.weekday, e.time]))
+  const [schedule, setSchedule] = useState<Map<number, ScheduleSlot>>(
+    scheduleToSlots(initialSchedule)
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +41,7 @@ export function GroupScheduleEditor({
   );
 
   function openEditor() {
-    setSchedule(
-      new Map((initialSchedule ?? []).map((e) => [e.weekday, e.time]))
-    );
+    setSchedule(scheduleToSlots(initialSchedule));
     setError(null);
     setOpen(true);
   }
@@ -45,9 +50,7 @@ export function GroupScheduleEditor({
     setSaving(true);
     setError(null);
     try {
-      const weeklySchedule: GroupScheduleEntry[] = Array.from(
-        schedule.entries()
-      ).map(([weekday, time]) => ({ weekday, time }));
+      const weeklySchedule = slotsToSchedule(schedule);
       const res = await fetch(`/api/groups/${groupId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -80,7 +83,7 @@ export function GroupScheduleEditor({
               key={e.weekday}
               className="rounded-full bg-[#D6FF38]/20 px-2.5 py-1 text-xs font-bold text-foreground"
             >
-              {WEEKDAY_LABELS[e.weekday]} {e.time}
+              {WEEKDAY_LABELS[e.weekday]} {formatScheduleTimes(e)}
             </span>
           ))}
         </div>
@@ -122,10 +125,10 @@ export function GroupScheduleEditor({
 
             <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
               <p className="mb-1 text-xs text-foreground/50">
-                Elige los días en que este grupo tiene clase y a qué hora.
-                &ldquo;Asignar clase&rdquo; propondrá sola la próxima fecha a
-                partir de esto, aunque siempre podrás cambiarla o añadir un
-                día suelto.
+                Elige los días en que este grupo tiene clase, con la hora de
+                inicio y la de finalización. &ldquo;Asignar clase&rdquo;
+                propondrá sola la próxima fecha (y la duración) a partir de
+                esto, aunque siempre podrás cambiarla o añadir un día suelto.
               </p>
               <WeeklySchedulePicker value={schedule} onChange={setSchedule} />
               {error && (
@@ -137,7 +140,7 @@ export function GroupScheduleEditor({
               <button
                 type="button"
                 onClick={() => void save()}
-                disabled={saving}
+                disabled={saving || (schedule.size > 0 && !slotsAreValid(schedule))}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6FF38] py-2.5 text-sm font-bold text-[#050505] disabled:opacity-60"
               >
                 {saving && <Loader2 className="size-4 animate-spin" />}
