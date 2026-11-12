@@ -93,6 +93,26 @@ export async function POST(request: Request) {
       rawKind = form.get("kind");
       rawText = form.get("text");
       const f = form.get("file");
+      if (f !== null && typeof f === "object" && (f as UploadFile).size === 0) {
+        return NextResponse.json(
+          {
+            error:
+              "El archivo ha llegado vacío. Vuelve a elegirlo e inténtalo de nuevo.",
+          },
+          { status: 400 }
+        );
+      }
+      if (f === null || typeof f === "string") {
+        // Hay formulario pero no archivo: se dice claro en vez de pedir texto.
+        console.error("[import-text] multipart sin archivo", typeof f);
+        return NextResponse.json(
+          {
+            error:
+              "No he recibido el archivo. Vuelve a elegirlo e inténtalo de nuevo.",
+          },
+          { status: 400 }
+        );
+      }
       // No se usa `instanceof File`: el File de formData() puede no ser el
       // global y el archivo se ignoraría en silencio.
       file =
