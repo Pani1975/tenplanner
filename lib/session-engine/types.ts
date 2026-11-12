@@ -48,6 +48,12 @@ export type EngineExercise = {
   hasMedia: boolean;
   /** Media de exercise_ratings (1-5) o null. */
   ratingAvg: number | null;
+  /** direccion | profundidad | altura | velocidad. */
+  parametros?: string[];
+  /** ataque | defensa | neutra. */
+  situaciones?: string[];
+  /** Nombre + objetivos de la ficha, normalizados (para los objetivos). */
+  text?: string;
 };
 
 export type GenerateInput = {

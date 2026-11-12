@@ -163,5 +163,32 @@ export const MONTAR = {
       : `Sustituye los ${n} ejercicios que tenía la sesión. Si no te convence, sal sin guardar.`,
 } as const;
 
+/** Pantalla "Antes de la propuesta" (duración, objetivos y lugar). */
+export const ANTES = {
+  title: "Antes de la propuesta",
+  history: (n: number) =>
+    n === 0
+      ? "Sin sesiones completadas aún"
+      : n === 1
+        ? "1 sesión en su historial"
+        : `${n} sesiones en su historial`,
+  level: (label: string) => `Nivel ${label}`,
+  durationQ: "¿Cuánto va a durar?",
+  otherDuration: "Otra",
+  minutes: "min",
+  objectivesQ: "¿Qué quieres trabajar?",
+  objectivesHint:
+    "Cárgalos del catálogo del club o escríbelos, uno por línea (p. ej. «Mejorar el control de la derecha»).",
+  objectivesPlaceholder: "Mejorar el control de la derecha",
+  suggested: "Sugeridos del grupo:",
+  understood: "Ten Planner entiende:",
+  notUnderstood: "No lo reconozco: se tendrá en cuenta como texto.",
+  required: "Escribe o carga al menos un objetivo.",
+  placeQ: "¿Dónde?",
+  optional: "(opcional)",
+  noPlace: "Sin lugar",
+  submit: "Ver la propuesta de Ten Planner",
+} as const;
+
 export const REPEATED_WARNING =
   "Aviso: algún ejercicio se repite de las 3 últimas sesiones porque no había otro que encajara.";

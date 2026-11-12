@@ -27,7 +27,13 @@ import { getClubMembersDirectory } from "@/lib/clubs";
 interface PageProps {
   params: Promise<{ id: string }>;
   /** disenar=1: "Que la diseñe Ten Planner" sobre esta sesión. */
-  searchParams: Promise<{ disenar?: string }>;
+  searchParams: Promise<{
+    disenar?: string;
+    dur?: string;
+    obj?: string;
+    lugar?: string;
+    step?: string;
+  }>;
 }
 
 export default async function EditSessionPage({
@@ -41,10 +47,16 @@ export default async function EditSessionPage({
   const user = authSession?.user ?? null;
   if (!user) redirect("/login");
 
-  const [{ id }, { disenar: disenarParam }] = await Promise.all([
-    params,
-    searchParams,
-  ]);
+  const [
+    { id },
+    {
+      disenar: disenarParam,
+      dur: durParam,
+      obj: objParam,
+      lugar: lugarParam,
+      step: stepParam,
+    },
+  ] = await Promise.all([params, searchParams]);
 
   const [sessionRow] = await db
     .select()
@@ -107,7 +119,7 @@ export default async function EditSessionPage({
   // no tiene objetivos, se proponen los del grupo.
   const disenar = disenarParam === "1" && !!sessionRow.groupId;
   const groupObjetivos =
-    disenar && !sessionRow.objective?.trim()
+    disenar && !objParam?.trim() && !sessionRow.objective?.trim()
       ? ((
           await db
             .select({ objetivos: groups.objetivos })
@@ -172,6 +184,7 @@ export default async function EditSessionPage({
                   ? {
                       groupId: sessionRow.groupId,
                       replacesCount: plan.items.length,
+                      autoStart: stepParam === "2",
                     }
                   : undefined
               }
@@ -180,12 +193,24 @@ export default async function EditSessionPage({
                 initialState: {
                   title: sessionRow.title,
                   scheduledAt: sessionRow.scheduledAt.toISOString(),
-                  durationMinutes: sessionRow.durationMinutes,
+                  durationMinutes:
+                    disenar && Number(durParam) >= 10 && Number(durParam) <= 240
+                      ? Math.round(Number(durParam))
+                      : sessionRow.durationMinutes,
                   location: sessionRow.location ?? "",
-                  placeId: sessionRow.placeId ?? null,
+                  placeId:
+                    disenar && lugarParam !== undefined
+                      ? coachPlaces.some((p) => p.id === lugarParam)
+                        ? lugarParam
+                        : null
+                      : (sessionRow.placeId ?? null),
                   groupId: sessionRow.groupId ?? null,
                   coachId: sessionRow.coachId ?? sessionRow.userId,
-                  objective: groupObjetivos ?? sessionRow.objective ?? "",
+                  objective:
+                    (disenar && objParam?.trim()) ||
+                    groupObjetivos ||
+                    sessionRow.objective ||
+                    "",
                   material: sessionRow.material ?? "",
                   observations: sessionRow.observations ?? "",
                   sourceClassId: sessionRow.sourceClassId ?? null,

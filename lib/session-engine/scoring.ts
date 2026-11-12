@@ -2,7 +2,7 @@
 // mejores, no el mejor siempre: "Otra propuesta" da algo distinto sin caer
 // en lo mediocre).
 
-import type { ObjectiveFocus } from "./objectives";
+import { keywordHits, type ObjectiveFocus } from "./objectives";
 import type { Slot } from "./skeleton";
 import type { EngineExercise, Focus, Intensity } from "./types";
 
@@ -46,10 +46,16 @@ export function scoreExercise(
   )
     s += 1;
   // Objetivos de la sesión: más puntos a lo que trabajan.
-  if (ctx.objectives) {
-    if (ex.golpes.some((g) => (ctx.objectives!.golpes as string[]).includes(g)))
-      s += 1;
-    if (ex.aspectos.some((a) => ctx.objectives!.aspectos.includes(a))) s += 1;
+  const obj = ctx.objectives;
+  if (obj) {
+    if (ex.golpes.some((g) => (obj.golpes as string[]).includes(g))) s += 1;
+    if (ex.aspectos.some((a) => obj.aspectos.includes(a))) s += 1;
+    if ((ex.parametros ?? []).some((p) => obj.parametros.includes(p))) s += 1;
+    if ((ex.situaciones ?? []).some((p) => obj.situaciones.includes(p)))
+      s += 0.75;
+    if (obj.competitivo && ex.caracter.includes("competitivo")) s += 0.5;
+    // La ficha dice buscar lo mismo (en su nombre u objetivos).
+    s += Math.min(2, 0.5 * keywordHits(obj.keywords, ex.text ?? ""));
   }
   if (ctx.recent3.has(ex.id)) s -= 4;
   else if (ctx.recent8.has(ex.id)) s -= 2;

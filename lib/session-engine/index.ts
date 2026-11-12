@@ -18,7 +18,11 @@ import {
   SLOT_LABELS,
 } from "./messages";
 import { seededRandom } from "./rng";
-import { parseObjectives, type ObjectiveFocus } from "./objectives";
+import {
+  objectiveLabels,
+  parseObjectives,
+  type ObjectiveFocus,
+} from "./objectives";
 import { pickWithSeed, scoreExercise } from "./scoring";
 import { buildSkeleton, type Slot } from "./skeleton";
 import type {
@@ -41,7 +45,7 @@ export function resolveFocus(
   focus: Focus,
   data: EngineData,
   rand: () => number,
-  objectives: ObjectiveFocus = { golpes: [], aspectos: [] }
+  objectives: ObjectiveFocus = parseObjectives(null)
 ): {
   focus: Exclude<Focus, "auto">;
   wasAuto: boolean;
@@ -218,6 +222,10 @@ export function generateSession(
     explanations.push(
       explainAutoFocus(FOCUS_LABELS[focus], focusInfo.reason ?? "turno")
     );
+  }
+  const understood = objectiveLabels(objectives);
+  if (understood.length > 0) {
+    explanations.push(`Por tus objetivos: ${understood.join(", ")}.`);
   }
   explanations.push(
     explainLevel(levelLabel(data.levels, level.code), level.source)

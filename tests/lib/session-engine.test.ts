@@ -7,7 +7,12 @@ import {
 } from "@/lib/session-engine";
 import { fitDurations } from "@/lib/session-engine/fit";
 import { resolveGroupLevel } from "@/lib/session-engine/level";
-import { parseObjectives } from "@/lib/session-engine/objectives";
+import {
+  keywordHits,
+  objectiveLabels,
+  parseObjectiveLines,
+  parseObjectives,
+} from "@/lib/session-engine/objectives";
 import { buildSkeleton } from "@/lib/session-engine/skeleton";
 import type { SkillLevel } from "@/lib/skill-levels";
 
@@ -333,5 +338,76 @@ describe("parseObjectives", () => {
       "remate",
     ]);
     expect(parseObjectives("").golpes).toEqual([]);
+  });
+});
+
+describe("objetivos escritos por el monitor", () => {
+  it("«Mejorar el control de la derecha» → derecha, técnica, dirección y profundidad", () => {
+    const [line] = parseObjectiveLines("Mejorar el control de la derecha");
+    expect(line.recognized).toBe(true);
+    expect(line.golpes).toEqual(["derecha"]);
+    expect(line.aspectos).toEqual(["tecnica"]);
+    expect(line.parametros).toEqual(["direccion", "profundidad"]);
+    expect(objectiveLabels(line)).toEqual([
+      "Derecha",
+      "Técnica",
+      "Dirección",
+      "Profundidad",
+    ]);
+  });
+
+  it("reconoce situaciones, puntos y aspectos; avisa de lo que no entiende", () => {
+    const lines = parseObjectiveLines(
+      "• Defender con bolas altas\nJugar puntos atacando la red\nPasarlo bien"
+    );
+    expect(lines[0].situaciones).toContain("defensa");
+    expect(lines[0].parametros).toContain("altura");
+    expect(lines[1].competitivo).toBe(true);
+    expect(lines[1].situaciones).toContain("ataque");
+    expect(lines[1].golpes).toEqual(["volea"]);
+    expect(lines[2].recognized).toBe(false);
+  });
+
+  it("compara las raíces con el texto de la ficha", () => {
+    const { keywords } = parseObjectives(
+      "Dar seguridad al peloteo con bolas arqueadas"
+    );
+    expect(
+      keywordHits(keywords, "pelotear con bolas arqueadas que pasan la red")
+    ).toBeGreaterThan(0);
+  });
+
+  it("el motor prefiere los ejercicios cuya ficha encaja con los objetivos", () => {
+    const lib = library().map((e) => ({
+      ...e,
+      text: "",
+      parametros: [] as string[],
+    }));
+    // Marca un ejercicio de técnica de nivel desarrollo como el que encaja.
+    const target = lib.find(
+      (e) =>
+        e.fases.includes("main") &&
+        e.aspectos.includes("tecnica") &&
+        e.niveles.includes("desarrollo")
+    )!;
+    target.text = "control de la derecha en diagonal";
+    target.parametros = ["direccion", "profundidad"];
+    target.golpes = ["derecha"];
+    let hits = 0;
+    for (let i = 0; i < 10; i++) {
+      const plan = generateSession(
+        input({
+          seed: `obj-${i}`,
+          focus: "auto",
+          objectives: "Mejorar el control de la derecha",
+        }),
+        data({ exercises: lib })
+      );
+      if (plan.items.some((it) => it.exerciseId === target.id)) hits++;
+      expect(
+        plan.explanations.some((t) => t.startsWith("Por tus objetivos"))
+      ).toBe(true);
+    }
+    expect(hits).toBeGreaterThanOrEqual(6);
   });
 });

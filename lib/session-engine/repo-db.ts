@@ -3,6 +3,7 @@
 
 import { and, asc, avg, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { normalizeSearchText } from "@/lib/exercises/search-text";
 import {
   exerciseRatings,
   exercises,
@@ -95,6 +96,9 @@ export async function loadEnginePool(
       golpes: exercises.golpes,
       caracter: exercises.caracter,
       aspectos: exercises.aspectosJuego,
+      parametros: exercises.parametros,
+      situaciones: exercises.situacionJuego,
+      objectivesText: exercises.objectives,
       tipoActividad: exercises.tipoActividad,
       tipoPelota: exercises.tipoPelota,
       numJugadores: exercises.numJugadores,
@@ -142,6 +146,9 @@ export async function loadEnginePool(
       hasVariantes: !!r.hasVariantes,
       hasMedia: !!r.hasMedia,
       ratingAvg: ratingById.get(r.id) ?? null,
+      parametros: arr(r.parametros),
+      situaciones: arr(r.situaciones),
+      text: normalizeSearchText(`${r.name} ${r.objectivesText ?? ""}`),
     };
   });
 }
