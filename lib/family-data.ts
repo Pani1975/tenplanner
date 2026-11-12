@@ -1,3 +1,4 @@
+import { effectiveAttended } from "@/lib/sessions/attendance";
 import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -189,5 +190,12 @@ export async function getPlayerCalendar(
     .orderBy(asc(calendarHolidays.startDate))
     .limit(500);
 
-  return { sessions: sessionRows, holidays: holidayRows };
+  // Un "no viene" previsto solo es falta si la sesión se completó.
+  return {
+    sessions: sessionRows.map((r) => ({
+      ...r,
+      attended: effectiveAttended(r.attended, r.status),
+    })),
+    holidays: holidayRows,
+  };
 }

@@ -112,6 +112,7 @@ export async function POST(request: Request, ctx: Ctx) {
     const [created] = await tx
       .insert(sessions)
       .values({
+        createdVia: "duplicate",
         title: parsed.data.title ?? original.title,
         description: original.description,
         scheduledAt: new Date(parsed.data.scheduledAt),

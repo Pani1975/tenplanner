@@ -59,6 +59,7 @@ export async function POST(request: Request, ctx: Ctx) {
       const [created] = await tx
         .insert(sessions)
         .values({
+          createdVia: "repeat",
           title: original.title,
           description: original.description,
           scheduledAt: new Date(dateStr),

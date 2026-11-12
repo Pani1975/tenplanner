@@ -170,6 +170,19 @@ export const createSessionSchema = z.object({
   studentIds: studentIdsSchema,
   exercises: z.array(exerciseItemSchema).default([]),
   blocks: z.array(sessionBlockSchema).max(3).optional().nullable(),
+  // Vía de creación (medición del motor). Por defecto, el asistente.
+  createdVia: z.enum(["wizard", "quick", "engine"]).optional(),
+  // Alumnos del grupo que el monitor marcó como "no vienen" al montar la
+  // clase: se guardan con attended = false. Solo cuentan como falta si la
+  // sesión llega a completarse (ver docs/f1-plan.md, decisión 7).
+  absentStudentIds: z.array(z.string().uuid()).max(100).optional().default([]),
+  // Entrada y traza del motor, solo con createdVia = "engine".
+  generation: z
+    .object({
+      input: z.record(z.string(), z.unknown()),
+      trace: z.unknown(),
+    })
+    .optional(),
 });
 
 export const updateSessionSchema = z

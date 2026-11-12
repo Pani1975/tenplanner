@@ -226,7 +226,7 @@ export async function loadClubReport(
   const [[summary], coachRows, playerRows] = await Promise.all([
     db.execute<Record<string, unknown>>(sql`
       with done as (
-        select s.id, s.duration_minutes from sessions s
+        select s.id, s.duration_minutes, s.status from sessions s
         where s.club_id = ${clubId}
           and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
@@ -256,8 +256,8 @@ export async function loadClubReport(
             and s.scheduled_at < now() + interval '30 days') as upcoming,
         (select count(*) filter (where ss.attended) from session_students ss
           where ss.session_id in (select id from done)) as present,
-        (select count(*) filter (where ss.attended is not null) from session_students ss
-          where ss.session_id in (select id from done)) as marked,
+        (select count(*) filter (where ss.attended or (ss.attended = false and d.status = 'completed')) from session_students ss
+          join done d on d.id = ss.session_id) as marked,
         (select count(*) from student_objectives so
           join students st on st.id = so.student_id
           where st.club_id = ${clubId} and so.achieved
@@ -274,7 +274,7 @@ export async function loadClubReport(
         select st.coach_id from students st where st.club_id = ${clubId}
       ),
       done as (
-        select s.id, coalesce(s.coach_id, s.user_id) as user_id, s.duration_minutes,
+        select s.id, coalesce(s.coach_id, s.user_id) as user_id, s.duration_minutes, s.status,
           s.scheduled_at from sessions s
         where s.club_id = ${clubId}
           and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
@@ -294,7 +294,7 @@ export async function loadClubReport(
             and s.scheduled_at < now() + interval '30 days') as upcoming,
         (select count(*) filter (where ss.attended) from session_students ss
           join done d on d.id = ss.session_id where d.user_id = u.id) as present,
-        (select count(*) filter (where ss.attended is not null) from session_students ss
+        (select count(*) filter (where ss.attended or (ss.attended = false and d.status = 'completed')) from session_students ss
           join done d on d.id = ss.session_id where d.user_id = u.id) as marked,
         (select max(s.scheduled_at) from sessions s
           where s.club_id = ${clubId} and coalesce(s.coach_id, s.user_id) = u.id
@@ -305,7 +305,7 @@ export async function loadClubReport(
     `),
     db.execute<Record<string, unknown>>(sql`
       with done as (
-        select s.id from sessions s
+        select s.id, s.status from sessions s
         where s.club_id = ${clubId}
           and s.scheduled_at >= ${since} and s.scheduled_at < ${until}
           and s.status <> 'cancelled'
@@ -314,9 +314,9 @@ export async function loadClubReport(
         (select count(*) filter (where ss.attended) from session_students ss
           where ss.student_id = st.id
             and ss.session_id in (select id from done)) as present,
-        (select count(*) filter (where ss.attended is not null) from session_students ss
-          where ss.student_id = st.id
-            and ss.session_id in (select id from done)) as marked,
+        (select count(*) filter (where ss.attended or (ss.attended = false and d.status = 'completed')) from session_students ss
+          join done d on d.id = ss.session_id
+          where ss.student_id = st.id) as marked,
         (select count(*) from student_objectives so
           where so.student_id = st.id and so.achieved) as objectives,
         (select count(*) from student_objectives so

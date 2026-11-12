@@ -47,6 +47,7 @@ export function QuickSessionCreator() {
           location: null,
           studentIds: [],
           exercises: [],
+          createdVia: "quick",
         }),
       });
 

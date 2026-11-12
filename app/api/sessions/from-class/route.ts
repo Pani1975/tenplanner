@@ -339,6 +339,7 @@ export async function POST(request: Request) {
         const [session] = await tx
           .insert(sessions)
           .values({
+            createdVia: "from_class",
             title,
             description: null,
             scheduledAt,
