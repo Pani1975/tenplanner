@@ -260,10 +260,24 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
       )
       .orderBy(asc(sessions.scheduledAt))
       .limit(6);
-    const counts = await countSessionItems(upcoming.map((s) => s.id));
+    // Para los días libres hay que mirar todas las sesiones futuras del
+    // grupo, no solo las 6 que se listan.
+    const [counts, takenRows] = await Promise.all([
+      countSessionItems(upcoming.map((s) => s.id)),
+      db
+        .select({ scheduledAt: sessions.scheduledAt })
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.groupId, selected.id),
+            ne(sessions.status, "cancelled"),
+            gte(sessions.scheduledAt, new Date(now.getTime() - 3600_000))
+          )
+        ),
+    ]);
     const free = freeOccurrences(
       selected.schedule,
-      upcoming.map((s) => s.scheduledAt),
+      takenRows.map((s) => s.scheduledAt),
       now
     );
 
