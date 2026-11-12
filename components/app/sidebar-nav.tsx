@@ -208,6 +208,7 @@ const platformNavItems: NavItem[] = [
 // clases, sesiones, objetivos, club ni lugares: para eso se cambia al modo
 // del club en el selector.
 const managementNavItems: NavItem[] = [
+  { href: "/gestion/panel", label: "Panel", icon: LayoutDashboard },
   { href: "/gestion", label: "Informes", icon: BarChart3 },
   { href: "/gestion/monitores", label: "Monitores", icon: Users2 },
   {
@@ -470,7 +471,7 @@ function NavContent({
               : tenPlannerMode
                 ? "/informes"
                 : managementMode
-                  ? "/gestion"
+                  ? "/gestion/panel"
                   : "/dashboard"
           }
           className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-sidebar-accent"
@@ -957,7 +958,7 @@ function SidebarNavInner({
                   : tenPlannerMode
                     ? "/informes"
                     : managementMode
-                      ? "/gestion"
+                      ? "/gestion/panel"
                       : "/dashboard"
               }
               className="flex min-w-0 shrink items-center gap-2.5"

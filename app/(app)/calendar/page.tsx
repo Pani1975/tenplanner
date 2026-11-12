@@ -259,7 +259,6 @@ export default async function CalendarPage({ searchParams }: PageProps) {
 
   const total = serialized.length;
   const totalEvents = serializedEvents.length;
-  const totalHolidays = serializedHolidays.length;
 
   return (
     <div className="tp-page">
@@ -334,35 +333,17 @@ export default async function CalendarPage({ searchParams }: PageProps) {
             ))}
           </div>
         )}
-        {!managementClubId &&
-        total === 0 &&
-        totalEvents === 0 &&
-        totalHolidays === 0 ? (
-          <div className="tp-panel flex flex-col items-center justify-center gap-4 border-dashed py-20 text-center">
-            <p className="max-w-xs text-sm leading-6 text-foreground/55">
-              Aún no tienes sesiones ni eventos planificados. Crea el primero
-              para verlo aquí.
-            </p>
-            <Link
-              href="/sessions/new"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground transition-opacity hover:opacity-90"
-            >
-              <Plus className="size-4" />
-              Crear primera sesión
-            </Link>
-          </div>
-        ) : (
-          <CalendarClient
-            sessions={serialized}
-            events={serializedEvents}
-            holidays={serializedHolidays}
-            groups={spaceGroups}
-            currentUserId={user.id}
-            management={!!managementClubId}
-            tasks={tasks}
-            coaches={taskCoaches.filter((m) => m.id !== user.id)}
-          />
-        )}
+        {/* Siempre se ve el calendario, aunque aún no haya nada en él. */}
+        <CalendarClient
+          sessions={serialized}
+          events={serializedEvents}
+          holidays={serializedHolidays}
+          groups={spaceGroups}
+          currentUserId={user.id}
+          management={!!managementClubId}
+          tasks={tasks}
+          coaches={taskCoaches.filter((m) => m.id !== user.id)}
+        />
       </div>
     </div>
   );

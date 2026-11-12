@@ -566,7 +566,7 @@ export default async function DashboardPage() {
   // El Espacio gestión tampoco tiene panel de sesiones: va a su Informes.
   const workMode = await getWorkMode(user.id);
   if (workMode.kind === "tenplanner") redirect("/informes");
-  if (workMode.kind === "club" && workMode.management) redirect("/gestion");
+  if (workMode.kind === "club" && workMode.management) redirect("/gestion/panel");
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||

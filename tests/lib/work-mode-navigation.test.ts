@@ -16,7 +16,7 @@ describe("goAfterModeChange", () => {
   it("entrar en gestión o administrador recarga en su página de inicio", () => {
     const a = setup();
     goAfterModeChange(a.router, "club-1", MODE_MANAGEMENT);
-    expect(a.assign).toHaveBeenCalledWith("/gestion");
+    expect(a.assign).toHaveBeenCalledWith("/gestion/panel");
     const b = setup();
     goAfterModeChange(b.router, "club-1", MODE_ADMIN);
     expect(b.assign).toHaveBeenCalledWith("/informes");
