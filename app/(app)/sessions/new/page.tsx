@@ -42,6 +42,7 @@ import {
 } from "@/components/app/session-wizard/timeline";
 import { resolveItemKind, type StationItemJson } from "@/lib/block-items";
 import { FeatureLocked } from "@/components/app/feature-locked";
+import { MONTAR } from "@/lib/session-engine/messages";
 import {
   ArrowLeft,
   BookOpen,
@@ -504,7 +505,22 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         </header>
 
         {noPreload && (
-          <div className="grid sm:grid-cols-3 gap-3 pt-6">
+          <div className="grid gap-3 pt-6 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              href="/sessions/new/montar"
+              className="group rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_12px_36px_rgba(5,5,5,0.04)] transition-colors hover:border-[#D6FF38]/70 hover:bg-[#D6FF38]/10 dark:border-white/10 dark:bg-white/[0.045]"
+            >
+              <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-[#D6FF38]/20 text-foreground">
+                <Sparkles className="size-4 text-brand" />
+              </div>
+              <p className="font-heading text-base text-foreground group-hover:text-brand">
+                {MONTAR.title}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {MONTAR.subtitle}
+              </p>
+            </Link>
+
             <Link
               href="/classes"
               className="group rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_12px_36px_rgba(5,5,5,0.04)] transition-colors hover:border-[#D6FF38]/70 hover:bg-[#D6FF38]/10 dark:border-white/10 dark:bg-white/[0.045]"
