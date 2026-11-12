@@ -1,7 +1,19 @@
 // Acceso a datos del motor: carga en pocas consultas todo lo que
 // generateSession necesita. El motor en sí no toca la base.
 
-import { and, asc, avg, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  avg,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { db } from "@/db";
 import { normalizeSearchText } from "@/lib/exercises/search-text";
 import {
@@ -16,7 +28,7 @@ import {
   students,
 } from "@/db/schema";
 import { sharedWithClubCondition } from "@/lib/clubs";
-import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
+import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 import {
@@ -80,11 +92,30 @@ export async function loadEngineGroup(
   return { ...g, students: members };
 }
 
-/** Ejercicios del deporte que el usuario puede usar, ya resumidos. */
-export async function loadEnginePool(
-  userId: string,
-  sport: string
-): Promise<EngineExercise[]> {
+type PoolRow = Omit<EngineExercise, "ratingAvg">;
+
+/** Cuánto se guarda en memoria la parte común (ejercicios públicos y valoraciones). */
+const POOL_TTL_MS = 10 * 60_000;
+const publicPoolCache = new Map<
+  string,
+  { at: number; rows: Promise<PoolRow[]> }
+>();
+let ratingsCache: {
+  at: number;
+  byId: Promise<Map<string, number | null>>;
+} | null = null;
+
+function cached(
+  entry: { at: number } | null | undefined,
+  now: number
+): boolean {
+  return !!entry && now - entry.at < POOL_TTL_MS;
+}
+
+const arr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+
+async function queryPool(where: SQL): Promise<PoolRow[]> {
   const rows = await db
     .select({
       id: exercises.id,
@@ -107,27 +138,7 @@ export async function loadEnginePool(
       hasMedia: sql<boolean>`(${exercises.imageUrl} is not null or ${exercises.animationScene} is not null or coalesce(json_typeof(${exercises.imageUrls}) = 'array' and json_array_length(${exercises.imageUrls}) > 0, false))`,
     })
     .from(exercises)
-    .where(
-      and(
-        eq(exercises.sport, sport as "tenis"),
-        exerciseVisibleToUserCondition(userId)
-      )
-    );
-
-  const ratings = await db
-    .select({
-      id: exerciseRatings.exerciseId,
-      avg: avg(exerciseRatings.rating),
-    })
-    .from(exerciseRatings)
-    .groupBy(exerciseRatings.exerciseId);
-  const ratingById = new Map(
-    ratings.map((r) => [r.id, r.avg === null ? null : Number(r.avg)])
-  );
-
-  const arr = (v: unknown): string[] =>
-    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
-
+    .where(where);
   return rows.map((r) => {
     const fases = arr(r.fases);
     return {
@@ -145,12 +156,76 @@ export async function loadEnginePool(
       hasSteps: !!r.hasSteps,
       hasVariantes: !!r.hasVariantes,
       hasMedia: !!r.hasMedia,
-      ratingAvg: ratingById.get(r.id) ?? null,
       parametros: arr(r.parametros),
       situaciones: arr(r.situaciones),
       text: normalizeSearchText(`${r.name} ${r.objectivesText ?? ""}`),
     };
   });
+}
+
+/** Ejercicios públicos (biblioteca global) de un deporte, en memoria 10 min. */
+function publicPool(sport: string, now: number): Promise<PoolRow[]> {
+  const hit = publicPoolCache.get(sport);
+  if (hit && cached(hit, now)) return hit.rows;
+  const rows = queryPool(
+    and(
+      eq(exercises.sport, sport as "tenis"),
+      or(eq(exercises.isGlobal, true), isNull(exercises.createdBy))
+    )!
+  );
+  publicPoolCache.set(sport, { at: now, rows });
+  // Si falla, que no se quede guardado el error.
+  rows.catch(() => publicPoolCache.delete(sport));
+  return rows;
+}
+
+function ratingsById(now: number): Promise<Map<string, number | null>> {
+  if (ratingsCache && cached(ratingsCache, now)) return ratingsCache.byId;
+  const byId = db
+    .select({
+      id: exerciseRatings.exerciseId,
+      avg: avg(exerciseRatings.rating),
+    })
+    .from(exerciseRatings)
+    .groupBy(exerciseRatings.exerciseId)
+    .then(
+      (rows) =>
+        new Map(rows.map((r) => [r.id, r.avg === null ? null : Number(r.avg)]))
+    );
+  ratingsCache = { at: now, byId };
+  byId.catch(() => {
+    ratingsCache = null;
+  });
+  return byId;
+}
+
+/**
+ * Ejercicios del deporte que el usuario puede usar, ya resumidos. La
+ * biblioteca pública (la gran mayoría) se guarda en memoria unos minutos;
+ * los propios y los de sus clubes se leen siempre.
+ */
+export async function loadEnginePool(
+  userId: string,
+  sport: string
+): Promise<EngineExercise[]> {
+  const now = Date.now();
+  const [pub, own, ratings] = await Promise.all([
+    publicPool(sport, now),
+    queryPool(
+      and(
+        eq(exercises.sport, sport as "tenis"),
+        exerciseOwnOrClubCondition(userId)
+      )!
+    ),
+    ratingsById(now),
+  ]);
+  const byId = new Map<string, PoolRow>();
+  for (const r of pub) byId.set(r.id, r);
+  for (const r of own) byId.set(r.id, r);
+  return [...byId.values()].map((r) => ({
+    ...r,
+    ratingAvg: ratings.get(r.id) ?? null,
+  }));
 }
 
 /** Ejercicios de las últimas sesiones completadas del grupo (más reciente primero). */
