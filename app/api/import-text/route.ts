@@ -93,6 +93,26 @@ export async function POST(request: Request) {
       rawKind = form.get("kind");
       rawText = form.get("text");
       const f = form.get("file");
+      if (f !== null && typeof f === "object" && (f as UploadFile).size === 0) {
+        return NextResponse.json(
+          {
+            error:
+              "El archivo ha llegado vacío. Vuelve a elegirlo e inténtalo de nuevo.",
+          },
+          { status: 400 }
+        );
+      }
+      if (f === null || typeof f === "string") {
+        // Hay formulario pero no archivo: se dice claro en vez de pedir texto.
+        console.error("[import-text] multipart sin archivo", typeof f);
+        return NextResponse.json(
+          {
+            error:
+              "No he recibido el archivo. Vuelve a elegirlo e inténtalo de nuevo.",
+          },
+          { status: 400 }
+        );
+      }
       // No se usa `instanceof File`: el File de formData() puede no ser el
       // global y el archivo se ignoraría en silencio.
       file =
@@ -281,12 +301,31 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
-    // Solo el tipo de error: nunca el contenido del documento.
-    console.error("[import-text] fallo", error instanceof Error ? error.name : "desconocido");
+    // Nunca el contenido del documento: solo tipo, código HTTP y el mensaje
+    // (corto) del proveedor.
+    const name = error instanceof Error ? error.name : "desconocido";
+    const status =
+      typeof (error as { statusCode?: unknown })?.statusCode === "number"
+        ? (error as { statusCode: number }).statusCode
+        : null;
+    const message =
+      error instanceof Error ? error.message.slice(0, 200) : "";
+    console.error("[import-text] fallo", name, status, message);
+    let reason = "";
+    if (status === 401 || status === 403) {
+      reason = " (la clave de Anthropic de este entorno no es válida)";
+    } else if (/credit balance/i.test(message)) {
+      reason = " (la cuenta de Anthropic no tiene saldo)";
+    } else if (status === 429 || status === 529) {
+      reason = " (Anthropic está saturado)";
+    } else if (status === 404) {
+      reason = " (el modelo de IA configurado no existe)";
+    } else if (status === 400) {
+      reason = " (Anthropic rechazó la petición)";
+    }
     return NextResponse.json(
       {
-        error:
-          "No he podido convertir el texto. Inténtalo de nuevo en un momento; esta importación no cuenta en tu límite.",
+        error: `No he podido convertir el texto${reason}. Inténtalo de nuevo en un momento; esta importación no cuenta en tu límite.`,
       },
       { status: 502 }
     );
