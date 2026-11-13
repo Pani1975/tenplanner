@@ -36,6 +36,13 @@ const anthropic = createAnthropic({
 
 const MODEL = process.env.IMPORT_TEXT_MODEL || "claude-sonnet-4-6";
 
+// El formato estructurado nativo de Anthropic limita el número de campos
+// opcionales («Schemas contains too many…», 400) y nuestro esquema tiene
+// muchos. Con una herramienta JSON acepta el esquema completo.
+const AI_PROVIDER_OPTIONS = {
+  anthropic: { structuredOutputMode: "jsonTool" as const },
+};
+
 function startOfTodayUtc() {
   const d = new Date();
   d.setUTCHours(0, 0, 0, 0);
@@ -252,6 +259,7 @@ export async function POST(request: Request) {
         messages,
         temperature: 0.2,
         maxOutputTokens: 16000,
+        providerOptions: AI_PROVIDER_OPTIONS,
       });
       const items = object.exercises
         .slice(0, IMPORT_MAX_EXERCISES)
@@ -273,6 +281,7 @@ export async function POST(request: Request) {
       messages,
       temperature: 0.2,
       maxOutputTokens: 16000,
+      providerOptions: AI_PROVIDER_OPTIONS,
     });
     const items = object.classes
       .slice(0, IMPORT_MAX_CLASSES)
