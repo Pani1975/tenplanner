@@ -187,17 +187,8 @@ export default async function ClassDetailPage({
   const copyTargets: CopyTarget[] = [];
   if (user && !inTenPlanner && cls.isLibrary && cls.status === "published")
     copyTargets.push("active");
-  // Para una clase de la Biblioteca ya existe "Copiar a Mis clases": el botón
-  // al espacio particular solo aplica a clases propias del club.
-  if (
-    user &&
-    !inTenPlanner &&
-    isOwner &&
-    !cls.isLibrary &&
-    cls.clubId &&
-    cls.status === "published"
-  )
-    copyTargets.push("particular");
+  // Las clases del club no se ofrecen para copiar al espacio particular: el
+  // contenido del club se queda en el club.
   // "Enviar al club": en el Modo monitor, una clase de su espacio.
   const sendClubs =
     user && isOwner && !cls.isLibrary && !cls.clubId

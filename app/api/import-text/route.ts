@@ -2,6 +2,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject, type ModelMessage } from "ai";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { linkClassItemsToLibrary } from "@/lib/import/link-exercises";
+import { CHOOSE_SYSTEM, aiChoicesSchema } from "@/lib/import/choose-exercises";
 import {
   readUpload,
   type UploadContent,
@@ -28,7 +29,8 @@ import {
   type ImportKind,
 } from "@/lib/import/schema";
 
-export const maxDuration = 120;
+// Dos llamadas a la IA en las clases (extraer y elegir ejercicios).
+export const maxDuration = 300;
 
 // La clave solo se lee en el servidor.
 const anthropic = createAnthropic({
@@ -77,7 +79,7 @@ Reglas:
 Tarea: extrae los EJERCICIOS del texto, uno por cada ejercicio distinto (máximo ${IMPORT_MAX_EXERCISES}). Si el texto describe una sola clase con varias actividades, cada actividad es un ejercicio.`;
   }
   return `${common}
-Tarea: extrae las CLASES del texto, una por cada clase distinta (máximo ${IMPORT_MAX_CLASSES}); si hay tres clases, devuelve tres. Cada clase tiene hasta 3 bloques en este orden: inicial (calentamiento), principal y final (vuelta a la calma); cada bloque contiene las actividades del texto con su duración. Para cada actividad que sea un ejercicio, rellena «busqueda» con 2-3 palabras clave con las que encontrarlo en una biblioteca de ejercicios (golpe y situación, sin artículos); déjala vacía en descansos, pausas o charlas.`;
+Tarea: extrae las CLASES del texto, una por cada clase distinta (máximo ${IMPORT_MAX_CLASSES}); si hay tres clases, devuelve tres. Cada clase tiene hasta 3 bloques en este orden: inicial (calentamiento), principal y final (vuelta a la calma); cada bloque contiene las actividades del texto con su duración. Para cada actividad que sea un ejercicio, rellena «busqueda» con 2-3 palabras clave con las que encontrarlo en una biblioteca de ejercicios (golpe y situación, sin artículos); déjala vacía en descansos, pausas o charlas. Etiqueta también cada actividad con sus golpes, su aspectoJuego y su tipoActividad usando solo los códigos permitidos.`;
 }
 
 export async function POST(request: Request) {
@@ -290,7 +292,18 @@ export async function POST(request: Request) {
       .filter((c) => c !== null);
     if (items.length === 0) throw new EmptyImportError();
     // Sugerencias de ejercicios de la biblioteca para cada actividad.
-    await linkClassItemsToLibrary(items, user.id, sport);
+    await linkClassItemsToLibrary(items, user.id, sport, async (prompt) => {
+      const { object: choices } = await generateObject({
+        model: anthropic(MODEL),
+        schema: aiChoicesSchema,
+        system: CHOOSE_SYSTEM,
+        prompt,
+        temperature: 0,
+        maxOutputTokens: 4000,
+        providerOptions: AI_PROVIDER_OPTIONS,
+      });
+      return choices;
+    });
     return NextResponse.json({
       kind,
       classes: items,

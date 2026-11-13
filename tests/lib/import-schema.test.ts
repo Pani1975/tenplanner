@@ -168,13 +168,31 @@ describe("vínculo con la biblioteca", () => {
     freeText: "Peloteo en dirección cruzada",
     durationMinutes: 10,
     suggestions: [],
+    tags: { golpes: [], aspecto: null, tipo: null },
+    reason: null,
   };
 
   it("búsquedas de más a menos precisas, sin repetir", () => {
-    expect(
-      searchQueriesFor({ searchTerms: "peloteo cruzado fondo", title: "Peloteo cruzado" })
-    ).toEqual(["peloteo cruzado fondo", "peloteo cruzado", "Peloteo cruzado"]);
-    expect(searchQueriesFor({ searchTerms: null, title: "Descanso" })).toEqual([]);
+    const q = searchQueriesFor({
+      searchTerms: "cesta clásica derecha",
+      title: "Cesta clásica de derecha",
+    });
+    // Frase entera, luego quitando una palabra (encuentra «Cesta derecha»)
+    // y al final palabras sueltas que no preseleccionan.
+    expect(q[0]).toEqual({ query: "cesta clásica derecha", strong: true });
+    expect(q).toContainEqual({ query: "cesta derecha", strong: true });
+    expect(q).toContainEqual({ query: "derecha", strong: false });
+    expect(new Set(q.map((x) => x.query)).size).toBe(q.length);
+    expect(q.length).toBeLessThanOrEqual(10);
+  });
+
+  it("sin palabras clave usa el título; descansos no se buscan", () => {
+    expect(searchQueriesFor({ searchTerms: null, title: "Peloteo paralelo" })[0]).toEqual({
+      query: "peloteo paralelo",
+      strong: true,
+    });
+    expect(searchQueriesFor({ searchTerms: "descanso", title: "Descanso" })).toEqual([]);
+    expect(searchQueriesFor({ searchTerms: null, title: "Pausa de hidratación" })).toEqual([]);
   });
 
   it("actividad vinculada se guarda como ejercicio con la explicación en notas", () => {

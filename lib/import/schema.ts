@@ -90,7 +90,11 @@ export const aiClassSchema = z.object({
               title: text.describe("Nombre de la actividad"),
               description: text.describe("Cómo se hace"),
               durationMinutes: z.number().nullish(),
-              aspectoJuego: text,
+              aspectoJuego: text.describe("tecnica | tactica | mental | fisico"),
+              golpes: list.describe("Golpes que trabaja la actividad"),
+              tipoActividad: text.describe(
+                "Tipo de ejercicio (uno de tiposActividad)"
+              ),
               busqueda: text.describe(
                 "2-3 palabras clave para buscar este ejercicio en la biblioteca (golpe + situación), p. ej. «peloteo cruzado» o «volea parejas». Vacío si no es un ejercicio (descanso, pausa, hidratación, charla)"
               ),
@@ -165,24 +169,74 @@ export interface ImportedClassItem {
   exerciseId: string | null;
   /** Candidatos de la biblioteca (se rellenan en el servidor). */
   suggestions: ExerciseSuggestion[];
+  /** Etiquetas de la actividad (validadas contra los catálogos). */
+  tags: { golpes: string[]; aspecto: string | null; tipo: string | null };
+  /** Por qué Ten Planner eligió ese ejercicio (para la revisión). */
+  reason: string | null;
 }
 
+/** Actividades que no son ejercicios: no se buscan en la biblioteca. */
+const NOT_EXERCISE_RE =
+  /^(descanso|pausa|hidrataci[oó]n|beber|agua|charla|explicaci[oó]n|presentaci[oó]n|recogida)\b/i;
+
+const QUERY_STOPWORDS = new Set([
+  "de", "del", "la", "el", "los", "las", "y", "o", "con", "en", "a", "al",
+  "por", "para", "un", "una", "sin",
+]);
+
+function queryWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 1 && !QUERY_STOPWORDS.has(w));
+}
+
+export type LibraryQuery = {
+  query: string;
+  /** Si su primer resultado coincide en el nombre, se preselecciona. */
+  strong: boolean;
+};
+
 /**
- * Búsquedas a probar para una actividad, de más a menos precisa: las
- * palabras clave, sus dos primeras palabras y el título. Sin palabras clave
- * (descanso, pausa…) no se busca nada.
+ * Búsquedas a probar para una actividad, de más a menos precisa. El buscador
+ * exige todas las palabras, así que se prueba la frase entera y después
+ * quitando una palabra cada vez («cesta clásica derecha» → «cesta
+ * derecha»). Al final, palabras sueltas: solo sugieren, no preseleccionan.
+ * Descansos, pausas, etc. no se buscan.
  */
 export function searchQueriesFor(item: {
   searchTerms: string | null;
   title: string | null;
-}): string[] {
-  if (!item.searchTerms) return [];
-  const terms = item.searchTerms.trim();
-  const words = terms.split(/\s+/);
-  const out = [terms];
-  if (words.length > 2) out.push(words.slice(0, 2).join(" "));
-  if (item.title) out.push(item.title.trim());
-  return Array.from(new Set(out.filter(Boolean)));
+}): LibraryQuery[] {
+  const title = item.title?.trim() ?? "";
+  if (NOT_EXERCISE_RE.test(title)) return [];
+  const sources = [item.searchTerms ?? "", title].filter(Boolean);
+  if (sources.length === 0) return [];
+
+  const out: LibraryQuery[] = [];
+  const seen = new Set<string>();
+  const add = (words: string[], strong: boolean) => {
+    const q = words.join(" ");
+    if (!q || seen.has(q)) return;
+    seen.add(q);
+    out.push({ query: q, strong });
+  };
+
+  const wordLists = sources.map(queryWords).filter((w) => w.length > 0);
+  for (const words of wordLists) add(words, words.length >= 2);
+  for (const words of wordLists) {
+    if (words.length < 3) continue;
+    for (let i = 0; i < words.length; i++) {
+      add(
+        words.filter((_, j) => j !== i),
+        true
+      );
+    }
+  }
+  for (const words of wordLists) {
+    for (const w of words) if (w.length >= 5) add([w], false);
+  }
+  return out.slice(0, 10);
 }
 
 /** Elemento de bloque para POST /api/classes a partir de lo revisado. */
@@ -466,6 +520,12 @@ export function sanitizeClass(
         searchTerms: cleanText(it.busqueda, 80) || null,
         exerciseId: null,
         suggestions: [],
+        tags: {
+          golpes: keepCatalog(it.golpes, ENUMS.golpes, 4),
+          aspecto: keepOne(it.aspectoJuego, ENUMS.aspectos),
+          tipo: keepOne(it.tipoActividad, ENUMS.tipos),
+        },
+        reason: null,
       });
     }
     const title = cleanText(b.title, 120) || null;
