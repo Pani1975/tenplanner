@@ -16,6 +16,9 @@ import {
   ExternalLink,
   Coffee,
   LayoutGrid,
+  Link2,
+  Replace,
+  Unlink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
@@ -78,6 +81,10 @@ const GOLPES = [
 ];
 
 const DURACIONES = [30, 45, 55, 60, 75, 90, 120];
+
+// Botones pequeños de cada actividad (vincular, cambiar, pasar a texto).
+const ITEM_ACTION_CLASS =
+  "inline-flex min-h-8 items-center gap-1 rounded-lg border border-foreground/15 px-2 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground";
 
 const BLOCK_TITLES = [
   { idx: 1, label: "Bloque inicial" },
@@ -398,7 +405,98 @@ export function ClassForm({
     );
   }
 
+  // Actividad que se va a sustituir por el ejercicio que se elija en el
+  // buscador (vincular un texto o cambiar el ejercicio). null = añadir.
+  const [replaceTarget, setReplaceTarget] = useState<{
+    blockIdx: number;
+    itemIdx: number;
+  } | null>(null);
+  useEffect(() => {
+    if (pickerOpen === null) setReplaceTarget(null);
+  }, [pickerOpen]);
+
+  function openReplacePicker(blockIdx: number, itemIdx: number) {
+    const item = blocks[blockIdx]?.items[itemIdx];
+    setReplaceTarget({ blockIdx, itemIdx });
+    setPickerOpen(blockIdx);
+    setPickerSourceTab("search");
+    // Se busca con el título de la actividad para empezar.
+    setSearch(
+      item?.kind === "text"
+        ? item.title || ""
+        : item?.kind === "exercise"
+          ? item.name
+          : ""
+    );
+  }
+
+  /** Convierte un ejercicio de la clase en texto libre (sin vínculo). */
+  function unlinkItem(blockIdx: number, itemIdx: number) {
+    setBlocks((prev) =>
+      prev.map((b, i) =>
+        i !== blockIdx
+          ? b
+          : {
+              ...b,
+              items: b.items.map((it, j) =>
+                j === itemIdx && it.kind === "exercise"
+                  ? {
+                      kind: "text" as const,
+                      title: it.name,
+                      freeText: it.freeText ?? "",
+                      notes: it.notes,
+                      durationMinutes: it.durationMinutes,
+                    }
+                  : it
+              ),
+            }
+      )
+    );
+  }
+
   function addExerciseToBlock(blockIdx: number, ex: AvailableExercise) {
+    const target =
+      replaceTarget && replaceTarget.blockIdx === blockIdx
+        ? replaceTarget
+        : null;
+    if (target) {
+      // Sustituye la actividad conservando su duración, su descripción
+      // propia y sus notas: el texto del monitor no se pierde.
+      setBlocks((prev) =>
+        prev.map((b, i) =>
+          i !== blockIdx
+            ? b
+            : {
+                ...b,
+                items: b.items.map((it, j) => {
+                  if (j !== target.itemIdx) return it;
+                  const prevText =
+                    it.kind === "text"
+                      ? [it.title, it.freeText].filter(Boolean).join(": ")
+                      : it.kind === "exercise"
+                        ? (it.freeText ?? "")
+                        : "";
+                  return {
+                    kind: "exercise" as const,
+                    exerciseId: ex.id,
+                    name: ex.name,
+                    durationMinutes:
+                      "durationMinutes" in it ? it.durationMinutes : null,
+                    freeText: prevText,
+                    notes:
+                      it.kind === "text" || it.kind === "exercise"
+                        ? it.notes
+                        : undefined,
+                  };
+                }),
+              }
+        )
+      );
+      setReplaceTarget(null);
+      setPickerOpen(null);
+      setSearch("");
+      return;
+    }
     setBlocks((prev) =>
       prev.map((b, i) =>
         i === blockIdx
@@ -1376,6 +1474,26 @@ export function ClassForm({
                                   className="mt-1 w-full resize-none rounded-lg border border-foreground/10 bg-background/60 px-2.5 py-1.5 text-xs text-foreground focus:border-[#D6FF38]/70 focus:outline-none placeholder:text-muted-foreground"
                                 />
                               </details>
+                              <div className="flex flex-wrap gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openReplacePicker(blockIdx, itemIdx)
+                                  }
+                                  className={ITEM_ACTION_CLASS}
+                                >
+                                  <Replace className="size-3" />
+                                  Cambiar ejercicio
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => unlinkItem(blockIdx, itemIdx)}
+                                  className={ITEM_ACTION_CLASS}
+                                >
+                                  <Unlink className="size-3" />
+                                  Pasar a texto
+                                </button>
+                              </div>
                             </div>
                           ) : item.kind === "text" ? (
                             <div className="flex items-start gap-2">
@@ -1406,6 +1524,17 @@ export function ClassForm({
                                   placeholder="Describe la actividad…"
                                   className="w-full text-sm bg-transparent border-0 p-0 focus:outline-none text-foreground resize-none placeholder:text-muted-foreground"
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openReplacePicker(blockIdx, itemIdx)
+                                  }
+                                  className={ITEM_ACTION_CLASS}
+                                  title="Para que cuente en estadísticas e informes"
+                                >
+                                  <Link2 className="size-3" />
+                                  Vincular a un ejercicio de la biblioteca
+                                </button>
                               </div>
                             </div>
                           ) : item.kind === "warmup" ? (
@@ -1696,6 +1825,13 @@ export function ClassForm({
                 </div>
               ) : pickerOpen === blockIdx ? (
                 <div className="space-y-2 rounded-lg border border-[#D6FF38]/35 bg-[#D6FF38]/10 p-3">
+                  {replaceTarget?.blockIdx === blockIdx ? (
+                    <p className="text-xs font-semibold text-foreground">
+                      Elige el ejercicio de la biblioteca para la actividad{" "}
+                      {String(replaceTarget.itemIdx + 1).padStart(2, "0")}. Se
+                      conservan su duración y su descripción.
+                    </p>
+                  ) : null}
                   <div className="flex items-center justify-between gap-2">
                     <div className="inline-flex rounded-full border border-foreground/15 bg-background p-0.5">
                       <button
