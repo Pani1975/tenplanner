@@ -13,7 +13,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { IMPORT_MAX_CHARS, validateImportInput } from "@/lib/import/schema";
+import {
+  IMPORT_MAX_CHARS,
+  toClassBody,
+  validateImportInput,
+} from "@/lib/import/schema";
 import type { ImportedClass, ImportedExercise } from "@/lib/import/schema";
 
 type Kind = "exercises" | "classes";
@@ -160,7 +164,7 @@ export function ImportTextDialog({
             : await fetch("/api/classes", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(item),
+                body: JSON.stringify(toClassBody(item as ImportedClass)),
               });
         if (!res.ok) throw new Error("save");
         saved += 1;
@@ -315,6 +319,12 @@ export function ImportTextDialog({
                     </button>
                   </div>
                   <ItemSummary item={item} />
+                  {"blocks" in item ? (
+                    <ClassItemsLinker
+                      cls={item}
+                      onChange={(blocks) => patch(i, { blocks })}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -372,5 +382,95 @@ function ItemSummary({ item }: { item: Item }) {
       {item.golpes.length ? ` · ${item.golpes.join(", ")}` : ""}
       {item.description ? ` · ${item.description.slice(0, 140)}` : ""}
     </p>
+  );
+}
+
+const BLOCK_LABELS: Record<number, string> = {
+  1: "Bloque inicial",
+  2: "Bloque principal",
+  3: "Bloque final",
+};
+
+/**
+ * Actividades de una clase importada con el ejercicio de la biblioteca que
+ * se le ha sugerido. El monitor elige un ejercicio o la deja como texto.
+ */
+function ClassItemsLinker({
+  cls,
+  onChange,
+}: {
+  cls: ImportedClass;
+  onChange: (blocks: ImportedClass["blocks"]) => void;
+}) {
+  const linked = cls.blocks.reduce(
+    (n, b) => n + b.items.filter((it) => it.exerciseId).length,
+    0
+  );
+  const total = cls.blocks.reduce((n, b) => n + b.items.length, 0);
+
+  function setExercise(bi: number, ii: number, exerciseId: string | null) {
+    onChange(
+      cls.blocks.map((b, j) =>
+        j !== bi
+          ? b
+          : {
+              ...b,
+              items: b.items.map((it, k) =>
+                k === ii ? { ...it, exerciseId } : it
+              ),
+            }
+      )
+    );
+  }
+
+  return (
+    <details className="text-xs">
+      <summary className="cursor-pointer select-none py-1 font-medium">
+        Actividades · {linked} de {total} vinculadas a la biblioteca
+      </summary>
+      <div className="mt-2 space-y-3">
+        {cls.blocks.map((b, bi) => (
+          <div key={bi} className="space-y-1.5">
+            <p className="font-semibold uppercase tracking-wide text-muted-foreground">
+              {b.title || BLOCK_LABELS[b.orderIndex]}
+            </p>
+            {b.items.map((it, ii) => (
+              <div
+                key={ii}
+                className="grid gap-1 sm:grid-cols-[1fr_minmax(0,16rem)] sm:items-center"
+              >
+                <span>
+                  {it.title || it.freeText.slice(0, 60)}
+                  {it.durationMinutes ? ` · ${it.durationMinutes} min` : ""}
+                </span>
+                {it.suggestions.length > 0 ? (
+                  <select
+                    aria-label={`Ejercicio de la biblioteca para ${it.title ?? "la actividad"}`}
+                    className="min-h-9 rounded-md border bg-background px-2"
+                    value={it.exerciseId ?? ""}
+                    onChange={(e) =>
+                      setExercise(bi, ii, e.target.value || null)
+                    }
+                  >
+                    <option value="">Dejar como texto</option>
+                    {it.suggestions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {it.searchTerms
+                      ? "Sin ejercicio parecido: texto"
+                      : "Texto"}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }

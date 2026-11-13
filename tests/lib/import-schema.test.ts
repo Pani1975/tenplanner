@@ -8,6 +8,9 @@ import {
   sanitizeExercise,
   validateImportText,
   validateImportInput,
+  searchQueriesFor,
+  toClassBlockItem,
+  toClassBody,
   type AiClass,
   type AiExercise,
 } from "@/lib/import/schema";
@@ -155,5 +158,45 @@ describe("validateImportInput", () => {
   });
   it("sin archivo, con texto válido", () => {
     expect(validateImportInput(false, "Ejercicio de derecha cruzada 10 min").ok).toBe(true);
+  });
+});
+
+describe("vínculo con la biblioteca", () => {
+  const base = {
+    kind: "text" as const,
+    title: "Peloteo cruzado",
+    freeText: "Peloteo en dirección cruzada",
+    durationMinutes: 10,
+    suggestions: [],
+  };
+
+  it("búsquedas de más a menos precisas, sin repetir", () => {
+    expect(
+      searchQueriesFor({ searchTerms: "peloteo cruzado fondo", title: "Peloteo cruzado" })
+    ).toEqual(["peloteo cruzado fondo", "peloteo cruzado", "Peloteo cruzado"]);
+    expect(searchQueriesFor({ searchTerms: null, title: "Descanso" })).toEqual([]);
+  });
+
+  it("actividad vinculada se guarda como ejercicio con la explicación en notas", () => {
+    expect(
+      toClassBlockItem({ ...base, searchTerms: "peloteo cruzado", exerciseId: "ex-1" })
+    ).toEqual({
+      kind: "exercise",
+      exerciseId: "ex-1",
+      durationMinutes: 10,
+      notes: "Peloteo en dirección cruzada",
+    });
+  });
+
+  it("sin ejercicio se guarda como texto y el cuerpo no lleva sugerencias", () => {
+    const item = { ...base, searchTerms: null, exerciseId: null };
+    expect(toClassBlockItem(item)).toEqual({
+      kind: "text",
+      title: "Peloteo cruzado",
+      freeText: "Peloteo en dirección cruzada",
+      durationMinutes: 10,
+    });
+    const body = toClassBody(sanitizeClass({ name: "C", blocks: [{ items: [{ title: "Saque", busqueda: "saque" }] }] }, ctx)!);
+    expect(JSON.stringify(body)).not.toMatch(/suggestions|searchTerms/);
   });
 });
