@@ -68,22 +68,35 @@ export async function linkClassItemsToLibrary(
 ): Promise<ImportedClass[]> {
   const cache = new Map<string, Promise<Found[]>>();
   let budget = MAX_QUERIES;
+  let errors = 0;
   const search = (term: string) => {
     const key = term.toLowerCase();
     let hit = cache.get(key);
     if (!hit) {
       if (budget <= 0) return Promise.resolve([] as Found[]);
       budget -= 1;
-      hit = searchLibrary(term, userId, sport).catch(() => []);
+      hit = searchLibrary(term, userId, sport).catch((e: unknown) => {
+        errors += 1;
+        if (errors === 1) {
+          console.error(
+            "[import-text] búsqueda en biblioteca falló",
+            e instanceof Error ? e.message.slice(0, 200) : "desconocido"
+          );
+        }
+        return [] as Found[];
+      });
       cache.set(key, hit);
     }
     return hit;
   };
 
+  let total = 0;
+  let withSuggestions = 0;
+  let preselected = 0;
   for (const c of classes) {
     for (const block of c.blocks) {
       for (const item of block.items) {
-        for (const query of searchQueriesFor(item)) {
+        for (const { query, strong } of searchQueriesFor(item)) {
           const found = await search(query);
           if (found.length === 0) continue;
           item.suggestions = found.map(({ id, name, durationMinutes }) => ({
@@ -91,11 +104,22 @@ export async function linkClassItemsToLibrary(
             name,
             durationMinutes,
           }));
-          item.exerciseId = found[0].inName ? found[0].id : null;
+          item.exerciseId = strong && found[0].inName ? found[0].id : null;
           break;
         }
+        if (item.suggestions.length > 0) withSuggestions += 1;
+        if (item.exerciseId) preselected += 1;
+        total += 1;
       }
     }
   }
+  // Solo recuentos (sin textos) para poder ver en los logs si enlaza.
+  console.info(
+    "[import-text] biblioteca",
+    `actividades=${total}`,
+    `con_sugerencias=${withSuggestions}`,
+    `preseleccionadas=${preselected}`,
+    `errores=${errors}`
+  );
   return classes;
 }

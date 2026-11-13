@@ -167,22 +167,68 @@ export interface ImportedClassItem {
   suggestions: ExerciseSuggestion[];
 }
 
+/** Actividades que no son ejercicios: no se buscan en la biblioteca. */
+const NOT_EXERCISE_RE =
+  /^(descanso|pausa|hidrataci[oó]n|beber|agua|charla|explicaci[oó]n|presentaci[oó]n|recogida)\b/i;
+
+const QUERY_STOPWORDS = new Set([
+  "de", "del", "la", "el", "los", "las", "y", "o", "con", "en", "a", "al",
+  "por", "para", "un", "una", "sin",
+]);
+
+function queryWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length > 1 && !QUERY_STOPWORDS.has(w));
+}
+
+export type LibraryQuery = {
+  query: string;
+  /** Si su primer resultado coincide en el nombre, se preselecciona. */
+  strong: boolean;
+};
+
 /**
- * Búsquedas a probar para una actividad, de más a menos precisa: las
- * palabras clave, sus dos primeras palabras y el título. Sin palabras clave
- * (descanso, pausa…) no se busca nada.
+ * Búsquedas a probar para una actividad, de más a menos precisa. El buscador
+ * exige todas las palabras, así que se prueba la frase entera y después
+ * quitando una palabra cada vez («cesta clásica derecha» → «cesta
+ * derecha»). Al final, palabras sueltas: solo sugieren, no preseleccionan.
+ * Descansos, pausas, etc. no se buscan.
  */
 export function searchQueriesFor(item: {
   searchTerms: string | null;
   title: string | null;
-}): string[] {
-  if (!item.searchTerms) return [];
-  const terms = item.searchTerms.trim();
-  const words = terms.split(/\s+/);
-  const out = [terms];
-  if (words.length > 2) out.push(words.slice(0, 2).join(" "));
-  if (item.title) out.push(item.title.trim());
-  return Array.from(new Set(out.filter(Boolean)));
+}): LibraryQuery[] {
+  const title = item.title?.trim() ?? "";
+  if (NOT_EXERCISE_RE.test(title)) return [];
+  const sources = [item.searchTerms ?? "", title].filter(Boolean);
+  if (sources.length === 0) return [];
+
+  const out: LibraryQuery[] = [];
+  const seen = new Set<string>();
+  const add = (words: string[], strong: boolean) => {
+    const q = words.join(" ");
+    if (!q || seen.has(q)) return;
+    seen.add(q);
+    out.push({ query: q, strong });
+  };
+
+  const wordLists = sources.map(queryWords).filter((w) => w.length > 0);
+  for (const words of wordLists) add(words, words.length >= 2);
+  for (const words of wordLists) {
+    if (words.length < 3) continue;
+    for (let i = 0; i < words.length; i++) {
+      add(
+        words.filter((_, j) => j !== i),
+        true
+      );
+    }
+  }
+  for (const words of wordLists) {
+    for (const w of words) if (w.length >= 5) add([w], false);
+  }
+  return out.slice(0, 10);
 }
 
 /** Elemento de bloque para POST /api/classes a partir de lo revisado. */
