@@ -90,7 +90,11 @@ export const aiClassSchema = z.object({
               title: text.describe("Nombre de la actividad"),
               description: text.describe("Cómo se hace"),
               durationMinutes: z.number().nullish(),
-              aspectoJuego: text,
+              aspectoJuego: text.describe("tecnica | tactica | mental | fisico"),
+              golpes: list.describe("Golpes que trabaja la actividad"),
+              tipoActividad: text.describe(
+                "Tipo de ejercicio (uno de tiposActividad)"
+              ),
               busqueda: text.describe(
                 "2-3 palabras clave para buscar este ejercicio en la biblioteca (golpe + situación), p. ej. «peloteo cruzado» o «volea parejas». Vacío si no es un ejercicio (descanso, pausa, hidratación, charla)"
               ),
@@ -165,6 +169,10 @@ export interface ImportedClassItem {
   exerciseId: string | null;
   /** Candidatos de la biblioteca (se rellenan en el servidor). */
   suggestions: ExerciseSuggestion[];
+  /** Etiquetas de la actividad (validadas contra los catálogos). */
+  tags: { golpes: string[]; aspecto: string | null; tipo: string | null };
+  /** Por qué Ten Planner eligió ese ejercicio (para la revisión). */
+  reason: string | null;
 }
 
 /** Actividades que no son ejercicios: no se buscan en la biblioteca. */
@@ -512,6 +520,12 @@ export function sanitizeClass(
         searchTerms: cleanText(it.busqueda, 80) || null,
         exerciseId: null,
         suggestions: [],
+        tags: {
+          golpes: keepCatalog(it.golpes, ENUMS.golpes, 4),
+          aspecto: keepOne(it.aspectoJuego, ENUMS.aspectos),
+          tipo: keepOne(it.tipoActividad, ENUMS.tipos),
+        },
+        reason: null,
       });
     }
     const title = cleanText(b.title, 120) || null;

@@ -168,6 +168,8 @@ describe("vínculo con la biblioteca", () => {
     freeText: "Peloteo en dirección cruzada",
     durationMinutes: 10,
     suggestions: [],
+    tags: { golpes: [], aspecto: null, tipo: null },
+    reason: null,
   };
 
   it("búsquedas de más a menos precisas, sin repetir", () => {

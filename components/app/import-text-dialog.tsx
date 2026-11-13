@@ -274,7 +274,11 @@ export function ImportTextDialog({
               disabled={busy || (!file && text.trim().length === 0)}
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              {busy ? "Convirtiendo…" : "Convertir"}
+              {busy
+                ? kind === "classes"
+                  ? "Convirtiendo y buscando ejercicios… (hasta 1-2 min)"
+                  : "Convirtiendo…"
+                : "Convertir"}
             </Button>
           </div>
         ) : (
@@ -416,7 +420,8 @@ function ClassItemsLinker({
           : {
               ...b,
               items: b.items.map((it, k) =>
-                k === ii ? { ...it, exerciseId } : it
+                // Al cambiarlo a mano, el motivo de Ten Planner ya no aplica.
+                k === ii ? { ...it, exerciseId, reason: null } : it
               ),
             }
       )
@@ -466,6 +471,11 @@ function ClassItemsLinker({
                       : "Texto"}
                   </span>
                 )}
+                {it.exerciseId && it.reason ? (
+                  <span className="text-muted-foreground sm:col-span-2">
+                    Ten Planner: {it.reason}
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>
