@@ -140,7 +140,7 @@ export function PublicClassListsSection({
                   {list.items.map((item) => (
                     <li key={item.id}>
                       <Link
-                        href={`/classes/${item.id}`}
+                        href={`/classes/${item.id}?desdeLista=${list.id}`}
                         className="flex items-center gap-2 px-4 py-2 text-[13px] text-foreground transition-colors hover:bg-foreground/[0.03] hover:text-brand"
                       >
                         <span className="min-w-0 flex-1 break-words">

@@ -1,6 +1,6 @@
-import { and, eq, type SQL } from "drizzle-orm";
+import { and, eq, or, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { classLists, classes, clubs, users } from "@/db/schema";
+import { classListItems, classLists, classes, clubs, users } from "@/db/schema";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 
 /**
@@ -121,4 +121,47 @@ export async function getSpaceLabel(activeClubId: string | null) {
     .where(eq(clubs.id, activeClubId))
     .limit(1);
   return club ? `Club ${club.name}` : "Espacio del club";
+}
+
+/**
+ * Clases de una lista en el orden en que se muestran (alfabético con
+ * numeración natural), para pasar de una a otra con las flechas desde la
+ * ficha de la clase ("?desdeLista=<id>"). null si la lista no existe o el
+ * usuario no la ve (lista pública, o de su espacio activo).
+ */
+export async function getClassListNavIds(
+  listId: string,
+  userId: string | null
+): Promise<string[] | null> {
+  const activeClubId = userId ? await getActiveWorkClubId(userId) : null;
+  const [list] = await db
+    .select({ id: classLists.id, isPublic: classLists.isPublic })
+    .from(classLists)
+    .where(
+      and(
+        eq(classLists.id, listId),
+        userId
+          ? or(
+              eq(classLists.isPublic, true),
+              classListSpaceCondition(userId, activeClubId)
+            )
+          : eq(classLists.isPublic, true)
+      )
+    )
+    .limit(1);
+  if (!list) return null;
+  const rows = await db
+    .select({ id: classes.id, name: classes.name })
+    .from(classListItems)
+    .innerJoin(classes, eq(classes.id, classListItems.classId))
+    .where(
+      and(
+        eq(classListItems.listId, listId),
+        list.isPublic ? publicListClassCondition() : undefined
+      )
+    );
+  rows.sort((a, b) =>
+    a.name.localeCompare(b.name, "es", { numeric: true, sensitivity: "base" })
+  );
+  return rows.map((r) => r.id);
 }
