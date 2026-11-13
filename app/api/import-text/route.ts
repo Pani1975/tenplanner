@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject, type ModelMessage } from "ai";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { linkClassItemsToLibrary } from "@/lib/import/link-exercises";
 import {
   readUpload,
   type UploadContent,
@@ -76,7 +77,7 @@ Reglas:
 Tarea: extrae los EJERCICIOS del texto, uno por cada ejercicio distinto (máximo ${IMPORT_MAX_EXERCISES}). Si el texto describe una sola clase con varias actividades, cada actividad es un ejercicio.`;
   }
   return `${common}
-Tarea: extrae las CLASES del texto, una por cada clase distinta (máximo ${IMPORT_MAX_CLASSES}); si hay tres clases, devuelve tres. Cada clase tiene hasta 3 bloques en este orden: inicial (calentamiento), principal y final (vuelta a la calma); cada bloque contiene las actividades del texto con su duración.`;
+Tarea: extrae las CLASES del texto, una por cada clase distinta (máximo ${IMPORT_MAX_CLASSES}); si hay tres clases, devuelve tres. Cada clase tiene hasta 3 bloques en este orden: inicial (calentamiento), principal y final (vuelta a la calma); cada bloque contiene las actividades del texto con su duración. Para cada actividad que sea un ejercicio, rellena «busqueda» con 2-3 palabras clave con las que encontrarlo en una biblioteca de ejercicios (golpe y situación, sin artículos); déjala vacía en descansos, pausas o charlas.`;
 }
 
 export async function POST(request: Request) {
@@ -288,6 +289,8 @@ export async function POST(request: Request) {
       .map((c) => sanitizeClass(c, { levelCodes }))
       .filter((c) => c !== null);
     if (items.length === 0) throw new EmptyImportError();
+    // Sugerencias de ejercicios de la biblioteca para cada actividad.
+    await linkClassItemsToLibrary(items, user.id, sport);
     return NextResponse.json({
       kind,
       classes: items,

@@ -91,6 +91,9 @@ export const aiClassSchema = z.object({
               description: text.describe("Cómo se hace"),
               durationMinutes: z.number().nullish(),
               aspectoJuego: text,
+              busqueda: text.describe(
+                "2-3 palabras clave para buscar este ejercicio en la biblioteca (golpe + situación), p. ej. «peloteo cruzado» o «volea parejas». Vacío si no es un ejercicio (descanso, pausa, hidratación, charla)"
+              ),
             })
           )
           .nullish(),
@@ -145,11 +148,71 @@ export interface ImportedExercise {
   formMode: "full";
 }
 
+export interface ExerciseSuggestion {
+  id: string;
+  name: string;
+  durationMinutes: number | null;
+}
+
 export interface ImportedClassItem {
   kind: "text";
   title: string | null;
   freeText: string;
   durationMinutes: number | null;
+  /** Palabras clave para buscar en la biblioteca; null = no es un ejercicio. */
+  searchTerms: string | null;
+  /** Ejercicio de la biblioteca elegido; null = se guarda como texto. */
+  exerciseId: string | null;
+  /** Candidatos de la biblioteca (se rellenan en el servidor). */
+  suggestions: ExerciseSuggestion[];
+}
+
+/**
+ * Búsquedas a probar para una actividad, de más a menos precisa: las
+ * palabras clave, sus dos primeras palabras y el título. Sin palabras clave
+ * (descanso, pausa…) no se busca nada.
+ */
+export function searchQueriesFor(item: {
+  searchTerms: string | null;
+  title: string | null;
+}): string[] {
+  if (!item.searchTerms) return [];
+  const terms = item.searchTerms.trim();
+  const words = terms.split(/\s+/);
+  const out = [terms];
+  if (words.length > 2) out.push(words.slice(0, 2).join(" "));
+  if (item.title) out.push(item.title.trim());
+  return Array.from(new Set(out.filter(Boolean)));
+}
+
+/** Elemento de bloque para POST /api/classes a partir de lo revisado. */
+export function toClassBlockItem(item: ImportedClassItem) {
+  if (item.exerciseId) {
+    return {
+      kind: "exercise" as const,
+      exerciseId: item.exerciseId,
+      durationMinutes: item.durationMinutes,
+      // La explicación del texto se conserva como nota del monitor.
+      notes: item.freeText !== item.title ? item.freeText : null,
+    };
+  }
+  return {
+    kind: "text" as const,
+    title: item.title,
+    freeText: item.freeText,
+    durationMinutes: item.durationMinutes,
+  };
+}
+
+/** Cuerpo de POST /api/classes (sin los datos auxiliares de la revisión). */
+export function toClassBody(c: ImportedClass) {
+  return {
+    ...c,
+    blocks: c.blocks.map((b) => ({
+      ...b,
+      items: b.items.map(toClassBlockItem),
+    })),
+  };
 }
 
 export interface ImportedClass {
@@ -400,6 +463,9 @@ export function sanitizeClass(
         title: title || null,
         freeText,
         durationMinutes: intIn(it.durationMinutes, 1, 300),
+        searchTerms: cleanText(it.busqueda, 80) || null,
+        exerciseId: null,
+        suggestions: [],
       });
     }
     const title = cleanText(b.title, 120) || null;
