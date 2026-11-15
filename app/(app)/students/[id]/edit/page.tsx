@@ -1,11 +1,11 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { db } from "@/db";
-import { students } from "@/db/schema";
+import { students, studentVideos } from "@/db/schema";
 import { StudentForm } from "@/components/app/student-form";
 import type { HowFound, LeftReason } from "@/lib/students/membership";
 
@@ -49,6 +49,24 @@ export default async function EditStudentPage({ params }: PageProps) {
 
   if (!student) notFound();
 
+  // Si la tabla aún no existe (migración 0098), el formulario se muestra igual.
+  const videos = await db
+    .select({
+      id: studentVideos.id,
+      location: studentVideos.location,
+      event: studentVideos.event,
+      recordedOn: studentVideos.recordedOn,
+      notes: studentVideos.notes,
+      videoUrl: studentVideos.videoUrl,
+    })
+    .from(studentVideos)
+    .where(eq(studentVideos.studentId, student.id))
+    .orderBy(desc(studentVideos.recordedOn), desc(studentVideos.createdAt))
+    .catch((error) => {
+      console.error("[student edit] videos failed", error);
+      return null;
+    });
+
   return (
     <div className="w-full px-4 py-8 sm:px-6 md:px-10">
       <div className="mb-6 flex items-start gap-4 border-b border-foreground/10 pb-5">
@@ -73,6 +91,8 @@ export default async function EditStudentPage({ params }: PageProps) {
       <StudentForm
         mode="edit"
         studentId={student.id}
+        studentName={student.name}
+        videos={videos}
         initialData={{
           name: student.name,
           firstName: student.firstName,

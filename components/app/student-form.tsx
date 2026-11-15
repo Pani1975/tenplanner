@@ -18,7 +18,15 @@ import {
   Clock,
   MapPin,
   UserPlus,
+  Video,
 } from "lucide-react";
+import { StudentVideosPanel } from "@/components/app/student-videos-panel";
+import {
+  createStudentVideo,
+  deleteStudentVideo,
+  updateStudentVideo,
+} from "@/app/(app)/students/[id]/video-actions";
+import type { StudentVideoItem } from "@/lib/student-videos";
 import { cn } from "@/lib/utils";
 import { splitFullName } from "@/lib/students/names";
 import {
@@ -141,6 +149,12 @@ export interface StudentFormProps {
     notes?: string | null;
     imageUrl?: string | null;
   };
+  /**
+   * Fichas de vídeo del alumno (solo al editar). Se gestionan al momento, sin
+   * esperar a «Guardar cambios». null = no se muestra la sección.
+   */
+  videos?: StudentVideoItem[] | null;
+  studentName?: string;
 }
 
 function SectionHeader({
@@ -173,6 +187,8 @@ export function StudentForm({
   mode,
   studentId,
   initialData,
+  videos,
+  studentName,
 }: StudentFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -867,6 +883,27 @@ export function StudentForm({
           </div>
         </div>
       </section>
+
+      {mode === "edit" && studentId && videos && (
+        <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
+          <SectionHeader
+            icon={Video}
+            title="Vídeos"
+            subtitle="Fichas con el enlace al vídeo (YouTube, Google Drive…). Se guardan al momento"
+          />
+          <StudentVideosPanel
+            studentId={studentId}
+            studentName={studentName ?? "el alumno"}
+            canEdit
+            initialVideos={videos}
+            actions={{
+              create: createStudentVideo,
+              update: updateStudentVideo,
+              remove: deleteStudentVideo,
+            }}
+          />
+        </section>
+      )}
 
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader

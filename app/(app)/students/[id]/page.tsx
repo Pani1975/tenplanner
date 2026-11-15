@@ -36,10 +36,13 @@ import { getAssignableCoaches, listStudentCoaches } from "@/lib/club-coaches";
 import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
 import { ObjectivesChecklist, type ScopeOption } from "./objectives-checklist";
 import { ReportDialogButton } from "./report-dialog";
+import { StudentVideosPanel } from "@/components/app/student-videos-panel";
+import type { StudentVideoItem } from "@/lib/student-videos";
 import {
-  StudentVideosPanel,
-  type StudentVideoItem,
-} from "./student-videos-panel";
+  createStudentVideo,
+  deleteStudentVideo,
+  updateStudentVideo,
+} from "./video-actions";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -695,12 +698,41 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* Vídeos */}
+        {videos && (
+          <section className="tp-panel p-5 sm:p-6">
+            <div className="grid grid-cols-[auto_auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+              <p className="text-[10px] font-black tabular-nums text-brand">
+                05
+              </p>
+              <Video className="size-3 self-center text-brand" />
+              <p className="text-[10px] font-black uppercase text-foreground/50">
+                Vídeos
+              </p>
+              <p className="text-[10px] font-black tabular-nums text-foreground/40">
+                {videos.length}
+              </p>
+            </div>
+            <StudentVideosPanel
+              studentId={student.id}
+              studentName={student.name}
+              canEdit={canEditVideos}
+              initialVideos={videos}
+              actions={{
+                create: createStudentVideo,
+                update: updateStudentVideo,
+                remove: deleteStudentVideo,
+              }}
+            />
+          </section>
+        )}
+
         {/* Objetivos por etapa */}
         {objectives && (
           <section className="tp-panel p-5 sm:p-6">
             <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
               <p className="text-[10px] font-black tabular-nums text-brand">
-                05
+                06
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
                 Objetivos por etapa
@@ -718,30 +750,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 student.playerLevel,
                 student.birthDate
               )}
-            />
-          </section>
-        )}
-
-        {/* Vídeos */}
-        {videos && (
-          <section className="tp-panel p-5 sm:p-6">
-            <div className="grid grid-cols-[auto_auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-              <p className="text-[10px] font-black tabular-nums text-brand">
-                06
-              </p>
-              <Video className="size-3 self-center text-brand" />
-              <p className="text-[10px] font-black uppercase text-foreground/50">
-                Vídeos
-              </p>
-              <p className="text-[10px] font-black tabular-nums text-foreground/40">
-                {videos.length}
-              </p>
-            </div>
-            <StudentVideosPanel
-              studentId={student.id}
-              studentName={student.name}
-              canEdit={canEditVideos}
-              initialVideos={videos}
             />
           </section>
         )}

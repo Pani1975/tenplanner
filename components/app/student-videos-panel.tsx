@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- Miniaturas públicas de YouTube (i.ytimg.com); next/image no aporta aquí. */
 
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { KeyboardEvent } from "react";
 import {
   CalendarDays,
   ExternalLink,
@@ -24,21 +24,11 @@ import {
   getYouTubeThumbnailUrl,
   normalizeVideoUrl,
 } from "@/lib/video-embed";
-import {
-  createStudentVideo,
-  deleteStudentVideo,
-  updateStudentVideo,
-} from "./video-actions";
-
-export interface StudentVideoItem {
-  id: string;
-  location: string | null;
-  event: string | null;
-  /** YYYY-MM-DD */
-  recordedOn: string | null;
-  notes: string | null;
-  videoUrl: string;
-}
+import type {
+  StudentVideoActions,
+  StudentVideoItem,
+  VideoActionResult,
+} from "@/lib/student-videos";
 
 type FormValues = {
   location: string;
@@ -87,11 +77,13 @@ export function StudentVideosPanel({
   studentName,
   canEdit,
   initialVideos,
+  actions,
 }: {
   studentId: string;
   studentName: string;
   canEdit: boolean;
   initialVideos: StudentVideoItem[];
+  actions: StudentVideoActions;
 }) {
   const [videos, setVideos] = useState(() => sortVideos(initialVideos));
   // null = sin formulario abierto; "new" = alta; id = edición de esa ficha.
@@ -103,7 +95,7 @@ export function StudentVideosPanel({
   async function onDelete(video: StudentVideoItem) {
     setDeletingId(video.id);
     setError(null);
-    const res = await deleteStudentVideo(studentId, video.id);
+    const res = await actions.remove(studentId, video.id);
     setDeletingId(null);
     if (!res.ok) {
       setError("No se pudo borrar la ficha. Inténtalo de nuevo.");
@@ -148,7 +140,7 @@ export function StudentVideosPanel({
                   submitLabel="Guardar cambios"
                   onCancel={() => setEditing(null)}
                   onSubmit={(values) =>
-                    updateStudentVideo(studentId, video.id, values)
+                    actions.update(studentId, video.id, values)
                   }
                   onSaved={(saved) => {
                     setVideos((list) =>
@@ -180,7 +172,7 @@ export function StudentVideosPanel({
             initial={EMPTY}
             submitLabel="Añadir ficha"
             onCancel={() => setEditing(null)}
-            onSubmit={(values) => createStudentVideo(studentId, values)}
+            onSubmit={(values) => actions.create(studentId, values)}
             onSaved={(saved) => {
               setVideos((list) => sortVideos([...list, saved]));
               setEditing(null);
@@ -346,11 +338,7 @@ function VideoForm({
   initial: FormValues;
   submitLabel: string;
   onCancel: () => void;
-  onSubmit: (
-    values: FormValues
-  ) => Promise<
-    { ok: true; video: StudentVideoItem } | { ok: false; error: string }
-  >;
+  onSubmit: (values: FormValues) => Promise<VideoActionResult>;
   onSaved: (video: StudentVideoItem) => void;
 }) {
   const [values, setValues] = useState(initial);
@@ -362,8 +350,17 @@ function VideoForm({
   const set = (key: keyof FormValues) => (e: { target: { value: string } }) =>
     setValues((v) => ({ ...v, [key]: e.target.value }));
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  // No es un <form>: el panel también vive dentro del formulario «Editar
+  // alumno», y un formulario dentro de otro no es válido. Enter en un campo
+  // guarda la ficha, no el alumno.
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+      e.preventDefault();
+      void handleSubmit();
+    }
+  }
+
+  async function handleSubmit() {
     if (!link) {
       setError("Pega un enlace válido de YouTube, Google Drive u otra web.");
       return;
@@ -391,8 +388,8 @@ function VideoForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
+    <div
+      onKeyDown={onKeyDown}
       className="space-y-3 rounded-2xl border border-dashed border-[#050505]/15 p-3 dark:border-white/15"
     >
       <div className="space-y-1.5">
@@ -475,7 +472,12 @@ function VideoForm({
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" disabled={saving}>
+        <Button
+          type="button"
+          size="sm"
+          disabled={saving}
+          onClick={() => void handleSubmit()}
+        >
           {saving && <Loader2 className="size-3.5 animate-spin" />}
           {submitLabel}
         </Button>
@@ -489,6 +491,6 @@ function VideoForm({
           Cancelar
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

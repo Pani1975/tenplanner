@@ -1,11 +1,21 @@
 import { redirect } from "next/navigation";
+import { and, desc, eq } from "drizzle-orm";
 import {
   CalendarCheck,
   CircleCheck,
   CircleX,
   Clock,
   UserRound,
+  Video,
 } from "lucide-react";
+import { db } from "@/db";
+import { studentVideos } from "@/db/schema";
+import { StudentVideosPanel } from "@/components/app/student-videos-panel";
+import {
+  createFamilyVideo,
+  deleteFamilyVideo,
+  updateFamilyVideo,
+} from "./video-actions";
 import { createClient } from "@/lib/supabase/server";
 import {
   getFamilyPlayers,
@@ -109,6 +119,31 @@ export default async function FamilyPlayerPage({
   const past = all.filter((s) => s.scheduledAt < now && !isOff(s));
   const upcoming = all.filter((s) => s.scheduledAt >= now && !isOff(s));
   const summary = attendanceSummary(past);
+  // Solo las fichas de vídeo que ha creado esta familia (no las del monitor).
+  // Si la tabla aún no existe, el panel se muestra sin la sección.
+  const videos = player
+    ? await db
+        .select({
+          id: studentVideos.id,
+          location: studentVideos.location,
+          event: studentVideos.event,
+          recordedOn: studentVideos.recordedOn,
+          notes: studentVideos.notes,
+          videoUrl: studentVideos.videoUrl,
+        })
+        .from(studentVideos)
+        .where(
+          and(
+            eq(studentVideos.studentId, player.studentId),
+            eq(studentVideos.createdBy, user.id)
+          )
+        )
+        .orderBy(desc(studentVideos.recordedOn), desc(studentVideos.createdAt))
+        .catch((error) => {
+          console.error("[family] videos failed", error);
+          return null;
+        })
+    : null;
   const age = player ? ageFromBirthDate(player.birthDate) : null;
   const groupNames = new Map((player?.groups ?? []).map((g) => [g.id, g.name]));
 
@@ -170,6 +205,26 @@ export default async function FamilyPlayerPage({
                 Si algún dato no es correcto, díselo al club o a su monitor.
               </p>
             </section>
+
+            {videos && (
+              <section className="tp-panel p-5">
+                <h2 className="flex items-center gap-2 text-lg font-black text-foreground">
+                  <Video className="size-5 text-brand" />
+                  Vídeos
+                </h2>
+                <StudentVideosPanel
+                  studentId={player.studentId}
+                  studentName={player.name}
+                  canEdit
+                  initialVideos={videos}
+                  actions={{
+                    create: createFamilyVideo,
+                    update: updateFamilyVideo,
+                    remove: deleteFamilyVideo,
+                  }}
+                />
+              </section>
+            )}
 
             <section className="tp-panel space-y-4 p-5">
               <h2 className="flex items-center gap-2 text-lg font-black text-foreground">
