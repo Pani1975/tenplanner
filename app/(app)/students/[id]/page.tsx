@@ -4,11 +4,18 @@ import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
 import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { Pencil, ClipboardList, Clock, Flame, Mail } from "lucide-react";
+import { Pencil, ClipboardList, Clock, Flame, Mail, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { db } from "@/db";
-import { clubs, students, sessionStudents, sessions, users } from "@/db/schema";
+import {
+  clubs,
+  students,
+  sessionStudents,
+  sessions,
+  studentVideos,
+  users,
+} from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { DeleteStudentButton } from "./delete-student-button";
 import { SessionFeedback } from "./session-feedback";
@@ -19,6 +26,7 @@ import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
 import { howFoundLabel, leftReasonLabel } from "@/lib/students/membership";
 import {
+  canTagWithClub,
   getActiveWorkClubId,
   getOwnedClub,
   sharedWithClubCondition,
@@ -28,6 +36,10 @@ import { getAssignableCoaches, listStudentCoaches } from "@/lib/club-coaches";
 import { defaultBallForStudent, loadStudentObjectives } from "@/lib/objectives";
 import { ObjectivesChecklist, type ScopeOption } from "./objectives-checklist";
 import { ReportDialogButton } from "./report-dialog";
+import {
+  StudentVideosPanel,
+  type StudentVideoItem,
+} from "./student-videos-panel";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -178,6 +190,27 @@ export default async function StudentDetailPage({ params }: PageProps) {
   // Desde la ficha solo se personaliza para este alumno o, si es particular y
   // el monitor es el propietario, para todos sus alumnos particulares. Los
   // cambios para todo el club se hacen en /club/[clubId]/objetivos.
+  // Fichas de vídeo. Si la tabla aún no existe (migración 0098 sin aplicar),
+  // la ficha se muestra igual sin la sección.
+  const videos: StudentVideoItem[] | null = await db
+    .select({
+      id: studentVideos.id,
+      location: studentVideos.location,
+      event: studentVideos.event,
+      recordedOn: studentVideos.recordedOn,
+      notes: studentVideos.notes,
+      videoUrl: studentVideos.videoUrl,
+    })
+    .from(studentVideos)
+    .where(eq(studentVideos.studentId, student.id))
+    .orderBy(desc(studentVideos.recordedOn), desc(studentVideos.createdAt))
+    .catch((error) => {
+      console.error("[student] videos failed", error);
+      return null;
+    });
+  // Igual que en las acciones: un alumno de club solo lo editan sus miembros.
+  const canEditVideos =
+    !student.clubId || (await canTagWithClub(user.id, student.clubId));
   const objectiveScopes: ScopeOption[] = [
     {
       id: "student",
@@ -689,10 +722,34 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </section>
         )}
 
+        {/* Vídeos */}
+        {videos && (
+          <section className="tp-panel p-5 sm:p-6">
+            <div className="grid grid-cols-[auto_auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+              <p className="text-[10px] font-black tabular-nums text-brand">
+                06
+              </p>
+              <Video className="size-3 self-center text-brand" />
+              <p className="text-[10px] font-black uppercase text-foreground/50">
+                Vídeos
+              </p>
+              <p className="text-[10px] font-black tabular-nums text-foreground/40">
+                {videos.length}
+              </p>
+            </div>
+            <StudentVideosPanel
+              studentId={student.id}
+              studentName={student.name}
+              canEdit={canEditVideos}
+              initialVideos={videos}
+            />
+          </section>
+        )}
+
         {/* Próximas */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">06</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Próximas sesiones
             </p>
@@ -716,7 +773,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
         {/* Historial */}
         <section className="tp-panel p-5 sm:p-6">
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
-            <p className="text-[10px] font-black tabular-nums text-brand">07</p>
+            <p className="text-[10px] font-black tabular-nums text-brand">08</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
               Historial y feedback
             </p>

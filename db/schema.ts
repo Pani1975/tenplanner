@@ -782,6 +782,37 @@ export const studentObjectives = pgTable(
   ]
 );
 
+// Fichas de vídeo del alumno (migración 0098). Solo se guarda el enlace
+// (YouTube, Google Drive...), no el archivo.
+export const studentVideos = pgTable(
+  "student_videos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .references(() => students.id, { onDelete: "cascade" })
+      .notNull(),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    location: varchar("location", { length: 200 }),
+    event: varchar("event", { length: 200 }),
+    recordedOn: date("recorded_on"),
+    notes: text("notes"),
+    videoUrl: text("video_url").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("student_videos_student_recorded_idx").on(t.studentId, t.recordedOn),
+    check("student_videos_video_url_chk", sql`${t.videoUrl} ~* '^https?://'`),
+  ]
+);
+
 // Session ↔ Students pivot
 export const sessionStudents = pgTable(
   "session_students",
