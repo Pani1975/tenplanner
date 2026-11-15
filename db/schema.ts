@@ -266,6 +266,11 @@ export const exercises = pgTable(
     autoria: varchar("autoria", { length: 64 }).default("libre"),
     isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
     isGlobal: boolean("is_global").default(false).notNull(),
+    // Solo para ejercicios globales: si es false, no aparece en la biblioteca,
+    // el buscador, Dr. Planner ni las propuestas de sesión (salvo para el
+    // administrador). Las clases que ya lo usan siguen funcionando.
+    // Migración 0099_exercise_published.
+    isPublished: boolean("is_published").default(true).notNull(),
     // null = ejercicio del espacio particular de su autor. Se asigna cuando
     // el monitor lo crea trabajando como un club (modo de trabajo): queda
     // compartido con todos los miembros activos de ese club ("Mis
@@ -291,6 +296,7 @@ export const exercises = pgTable(
     index("exercises_created_by_idx").on(t.createdBy),
     index("exercises_created_by_name_idx").on(t.createdBy, t.name),
     index("exercises_is_global_idx").on(t.isGlobal),
+    index("exercises_global_published_idx").on(t.isGlobal, t.isPublished),
     index("exercises_category_created_at_idx").on(t.category, t.createdAt),
     index("exercises_name_idx").on(t.name),
     index("exercises_autoria_idx").on(t.autoria),

@@ -170,7 +170,8 @@ function publicPool(sport: string, now: number): Promise<PoolRow[]> {
   const rows = queryPool(
     and(
       eq(exercises.sport, sport as "tenis"),
-      or(eq(exercises.isGlobal, true), isNull(exercises.createdBy))
+      or(eq(exercises.isGlobal, true), isNull(exercises.createdBy)),
+      eq(exercises.isPublished, true)
     )!
   );
   publicPoolCache.set(sport, { at: now, rows });

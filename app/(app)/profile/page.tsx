@@ -60,7 +60,10 @@ export default async function ProfilePage() {
       .from(exercisesTable)
       .where(
         or(
-          eq(exercisesTable.isGlobal, true),
+          and(
+            eq(exercisesTable.isGlobal, true),
+            eq(exercisesTable.isPublished, true)
+          )!,
           eq(exercisesTable.createdBy, user.id)
         )
       ),

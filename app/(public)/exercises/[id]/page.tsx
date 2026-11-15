@@ -209,6 +209,7 @@ export default async function ExercisePage({
         fases: (exercise.fases as string[] | null) ?? null,
         intensity: exercise.intensity ?? null,
         isGlobal: exercise.isGlobal,
+        isPublished: exercise.isPublished,
         autoria: exercise.autoria ?? null,
         isAiGenerated: exercise.isAiGenerated,
         createdBy: exercise.createdBy,

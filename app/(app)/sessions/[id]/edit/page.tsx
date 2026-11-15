@@ -14,8 +14,9 @@ import {
   users,
 } from "@/db/schema";
 import {
+  exerciseListableCondition,
   exerciseOwnOrClubCondition,
-  exerciseVisibleToUserCondition,
+  isPlatformAdmin,
 } from "@/lib/exercise-access";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { loadSessionPlan } from "@/lib/sessions/plan";
@@ -106,7 +107,10 @@ export default async function EditSessionPage({
         .where(
           and(
             publicExercisesEnabled
-              ? exerciseVisibleToUserCondition(user.id)
+              ? exerciseListableCondition(
+                  user.id,
+                  await isPlatformAdmin(user.id)
+                )
               : exerciseOwnOrClubCondition(user.id),
             eq(exercises.sport, sessionRow.sport)
           )

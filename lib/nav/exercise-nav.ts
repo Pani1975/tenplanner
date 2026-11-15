@@ -25,6 +25,10 @@ import {
   type TipoPelota,
 } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import {
+  exercisePublishedCondition,
+  isPlatformAdmin,
+} from "@/lib/exercise-access";
 import { exerciseListSpaceCondition } from "@/lib/exercises/lists";
 import {
   exerciseSearchCondition,
@@ -207,18 +211,24 @@ export async function getFilteredExerciseIds(
       )
     : sql`1=0`;
 
+  // Ejercicios de Ten Planner listables: solo los publicados, salvo admin.
+  const globalWhere = and(
+    eq(exercisesTable.isGlobal, true),
+    exercisePublishedCondition(await isPlatformAdmin(userId))
+  )!;
+
   const allVisibleWhere = userId
     ? publicExercisesEnabled
-      ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+      ? (or(globalWhere, mineWhere) ?? mineWhere)
       : mineWhere
     : publicExercisesEnabled
-      ? eq(exercisesTable.isGlobal, true)
+      ? globalWhere
       : sql`1=0`;
 
   const visibilityWhere =
     activeTab === "global"
       ? publicExercisesEnabled
-        ? eq(exercisesTable.isGlobal, true)
+        ? globalWhere
         : sql`1=0`
       : activeTab === "mine" && userId
         ? mineWhere

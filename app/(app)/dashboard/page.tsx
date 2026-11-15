@@ -211,7 +211,10 @@ async function DashboardBody({
         and(
           eq(exercisesTable.sport, activeSport),
           or(
-            eq(exercisesTable.isGlobal, true),
+            and(
+              eq(exercisesTable.isGlobal, true),
+              eq(exercisesTable.isPublished, true)
+            )!,
             sharedWithClubCondition(
               exercisesTable.createdBy,
               exercisesTable.clubId,
@@ -566,7 +569,8 @@ export default async function DashboardPage() {
   // El Espacio gestión tampoco tiene panel de sesiones: va a su Informes.
   const workMode = await getWorkMode(user.id);
   if (workMode.kind === "tenplanner") redirect("/informes");
-  if (workMode.kind === "club" && workMode.management) redirect("/gestion/panel");
+  if (workMode.kind === "club" && workMode.management)
+    redirect("/gestion/panel");
 
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||

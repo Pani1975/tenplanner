@@ -73,7 +73,12 @@ export default async function LandingPage() {
         aspectoJuego: exercises.aspectoJuego,
       })
       .from(exercises)
-      .where(or(eq(exercises.isGlobal, true), isNull(exercises.createdBy)))
+      .where(
+        and(
+          or(eq(exercises.isGlobal, true), isNull(exercises.createdBy)),
+          eq(exercises.isPublished, true)
+        )
+      )
       .orderBy(desc(exercises.createdAt))
       .limit(3),
     db

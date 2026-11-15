@@ -2,13 +2,16 @@ import Link from "next/link";
 import { getWorkMode, spaceTitle } from "@/lib/work-mode";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { exercises } from "@/db/schema";
 import { ClassForm } from "@/components/app/class-form";
 import { getActiveSport } from "@/lib/sports";
-import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
+import {
+  exerciseListableCondition,
+  isPlatformAdmin,
+} from "@/lib/exercise-access";
 
 export default async function NewClassPage() {
   const supabase = await createClient();
@@ -40,7 +43,7 @@ export default async function NewClassPage() {
     .from(exercises)
     .where(
       and(
-        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id)),
+        exerciseListableCondition(user.id, await isPlatformAdmin(user.id)),
         eq(exercises.sport, sport)
       )
     )

@@ -6,7 +6,13 @@ import { AdminContentClient } from "./content-client";
 
 const PER_PAGE = 50;
 
-type ExFilter = "all" | "global" | "private" | "ai";
+type ExFilter =
+  | "all"
+  | "global"
+  | "private"
+  | "ai"
+  | "published"
+  | "unpublished";
 
 interface PageProps {
   searchParams: Promise<{
@@ -22,7 +28,9 @@ export default async function AdminContentPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const q = params.q?.trim() ?? "";
   const exFilter = (
-    ["all", "global", "private", "ai"].includes(params.exFilter ?? "")
+    ["all", "global", "private", "ai", "published", "unpublished"].includes(
+      params.exFilter ?? ""
+    )
       ? params.exFilter
       : "all"
   ) as ExFilter;
@@ -36,6 +44,15 @@ export default async function AdminContentPage({ searchParams }: PageProps) {
   if (exFilter === "global") exConditions.push(eq(exercises.isGlobal, true));
   if (exFilter === "private") exConditions.push(eq(exercises.isGlobal, false));
   if (exFilter === "ai") exConditions.push(eq(exercises.isAiGenerated, true));
+  // Publicación en la biblioteca (solo ejercicios de Ten Planner).
+  if (exFilter === "published")
+    exConditions.push(
+      and(eq(exercises.isGlobal, true), eq(exercises.isPublished, true))!
+    );
+  if (exFilter === "unpublished")
+    exConditions.push(
+      and(eq(exercises.isGlobal, true), eq(exercises.isPublished, false))!
+    );
   const exWhere = exConditions.length > 0 ? and(...exConditions) : undefined;
 
   // Session conditions
@@ -57,6 +74,7 @@ export default async function AdminContentPage({ searchParams }: PageProps) {
           difficulty: exercises.difficulty,
           durationMinutes: exercises.durationMinutes,
           isGlobal: exercises.isGlobal,
+          isPublished: exercises.isPublished,
           isAiGenerated: exercises.isAiGenerated,
           createdAt: exercises.createdAt,
           createdByEmail: users.email,

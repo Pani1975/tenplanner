@@ -33,6 +33,10 @@ import { ExerciseDraftsPanel } from "@/components/app/exercise-drafts-panel";
 import { ImportTextDialog } from "@/components/app/import-text-dialog";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
+import {
+  exercisePublishedCondition,
+  isPlatformAdmin,
+} from "@/lib/exercise-access";
 import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
 import { SportGate } from "@/components/public/sport-gate";
@@ -167,6 +171,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     data: { session },
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
+  // Ejercicios de Ten Planner listables: solo los publicados, salvo admin.
+  const isAdmin = await isPlatformAdmin(user?.id);
+  const globalWhere = and(
+    eq(exercisesTable.isGlobal, true),
+    exercisePublishedCondition(isAdmin)
+  )!;
   const [publicExercisesEnabled, exerciseCreationEnabled] = await Promise.all([
     getBooleanSetting("feature.public_exercises_enabled"),
     getBooleanSetting("feature.exercise_creation_enabled"),
@@ -220,8 +230,8 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       : inTenPlanner && requestedTab === "mine"
         ? "global"
         : !publicExercisesEnabled && requestedTab === "global"
-        ? "mine"
-        : requestedTab;
+          ? "mine"
+          : requestedTab;
 
   const searchTerm = getString(params.q).trim();
   const activeSort = parseExerciseSort(params);
@@ -311,19 +321,16 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        ? (or(globalWhere, mineWhere) ?? mineWhere)
         : mineWhere
       : publicExercisesEnabled
-        ? eq(exercisesTable.isGlobal, true)
+        ? globalWhere
         : sql`1=0`
   )!;
 
   const visibilityWhere =
     activeTab === "global"
-      ? and(
-          sportWhere,
-          publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
-        )!
+      ? and(sportWhere, publicExercisesEnabled ? globalWhere : sql`1=0`)!
       : activeTab === "mine" && user
         ? and(sportWhere, mineWhere)!
         : allVisibleWhere;
@@ -535,7 +542,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
       ? db
           .select({ total: count() })
           .from(exercisesTable)
-          .where(and(sportWhere, eq(exercisesTable.isGlobal, true)))
+          .where(and(sportWhere, globalWhere))
       : Promise.resolve([{ total: 0 }]),
     user
       ? db

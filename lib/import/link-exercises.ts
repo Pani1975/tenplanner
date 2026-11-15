@@ -88,7 +88,10 @@ export async function linkClassItemsToLibrary(
 ): Promise<ImportedClass[]> {
   const visible = and(
     eq(exercises.sport, sport as typeof exercises.sport._.data),
-    or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(userId))
+    or(
+      and(eq(exercises.isGlobal, true), eq(exercises.isPublished, true)),
+      exerciseOwnOrClubCondition(userId)
+    )
   );
   let budget = MAX_QUERIES;
   let errors = 0;
@@ -190,7 +193,10 @@ export async function linkClassItemsToLibrary(
     try {
       const levels = classes.flatMap((c) => c.niveles ?? []);
       const ai = await choose(
-        buildChoicePrompt(activities, levels.length ? [...new Set(levels)] : null)
+        buildChoicePrompt(
+          activities,
+          levels.length ? [...new Set(levels)] : null
+        )
       );
       chosen = applyChoices(activities, ai);
       mode = "ia";
@@ -215,7 +221,8 @@ export async function linkClassItemsToLibrary(
       a.item.exerciseId = strong && rows[0]?.inName ? rows[0].id : null;
       if (a.item.exerciseId) chosen += 1;
     }
-    if (activities.length > 0) mode = choose ? "palabras (IA falló)" : "palabras";
+    if (activities.length > 0)
+      mode = choose ? "palabras (IA falló)" : "palabras";
   }
 
   // Solo recuentos (sin textos) para poder revisar en los logs.

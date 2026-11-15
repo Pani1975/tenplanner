@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { clubMembers, exercises } from "@/db/schema";
+import { clubMembers, exercises, users } from "@/db/schema";
 
 /**
  * Ejercicios del propio usuario más los de cualquier club del que sea
@@ -27,6 +27,42 @@ export function exerciseVisibleToUserCondition(
   if (!userId) return publicExercise!;
 
   return or(publicExercise!, exerciseOwnOrClubCondition(userId))!;
+}
+
+/** true si el usuario es administrador de la plataforma (users.is_admin). */
+export async function isPlatformAdmin(
+  userId: string | null | undefined
+): Promise<boolean> {
+  if (!userId) return false;
+  const [row] = await db
+    .select({ isAdmin: users.isAdmin })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return !!row?.isAdmin;
+}
+
+/**
+ * Ejercicios de Ten Planner que se pueden *listar* (biblioteca, buscador,
+ * selectores, Dr. Planner, propuestas): solo los publicados, salvo para el
+ * administrador, que los ve todos. No afecta al acceso: una clase o sesión
+ * que ya usa un ejercicio sin publicar lo sigue mostrando.
+ */
+export function exercisePublishedCondition(isAdmin: boolean): SQL {
+  return isAdmin ? sql`true` : eq(exercises.isPublished, true);
+}
+
+/** Como exerciseVisibleToUserCondition, pero sin los globales sin publicar. */
+export function exerciseListableCondition(
+  userId: string | null | undefined,
+  isAdmin: boolean
+): SQL {
+  const publicExercise = and(
+    or(eq(exercises.isGlobal, true), isNull(exercises.createdBy)),
+    exercisePublishedCondition(isAdmin)
+  )!;
+  if (!userId) return publicExercise;
+  return or(publicExercise, exerciseOwnOrClubCondition(userId))!;
 }
 
 /** Igual que exerciseVisibleToUserCondition, para un ejercicio ya cargado. */

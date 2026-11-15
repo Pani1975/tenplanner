@@ -16,8 +16,9 @@ import {
 } from "@/db/schema";
 import { and, eq, asc } from "drizzle-orm";
 import {
+  exerciseListableCondition,
   exerciseOwnOrClubCondition,
-  exerciseVisibleToUserCondition,
+  isPlatformAdmin,
 } from "@/lib/exercise-access";
 import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import type {
@@ -141,7 +142,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     .where(
       and(
         publicExercisesEnabled
-          ? exerciseVisibleToUserCondition(user.id)
+          ? exerciseListableCondition(user.id, await isPlatformAdmin(user.id))
           : exerciseOwnOrClubCondition(user.id),
         eq(exercises.sport, sport)
       )

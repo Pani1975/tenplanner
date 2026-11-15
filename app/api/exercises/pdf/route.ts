@@ -21,6 +21,10 @@ import {
 } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getBooleanSetting } from "@/lib/app-settings";
+import {
+  exercisePublishedCondition,
+  isPlatformAdmin,
+} from "@/lib/exercise-access";
 import { getActiveSport } from "@/lib/sports";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { spaceLabels } from "@/lib/space-labels";
@@ -254,23 +258,26 @@ export async function GET(request: Request) {
     : [];
   const favIdArray = favRows.map((f) => f.exerciseId);
 
+  // Ejercicios de Ten Planner listables: solo los publicados, salvo admin.
+  const globalWhere = and(
+    eq(exercisesTable.isGlobal, true),
+    exercisePublishedCondition(await isPlatformAdmin(user?.id))
+  )!;
+
   const allVisibleWhere = and(
     sportWhere,
     user
       ? publicExercisesEnabled
-        ? (or(eq(exercisesTable.isGlobal, true), mineWhere) ?? mineWhere)
+        ? (or(globalWhere, mineWhere) ?? mineWhere)
         : mineWhere
       : publicExercisesEnabled
-        ? eq(exercisesTable.isGlobal, true)
+        ? globalWhere
         : sql`1=0`
   )!;
 
   const visibilityWhere =
     activeTab === "global"
-      ? and(
-          sportWhere,
-          publicExercisesEnabled ? eq(exercisesTable.isGlobal, true) : sql`1=0`
-        )!
+      ? and(sportWhere, publicExercisesEnabled ? globalWhere : sql`1=0`)!
       : activeTab === "mine" && user
         ? and(sportWhere, mineWhere)!
         : allVisibleWhere;

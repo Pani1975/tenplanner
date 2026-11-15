@@ -18,8 +18,9 @@ import { db } from "@/db";
 import { exercises, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import {
+  exerciseListableCondition,
   exerciseOwnOrClubCondition,
-  exerciseVisibleToUserCondition,
+  isPlatformAdmin,
 } from "@/lib/exercise-access";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { embedExercise } from "@/lib/ai/semantic-search";
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
     "feature.public_exercises_enabled"
   );
   const visibilityCondition = publicExercisesEnabled
-    ? exerciseVisibleToUserCondition(user?.id)
+    ? exerciseListableCondition(user?.id, await isPlatformAdmin(user?.id))
     : user
       ? exerciseOwnOrClubCondition(user.id)
       : undefined;

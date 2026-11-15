@@ -17,7 +17,10 @@ import {
   resolveItemKind,
   type StationItemJson,
 } from "@/lib/block-items";
-import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
+import {
+  exerciseListableCondition,
+  isPlatformAdmin,
+} from "@/lib/exercise-access";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -91,7 +94,7 @@ export default async function EditClassPage({ params }: PageProps) {
     .from(exercises)
     .where(
       and(
-        or(eq(exercises.isGlobal, true), exerciseOwnOrClubCondition(user.id)),
+        exerciseListableCondition(user.id, await isPlatformAdmin(user.id)),
         eq(exercises.sport, cls.sport)
       )
     )

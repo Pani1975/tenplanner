@@ -658,7 +658,12 @@ export async function POST(request: Request) {
     db
       .select({ total: count() })
       .from(exercises)
-      .where(or(eq(exercises.isGlobal, true), isNull(exercises.createdBy))),
+      .where(
+        and(
+          or(eq(exercises.isGlobal, true), isNull(exercises.createdBy)),
+          eq(exercises.isPublished, true)
+        )
+      ),
     db
       .select({
         id: students.id,
@@ -1380,8 +1385,13 @@ ${profile ? buildUserContext(profile, sessionCount) : "Sin datos"}
                   publicExercisesEnabled
                     ? or(
                         eq(exercises.createdBy, user.id),
-                        eq(exercises.isGlobal, true),
-                        isNull(exercises.createdBy)
+                        and(
+                          or(
+                            eq(exercises.isGlobal, true),
+                            isNull(exercises.createdBy)
+                          ),
+                          eq(exercises.isPublished, true)
+                        )!
                       )
                     : eq(exercises.createdBy, user.id)
                 )
@@ -1442,8 +1452,13 @@ ${profile ? buildUserContext(profile, sessionCount) : "Sin datos"}
                 publicExercisesEnabled
                   ? or(
                       eq(exercises.createdBy, user.id),
-                      eq(exercises.isGlobal, true),
-                      isNull(exercises.createdBy)
+                      and(
+                        or(
+                          eq(exercises.isGlobal, true),
+                          isNull(exercises.createdBy)
+                        ),
+                        eq(exercises.isPublished, true)
+                      )!
                     )
                   : eq(exercises.createdBy, user.id)
               )
@@ -1769,8 +1784,13 @@ En 2 frases (máx 40 palabras), por qué esta propuesta tiene sentido ahora. Sin
             : publicExercisesEnabled
               ? or(
                   eq(exercises.createdBy, user.id),
-                  eq(exercises.isGlobal, true),
-                  isNull(exercises.createdBy)
+                  and(
+                    or(
+                      eq(exercises.isGlobal, true),
+                      isNull(exercises.createdBy)
+                    ),
+                    eq(exercises.isPublished, true)
+                  )!
                 )
               : eq(exercises.createdBy, user.id);
 

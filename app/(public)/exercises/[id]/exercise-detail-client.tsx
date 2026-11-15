@@ -53,6 +53,7 @@ import { ShareButton } from "@/components/app/share-button";
 import { PrevNextNav } from "@/components/app/prev-next-nav";
 import { LevelBalls } from "@/components/app/level-balls";
 import { BackToSearchLink } from "@/components/app/back-to-search-link";
+import { ExercisePublishToggle } from "@/components/app/exercise-publish-toggle";
 import {
   CopyToSpaceButton,
   type CopyTarget,
@@ -110,6 +111,7 @@ export interface ExerciseData {
   fases?: string[] | null;
   intensity: number | null;
   isGlobal: boolean;
+  isPublished?: boolean;
   autoria: string | null;
   isAiGenerated: boolean;
   createdBy: string | null;
@@ -512,6 +514,13 @@ export function ExerciseDetailClient({
               <span className="sm:hidden">Solo admins</span>
             </div>
           ) : null}
+          {isAdmin && exercise.isGlobal && (
+            <ExercisePublishToggle
+              exerciseId={exercise.id}
+              initialPublished={exercise.isPublished ?? true}
+              className="w-full sm:w-auto"
+            />
+          )}
           {(copyTargets.length > 0 || sendClubs.length > 0) && (
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <CopyToSpaceButton

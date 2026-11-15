@@ -38,6 +38,7 @@ import {
   adminPrimaryActionClass,
   adminTableShellClass,
 } from "../_components/admin-ui";
+import { ExercisePublishToggle } from "@/components/app/exercise-publish-toggle";
 
 interface Exercise {
   id: string;
@@ -46,6 +47,7 @@ interface Exercise {
   difficulty: string;
   durationMinutes: number;
   isGlobal: boolean;
+  isPublished: boolean;
   isAiGenerated: boolean;
   createdAt: string;
   createdByEmail: string | null;
@@ -65,7 +67,13 @@ interface Session {
   exerciseCount: number;
 }
 
-type ExFilter = "all" | "global" | "private" | "ai";
+type ExFilter =
+  | "all"
+  | "global"
+  | "private"
+  | "ai"
+  | "published"
+  | "unpublished";
 
 interface Props {
   exercises: Exercise[];
@@ -301,6 +309,8 @@ export function AdminContentClient({
     ["global", "Globales"],
     ["private", "Privados"],
     ["ai", "IA"],
+    ["unpublished", "Sin publicar"],
+    ["published", "Publicados"],
   ];
 
   return (
@@ -467,6 +477,14 @@ export function AdminContentClient({
                   )}
                 </div>
 
+                {e.isGlobal && (
+                  <ExercisePublishToggle
+                    exerciseId={e.id}
+                    initialPublished={e.isPublished}
+                    className="mt-3 flex-wrap"
+                  />
+                )}
+
                 <div className="mt-3 flex justify-end gap-2">
                   <Link
                     href={`/exercises/${e.id}`}
@@ -490,7 +508,7 @@ export function AdminContentClient({
                     ) : (
                       <Globe className="size-3.5" />
                     )}
-                    {e.isGlobal ? "Privar" : "Publicar"}
+                    {e.isGlobal ? "Hacer privado" : "Hacer global"}
                   </button>
                   <button
                     onClick={() => setDeleteTarget({ id: e.id, name: e.name })}
@@ -650,6 +668,13 @@ export function AdminContentClient({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {e.isGlobal && (
+                          <ExercisePublishToggle
+                            exerciseId={e.id}
+                            initialPublished={e.isPublished}
+                            compact
+                          />
+                        )}
                         <Link
                           href={`/exercises/${e.id}`}
                           target="_blank"
@@ -661,11 +686,7 @@ export function AdminContentClient({
                         <button
                           onClick={() => void toggleGlobal(e.id, !e.isGlobal)}
                           disabled={busy === e.id || busy === "bulk"}
-                          title={
-                            e.isGlobal
-                              ? "Hacer privado"
-                              : "Publicar globalmente"
-                          }
+                          title={e.isGlobal ? "Hacer privado" : "Hacer global"}
                           className={cn(
                             "p-1.5 rounded-lg transition-colors disabled:opacity-40",
                             e.isGlobal
