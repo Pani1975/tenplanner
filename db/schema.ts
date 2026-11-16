@@ -519,6 +519,9 @@ export const sessionBlocks = pgTable(
     orderIndex: integer("order_index").notNull(),
     title: varchar("title", { length: 120 }),
     notes: text("notes"),
+    // Dos pistas con rotación: los dos grupos hacen el programa de las dos
+    // pistas y rotan a mitad; los minutos son por grupo (ver 0103).
+    rotates: boolean("rotates").default(false).notNull(),
   },
   (t) => [
     uniqueIndex("session_blocks_session_order_uniq").on(
@@ -1265,6 +1268,8 @@ export const classBlocks = pgTable(
     orderIndex: integer("order_index").notNull(), // 1=inicial, 2=principal, 3=final
     title: varchar("title", { length: 120 }),
     notes: text("notes"),
+    // Dos pistas con rotación (igual que session_blocks.rotates, ver 0103).
+    rotates: boolean("rotates").default(false).notNull(),
   },
   (t) => [
     uniqueIndex("class_blocks_class_order_uniq").on(t.classId, t.orderIndex),

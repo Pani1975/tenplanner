@@ -34,6 +34,9 @@ interface CourtsBoardViewProps {
   onSetTwoCourts: (value: boolean) => void;
   items: LaneItem[];
   onPatchItem: (id: string, patch: { court?: 1 | 2; ledBy?: LedBy | null }) => void;
+  /** Bloques con rotación (dos grupos que cambian de pista a mitad). */
+  rotates?: Partial<Record<TrainingPhase, boolean>>;
+  onToggleRotate?: (phase: TrainingPhase, on: boolean) => void;
   /** Contenido extra bajo la cabecera (p. ej. los lugares de cada pista). */
   extra?: ReactNode;
 }
@@ -52,6 +55,8 @@ export function CourtsBoardView({
   onSetTwoCourts,
   items: allItems,
   onPatchItem,
+  rotates = {},
+  onToggleRotate,
   extra,
 }: CourtsBoardViewProps) {
   if (!twoCourts) {
@@ -106,7 +111,10 @@ export function CourtsBoardView({
         const lane = (court: 1 | 2) => items.filter((it) => it.court === court);
         const total = (court: 1 | 2) =>
           lane(court).reduce((sum, it) => sum + (it.minutes ?? 0), 0);
-        const blockMax = Math.max(total(1), total(2));
+        const laneMax = Math.max(total(1), total(2));
+        const rotating = !!rotates[phase];
+        // Con rotación los minutos son por grupo: el bloque dura el doble.
+        const blockMax = rotating ? laneMax * 2 : laneMax;
 
         return (
           <div
@@ -125,6 +133,44 @@ export function CourtsBoardView({
               )}
             </div>
 
+            {onToggleRotate && laneMax > 0 && (
+              <div className="mb-2 rounded-md border border-foreground/10 bg-background/60 px-3 py-2">
+                <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={rotating}
+                    onChange={(e) => onToggleRotate(phase, e.target.checked)}
+                    className="mt-0.5 size-4 accent-[#D6FF38]"
+                  />
+                  <span>
+                    <span className="font-semibold text-foreground">
+                      Los grupos rotan
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Dos grupos: cada uno hace las dos pistas. Los minutos son
+                      por grupo.
+                    </span>
+                  </span>
+                </label>
+                {rotating && (
+                  <ol className="mt-2 space-y-1 text-xs text-foreground">
+                    <li>
+                      <span className="font-bold">
+                        Ronda 1 · 0–{laneMax} min:
+                      </span>{" "}
+                      grupo A en la pista 1 · grupo B en la pista 2
+                    </li>
+                    <li>
+                      <span className="font-bold">
+                        Ronda 2 · {laneMax}–{laneMax * 2} min:
+                      </span>{" "}
+                      rotan: grupo A en la pista 2 · grupo B en la pista 1
+                    </li>
+                  </ol>
+                )}
+              </div>
+            )}
+
             <div className="grid gap-2 sm:grid-cols-2">
               {([1, 2] as const).map((court) => {
                 const entries = lane(court);
@@ -140,15 +186,15 @@ export function CourtsBoardView({
                         Pista {court}
                       </span>
                       <span className="text-muted-foreground">
-                        {laneMinutes} min
+                        {laneMinutes} min{rotating ? " por grupo" : ""}
                       </span>
                     </div>
-                    {blockMax > 0 && (
+                    {laneMax > 0 && (
                       <div className="mb-2 h-1 overflow-hidden rounded-full bg-foreground/10">
                         <div
                           className="h-full rounded-full bg-brand"
                           style={{
-                            width: `${Math.round((laneMinutes / blockMax) * 100)}%`,
+                            width: `${Math.round((laneMinutes / (laneMax || 1)) * 100)}%`,
                           }}
                         />
                       </div>
@@ -260,6 +306,20 @@ export function CourtsBoard({ state, update, places = [] }: CourtsBoardProps) {
 
   return (
     <CourtsBoardView
+      rotates={Object.fromEntries(
+        state.blocks.map((b) => [
+          b.orderIndex === 1 ? "activation" : b.orderIndex === 3 ? "cooldown" : "main",
+          !!b.rotates,
+        ])
+      )}
+      onToggleRotate={(phase, on) => {
+        const order = phase === "activation" ? 1 : phase === "cooldown" ? 3 : 2;
+        update({
+          blocks: state.blocks.map((b) =>
+            b.orderIndex === order ? { ...b, rotates: on } : b
+          ),
+        });
+      }}
       twoCourts={state.courts === 2}
       onSetTwoCourts={(on) => update({ courts: on ? 2 : 1 })}
       items={items}

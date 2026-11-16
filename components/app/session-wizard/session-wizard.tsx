@@ -58,6 +58,8 @@ interface SessionWizardProps {
   initialPlaceId?: string | null;
   /** Sesión que parte de una plantilla/sesión de dos pistas. */
   initialCourts?: 1 | 2;
+  /** Con dos pistas, el bloque principal rota entre dos grupos. */
+  initialRotation?: boolean;
   /** Grupo al que se preasigna la sesión (p. ej. desde "Asignar clase" en la ficha de grupo). */
   initialGroupId?: string | null;
   initialGroupName?: string;
@@ -177,6 +179,7 @@ function createInitialState({
   initialLocation,
   initialPlaceId,
   initialCourts,
+  initialRotation,
   initialGroupId,
   initialGroupName,
   initialStudentIds,
@@ -195,6 +198,7 @@ function createInitialState({
   | "initialLocation"
   | "initialPlaceId"
   | "initialCourts"
+  | "initialRotation"
   | "initialGroupId"
   | "initialGroupName"
   | "initialStudentIds"
@@ -226,7 +230,11 @@ function createInitialState({
       ...(initialExercises ?? []),
       ...textItemsFromBlocks(initialBlocks),
     ],
-    blocks: normalizeBlocks(initialBlocks),
+    blocks: normalizeBlocks(initialBlocks).map((b) =>
+      initialRotation && initialCourts === 2 && b.orderIndex === 2
+        ? { ...b, rotates: true }
+        : b
+    ),
     recurrence: {
       enabled: false,
       frequency: "weekly",
@@ -358,6 +366,7 @@ export function SessionWizard({
   initialLocation,
   initialPlaceId,
   initialCourts,
+  initialRotation,
   initialGroupId,
   initialGroupName,
   initialStudentIds,
@@ -397,6 +406,7 @@ export function SessionWizard({
       initialLocation,
       initialPlaceId,
       initialCourts,
+      initialRotation,
       initialGroupId,
       initialGroupName,
       initialStudentIds,

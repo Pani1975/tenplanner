@@ -81,6 +81,8 @@ export type SessionPlanBlock = {
   orderIndex: 1 | 2 | 3;
   title: string;
   notes: string | null;
+  /** Dos pistas con rotación: los dos grupos hacen ambas pistas. */
+  rotates?: boolean;
 };
 
 export type SessionPlan = {
@@ -140,6 +142,7 @@ export async function loadSessionPlan(
       blockOrder: sessionBlocks.orderIndex,
       blockTitle: sessionBlocks.title,
       blockNotes: sessionBlocks.notes,
+      blockRotates: sessionBlocks.rotates,
       itemId: sessionBlockItems.id,
       itemOrder: sessionBlockItems.orderIndex,
       itemExerciseId: sessionBlockItems.exerciseId,
@@ -189,6 +192,7 @@ export async function loadSessionPlan(
         orderIndex: order,
         title: row.blockTitle || BLOCK_TITLES[order],
         notes: row.blockNotes ?? null,
+        rotates: row.blockRotates === true,
       });
     }
   }

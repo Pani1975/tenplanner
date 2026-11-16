@@ -76,6 +76,7 @@ type LoadedBlock = {
   orderIndex: 1 | 2 | 3;
   title: string | null;
   notes: string | null;
+  rotates: boolean;
   items: LoadedBlockItem[];
 };
 
@@ -216,6 +217,7 @@ export async function POST(request: Request) {
         blockOrder: classBlocks.orderIndex,
         blockTitle: classBlocks.title,
         blockNotes: classBlocks.notes,
+        blockRotates: classBlocks.rotates,
         itemExerciseId: classBlockExercises.exerciseId,
         freeText: classBlockExercises.freeText,
         itemTitle: classBlockExercises.title,
@@ -249,6 +251,7 @@ export async function POST(request: Request) {
           orderIndex,
           title: row.blockTitle,
           notes: row.blockNotes,
+          rotates: row.blockRotates === true,
           items: [],
         } satisfies LoadedBlock);
       const hasContent =
@@ -279,6 +282,7 @@ export async function POST(request: Request) {
           orderIndex: orderIndex as 1 | 2 | 3,
           title: null,
           notes: null,
+          rotates: false,
           items: [],
         }
     );
@@ -375,6 +379,7 @@ export async function POST(request: Request) {
               orderIndex: block.orderIndex,
               title: block.title ?? BLOCK_TITLE_BY_PHASE[block.orderIndex],
               notes: block.notes ?? null,
+              rotates: cls.courts === 2 && block.rotates,
             })
             .returning({ id: sessionBlocks.id });
 

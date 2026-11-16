@@ -88,7 +88,12 @@ export function useEngineProposal({
         durationMinutes: state.durationMinutes,
         objectives: state.objective || null,
         attendeeIds: null,
-        ...(state.courts === 2 ? { courts: 2 } : {}),
+        ...(state.courts === 2
+          ? {
+              courts: 2,
+              rotate: state.blocks.some((b) => b.orderIndex === 2 && b.rotates),
+            }
+          : {}),
         ...body,
       }),
     });
@@ -119,6 +124,10 @@ export function useEngineProposal({
       update({
         exercises: p.plan.items.map((it) => toWizard(it)),
         durationManual: true,
+        // Con rotación, el bloque principal pasa a ser por grupo.
+        blocks: state.blocks.map((b) =>
+          b.orderIndex === 2 ? { ...b, rotates: !!p.plan.rotatesMain } : b
+        ),
       });
       return true;
     } catch {

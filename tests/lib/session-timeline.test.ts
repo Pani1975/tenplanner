@@ -277,3 +277,75 @@ describe("session timeline", () => {
     });
   });
 });
+
+describe("dos pistas con rotación", () => {
+  const a = "11111111-1111-1111-1111-111111111111";
+  const b = "22222222-2222-2222-2222-222222222222";
+  const block = (orderIndex: 1 | 2 | 3, rotates: boolean) => ({
+    orderIndex,
+    title: "",
+    notes: "",
+    items: [],
+    rotates,
+  });
+
+  it("20 min: 10 de cesta en una pista y 10 de peloteo en la otra, rotan → 20", () => {
+    const state = {
+      courts: 2 as const,
+      blocks: [block(1, false), block(2, true), block(3, false)],
+      exercises: [
+        { ...ex(a, "main"), overrideDuration: 10, court: 1 as const },
+        { ...ex(b, "main"), overrideDuration: 10, court: 2 as const },
+      ],
+    };
+    // Minutos por grupo: el bloque dura el doble de la pista más larga.
+    expect(computeTimelineDuration(state)).toBe(20);
+  });
+
+  it("sin rotación, las mismas pistas duran 10 (a la vez)", () => {
+    const state = {
+      courts: 2 as const,
+      blocks: [block(1, false), block(2, false), block(3, false)],
+      exercises: [
+        { ...ex(a, "main"), overrideDuration: 10, court: 1 as const },
+        { ...ex(b, "main"), overrideDuration: 10, court: 2 as const },
+      ],
+    };
+    expect(computeTimelineDuration(state)).toBe(10);
+  });
+
+  it("la rotación solo cuenta en el bloque marcado", () => {
+    const state = {
+      courts: 2 as const,
+      blocks: [block(1, false), block(2, true), block(3, false)],
+      exercises: [
+        { ...ex(a, "activation"), overrideDuration: 5 },
+        { ...ex(a, "main"), overrideDuration: 8, court: 1 as const },
+        { ...ex(b, "main"), overrideDuration: 6, court: 2 as const },
+      ],
+    };
+    expect(computeTimelineDuration(state)).toBe(5 + 16);
+  });
+
+  it("el servidor calcula igual (rotates por bloque)", () => {
+    const blocks = [
+      {
+        rotates: true,
+        items: [
+          { kind: "text", freeText: "cesta", durationMinutes: 10, court: 1 },
+          { kind: "text", freeText: "peloteo", durationMinutes: 10, court: 2 },
+        ],
+      },
+    ];
+    expect(sumBlocksDuration(blocks, new Map())).toBe(20);
+  });
+
+  it("envía rotates solo con dos pistas", () => {
+    const blocks = [block(1, false), block(2, true), block(3, false)];
+    const exercises = [{ ...ex(a, "main"), court: 1 as const }];
+    const two = buildBlocksPayload({ blocks, exercises, courts: 2 });
+    expect(two[1].rotates).toBe(true);
+    const one = buildBlocksPayload({ blocks, exercises, courts: 1 });
+    expect(one[1].rotates).toBeUndefined();
+  });
+});

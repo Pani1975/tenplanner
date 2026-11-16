@@ -132,6 +132,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         blockOrderIndex: sessionBlocks.orderIndex,
         blockTitle: sessionBlocks.title,
         blockNotes: sessionBlocks.notes,
+        blockRotates: sessionBlocks.rotates,
         itemId: sessionBlockItems.id,
         itemOrderIndex: sessionBlockItems.orderIndex,
         itemExerciseId: sessionBlockItems.exerciseId,
@@ -264,6 +265,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
       orderIndex: number;
       title: string | null;
       notes: string | null;
+      rotates: boolean;
       items: Array<{
         id: string;
         orderIndex: number;
@@ -292,6 +294,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         orderIndex: row.blockOrderIndex,
         title: row.blockTitle,
         notes: row.blockNotes,
+        rotates: row.blockRotates === true,
         items: [],
       };
       blocks.push(block);

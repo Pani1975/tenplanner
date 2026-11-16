@@ -77,6 +77,8 @@ export interface WizardSessionBlock {
   orderIndex: 1 | 2 | 3;
   title: string;
   notes: string;
+  /** Dos pistas con rotación: los dos grupos hacen ambas pistas y rotan. */
+  rotates?: boolean;
   items: WizardBlockItem[];
 }
 

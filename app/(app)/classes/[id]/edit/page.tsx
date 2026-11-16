@@ -138,6 +138,7 @@ export default async function EditClassPage({ params }: PageProps) {
       orderIndex: b.orderIndex,
       title: b.title,
       notes: b.notes,
+      rotates: b.rotates,
       items: items
         .filter((it) => it.blockId === b.id)
         .map((it) => {

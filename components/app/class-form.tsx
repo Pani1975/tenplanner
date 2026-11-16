@@ -135,6 +135,8 @@ interface BlockState {
   orderIndex: number;
   title: string;
   notes: string;
+  /** Dos pistas con rotación: los dos grupos hacen ambas pistas. */
+  rotates?: boolean;
   items: BlockItem[];
 }
 
@@ -186,6 +188,7 @@ export interface ClassInitialData {
     orderIndex: number;
     title: string | null;
     notes: string | null;
+    rotates?: boolean;
     items: BlockItem[];
   }[];
 }
@@ -274,6 +277,7 @@ export function ClassForm({
         ...b,
         title: found.title ?? b.title,
         notes: found.notes ?? "",
+        rotates: found.rotates === true,
         items: found.items,
       };
     });
@@ -876,6 +880,7 @@ export function ClassForm({
           orderIndex: b.orderIndex,
           title: b.title.trim() || null,
           notes: b.notes.trim() || null,
+          rotates: courts === 2 && !!b.rotates,
           items: b.items.map((item) => {
             if (item.kind === "exercise") {
               return {
@@ -1392,6 +1397,25 @@ export function ClassForm({
           </p>
 
           <CourtsBoardView
+            rotates={Object.fromEntries(
+              blocks.map((b) => [
+                b.orderIndex === 1
+                  ? "activation"
+                  : b.orderIndex === 3
+                    ? "cooldown"
+                    : "main",
+                !!b.rotates,
+              ])
+            )}
+            onToggleRotate={(phase, on) => {
+              const order =
+                phase === "activation" ? 1 : phase === "cooldown" ? 3 : 2;
+              setBlocks((prev) =>
+                prev.map((b) =>
+                  b.orderIndex === order ? { ...b, rotates: on } : b
+                )
+              );
+            }}
             twoCourts={courts === 2}
             onSetTwoCourts={(on) => setCourts(on ? 2 : 1)}
             items={blocks.flatMap((block, bi) =>

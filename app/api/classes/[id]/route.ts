@@ -68,6 +68,7 @@ const blockSchema = z.object({
   orderIndex: z.number().int().min(1).max(3),
   title: z.string().trim().max(120).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  rotates: z.boolean().optional(),
   items: z.array(blockExerciseSchema).default([]),
 });
 
@@ -354,6 +355,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
               orderIndex: block.orderIndex,
               title: block.title ?? null,
               notes: block.notes ?? null,
+              rotates: courts === 2 && block.rotates === true,
             })
             .returning({ id: classBlocks.id });
           if (block.items.length > 0) {

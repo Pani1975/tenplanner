@@ -262,6 +262,7 @@ export function StepExercises({
   const totalDuration = computeTimelineDuration({
     exercises: selected,
     courts: state.courts,
+    blocks: state.blocks,
   });
   const selectedIds = new Set(selected.map((e) => e.exerciseId));
   // Sumatorio del tiempo por tipo de elemento (ejercicios, descansos...).

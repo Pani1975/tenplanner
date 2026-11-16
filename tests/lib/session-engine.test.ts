@@ -457,3 +457,37 @@ describe("generateSession con dos pistas", () => {
     expect(plan.items.every((it) => it.court === undefined)).toBe(true);
   });
 });
+
+describe("generateSession con dos pistas y rotación", () => {
+  it("los minutos del bloque principal son por grupo (la mitad)", () => {
+    const parallel = generateSession(input({ courts: 2 }), data());
+    const rotating = generateSession(input({ courts: 2, rotate: true }), data());
+    expect(rotating.rotatesMain).toBe(true);
+    expect(parallel.rotatesMain).toBeFalsy();
+    const mainP = parallel.items.filter((i) => i.court === 1 && i.phase === "main");
+    const mainR = rotating.items.filter((i) => i.court === 1 && i.phase === "main");
+    // Mismos ejercicios en la pista 1; cada uno dura aprox. la mitad.
+    expect(mainR.map((i) => i.exerciseId)).toEqual(mainP.map((i) => i.exerciseId));
+    mainR.forEach((it, i) =>
+      expect(Math.abs(it.minutes - mainP[i].minutes / 2)).toBeLessThanOrEqual(1)
+    );
+  });
+
+  it("la duración total sigue siendo la pedida (±1 por redondeo)", () => {
+    const plan = generateSession(input({ courts: 2, rotate: true }), data());
+    expect(Math.abs(plan.durationMinutes - 60)).toBeLessThanOrEqual(2);
+  });
+
+  it("cada pareja de la pista 2 dura lo mismo que la de la pista 1", () => {
+    const plan = generateSession(input({ courts: 2, rotate: true }), data());
+    const lane1 = plan.items.filter((i) => i.court === 1 && i.phase === "main");
+    const lane2 = plan.items.filter((i) => i.court === 2);
+    lane2.forEach((it, i) => expect(it.minutes).toBe(lane1[i].minutes));
+  });
+
+  it("sin pedir rotación no cambia nada", () => {
+    const a = generateSession(input({ courts: 2 }), data());
+    const b = generateSession(input({ courts: 2, rotate: false }), data());
+    expect(a.items).toEqual(b.items);
+  });
+});

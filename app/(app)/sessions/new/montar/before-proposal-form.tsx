@@ -44,6 +44,7 @@ export function BeforeProposalForm({
   const [objectives, setObjectives] = useState(defaultObjectives);
   const [placeId, setPlaceId] = useState(defaultPlaceId ?? "");
   const [twoCourts, setTwoCourts] = useState(false);
+  const [rotate, setRotate] = useState(false);
   const [showError, setShowError] = useState(false);
   const [going, setGoing] = useState(false);
 
@@ -76,6 +77,7 @@ export function BeforeProposalForm({
       obj: lines.map((l) => l.text).join("\n"),
       ...(placeId ? { lugar: placeId } : {}),
       ...(twoCourts ? { pistas: "2" } : {}),
+      ...(twoCourts && rotate ? { rota: "1" } : {}),
     });
     router.push(`${baseHref}${sep}${qs.toString()}`);
   }
@@ -251,6 +253,23 @@ export function BeforeProposalForm({
             </span>
           </span>
         </label>
+        {twoCourts && (
+          <label className="ml-6 flex w-fit cursor-pointer items-start gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={rotate}
+              onChange={(e) => setRotate(e.target.checked)}
+              className="mt-0.5 size-4 accent-[#D6FF38]"
+            />
+            <span>
+              Los grupos rotan
+              <span className="block text-xs text-muted-foreground">
+                El grupo se parte en dos y cada mitad hace las dos pistas: a
+                mitad del bloque principal cambian de pista.
+              </span>
+            </span>
+          </label>
+        )}
       </section>
 
       <button

@@ -94,6 +94,7 @@ const sessionBlockSchema = z.object({
   orderIndex: z.number().int().min(1).max(3),
   title: z.string().trim().max(120).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  rotates: z.boolean().optional(),
   items: z.array(sessionBlockItemSchema).default([]),
 });
 

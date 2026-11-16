@@ -110,6 +110,7 @@ export async function POST(_request: Request, ctx: Ctx) {
           orderIndex: block.orderIndex,
           title: block.title,
           notes: block.notes,
+          rotates: block.rotates,
         })
         .returning({ id: classBlocks.id });
 

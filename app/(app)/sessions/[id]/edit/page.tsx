@@ -34,6 +34,7 @@ interface PageProps {
     obj?: string;
     lugar?: string;
     pistas?: string;
+    rota?: string;
     step?: string;
   }>;
 }
@@ -57,6 +58,7 @@ export default async function EditSessionPage({
       obj: objParam,
       lugar: lugarParam,
       pistas: pistasParam,
+      rota: rotaParam,
       step: stepParam,
     },
   ] = await Promise.all([params, searchParams]);
@@ -233,6 +235,12 @@ export default async function EditSessionPage({
                     orderIndex: block.orderIndex,
                     title: block.title,
                     notes: block.notes ?? "",
+                    rotates:
+                      block.rotates === true ||
+                      (disenar &&
+                        pistasParam === "2" &&
+                        rotaParam === "1" &&
+                        block.orderIndex === 2),
                     items: [],
                   })),
                 },

@@ -131,6 +131,7 @@ export function normalizeBlocks(
       orderIndex: fallback.orderIndex,
       title: block?.title || fallback.title,
       notes: block?.notes ?? "",
+      rotates: block?.rotates === true,
       // Los items viven en la línea de tiempo (state.exercises).
       items: [],
     };
@@ -197,6 +198,8 @@ export type BlockPayload = {
   orderIndex: 1 | 2 | 3;
   title: string;
   notes: string | null;
+  /** Dos pistas con rotación (solo se envía con dos pistas). */
+  rotates?: boolean;
   items: BlockPayloadItem[];
 };
 
@@ -212,6 +215,7 @@ export function buildBlocksPayload(
         orderIndex: block.orderIndex,
         title: block.title,
         notes: block.notes.trim() || null,
+        ...(state.courts === 2 && block.rotates ? { rotates: true } : {}),
         items: [],
       },
     ])
@@ -288,7 +292,9 @@ export function buildExercisesPayload(state: Pick<WizardState, "exercises">) {
  * cuanto hay contenido, para que nunca se quede desactualizado.
  */
 export function computeTimelineDuration(
-  state: Pick<WizardState, "exercises" | "courts">
+  state: Pick<WizardState, "exercises" | "courts"> & {
+    blocks?: WizardState["blocks"];
+  }
 ): number {
   if (state.courts !== 2) {
     return state.exercises.reduce(
@@ -308,10 +314,16 @@ export function computeTimelineDuration(
   }
   let total = 0;
   for (const block of [1, 2, 3]) {
-    total += Math.max(
+    const longest = Math.max(
       perBlockCourt.get(`${block}-1`) ?? 0,
       perBlockCourt.get(`${block}-2`) ?? 0
     );
+    // Con rotación los minutos son por grupo y cada grupo hace las dos
+    // pistas: el bloque dura el doble de la pista más larga.
+    const rotates = state.blocks?.some(
+      (b) => b.orderIndex === block && b.rotates
+    );
+    total += longest * (rotates ? 2 : 1);
   }
   return total;
 }

@@ -87,6 +87,8 @@ type SessionBlockInput = {
   orderIndex: number;
   title?: string | null;
   notes?: string | null;
+  /** Dos pistas con rotación (solo con courts = 2). */
+  rotates?: boolean;
   items: SessionBlockInputItem[];
 };
 
@@ -178,6 +180,7 @@ function normalizeBlocks(
     existing.title =
       block.title ?? existing.title ?? BLOCK_TITLE_BY_PHASE[orderIndex];
     existing.notes = block.notes ?? existing.notes ?? null;
+    existing.rotates = block.rotates ?? existing.rotates;
     existing.items.push(...block.items);
     byOrder.set(orderIndex, existing);
   }
@@ -600,6 +603,8 @@ export async function POST(request: Request) {
     // Sin dos pistas todo va en la pista 1 (aunque el cliente mande otra cosa).
     const courts = requestedCourts === 2 ? 2 : 1;
     for (const block of normalizedBlocks) {
+      // La rotación solo existe con dos pistas.
+      block.rotates = courts === 2 && block.rotates === true;
       for (const item of block.items) {
         item.court = courts === 2 && item.court === 2 ? 2 : 1;
       }
@@ -718,6 +723,7 @@ export async function POST(request: Request) {
             orderIndex: block.orderIndex,
             title: block.title ?? BLOCK_TITLE_BY_PHASE[block.orderIndex],
             notes: block.notes ?? null,
+            rotates: block.rotates === true,
           })
           .returning({ id: sessionBlocks.id });
 

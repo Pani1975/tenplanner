@@ -218,8 +218,9 @@ export function generateSession(
   // una pareja en la pista 2 (autónoma) del mismo tiempo, tomada entre los
   // ejercicios competitivos (juego/puntos), que no necesitan al monitor, y
   // pensada para la mitad del grupo. La duración total es la de la pista 1.
-  const totalMinutes = items.reduce((n, it) => n + it.minutes, 0);
+  let totalMinutes = items.reduce((n, it) => n + it.minutes, 0);
   const secondLane: PlanItem[] = [];
+  const partnerOf = new Map<PlanItem, PlanItem>();
   if (input.courts === 2) {
     const half = Math.max(1, Math.ceil(input.attendeeIds.length / 2));
     let nextSlot = slots.length;
@@ -253,7 +254,7 @@ export function generateSession(
       const pick = pickWithSeed(scored, rand);
       if (!pick) continue;
       usedIds.add(pick.ex.id);
-      secondLane.push({
+      const partner: PlanItem = {
         slotIndex: nextSlot++,
         kind: "puntos",
         phase: "main",
@@ -264,8 +265,43 @@ export function generateSession(
         relaxStep: step,
         court: 2,
         ledBy: "auto",
-      });
+      };
+      secondLane.push(partner);
+      partnerOf.set(it, partner);
     }
+  }
+
+  // Con rotación, los dos grupos hacen las dos pistas: los minutos del bloque
+  // principal pasan a ser por grupo (la mitad) y el bloque dura el doble.
+  const rotatesMain =
+    input.courts === 2 && input.rotate === true && secondLane.length > 0;
+  if (rotatesMain) {
+    const mains = items.filter((x) => x.phase === "main");
+    // Mitad de cada hueco, repartiendo el redondeo (primero a los impares)
+    // para que el bloque dure lo que durarían los huecos sin rotar.
+    const halves = mains.map((it) => Math.max(2, Math.floor(it.minutes / 2)));
+    let spare =
+      Math.round(mains.reduce((n, it) => n + it.minutes, 0) / 2) -
+      halves.reduce((n, h) => n + h, 0);
+    const order = mains
+      .map((it, i) => i)
+      .sort((x, y) => (mains[y].minutes % 2) - (mains[x].minutes % 2));
+    for (let k = 0; spare > 0 && k < order.length * 2; k++, spare--) {
+      halves[order[k % order.length]] += 1;
+    }
+    mains.forEach((it, i) => {
+      it.minutes = halves[i];
+      const partner = partnerOf.get(it);
+      if (partner) partner.minutes = halves[i];
+    });
+    const mainLane1 = items
+      .filter((x) => x.phase === "main")
+      .reduce((n, it) => n + it.minutes, 0);
+    totalMinutes =
+      items
+        .filter((x) => x.phase !== "main")
+        .reduce((n, it) => n + it.minutes, 0) +
+      mainLane1 * 2;
   }
 
   const repeatedRecent = items.some(
@@ -294,7 +330,9 @@ export function generateSession(
   if (repeatedRecent) explanations.push(REPEATED_WARNING);
   if (secondLane.length > 0) {
     explanations.push(
-      "Dos pistas: en la pista 1 trabajas con el monitor y en la pista 2 el grupo juega por su cuenta, con el mismo tiempo."
+      rotatesMain
+        ? "Dos pistas con rotación: el grupo se parte en dos y cada mitad hace las dos pistas (con el monitor y por su cuenta); los minutos del bloque principal son por grupo y rotan a mitad."
+        : "Dos pistas: en la pista 1 trabajas con el monitor y en la pista 2 el grupo juega por su cuenta, con el mismo tiempo."
     );
   }
 
@@ -305,6 +343,7 @@ export function generateSession(
     focus,
     focusWasAuto: focusInfo.wasAuto,
     items: [...items, ...secondLane],
+    rotatesMain,
     explanations,
     repeatedRecent,
     trace,

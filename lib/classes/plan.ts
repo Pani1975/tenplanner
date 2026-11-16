@@ -45,6 +45,7 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
       blockOrder: classBlocks.orderIndex,
       blockTitle: classBlocks.title,
       blockNotes: classBlocks.notes,
+      blockRotates: classBlocks.rotates,
       itemId: classBlockExercises.id,
       itemExerciseId: classBlockExercises.exerciseId,
       itemFreeText: classBlockExercises.freeText,
@@ -81,6 +82,7 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
         orderIndex: order,
         title: row.blockTitle || BLOCK_TITLES[order],
         notes: row.blockNotes ?? null,
+        rotates: row.blockRotates === true,
       });
     }
   }

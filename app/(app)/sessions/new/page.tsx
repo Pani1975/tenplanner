@@ -68,6 +68,8 @@ interface PageProps {
     lugar?: string;
     /** pistas=2: la sesión usa dos pistas. */
     pistas?: string;
+    /** rota=1: con dos pistas, los grupos rotan. */
+    rota?: string;
   }>;
 }
 
@@ -163,6 +165,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     obj: objParam,
     lugar: lugarParam,
     pistas: pistasParam,
+    rota: rotaParam,
     step: stepParam,
   } = await searchParams;
 
@@ -263,6 +266,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           blockOrder: classBlocks.orderIndex,
           blockTitle: classBlocks.title,
           blockNotes: classBlocks.notes,
+          blockRotates: classBlocks.rotates,
           itemExerciseId: classBlockExercises.exerciseId,
           freeText: classBlockExercises.freeText,
           itemTitle: classBlockExercises.title,
@@ -316,6 +320,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
                   ? "Bloque final"
                   : "Bloque principal"),
             notes: row.blockNotes ?? "",
+            rotates: cls.courts === 2 && row.blockRotates === true,
             items: [],
           } satisfies WizardSessionBlock);
 
@@ -639,6 +644,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialTags={fromSession?.tags ?? fromClass?.tags ?? undefined}
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
+              initialRotation={
+                disenar && pistasParam === "2" && rotaParam === "1"
+              }
               initialCourts={
                 fromSession?.courts === 2 ||
                 fromClass?.courts === 2 ||

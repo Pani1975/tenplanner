@@ -77,6 +77,11 @@ export type GenerateInput = {
   };
   /** Pistas que usa la sesión (1 o 2). Con 2 se añade una pista autónoma. */
   courts?: 1 | 2;
+  /**
+   * Con dos pistas: los dos grupos rotan (cada uno hace las dos pistas) en el
+   * bloque principal. Los minutos de ese bloque pasan a ser por grupo.
+   */
+  rotate?: boolean;
   seed: string;
 };
 
@@ -120,6 +125,8 @@ export type SessionPlan = {
   focus: Exclude<Focus, "auto">;
   focusWasAuto: boolean;
   items: PlanItem[];
+  /** El bloque principal rota entre dos grupos (minutos por grupo). */
+  rotatesMain?: boolean;
   /** Frases en castellano que explican las decisiones. */
   explanations: string[];
   /** true si algún hueco tuvo que repetir un ejercicio reciente. */

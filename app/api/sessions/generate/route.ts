@@ -40,6 +40,7 @@ const bodySchema = z.object({
     .optional(),
   variant: z.number().int().min(0).max(10_000).optional(),
   courts: z.union([z.literal(1), z.literal(2)]).optional(),
+  rotate: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {

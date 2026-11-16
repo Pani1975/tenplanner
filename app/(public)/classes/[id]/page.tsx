@@ -710,6 +710,15 @@ export default async function ClassDetailPage({
                       blockTitles[block.orderIndex - 1] ??
                       "Bloque"}
                   </p>
+                  {cls.courts === 2 && block.rotates && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">
+                        Los grupos rotan:
+                      </span>{" "}
+                      dos grupos, cada uno hace las dos pistas (los minutos son
+                      por grupo).
+                    </p>
+                  )}
                   <ul className="space-y-1.5">
                     {blockItems.length === 0 ? (
                       <li className="text-sm text-muted-foreground italic">

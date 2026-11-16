@@ -121,6 +121,8 @@ export function resolveBlockItemDuration(
  */
 export function sumBlocksDuration(
   blocks: Array<{
+    /** Dos pistas con rotación: los minutos son por grupo y rotan. */
+    rotates?: boolean;
     items: Array<{
       kind?: string | null;
       exerciseId?: string | null;
@@ -143,6 +145,10 @@ export function sumBlocksDuration(
           resolveBlockItemDuration(item, exerciseDurationById)
       );
     }
-    return sum + Math.max(0, ...byCourt.values());
+    // Con rotación cada grupo hace las dos pistas, una tras otra: el bloque
+    // dura el doble de la pista más larga.
+    return (
+      sum + Math.max(0, ...byCourt.values()) * (block.rotates ? 2 : 1)
+    );
   }, 0);
 }

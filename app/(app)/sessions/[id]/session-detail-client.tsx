@@ -197,6 +197,8 @@ export interface SessionBlockData {
   orderIndex: number;
   title: string | null;
   notes: string | null;
+  /** Dos pistas con rotación: los minutos son por grupo. */
+  rotates?: boolean;
   items: Array<{
     id: string;
     orderIndex: number;
@@ -720,6 +722,20 @@ export function SessionDetailClient({
     (item.kind === "exercise" || (!item.kind && item.exerciseId)
       ? ((item.exerciseId ? exerciseMinutes.get(item.exerciseId) : null) ?? 0)
       : 5);
+  // Minutos de la pista más larga del bloque (lo de cada pista pasa a la
+  // vez) y duración del bloque: con rotación, el doble (minutos por grupo).
+  const laneLongest = (block: SessionBlockData) => {
+    const byCourt = new Map<number, number>();
+    for (const item of block.items) {
+      const court = item.court === 2 ? 2 : 1;
+      byCourt.set(court, (byCourt.get(court) ?? 0) + itemMinutes(item));
+    }
+    return Math.max(0, ...byCourt.values());
+  };
+  const blockMinutes = (block: SessionBlockData) =>
+    session.courts === 2
+      ? laneLongest(block) * (block.rotates ? 2 : 1)
+      : block.items.reduce((sum, item) => sum + itemMinutes(item), 0);
 
   return (
     <div className="min-h-full w-full space-y-6 bg-[#F4F4F1] px-4 py-8 dark:bg-[#050505] sm:px-6 md:px-8">
@@ -1029,13 +1045,23 @@ export function SessionDetailClient({
                     {block.title ?? `Bloque ${block.orderIndex}`}
                   </p>
                   <span className="shrink-0 text-[11px] font-semibold tabular-nums text-foreground">
-                    {block.items.reduce(
-                      (sum, item) => sum + itemMinutes(item),
-                      0
-                    )}{" "}
+                    {blockMinutes(block)}{" "}
                     min
                   </span>
                 </div>
+                {session.courts === 2 && block.rotates && (
+                  <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-2.5 py-2 text-xs text-foreground">
+                    <p className="font-bold">Los grupos rotan</p>
+                    <p>
+                      Ronda 1 (0–{laneLongest(block)} min): grupo A en la pista 1
+                      · grupo B en la pista 2
+                    </p>
+                    <p>
+                      Ronda 2 ({laneLongest(block)}–{laneLongest(block) * 2}{" "}
+                      min): rotan, grupo A en la pista 2 · grupo B en la pista 1
+                    </p>
+                  </div>
+                )}
                 {block.notes && (
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     {block.notes}

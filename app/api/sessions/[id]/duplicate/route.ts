@@ -148,6 +148,7 @@ export async function POST(request: Request, ctx: Ctx) {
           orderIndex: block.orderIndex,
           title: block.title,
           notes: block.notes,
+          rotates: block.rotates,
         })
         .returning({ id: sessionBlocks.id });
       const blockItems = items.filter((item) => item.blockId === block.id);

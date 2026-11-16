@@ -183,6 +183,8 @@ export type ProposalRequest = {
   slotAdjust?: GenerateInput["slotAdjust"];
   /** Pistas que usa la sesión (1 o 2). */
   courts?: 1 | 2;
+  /** Con dos pistas, los grupos rotan en el bloque principal. */
+  rotate?: boolean;
   /** Variante de "Otra propuesta" (0 = la primera). */
   variant?: number;
 };
@@ -219,6 +221,7 @@ export async function buildProposal(
     previousIds: req.previousIds,
     slotAdjust: req.slotAdjust,
     courts: req.courts === 2 ? 2 : undefined,
+    rotate: req.courts === 2 && req.rotate === true ? true : undefined,
     seed: req.variant ? `${baseSeed}#${req.variant}` : baseSeed,
   };
   const data = await loadEngineData(userId, group, attendeeIds);
