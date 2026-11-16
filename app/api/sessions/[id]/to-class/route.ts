@@ -97,6 +97,7 @@ export async function POST(_request: Request, ctx: Ctx) {
         autoria: "libre",
         clubId,
         sport: session.sport,
+        courts: session.courts === 2 ? 2 : 1,
         status: "published",
       })
       .returning({ id: classes.id });
@@ -139,6 +140,8 @@ export async function POST(_request: Request, ctx: Ctx) {
             kind: item.kind,
             stations: item.stations,
             aspectoJuego: item.aspectoJuego,
+            court: item.court,
+            ledBy: item.ledBy,
           };
         })
       );

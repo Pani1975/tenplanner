@@ -68,6 +68,8 @@ type LoadedBlockItem = {
   stations: StationItemJson[] | null;
   aspecto: string | null;
   notes: string | null;
+  court: number;
+  ledBy: string | null;
 };
 
 type LoadedBlock = {
@@ -183,6 +185,7 @@ export async function POST(request: Request) {
         observations: classes.aspectosImportantes,
         tags: classes.tags,
         sport: classes.sport,
+        courts: classes.courts,
       })
       .from(classes)
       .where(
@@ -221,6 +224,8 @@ export async function POST(request: Request) {
         itemStations: classBlockExercises.stations,
         itemAspecto: classBlockExercises.aspectoJuego,
         itemNotes: classBlockExercises.notes,
+        itemCourt: classBlockExercises.court,
+        itemLedBy: classBlockExercises.ledBy,
       })
       .from(classBlocks)
       .leftJoin(
@@ -262,6 +267,8 @@ export async function POST(request: Request) {
           stations: (row.itemStations as StationItemJson[] | null) ?? null,
           aspecto: row.itemAspecto ?? null,
           notes: row.itemNotes ?? null,
+          court: row.itemCourt === 2 ? 2 : 1,
+          ledBy: row.itemLedBy ?? null,
         });
       }
       blockMap.set(orderIndex, block);
@@ -356,6 +363,7 @@ export async function POST(request: Request) {
             groupId: group.id,
             clubId: clubId ?? null,
             sport: cls.sport ?? activeSport,
+            courts: cls.courts === 2 ? 2 : 1,
           })
           .returning();
 
@@ -408,6 +416,8 @@ export async function POST(request: Request) {
                         }))
                       : null,
                   aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
+                  court: cls.courts === 2 && item.court === 2 ? 2 : 1,
+                  ledBy: cls.courts === 2 ? item.ledBy : null,
                 };
               })
             );

@@ -119,6 +119,8 @@ export interface WizardState {
   durationManual?: boolean;
   /** Pistas que usa la sesión (1 o 2). Con 2, cada item lleva su pista. */
   courts?: 1 | 2;
+  /** Lugar de la segunda pista (Mis lugares); solo con courts = 2. */
+  secondPlaceId?: string | null;
   /** Grupos marcados en el paso de alumnos (selección independiente). */
   selectedGroupIds?: string[];
   /** Si está activo, cada sesión se llama AAMMDD_Grupo según su fecha. */

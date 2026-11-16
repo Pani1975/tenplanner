@@ -43,6 +43,7 @@ export function BeforeProposalForm({
   const [custom, setCustom] = useState(!DURATIONS.includes(defaultDuration));
   const [objectives, setObjectives] = useState(defaultObjectives);
   const [placeId, setPlaceId] = useState(defaultPlaceId ?? "");
+  const [twoCourts, setTwoCourts] = useState(false);
   const [showError, setShowError] = useState(false);
   const [going, setGoing] = useState(false);
 
@@ -74,6 +75,7 @@ export function BeforeProposalForm({
       dur: String(duration),
       obj: lines.map((l) => l.text).join("\n"),
       ...(placeId ? { lugar: placeId } : {}),
+      ...(twoCourts ? { pistas: "2" } : {}),
     });
     router.push(`${baseHref}${sep}${qs.toString()}`);
   }
@@ -234,6 +236,21 @@ export function BeforeProposalForm({
             </option>
           ))}
         </select>
+        <label className="flex w-fit cursor-pointer items-start gap-2 pt-1 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={twoCourts}
+            onChange={(e) => setTwoCourts(e.target.checked)}
+            className="mt-0.5 size-4 accent-[#D6FF38]"
+          />
+          <span>
+            Uso dos pistas
+            <span className="block text-xs text-muted-foreground">
+              En una pista trabajas con el monitor y en la otra el grupo juega por
+              su cuenta.
+            </span>
+          </span>
+        </label>
       </section>
 
       <button

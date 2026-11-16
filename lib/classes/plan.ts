@@ -52,6 +52,8 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
       itemDuration: classBlockExercises.durationMinutes,
       itemKind: classBlockExercises.kind,
       itemStations: classBlockExercises.stations,
+      itemCourt: classBlockExercises.court,
+      itemLedBy: classBlockExercises.ledBy,
       exId: exercises.id,
       exName: exercises.name,
       exDescription: exercises.description,
@@ -162,6 +164,28 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
       // solo está implementada en el creador de sesiones por ahora.
       aspecto: null,
     });
+  }
+
+  // Pista y quién dirige (plantillas con dos pistas), igual que en sesiones.
+  const laneByKey = new Map(
+    rows
+      .filter((row) => row.itemId !== null)
+      .map((row) => [
+        row.itemId as string,
+        {
+          court: (row.itemCourt === 2 ? 2 : 1) as 1 | 2,
+          ledBy: (row.itemLedBy === "coach" || row.itemLedBy === "auto"
+            ? row.itemLedBy
+            : null) as "coach" | "auto" | null,
+        },
+      ])
+  );
+  for (const item of items) {
+    const lane = laneByKey.get(item.key);
+    if (lane) {
+      item.court = lane.court;
+      item.ledBy = lane.ledBy;
+    }
   }
 
   return { blocks, items };

@@ -66,6 +66,8 @@ export default async function EditClassPage({ params }: PageProps) {
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
           stations: classBlockExercises.stations,
+          court: classBlockExercises.court,
+          ledBy: classBlockExercises.ledBy,
           exerciseName: exercises.name,
         })
         .from(classBlockExercises)
@@ -103,6 +105,7 @@ export default async function EditClassPage({ params }: PageProps) {
 
   const initialData = {
     name: cls.name,
+    courts: (cls.courts === 2 ? 2 : 1) as 1 | 2,
     duracionMinutes: cls.duracionMinutes,
     alumnosTipo: cls.alumnosTipo as "individual" | "grupal" | null,
     numAlumnos: cls.numAlumnos,
@@ -138,9 +141,16 @@ export default async function EditClassPage({ params }: PageProps) {
       items: items
         .filter((it) => it.blockId === b.id)
         .map((it) => {
+          const lane = {
+            court: (it.court === 2 ? 2 : 1) as 1 | 2,
+            ledBy: (it.ledBy === "coach" || it.ledBy === "auto"
+              ? it.ledBy
+              : null) as "coach" | "auto" | null,
+          };
           const itemKind = resolveItemKind(it);
           if (itemKind === "warmup") {
             return {
+              ...lane,
               kind: "warmup" as const,
               durationMinutes:
                 it.durationMinutes ?? DEFAULT_BLOCK_ITEM_DURATION,
@@ -149,6 +159,7 @@ export default async function EditClassPage({ params }: PageProps) {
           if (itemKind === "stations") {
             const stations = (it.stations as StationItemJson[] | null) ?? [];
             return {
+              ...lane,
               kind: "stations" as const,
               introText: it.freeText ?? "",
               durationMinutes: it.durationMinutes,
@@ -163,6 +174,7 @@ export default async function EditClassPage({ params }: PageProps) {
           }
           return it.exerciseId && it.exerciseName
             ? {
+                ...lane,
                 kind: "exercise" as const,
                 exerciseId: it.exerciseId,
                 name: it.exerciseName,
@@ -172,6 +184,7 @@ export default async function EditClassPage({ params }: PageProps) {
                 notes: it.notes ?? "",
               }
             : {
+                ...lane,
                 kind: "text" as const,
                 freeText: it.freeText ?? "",
                 title: it.title ?? "",

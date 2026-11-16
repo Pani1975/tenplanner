@@ -214,6 +214,60 @@ export function generateSession(
     relaxStep: c.step,
   }));
 
+  // Dos pistas: cada hueco del bloque principal (pista 1, con monitor) recibe
+  // una pareja en la pista 2 (autónoma) del mismo tiempo, tomada entre los
+  // ejercicios competitivos (juego/puntos), que no necesitan al monitor, y
+  // pensada para la mitad del grupo. La duración total es la de la pista 1.
+  const totalMinutes = items.reduce((n, it) => n + it.minutes, 0);
+  const secondLane: PlanItem[] = [];
+  if (input.courts === 2) {
+    const half = Math.max(1, Math.ceil(input.attendeeIds.length / 2));
+    let nextSlot = slots.length;
+    for (const it of items.filter((x) => x.phase === "main")) {
+      it.court = 1;
+      it.ledBy = "coach";
+      const slot: Slot = { kind: "puntos", phase: "main", minutes: it.minutes };
+      const ctx: CandidateContext = {
+        levels: data.levels,
+        level: level.code,
+        focus,
+        attendees: half,
+        usedIds,
+        excludeIds: new Set(),
+        recent3,
+      };
+      const { step, list } = findCandidates(data.exercises, slot, ctx);
+      const scored = list.map((ex) => ({
+        ex,
+        score: scoreExercise(ex, slot, {
+          level: level.code,
+          focus,
+          intensity: input.intensity,
+          recent3,
+          recent8,
+          previousIds,
+          prev: null,
+          objectives,
+        }),
+      }));
+      const pick = pickWithSeed(scored, rand);
+      if (!pick) continue;
+      usedIds.add(pick.ex.id);
+      secondLane.push({
+        slotIndex: nextSlot++,
+        kind: "puntos",
+        phase: "main",
+        exerciseId: pick.ex.id,
+        name: pick.ex.name,
+        minutes: it.minutes,
+        pinned: false,
+        relaxStep: step,
+        court: 2,
+        ledBy: "auto",
+      });
+    }
+  }
+
   const repeatedRecent = items.some(
     (it) => !it.pinned && recent3.has(it.exerciseId)
   );
@@ -238,14 +292,19 @@ export function generateSession(
     }
   }
   if (repeatedRecent) explanations.push(REPEATED_WARNING);
+  if (secondLane.length > 0) {
+    explanations.push(
+      "Dos pistas: en la pista 1 trabajas con el monitor y en la pista 2 el grupo juega por su cuenta, con el mismo tiempo."
+    );
+  }
 
   return {
-    durationMinutes: items.reduce((n, it) => n + it.minutes, 0),
+    durationMinutes: totalMinutes,
     groupLevel: level.code,
     levelSource: level.source,
     focus,
     focusWasAuto: focusInfo.wasAuto,
-    items,
+    items: [...items, ...secondLane],
     explanations,
     repeatedRecent,
     trace,

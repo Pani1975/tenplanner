@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ArrowRightLeft, Clock, Columns2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -17,43 +18,42 @@ const LED_BY_OPTIONS: Array<{ value: LedBy; label: string }> = [
   { value: "auto", label: "Autónomo" },
 ];
 
-function minutesOf(ex: WizardExercise) {
-  return ex.overrideDuration ?? ex.durationMinutes;
+/** Un elemento del plan tal como lo pinta el tablero (sesión o clase). */
+export interface LaneItem {
+  id: string;
+  phase: TrainingPhase;
+  label: string;
+  /** Minutos del elemento; null = sin duración conocida (cuenta 0). */
+  minutes: number | null;
+  court: 1 | 2;
+  ledBy: LedBy | null;
 }
 
-function itemLabel(ex: WizardExercise) {
-  return (
-    ex.title?.trim() ||
-    ex.name?.trim() ||
-    ex.freeText?.trim().slice(0, 40) ||
-    "Actividad"
-  );
-}
-
-interface CourtsBoardProps {
-  state: WizardState;
-  update: (patch: Partial<WizardState>) => void;
+interface CourtsBoardViewProps {
+  twoCourts: boolean;
+  onSetTwoCourts: (value: boolean) => void;
+  items: LaneItem[];
+  onPatchItem: (id: string, patch: { court?: 1 | 2; ledBy?: LedBy | null }) => void;
+  /** Contenido extra bajo la cabecera (p. ej. los lugares de cada pista). */
+  extra?: ReactNode;
 }
 
 /**
- * Tablero de pistas del Paso 2. Con una sola pista es solo el interruptor
- * «Usar dos pistas». Con dos, cada bloque muestra dos carriles en paralelo:
- * en uno se hace un trabajo y en el otro otro (p. ej. cesta con el monitor y
- * peloteo autónomo). Cada ejercicio se pasa de una pista a otra y se marca
- * si lo dirige el monitor o es autónomo. Lo de cada pista ocurre a la vez,
- * así que un bloque dura lo que dure su pista más larga.
+ * Tablero de pistas. Con una sola pista es solo el interruptor «Usar dos
+ * pistas». Con dos, cada bloque muestra dos carriles en paralelo: en uno se
+ * hace un trabajo y en el otro otro (p. ej. cesta con el monitor y peloteo
+ * autónomo). Cada elemento se pasa de una pista a otra y se marca si lo
+ * dirige el monitor o es autónomo. Lo de cada pista ocurre a la vez, así que
+ * un bloque dura lo que dure su pista más larga. Lo usan las sesiones y las
+ * plantillas de clase.
  */
-export function CourtsBoard({ state, update }: CourtsBoardProps) {
-  const twoCourts = state.courts === 2;
-
-  function patchItem(flatIdx: number, patch: Partial<WizardExercise>) {
-    update({
-      exercises: state.exercises.map((ex, i) =>
-        i === flatIdx ? { ...ex, ...patch } : ex
-      ),
-    });
-  }
-
+export function CourtsBoardView({
+  twoCourts,
+  onSetTwoCourts,
+  items: allItems,
+  onPatchItem,
+  extra,
+}: CourtsBoardViewProps) {
   if (!twoCourts) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-foreground/15 bg-card px-4 py-3">
@@ -67,7 +67,7 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
         </div>
         <button
           type="button"
-          onClick={() => update({ courts: 2 })}
+          onClick={() => onSetTwoCourts(true)}
           className="inline-flex items-center gap-2 rounded-lg border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
         >
           <Columns2 className="size-4" />
@@ -76,8 +76,6 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
       </div>
     );
   }
-
-  const indexed = state.exercises.map((ex, flatIdx) => ({ ex, flatIdx }));
 
   return (
     <div className="space-y-3 rounded-lg border border-brand/30 bg-brand/5 p-3 sm:p-4">
@@ -94,21 +92,20 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
         </div>
         <button
           type="button"
-          onClick={() => update({ courts: 1 })}
+          onClick={() => onSetTwoCourts(false)}
           className="rounded-lg border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
           Volver a una pista
         </button>
       </div>
 
+      {extra}
+
       {PHASES.map((phase) => {
-        const items = indexed.filter(
-          ({ ex }) => (ex.phase ?? "main") === phase
-        );
-        const lane = (court: 1 | 2) =>
-          items.filter(({ ex }) => (ex.court === 2 ? 2 : 1) === court);
+        const items = allItems.filter((it) => it.phase === phase);
+        const lane = (court: 1 | 2) => items.filter((it) => it.court === court);
         const total = (court: 1 | 2) =>
-          lane(court).reduce((sum, { ex }) => sum + minutesOf(ex), 0);
+          lane(court).reduce((sum, it) => sum + (it.minutes ?? 0), 0);
         const blockMax = Math.max(total(1), total(2));
 
         return (
@@ -163,18 +160,20 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
                       </p>
                     ) : (
                       <ul className="space-y-1.5">
-                        {entries.map(({ ex, flatIdx }) => (
+                        {entries.map((it) => (
                           <li
-                            key={`${ex.exerciseId}-${flatIdx}`}
+                            key={it.id}
                             className="rounded-md border border-foreground/10 bg-card p-2"
                           >
                             <div className="flex items-start gap-2">
                               <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">
-                                {itemLabel(ex)}
+                                {it.label}
                               </span>
-                              <span className="shrink-0 text-xs text-muted-foreground">
-                                {minutesOf(ex)} min
-                              </span>
+                              {it.minutes !== null && (
+                                <span className="shrink-0 text-xs text-muted-foreground">
+                                  {it.minutes} min
+                                </span>
+                              )}
                             </div>
                             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                               <div
@@ -183,14 +182,14 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
                                 className="inline-flex overflow-hidden rounded-md border border-foreground/15 text-[11px] font-semibold"
                               >
                                 {LED_BY_OPTIONS.map((opt) => {
-                                  const active = ex.ledBy === opt.value;
+                                  const active = it.ledBy === opt.value;
                                   return (
                                     <button
                                       key={opt.value}
                                       type="button"
                                       aria-pressed={active}
                                       onClick={() =>
-                                        patchItem(flatIdx, {
+                                        onPatchItem(it.id, {
                                           ledBy: active ? null : opt.value,
                                         })
                                       }
@@ -209,7 +208,7 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  patchItem(flatIdx, { court: other })
+                                  onPatchItem(it.id, { court: other })
                                 }
                                 className="ml-auto inline-flex items-center gap-1 rounded-md border border-foreground/15 px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-brand hover:text-brand"
                               >
@@ -229,5 +228,79 @@ export function CourtsBoard({ state, update }: CourtsBoardProps) {
         );
       })}
     </div>
+  );
+}
+
+function itemLabel(ex: WizardExercise) {
+  return (
+    ex.title?.trim() ||
+    ex.name?.trim() ||
+    ex.freeText?.trim().slice(0, 40) ||
+    "Actividad"
+  );
+}
+
+interface CourtsBoardProps {
+  state: WizardState;
+  update: (patch: Partial<WizardState>) => void;
+  /** Mis lugares: cada pista puede estar en un lugar distinto. */
+  places?: { id: string; name: string }[];
+}
+
+/** Tablero de pistas del Paso 2 del asistente de sesiones. */
+export function CourtsBoard({ state, update, places = [] }: CourtsBoardProps) {
+  const items: LaneItem[] = state.exercises.map((ex, i) => ({
+    id: String(i),
+    phase: ex.phase ?? "main",
+    label: itemLabel(ex),
+    minutes: ex.overrideDuration ?? ex.durationMinutes,
+    court: ex.court === 2 ? 2 : 1,
+    ledBy: ex.ledBy ?? null,
+  }));
+
+  return (
+    <CourtsBoardView
+      twoCourts={state.courts === 2}
+      onSetTwoCourts={(on) => update({ courts: on ? 2 : 1 })}
+      items={items}
+      onPatchItem={(id, patch) =>
+        update({
+          exercises: state.exercises.map((ex, i) =>
+            String(i) === id ? { ...ex, ...patch } : ex
+          ),
+        })
+      }
+      extra={
+        places.length > 0 ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(
+              [
+                { court: 1, key: "placeId", value: state.placeId },
+                { court: 2, key: "secondPlaceId", value: state.secondPlaceId },
+              ] as const
+            ).map(({ court, key, value }) => (
+              <label
+                key={court}
+                className="flex flex-col gap-1 text-xs font-semibold text-foreground/70"
+              >
+                Lugar de la pista {court}
+                <select
+                  value={value ?? ""}
+                  onChange={(e) => update({ [key]: e.target.value || null })}
+                  className="h-9 rounded-md border border-foreground/15 bg-background px-2 text-sm font-normal text-foreground"
+                >
+                  <option value="">Sin lugar asignado</option>
+                  {places.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        ) : null
+      }
+    />
   );
 }

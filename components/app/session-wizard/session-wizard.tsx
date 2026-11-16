@@ -55,6 +55,8 @@ interface SessionWizardProps {
   initialBlocks?: WizardSessionBlock[];
   initialLocation?: string;
   initialPlaceId?: string | null;
+  /** Sesión que parte de una plantilla/sesión de dos pistas. */
+  initialCourts?: 1 | 2;
   /** Grupo al que se preasigna la sesión (p. ej. desde "Asignar clase" en la ficha de grupo). */
   initialGroupId?: string | null;
   initialGroupName?: string;
@@ -173,6 +175,7 @@ function createInitialState({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialCourts,
   initialGroupId,
   initialGroupName,
   initialStudentIds,
@@ -190,6 +193,7 @@ function createInitialState({
   | "initialBlocks"
   | "initialLocation"
   | "initialPlaceId"
+  | "initialCourts"
   | "initialGroupId"
   | "initialGroupName"
   | "initialStudentIds"
@@ -209,6 +213,7 @@ function createInitialState({
     durationMinutes: initialDurationMinutes ?? 60,
     location: initialLocation ?? "",
     placeId: initialPlaceId ?? null,
+    courts: initialCourts === 2 ? 2 : 1,
     objective: initialObjective ?? "",
     material: initialMaterial ?? "",
     observations: initialObservations ?? "",
@@ -242,6 +247,8 @@ function toDraftPayload(state: WizardState): SessionDraftPayload {
     durationMinutes: state.durationMinutes,
     location: state.location,
     placeId: state.placeId,
+    courts: state.courts === 2 ? 2 : 1,
+    secondPlaceId: state.secondPlaceId ?? null,
     objective: state.objective,
     material: state.material,
     observations: state.observations,
@@ -280,6 +287,12 @@ function sanitizeDraftPayload(
       typeof payload.placeId === "string" || payload.placeId === null
         ? payload.placeId
         : fallback.placeId,
+    courts: payload.courts === 2 ? 2 : fallback.courts,
+    secondPlaceId:
+      typeof payload.secondPlaceId === "string" ||
+      payload.secondPlaceId === null
+        ? payload.secondPlaceId
+        : fallback.secondPlaceId,
     objective:
       typeof payload.objective === "string"
         ? payload.objective
@@ -343,6 +356,7 @@ export function SessionWizard({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialCourts,
   initialGroupId,
   initialGroupName,
   initialStudentIds,
@@ -381,6 +395,7 @@ export function SessionWizard({
       initialBlocks,
       initialLocation,
       initialPlaceId,
+      initialCourts,
       initialGroupId,
       initialGroupName,
       initialStudentIds,
@@ -696,21 +711,27 @@ export function SessionWizard({
 
       // ¿Coincide con otra sesión en la misma pista? Solo avisa: se puede
       // guardar igualmente. Si la comprobación falla, no bloquea.
-      if (!ignoreConflicts && state.placeId) {
+      // Con dos pistas se comprueban los dos lugares.
+      const placesToCheck = [
+        state.placeId,
+        state.courts === 2 ? (state.secondPlaceId ?? null) : null,
+      ].filter((id, i, all): id is string => !!id && all.indexOf(id) === i);
+      if (!ignoreConflicts && placesToCheck.length > 0) {
         try {
-          const check = await fetch("/api/sessions/conflicts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              placeId: state.placeId,
-              excludeSessionId: edit?.sessionId ?? null,
-              slots: sessionDates.slice(0, 60).map((date) => ({
-                start: date.toISOString(),
-                durationMinutes,
-              })),
-            }),
-          });
-          if (check.ok) {
+          for (const placeId of placesToCheck) {
+            const check = await fetch("/api/sessions/conflicts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                placeId,
+                excludeSessionId: edit?.sessionId ?? null,
+                slots: sessionDates.slice(0, 60).map((date) => ({
+                  start: date.toISOString(),
+                  durationMinutes,
+                })),
+              }),
+            });
+            if (!check.ok) continue;
             const json = (await check.json()) as {
               data: {
                 placeName?: string;
@@ -754,6 +775,8 @@ export function SessionWizard({
             tags: state.tags.length > 0 ? state.tags : null,
             location: state.location.trim() || null,
             placeId: state.placeId,
+            secondPlaceId:
+              state.courts === 2 ? (state.secondPlaceId ?? null) : null,
             groupId: state.groupId ?? null,
             ...(coaches.length > 0 ? { coachId: state.coachId ?? null } : {}),
             studentIds: state.studentIds,
@@ -810,6 +833,8 @@ export function SessionWizard({
             tags: state.tags.length > 0 ? state.tags : null,
             location: state.location.trim() || null,
             placeId: state.placeId,
+            secondPlaceId:
+              state.courts === 2 ? (state.secondPlaceId ?? null) : null,
             groupId: state.groupId ?? null,
             ...(coaches.length > 0 ? { coachId: state.coachId ?? null } : {}),
             studentIds: state.studentIds,
@@ -1045,6 +1070,7 @@ export function SessionWizard({
               state={state}
               update={update}
               availableExercises={availableExercises}
+              places={places}
               onBeforeLeave={() => void saveDraftRef.current()}
               onAutoChange={
                 engine ? (idx) => void proposal.changeItem(idx) : undefined

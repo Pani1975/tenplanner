@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, eq, gte, inArray, isNull, lt, ne, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { clubs, courtBookings, places, sessions, users } from "@/db/schema";
 import {
@@ -54,6 +54,32 @@ export async function ensureBookingToken(userId: string) {
 }
 
 /**
+ * Una sesión con dos pistas ocupa dos lugares: el principal (placeId) y el
+ * de la segunda pista (secondPlaceId). Estas condiciones las usan las
+ * reservas, el aviso de coincidencias y el calendario de pistas.
+ */
+export const sessionAtPlace = (placeId: string) =>
+  or(eq(sessions.placeId, placeId), eq(sessions.secondPlaceId, placeId));
+
+export const sessionAtPlaces = (placeIds: string[]) =>
+  or(
+    inArray(sessions.placeId, placeIds),
+    inArray(sessions.secondPlaceId, placeIds)
+  );
+
+/** Una fila por lugar ocupado: una sesión de dos pistas da dos filas. */
+export function expandSessionPlaces<
+  T extends { placeId: string | null; secondPlaceId: string | null },
+>(rows: T[]): Array<Omit<T, "secondPlaceId"> & { placeId: string }> {
+  return rows.flatMap((row) => {
+    const { secondPlaceId, ...rest } = row;
+    return [row.placeId, secondPlaceId]
+      .filter((id): id is string => !!id)
+      .map((placeId) => ({ ...rest, placeId }));
+  });
+}
+
+/**
  * Pistas reservables del dueño con lo que las ocupa entre `from` y `to`
  * (sesiones no canceladas y reservas no canceladas). Sin nombres.
  */
@@ -88,18 +114,20 @@ export async function loadBookablePlaces(
     db
       .select({
         placeId: sessions.placeId,
+        secondPlaceId: sessions.secondPlaceId,
         start: sessions.scheduledAt,
         minutes: sessions.durationMinutes,
       })
       .from(sessions)
       .where(
         and(
-          inArray(sessions.placeId, ids),
+          sessionAtPlaces(ids),
           ne(sessions.status, "cancelled"),
           gte(sessions.scheduledAt, windowStart),
           lt(sessions.scheduledAt, to)
         )
-      ),
+      )
+      .then(expandSessionPlaces),
     db
       .select({
         placeId: courtBookings.placeId,
@@ -229,7 +257,7 @@ async function loadBookablePlacesTx(
       .from(sessions)
       .where(
         and(
-          eq(sessions.placeId, placeId),
+          sessionAtPlace(placeId),
           ne(sessions.status, "cancelled"),
           gte(sessions.scheduledAt, windowStart),
           lt(sessions.scheduledAt, to)
@@ -314,7 +342,7 @@ export async function createClubBooking({
         .from(sessions)
         .where(
           and(
-            eq(sessions.placeId, placeId),
+            sessionAtPlace(placeId),
             ne(sessions.status, "cancelled"),
             gte(sessions.scheduledAt, windowStart),
             lt(sessions.scheduledAt, end)

@@ -33,6 +33,7 @@ interface PageProps {
     dur?: string;
     obj?: string;
     lugar?: string;
+    pistas?: string;
     step?: string;
   }>;
 }
@@ -55,6 +56,7 @@ export default async function EditSessionPage({
       dur: durParam,
       obj: objParam,
       lugar: lugarParam,
+      pistas: pistasParam,
       step: stepParam,
     },
   ] = await Promise.all([params, searchParams]);
@@ -221,7 +223,11 @@ export default async function EditSessionPage({
                   intensity: sessionRow.intensity ?? null,
                   tags: Array.isArray(sessionRow.tags) ? sessionRow.tags : [],
                   studentIds: studentRows.map((row) => row.studentId),
-                  courts: sessionRow.courts === 2 ? 2 : 1,
+                  courts:
+                    sessionRow.courts === 2 || (disenar && pistasParam === "2")
+                      ? 2
+                      : 1,
+                  secondPlaceId: sessionRow.secondPlaceId ?? null,
                   exercises: planItemsToWizard(plan.items),
                   blocks: plan.blocks.map((block) => ({
                     orderIndex: block.orderIndex,

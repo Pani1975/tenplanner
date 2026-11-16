@@ -75,6 +75,8 @@ export type GenerateInput = {
     levelShift?: -1 | 0 | 1;
     excludeIds?: string[];
   };
+  /** Pistas que usa la sesión (1 o 2). Con 2 se añade una pista autónoma. */
+  courts?: 1 | 2;
   seed: string;
 };
 
@@ -106,6 +108,9 @@ export type PlanItem = {
   pinned: boolean;
   /** Pasos de relajación que hicieron falta (0 = ninguno). */
   relaxStep: number;
+  /** Pista (solo con dos pistas): 1 = con monitor, 2 = autónoma. */
+  court?: 1 | 2;
+  ledBy?: "coach" | "auto";
 };
 
 export type SessionPlan = {

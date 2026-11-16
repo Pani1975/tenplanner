@@ -72,6 +72,8 @@ export function useEngineProposal({
       notes: "",
       phase: it.phase,
       intensity: null,
+      // Dos pistas: la pista 2 es autónoma (ver lib/session-engine/index.ts).
+      ...(it.court ? { court: it.court, ledBy: it.ledBy ?? null } : {}),
     };
   }
 
@@ -86,6 +88,7 @@ export function useEngineProposal({
         durationMinutes: state.durationMinutes,
         objectives: state.objective || null,
         attendeeIds: null,
+        ...(state.courts === 2 ? { courts: 2 } : {}),
         ...body,
       }),
     });
@@ -100,8 +103,9 @@ export function useEngineProposal({
       const p = await call({ variant, previousIds });
       if (!p) return false;
       const slotByExercise: Record<string, number> = {};
+      // Solo la pista 1 tiene huecos que "Cambiar" pueda ajustar.
       for (const it of p.plan.items)
-        slotByExercise[it.exerciseId] = it.slotIndex;
+        if (it.court !== 2) slotByExercise[it.exerciseId] = it.slotIndex;
       triedRef.current = {};
       setInfo({
         key: stepOneKey(state),

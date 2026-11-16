@@ -66,6 +66,8 @@ interface PageProps {
     dur?: string;
     obj?: string;
     lugar?: string;
+    /** pistas=2: la sesión usa dos pistas. */
+    pistas?: string;
   }>;
 }
 
@@ -160,6 +162,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     dur: durParam,
     obj: objParam,
     lugar: lugarParam,
+    pistas: pistasParam,
     step: stepParam,
   } = await searchParams;
 
@@ -211,6 +214,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     material: string | null;
     observations: string | null;
     tags: string[] | null;
+    courts: number;
   } | null = null;
   const fromClassExercises: WizardExercise[] = [];
   let fromClassBlocks: WizardSessionBlock[] = [];
@@ -224,6 +228,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         material: classes.material,
         observations: classes.aspectosImportantes,
         tags: classes.tags,
+        courts: classes.courts,
         isLibrary: classes.isLibrary,
         createdBy: classes.createdBy,
         clubId: classes.clubId,
@@ -251,6 +256,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         material: cls.material,
         observations: cls.observations,
         tags: Array.isArray(cls.tags) ? cls.tags : null,
+        courts: cls.courts,
       };
       const items = await db
         .select({
@@ -264,6 +270,8 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           itemOrderIndex: classBlockExercises.orderIndex,
           itemKind: classBlockExercises.kind,
           itemStations: classBlockExercises.stations,
+          itemCourt: classBlockExercises.court,
+          itemLedBy: classBlockExercises.ledBy,
           exerciseId: exercises.id,
           name: exercises.name,
           category: exercises.category,
@@ -288,6 +296,11 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         return "main";
       }
 
+      // Pista y quién dirige cada elemento (plantillas con dos pistas).
+      let lane: Pick<WizardExercise, "court" | "ledBy"> = {};
+      const pushItem = (item: WizardExercise) =>
+        fromClassExercises.push({ ...item, ...lane });
+
       for (const row of items) {
         const orderIndex =
           row.blockOrder === 1 || row.blockOrder === 3 ? row.blockOrder : 2;
@@ -307,6 +320,16 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           } satisfies WizardSessionBlock);
 
         blockMap.set(orderIndex, block);
+        lane =
+          cls.courts === 2
+            ? {
+                court: row.itemCourt === 2 ? 2 : 1,
+                ledBy:
+                  row.itemLedBy === "coach" || row.itemLedBy === "auto"
+                    ? row.itemLedBy
+                    : null,
+              }
+            : {};
 
         const itemKind = resolveItemKind({
           kind: row.itemKind,
@@ -315,7 +338,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         });
 
         if (itemKind === "warmup") {
-          fromClassExercises.push(
+          pushItem(
             createWarmupItem(
               phaseFromBlock(orderIndex),
               row.itemDuration ?? null
@@ -341,7 +364,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               durationMinutes: s.durationMinutes,
             }));
           }
-          fromClassExercises.push(stationsItem);
+          pushItem(stationsItem);
           continue;
         }
 
@@ -350,7 +373,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           !row.itemExerciseId &&
           (row.freeText?.trim() || row.itemTitle?.trim())
         ) {
-          fromClassExercises.push(
+          pushItem(
             createTextItem(
               row.freeText?.trim() ?? "",
               phaseFromBlock(orderIndex),
@@ -362,7 +385,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         }
 
         if (row.exerciseId && row.name && row.category) {
-          fromClassExercises.push({
+          pushItem({
             exerciseId: row.exerciseId,
             name: row.name,
             category: row.category,
@@ -401,6 +424,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     observations: string | null;
     tags: string[];
     location: string | null;
+    courts: number;
   } | null = null;
   let fromExercises: WizardExercise[] = [];
 
@@ -414,6 +438,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         observations: sessions.observations,
         tags: sessions.tags,
         location: sessions.location,
+        courts: sessions.courts,
         userId: sessions.userId,
       })
       .from(sessions)
@@ -428,6 +453,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
         observations: sourceSession.observations,
         tags: Array.isArray(sourceSession.tags) ? sourceSession.tags : [],
         location: sourceSession.location,
+        courts: sourceSession.courts,
       };
 
       const plan = await loadSessionPlan(fromSessionId, user.id);
@@ -613,6 +639,13 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialTags={fromSession?.tags ?? fromClass?.tags ?? undefined}
               initialSourceClassId={fromClass?.id ?? null}
               initialBlocks={fromClassBlocks}
+              initialCourts={
+                fromSession?.courts === 2 ||
+                fromClass?.courts === 2 ||
+                (disenar && pistasParam === "2")
+                  ? 2
+                  : 1
+              }
               initialLocation={fromSession?.location ?? undefined}
               initialGroupId={fromGroup?.id ?? null}
               initialGroupName={fromGroup?.name}

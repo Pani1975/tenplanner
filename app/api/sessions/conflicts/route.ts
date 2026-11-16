@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { courtBookings, places, sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { sessionAtPlace } from "@/lib/bookings/server";
 import { findOverlaps, slotEnd } from "@/lib/sessions/overlap";
 
 const schema = z.object({
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     .from(sessions)
     .where(
       and(
-        eq(sessions.placeId, place.id),
+        sessionAtPlace(place.id),
         ne(sessions.status, "cancelled"),
         gte(sessions.scheduledAt, from),
         lt(sessions.scheduledAt, to)

@@ -16,6 +16,7 @@ import {
   localToUtc,
   minutesLabel,
 } from "@/lib/bookings/availability";
+import { expandSessionPlaces, sessionAtPlaces } from "@/lib/bookings/server";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { ClubBookingButton } from "./club-booking-button";
@@ -96,6 +97,7 @@ export default async function CourtBookingsPage({
             .select({
               id: sessions.id,
               placeId: sessions.placeId,
+              secondPlaceId: sessions.secondPlaceId,
               title: sessions.title,
               start: sessions.scheduledAt,
               minutes: sessions.durationMinutes,
@@ -104,7 +106,7 @@ export default async function CourtBookingsPage({
             .from(sessions)
             .where(
               and(
-                inArray(sessions.placeId, placeIds),
+                sessionAtPlaces(placeIds),
                 ne(sessions.status, "cancelled"),
                 gte(
                   sessions.scheduledAt,
@@ -149,9 +151,10 @@ export default async function CourtBookingsPage({
   };
 
   const blocksByPlace = new Map<string, Block[]>();
-  for (const s of sessionRows) {
-    const b = s.placeId ? toBlock(s.start, s.minutes) : null;
-    if (!b || !s.placeId) continue;
+  // Una sesión de dos pistas pinta un bloque en cada lugar que ocupa.
+  for (const s of expandSessionPlaces(sessionRows)) {
+    const b = toBlock(s.start, s.minutes);
+    if (!b) continue;
     const list = blocksByPlace.get(s.placeId) ?? [];
     list.push({
       key: `s-${s.id}`,

@@ -56,6 +56,10 @@ export interface SessionDraftPayload {
   durationMinutes: number;
   location: string;
   placeId: string | null;
+  /** Sesión con dos pistas (1 o 2) y lugar de la segunda. Opcionales: los
+   * borradores antiguos no los traen. */
+  courts?: 1 | 2;
+  secondPlaceId?: string | null;
   objective: string;
   material: string;
   observations: string;

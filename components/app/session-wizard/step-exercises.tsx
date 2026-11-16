@@ -112,6 +112,8 @@ interface StepExercisesProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
   availableExercises: AvailableExercise[];
+  /** Mis lugares: para elegir en qué lugar está cada pista. */
+  places?: { id: string; name: string }[];
   /** Se llama justo antes de abrir la ficha de un ejercicio (guardar borrador). */
   onBeforeLeave?: () => void;
   /**
@@ -160,6 +162,7 @@ export function StepExercises({
   state,
   update,
   availableExercises,
+  places = [],
   onBeforeLeave,
   onAutoChange,
   canAutoChange,
@@ -1234,7 +1237,7 @@ export function StepExercises({
       </Dialog>
 
       <div className="space-y-4">
-        <CourtsBoard state={state} update={update} />
+        <CourtsBoard state={state} update={update} places={places} />
         {selected.length > 0 && (
           <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
             <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">

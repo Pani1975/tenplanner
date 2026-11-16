@@ -220,6 +220,8 @@ export default async function ClassDetailPage({
           durationMinutes: classBlockExercises.durationMinutes,
           kind: classBlockExercises.kind,
           stations: classBlockExercises.stations,
+          court: classBlockExercises.court,
+          ledBy: classBlockExercises.ledBy,
           exerciseName: exercises.name,
           exerciseDescription: exercises.description,
         })
@@ -784,6 +786,21 @@ export default async function ClassDetailPage({
                                 </span>
                               ) : (
                                 (item.freeText ?? "-")
+                              )}
+                              {cls.courts === 2 && (
+                                <span className="ml-2 inline-flex items-center gap-1 align-middle">
+                                  <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
+                                    Pista {item.court === 2 ? 2 : 1}
+                                  </span>
+                                  {(item.ledBy === "coach" ||
+                                    item.ledBy === "auto") && (
+                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                      {item.ledBy === "coach"
+                                        ? "Con monitor"
+                                        : "Autónomo"}
+                                    </span>
+                                  )}
+                                </span>
                               )}
                               {item.durationMinutes && (
                                 <span className="text-muted-foreground ml-2 text-xs">

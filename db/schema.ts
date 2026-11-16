@@ -423,6 +423,11 @@ export const sessions = pgTable(
     // Pistas que usa la sesión (1 o 2). Con 2, cada item del plan indica su
     // pista (session_block_items.court). Default 1 = como siempre.
     courts: smallint("courts").default(1).notNull(),
+    // Lugar de la segunda pista (Mis lugares). Con courts = 2 la sesión
+    // ocupa placeId y secondPlaceId (reservas y coincidencias).
+    secondPlaceId: uuid("second_place_id").references(() => places.id, {
+      onDelete: "set null",
+    }),
     status: sessionStatusEnum("status").notNull().default("scheduled"),
     statusNote: text("status_note"), // notas de completada / motivo de cancelada
     // Comentario libre del monitor sobre la sesión en general; se puede
@@ -463,6 +468,7 @@ export const sessions = pgTable(
     index("sessions_scheduled_at_idx").on(t.scheduledAt),
     index("sessions_user_scheduled_at_idx").on(t.userId, t.scheduledAt),
     index("sessions_place_id_idx").on(t.placeId),
+    index("sessions_second_place_id_idx").on(t.secondPlaceId),
     index("sessions_club_id_idx").on(t.clubId),
     index("sessions_sport_idx").on(t.sport),
     index("sessions_group_id_idx").on(t.groupId),
@@ -1221,6 +1227,9 @@ export const classes = pgTable(
     }),
     // Deporte de la clase (biblioteca de plantillas por deporte).
     sport: sportEnum("sport").default("tenis").notNull(),
+    // Pistas que usa la plantilla (1 o 2). Con 2, cada elemento del plan
+    // indica su pista (class_block_exercises.court). Default 1 = como siempre.
+    courts: smallint("courts").default(1).notNull(),
     // "published" | "draft". Un borrador solo lo ve quien lo creó (aún se
     // está configurando); ver lib/classes/visibility.ts.
     status: varchar("status", { length: 16 }).default("published").notNull(),
@@ -1293,6 +1302,10 @@ export const classBlockExercises = pgTable(
     // una ficha completa. Null para ejercicios de biblioteca (su aspecto
     // sale de exercises.aspecto_juego) y para items sin clasificar.
     aspectoJuego: varchar("aspecto_juego", { length: 16 }),
+    // Pista del elemento (1 o 2) y quién lo dirige ("coach" | "auto" | null);
+    // solo cuentan si classes.courts = 2. Igual que en session_block_items.
+    court: smallint("court").default(1).notNull(),
+    ledBy: varchar("led_by", { length: 8 }),
   },
   (t) => [
     index("class_block_exercises_block_id_idx").on(t.blockId),

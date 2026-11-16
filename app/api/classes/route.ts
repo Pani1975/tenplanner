@@ -50,6 +50,9 @@ const blockExerciseSchema = z
       .max(STATION_COUNT_MAX)
       .optional()
       .nullable(),
+    // Plantillas con dos pistas: pista del elemento y quién lo dirige.
+    court: z.union([z.literal(1), z.literal(2)]).optional(),
+    ledBy: z.enum(["coach", "auto"]).optional().nullable(),
   })
   .refine(
     (item) => {
@@ -94,6 +97,8 @@ const createSchema = z.object({
   isLibrary: z.boolean().optional().default(false),
   autoria: z.enum(AUTORIA_VALUES).optional().nullable(),
   blocks: z.array(blockSchema).max(3).default([]),
+  /** Pistas que usa la plantilla (1 o 2). */
+  courts: z.union([z.literal(1), z.literal(2)]).optional(),
   status: z.enum(CLASS_STATUSES).optional().default("published"),
 });
 
@@ -366,6 +371,7 @@ export async function POST(request: Request) {
           autoria: isAdmin ? (d.autoria ?? "ten_planner") : "libre",
           clubId,
           sport,
+          courts: d.courts === 2 ? 2 : 1,
           status: d.status,
         })
         .returning();
@@ -394,6 +400,9 @@ export async function POST(request: Request) {
               kind: item.kind ?? null,
               stations:
                 item.kind === "stations" ? buildStations(item.stations) : null,
+              // Sin dos pistas todo va en la pista 1, sin "quién dirige".
+              court: d.courts === 2 && item.court === 2 ? 2 : 1,
+              ledBy: d.courts === 2 ? (item.ledBy ?? null) : null,
             }))
           );
         }

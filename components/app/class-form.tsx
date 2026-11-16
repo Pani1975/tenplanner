@@ -21,6 +21,7 @@ import {
   Unlink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CourtsBoardView } from "@/components/app/session-wizard/courts-board";
 import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import {
   pickExerciseHref,
@@ -99,7 +100,12 @@ interface AvailableExercise extends PickerTaggedExercise {
   description?: string | null;
 }
 
-type BlockItem =
+/** Pista y quién dirige cada elemento (plantillas con dos pistas). */
+type BlockItemLane = { court?: 1 | 2; ledBy?: "coach" | "auto" | null };
+
+type BlockItem = BlockItemLane & BlockItemShape;
+
+type BlockItemShape =
   | {
       kind: "exercise";
       exerciseId: string;
@@ -152,11 +158,14 @@ interface ClassAutosave {
   aspectosImportantes: string;
   isLibrary: boolean;
   autoria: string;
+  courts?: 1 | 2;
   blocks: BlockState[];
 }
 
 export interface ClassInitialData {
   name: string;
+  /** Pistas que usa la plantilla (1 o 2). */
+  courts?: 1 | 2;
   duracionMinutes: number;
   alumnosTipo: "individual" | "grupal" | null;
   numAlumnos: number | null;
@@ -244,6 +253,9 @@ export function ClassForm({
   );
   const isDraft = initialData?.status === "draft";
 
+  const [courts, setCourts] = useState<1 | 2>(
+    initialData?.courts === 2 ? 2 : 1
+  );
   const [blocks, setBlocks] = useState<BlockState[]>(() => {
     const base = BLOCK_TITLES.map((b) => ({
       orderIndex: b.idx,
@@ -315,6 +327,7 @@ export function ClassForm({
           if (typeof saved.isLibrary === "boolean")
             setIsLibrary(saved.isLibrary);
           if (typeof saved.autoria === "string") setAutoria(saved.autoria);
+          if (saved.courts === 2) setCourts(2);
           if (Array.isArray(saved.blocks) && saved.blocks.length > 0)
             setBlocks(saved.blocks);
           setRecoveredDraft(true);
@@ -366,6 +379,7 @@ export function ClassForm({
         aspectosImportantes,
         isLibrary,
         autoria,
+        courts,
         blocks,
       };
       window.sessionStorage.setItem(
@@ -855,6 +869,7 @@ export function ClassForm({
       isLibrary: isAdmin ? isLibrary : false,
       autoria: isAdmin ? autoria : undefined,
       status,
+      courts,
       blocks: blocks
         .filter((b) => b.items.length > 0 || b.notes.trim())
         .map((b) => ({
@@ -910,7 +925,17 @@ export function ClassForm({
               notes: item.notes?.trim() || null,
               durationMinutes: item.durationMinutes,
             };
-          }),
+          })
+            // Pista y quién dirige: solo con dos pistas.
+            .map((out, i) => ({
+              ...out,
+              ...(courts === 2
+                ? {
+                    court: b.items[i].court === 2 ? (2 as const) : (1 as const),
+                    ledBy: b.items[i].ledBy ?? null,
+                  }
+                : {}),
+            })),
         })),
     };
 
@@ -1365,6 +1390,50 @@ export function ClassForm({
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
             Estructura por bloques
           </p>
+
+          <CourtsBoardView
+            twoCourts={courts === 2}
+            onSetTwoCourts={(on) => setCourts(on ? 2 : 1)}
+            items={blocks.flatMap((block, bi) =>
+              block.items.map((item, ii) => ({
+                id: `${bi}:${ii}`,
+                phase:
+                  block.orderIndex === 1
+                    ? ("activation" as const)
+                    : block.orderIndex === 3
+                      ? ("cooldown" as const)
+                      : ("main" as const),
+                label:
+                  item.kind === "exercise"
+                    ? item.name
+                    : item.kind === "text"
+                      ? item.title.trim() ||
+                        item.freeText.trim().slice(0, 40) ||
+                        "Actividad"
+                      : item.kind === "warmup"
+                        ? "Descanso"
+                        : "Estaciones",
+                minutes: item.durationMinutes,
+                court: item.court === 2 ? (2 as const) : (1 as const),
+                ledBy: item.ledBy ?? null,
+              }))
+            )}
+            onPatchItem={(id, patch) => {
+              const [bi, ii] = id.split(":").map(Number);
+              setBlocks((prev) =>
+                prev.map((b, i) =>
+                  i !== bi
+                    ? b
+                    : {
+                        ...b,
+                        items: b.items.map((it, j) =>
+                          j === ii ? { ...it, ...patch } : it
+                        ),
+                      }
+                )
+              );
+            }}
+          />
 
           {blocks.map((block, blockIdx) => (
             <div

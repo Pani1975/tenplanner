@@ -126,6 +126,7 @@ export async function POST(request: Request, ctx: Ctx) {
         tags: original.tags,
         location: original.location,
         placeId: original.placeId,
+        secondPlaceId: original.secondPlaceId,
         // Mismo espacio (club o particular), grupo y deporte que el original:
         // sin esto la copia caía en el modo particular y no se veía en el club.
         clubId: original.clubId,

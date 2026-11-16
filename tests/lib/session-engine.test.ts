@@ -412,3 +412,48 @@ describe("objetivos escritos por el monitor", () => {
     expect(hits).toBeGreaterThanOrEqual(6);
   });
 });
+
+describe("generateSession con dos pistas", () => {
+  it("la pista 1 es la propuesta de siempre y la pista 2 es autónoma", () => {
+    const single = generateSession(input(), data());
+    const two = generateSession(input({ courts: 2 }), data());
+    const lane1 = two.items.filter((it) => it.court !== 2);
+    const lane2 = two.items.filter((it) => it.court === 2);
+    // La pista 1 no cambia respecto a la propuesta de una pista.
+    expect(lane1.map((i) => i.exerciseId)).toEqual(
+      single.items.map((i) => i.exerciseId)
+    );
+    expect(lane2.length).toBeGreaterThan(0);
+    expect(lane2.every((it) => it.ledBy === "auto" && it.phase === "main")).toBe(
+      true
+    );
+    expect(
+      lane1.filter((it) => it.phase === "main").every((it) => it.ledBy === "coach")
+    ).toBe(true);
+  });
+
+  it("la duración es la de la pista 1 y no se repiten ejercicios", () => {
+    const two = generateSession(input({ courts: 2 }), data());
+    const lane1Minutes = two.items
+      .filter((it) => it.court !== 2)
+      .reduce((n, it) => n + it.minutes, 0);
+    expect(two.durationMinutes).toBe(60);
+    expect(lane1Minutes).toBe(60);
+    const ids = two.items.map((i) => i.exerciseId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("cada ejercicio de la pista 2 dura lo mismo que su pareja de la pista 1", () => {
+    const two = generateSession(input({ courts: 2 }), data());
+    const mainLane1 = two.items.filter(
+      (it) => it.court === 1 && it.phase === "main"
+    );
+    const lane2 = two.items.filter((it) => it.court === 2);
+    lane2.forEach((it, i) => expect(it.minutes).toBe(mainLane1[i].minutes));
+  });
+
+  it("sin courts la propuesta no lleva pistas", () => {
+    const plan = generateSession(input(), data());
+    expect(plan.items.every((it) => it.court === undefined)).toBe(true);
+  });
+});

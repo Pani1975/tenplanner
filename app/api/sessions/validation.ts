@@ -174,6 +174,11 @@ export const createSessionSchema = z.object({
   tags: tagsSchema,
   location: locationSchema,
   placeId: z.string().uuid("ID de lugar inválido").nullable().optional(),
+  secondPlaceId: z
+    .string()
+    .uuid("ID de lugar inválido")
+    .nullable()
+    .optional(),
   groupId: z.string().uuid("ID de grupo inválido").nullable().optional(),
   // Monitor que imparte la sesión (solo en modo club; null = quien la crea).
   coachId: z.string().uuid("ID de monitor inválido").nullable().optional(),
@@ -238,6 +243,11 @@ export const updateSessionSchema = z
     tags: tagsSchema,
     location: locationSchema,
     placeId: z.string().uuid("ID de lugar inválido").nullable().optional(),
+    secondPlaceId: z
+      .string()
+      .uuid("ID de lugar inválido")
+      .nullable()
+      .optional(),
     groupId: z.string().uuid("ID de grupo inválido").nullable().optional(),
     coachId: z.string().uuid("ID de monitor inválido").nullable().optional(),
     studentIds: z.array(z.string().uuid("ID de alumno inválido")).optional(),

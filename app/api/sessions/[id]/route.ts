@@ -506,6 +506,7 @@ export async function PUT(request: Request, context: RouteContext) {
         clubId: sessions.clubId,
         status: sessions.status,
         courts: sessions.courts,
+        secondPlaceId: sessions.secondPlaceId,
       })
       .from(sessions)
       .where(eq(sessions.id, id))
@@ -673,6 +674,13 @@ export async function PUT(request: Request, context: RouteContext) {
       updateValues.location = sessionFields.location;
     if (sessionFields.placeId !== undefined)
       updateValues.placeId = sessionFields.placeId;
+    // Segundo lugar: solo con dos pistas; con una se vacía.
+    if (replacesPlan || sessionFields.secondPlaceId !== undefined) {
+      updateValues.secondPlaceId =
+        courts === 2
+          ? (sessionFields.secondPlaceId ?? existing.secondPlaceId ?? null)
+          : null;
+    }
     if (sessionFields.groupId !== undefined)
       updateValues.groupId = sessionFields.groupId;
     if (

@@ -175,6 +175,19 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         .where(eq(places.id, session.placeId))
         .limit(1)
     : [];
+  // Sesión de dos pistas: se muestran los dos lugares ("A · B").
+  const [secondPlaceRow] =
+    session.courts === 2 && session.secondPlaceId
+      ? await db
+          .select({ name: places.name })
+          .from(places)
+          .where(eq(places.id, session.secondPlaceId))
+          .limit(1)
+      : [];
+  const placeLabel =
+    placeRow && secondPlaceRow
+      ? `${placeRow.name} · ${secondPlaceRow.name}`
+      : (placeRow?.name ?? secondPlaceRow?.name ?? null);
   if (!isOwner) {
     const activeClubId = session.clubId
       ? await getActiveWorkClubId(user.id)
@@ -460,7 +473,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         intensity: session.intensity,
         tags,
         location: session.location,
-        placeName: placeRow?.name ?? null,
+        placeName: placeLabel,
         courts: session.courts === 2 ? 2 : 1,
         status: session.status,
       }}

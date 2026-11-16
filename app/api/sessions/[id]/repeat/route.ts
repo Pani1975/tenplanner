@@ -72,6 +72,8 @@ export async function POST(request: Request, ctx: Ctx) {
           tags: original.tags,
           location: original.location,
           placeId: original.placeId,
+          courts: original.courts,
+          secondPlaceId: original.secondPlaceId,
           // Mismo espacio, grupo, deporte y monitor que la original.
           clubId: original.clubId,
           groupId: original.groupId,

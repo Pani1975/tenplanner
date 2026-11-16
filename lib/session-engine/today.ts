@@ -181,6 +181,8 @@ export type ProposalRequest = {
   pinned?: GenerateInput["pinned"];
   previousIds?: string[];
   slotAdjust?: GenerateInput["slotAdjust"];
+  /** Pistas que usa la sesión (1 o 2). */
+  courts?: 1 | 2;
   /** Variante de "Otra propuesta" (0 = la primera). */
   variant?: number;
 };
@@ -216,6 +218,7 @@ export async function buildProposal(
     pinned: req.pinned,
     previousIds: req.previousIds,
     slotAdjust: req.slotAdjust,
+    courts: req.courts === 2 ? 2 : undefined,
     seed: req.variant ? `${baseSeed}#${req.variant}` : baseSeed,
   };
   const data = await loadEngineData(userId, group, attendeeIds);
