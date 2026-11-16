@@ -20,11 +20,21 @@ export function defaultCourseEnd(from: Date) {
   return `${year}-06-30`;
 }
 
-/** Código de sesión: AAMMDD_Grupo (p. ej. 260930_Galácticas). */
-export function sessionCode(date: Date, groupName: string) {
-  const code = `${String(date.getFullYear()).slice(-2)}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+/** Parte de fecha del nombre automático: AAMMDD (p. ej. 260930). */
+export function dateCode(date: Date) {
+  return `${String(date.getFullYear()).slice(-2)}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+}
+
+/**
+ * Código de sesión: AAMMDD_Grupo (p. ej. 260930_Galácticas). Sin grupo
+ * (clase suelta a uno o dos jugadores) lleva SG: 260930_SG y, si ese día hay
+ * más sesiones sin grupo, 260930_SG2, 260930_SG3…
+ */
+export function sessionCode(date: Date, groupName: string, sgNumber = 1) {
+  const code = dateCode(date);
   const group = groupName.trim();
-  return group ? `${code}_${group}` : code;
+  if (group) return `${code}_${group}`;
+  return `${code}_SG${sgNumber > 1 ? sgNumber : ""}`;
 }
 
 /**

@@ -18,7 +18,7 @@ describe("recurrence", () => {
     expect(sessionCode(new Date(2026, 8, 30, 17, 0), "Galácticas")).toBe(
       "260930_Galácticas"
     );
-    expect(sessionCode(new Date(2027, 0, 4, 17, 0), "  ")).toBe("270104");
+    expect(sessionCode(new Date(2027, 0, 4, 17, 0), "  ")).toBe("270104_SG");
   });
 
   it("proposes 30 June of the right year as end of course", () => {
@@ -83,5 +83,24 @@ describe("recurrence", () => {
     });
     expect(dates).toHaveLength(MAX_RECURRING_SESSIONS);
     expect(truncated).toBe(true);
+  });
+});
+
+describe("sessionCode: nombre automático", () => {
+  const d = new Date(2026, 10, 17, 17, 0); // 17-nov-2026, hora local
+
+  it("con grupo: año, mes, día y grupo", () => {
+    expect(sessionCode(d, "Galácticas")).toBe("261117_Galácticas");
+  });
+
+  it("sin grupo (clase suelta): SG, y SG2, SG3… si hay más ese día", () => {
+    expect(sessionCode(d, "")).toBe("261117_SG");
+    expect(sessionCode(d, "  ", 1)).toBe("261117_SG");
+    expect(sessionCode(d, "", 2)).toBe("261117_SG2");
+    expect(sessionCode(d, "", 3)).toBe("261117_SG3");
+  });
+
+  it("el número solo cuenta sin grupo", () => {
+    expect(sessionCode(d, "Galácticas", 4)).toBe("261117_Galácticas");
   });
 });

@@ -25,6 +25,7 @@ import {
 } from "./engine-proposal";
 import { StepExercises } from "./step-exercises";
 import { computeSessionDates, sessionCode } from "./recurrence";
+import { fetchSgNumbers } from "./sg-number";
 import {
   buildBlocksPayload,
   buildExercisesPayload,
@@ -201,10 +202,10 @@ function createInitialState({
   | "initialDurationMinutes"
 >): WizardState {
   const scheduledAt = initialScheduledAt ?? defaultScheduledAt();
-  // Si la sesión viene preasignada a un grupo (p. ej. "Asignar clase" desde
-  // la ficha de grupo), se activa el mismo nombre automático AAMMDD_Grupo
-  // que usa el paso de alumnos al elegir un grupo manualmente.
-  const useCodeTitle = !!initialGroupId && !initialTitle;
+  // Toda sesión nueva sin nombre propio parte con el nombre automático:
+  // AAMMDD_Grupo, o AAMMDD_SG si es una clase suelta (sin grupo). Se
+  // recalcula solo al elegir grupo o fecha, y se puede escribir otro.
+  const useCodeTitle = !initialTitle;
   return {
     title: useCodeTitle
       ? sessionCode(new Date(scheduledAt), initialGroupName ?? "")
@@ -693,9 +694,14 @@ export function SessionWizard({
       const sessionDates = edit
         ? [scheduledDate]
         : computeSessionDates(scheduledDate, state.recurrence).dates;
-      const titleFor = (date: Date) =>
+      // Sin grupo, cada día lleva su número: SG, SG2, SG3…
+      const sgNumbers =
+        !edit && state.useCodeTitle && !(state.groupName ?? "").trim()
+          ? await fetchSgNumbers(sessionDates)
+          : null;
+      const titleFor = (date: Date, index: number) =>
         !edit && state.useCodeTitle
-          ? sessionCode(date, state.groupName ?? "")
+          ? sessionCode(date, state.groupName ?? "", sgNumbers?.[index] ?? 1)
           : state.title.trim();
 
       const exercisesPayload = buildExercisesPayload(state);
@@ -811,7 +817,7 @@ export function SessionWizard({
       // Submit all sessions sequentially. If any fails we stop and report.
       let res: Response | null = null;
       let createdCount = 0;
-      for (const date of sessionDates) {
+      for (const [dateIndex, date] of sessionDates.entries()) {
         if (sessionDates.length > 1) {
           setProgress({ done: createdCount, total: sessionDates.length });
         }
@@ -819,7 +825,7 @@ export function SessionWizard({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: titleFor(date),
+            title: titleFor(date, dateIndex),
             description: null,
             scheduledAt: date.toISOString(),
             durationMinutes,

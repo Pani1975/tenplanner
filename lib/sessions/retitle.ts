@@ -1,4 +1,4 @@
-import { sessionCode } from "@/components/app/session-wizard/recurrence";
+import { dateCode } from "@/components/app/session-wizard/recurrence";
 
 /**
  * Si el título es un código automático (AAMMDD_Grupo) cuya fecha coincide con
@@ -12,8 +12,8 @@ export function retitleForDate(
 ): string | null {
   const match = /^(\d{6})(_.*)?$/.exec(title.trim());
   if (!match) return null;
-  if (match[1] !== sessionCode(oldDate, "")) return null;
-  return `${sessionCode(newDate, "")}${match[2] ?? ""}`;
+  if (match[1] !== dateCode(oldDate)) return null;
+  return `${dateCode(newDate)}${match[2] ?? ""}`;
 }
 
 function sameDay(a: Date, b: Date) {

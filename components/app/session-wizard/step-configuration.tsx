@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import {
   Calendar,
-  ChevronDown,
-  ChevronRight,
   Clock,
   MapPin,
   Repeat,
@@ -173,11 +170,23 @@ export function StepConfiguration({
   coaches = [],
   hideRecurrence = false,
 }: StepConfigurationProps) {
-  const [studentsOpen, setStudentsOpen] = useState(false);
-
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_252px]">
       <div className="flex min-w-0 flex-col gap-6">
+        {/* Primero: para quién es (grupo o clase suelta); de ahí sale el nombre */}
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3">
+            <p className="text-sm font-semibold text-foreground">
+              ¿Para quién es la sesión?
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Elige un grupo o, si es una clase suelta, uno o dos alumnos. Con
+              eso y la fecha se pone el nombre.
+            </p>
+          </div>
+          <StepStudents state={state} update={update} />
+        </section>
+
         <StepBasics
           state={state}
           update={update}
@@ -261,44 +270,6 @@ export function StepConfiguration({
         <div className="border-t border-border/40" />
 
         <StepObjective state={state} update={update} errors={errors} />
-
-        <div className="rounded-2xl border border-border bg-card">
-          <button
-            type="button"
-            onClick={() => setStudentsOpen((v) => !v)}
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
-          >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <Users className="size-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">Alumnos</p>
-              <p className="text-xs text-muted-foreground">
-                {state.studentIds.length > 0
-                  ? `${state.studentIds.length} alumno${state.studentIds.length !== 1 ? "s" : ""} asignado${state.studentIds.length !== 1 ? "s" : ""}`
-                  : "Asigna alumnos a esta sesión (opcional)"}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors",
-                studentsOpen && "bg-muted text-foreground"
-              )}
-            >
-              {studentsOpen ? (
-                <ChevronDown className="size-4" />
-              ) : (
-                <ChevronRight className="size-4" />
-              )}
-            </div>
-          </button>
-
-          {studentsOpen && (
-            <div className="border-t border-border px-4 py-4">
-              <StepStudents state={state} update={update} />
-            </div>
-          )}
-        </div>
 
         {!hideRecurrence && <RecurrenceBlock state={state} update={update} />}
       </div>

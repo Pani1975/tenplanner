@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StudentOption, WizardState } from "./types";
-import { sessionCode } from "./recurrence";
 
 interface StepStudentsProps {
   state: WizardState;
@@ -35,7 +34,7 @@ export function StepStudents({ state, update }: StepStudentsProps) {
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"individual" | "groups">("individual");
+  const [tab, setTab] = useState<"individual" | "groups">("groups");
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +59,9 @@ export function StepStudents({ state, update }: StepStudentsProps) {
           Array.isArray(studentsPayload?.data) ? studentsPayload.data : []
         );
         setGroups(Array.isArray(groupsPayload?.data) ? groupsPayload.data : []);
+        // Sin grupos creados, se empieza por la clase suelta (alumnos sueltos).
+        if (!Array.isArray(groupsPayload?.data) || groupsPayload.data.length === 0)
+          setTab("individual");
         setStatus("ready");
       } catch {
         if (!cancelled) setStatus("unavailable");
@@ -88,6 +90,11 @@ export function StepStudents({ state, update }: StepStudentsProps) {
     const nextGroupIds = isSelected
       ? selectedGroupIds.filter((id) => id !== group.id)
       : [...selectedGroupIds, group.id];
+    const nextGroupId = isSelected
+      ? state.groupId === group.id
+        ? (nextGroupIds[nextGroupIds.length - 1] ?? null)
+        : (state.groupId ?? null)
+      : group.id;
 
     const set = new Set(state.studentIds);
     if (isSelected) {
@@ -109,21 +116,10 @@ export function StepStudents({ state, update }: StepStudentsProps) {
       selectedGroupIds: nextGroupIds,
       // La sesión queda vinculada al último grupo elegido; si se desmarca,
       // pasa al último que siga marcado.
-      groupId: isSelected
-        ? state.groupId === group.id
-          ? (nextGroupIds[nextGroupIds.length - 1] ?? null)
-          : (state.groupId ?? null)
-        : group.id,
-      // Propone el nombre del grupo para el código de la sesión.
-      ...(!isSelected && !state.groupName?.trim()
-        ? {
-            groupName: group.name,
-            ...(state.useCodeTitle &&
-            !isNaN(new Date(state.scheduledAt).getTime())
-              ? { title: sessionCode(new Date(state.scheduledAt), group.name) }
-              : {}),
-          }
-        : {}),
+      groupId: nextGroupId,
+      // El nombre del grupo para el nombre de la sesión (sin grupo: vacío,
+      // y el nombre lleva SG).
+      groupName: groups.find((g) => g.id === nextGroupId)?.name ?? "",
     });
   }
 
@@ -179,14 +175,14 @@ export function StepStudents({ state, update }: StepStudentsProps) {
           type="button"
           onClick={() => setTab("individual")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-xs font-medium transition-colors",
+            "order-last flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-xs font-medium transition-colors",
             tab === "individual"
               ? "bg-background text-foreground border border-border"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Users className="size-3.5" />
-          Individual
+          Clase suelta (alumnos)
         </button>
         <button
           type="button"

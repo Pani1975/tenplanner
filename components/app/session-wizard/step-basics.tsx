@@ -1,16 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
 import { Minus, Plus } from "lucide-react";
 import { DateTimePicker } from "@/components/app/date-time-picker";
 import { cn } from "@/lib/utils";
 import type { WizardState } from "./types";
 import { sessionCode } from "./recurrence";
+import { fetchSgNumbers } from "./sg-number";
 import { hasPlanContent } from "./timeline";
 
 interface StepBasicsProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
   errors: Partial<Record<keyof WizardState, string>>;
+  /** Id de la sesión que se edita (para no contarla al numerar SG). */
+  sessionId?: string | null;
 }
 
 export function StepBasics({
@@ -18,29 +22,37 @@ export function StepBasics({
   update,
   errors,
   allowCodeTitle = true,
+  sessionId = null,
 }: StepBasicsProps & { allowCodeTitle?: boolean }) {
-  const codeFor = (scheduledAt: string, groupName: string) => {
-    const d = new Date(scheduledAt);
-    return isNaN(d.getTime()) ? "" : sessionCode(d, groupName);
-  };
+  // El nombre automático se recalcula solo al cambiar el grupo o el día:
+  // AAMMDD_Grupo, o AAMMDD_SG (SG2, SG3… si ese día ya hay clases sueltas).
+  const day = state.scheduledAt.slice(0, 10);
+  const group = (state.groupName ?? "").trim();
+  useEffect(() => {
+    if (!allowCodeTitle || !state.useCodeTitle) return;
+    const date = new Date(state.scheduledAt);
+    if (isNaN(date.getTime())) return;
+    if (group) {
+      const next = sessionCode(date, group);
+      if (next !== state.title) update({ title: next });
+      return;
+    }
+    let cancelled = false;
+    void fetchSgNumbers([date], sessionId).then(([n]) => {
+      if (cancelled) return;
+      const next = sessionCode(date, "", n);
+      if (next !== state.title) update({ title: next });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Solo depende de lo que cambia el nombre; `title`/`update` no.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowCodeTitle, state.useCodeTitle, group, state.scheduledAt, day]);
 
   function setCodeMode(on: boolean) {
-    update(
-      on
-        ? {
-            useCodeTitle: true,
-            title: codeFor(state.scheduledAt, state.groupName ?? ""),
-          }
-        : { useCodeTitle: false }
-    );
-  }
-
-  function setGroupName(groupName: string) {
-    update(
-      state.useCodeTitle
-        ? { groupName, title: codeFor(state.scheduledAt, groupName) }
-        : { groupName }
-    );
+    // Al activarlo, el efecto de arriba calcula el nombre.
+    update({ useCodeTitle: on });
   }
 
   function bumpDuration(delta: number) {
@@ -50,14 +62,34 @@ export function StepBasics({
 
   return (
     <div className="space-y-6">
-      {/* Title */}
+      {/* Fecha y hora: va antes del nombre, que sale de ella y del grupo */}
+      <div className="space-y-2">
+        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Fecha y hora{" "}
+          <span className="text-[10px] text-destructive normal-case tracking-normal">
+            Oblig.
+          </span>
+        </label>
+        <DateTimePicker
+          value={state.scheduledAt}
+          onChange={(v) => update({ scheduledAt: v })}
+          error={!!errors.scheduledAt}
+        />
+        {errors.scheduledAt && (
+          <p className="text-xs text-destructive font-medium">
+            {errors.scheduledAt}
+          </p>
+        )}
+      </div>
+
+      {/* Nombre */}
       <div className="space-y-2">
         <div className="flex items-baseline gap-2">
           <label
             htmlFor="title"
             className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
           >
-            Título
+            Nombre de la sesión
           </label>
           <span className="text-[10px] text-destructive font-semibold">
             Obligatorio
@@ -70,7 +102,7 @@ export function StepBasics({
           autoComplete="off"
           value={state.title}
           onChange={(e) =>
-            // Si se escribe a mano, deja de usarse el código automático.
+            // Si se escribe a mano, deja de usarse el nombre automático.
             update({ title: e.target.value, useCodeTitle: false })
           }
           aria-invalid={!!errors.title}
@@ -96,11 +128,13 @@ export function StepBasics({
               />
               <span className="text-sm">
                 <span className="font-semibold text-foreground">
-                  Nombre automático: fecha + grupo
+                  Nombre automático: día + grupo
                 </span>
                 <span className="block text-xs text-muted-foreground">
-                  Ej.: 260930_Galácticas. Si repites la sesión, cada una lleva
-                  su fecha. Luego puedes cambiar el nombre de cualquiera.
+                  Año, mes y día, y el grupo: 260930_Galácticas. Sin grupo
+                  (clase suelta): 260930_SG, y SG2, SG3… si ese día hay más. Si
+                  repites la sesión, cada una lleva su fecha. Puedes cambiar el
+                  nombre cuando quieras.
                 </span>
               </span>
             </label>
@@ -108,8 +142,8 @@ export function StepBasics({
               <input
                 type="text"
                 value={state.groupName ?? ""}
-                onChange={(e) => setGroupName(e.target.value)}
-                placeholder="Nombre del grupo (ej.: Galácticas)"
+                onChange={(e) => update({ groupName: e.target.value })}
+                placeholder="Grupo (vacío = sin grupo, SG)"
                 maxLength={60}
                 className="mt-2.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
               />
@@ -118,84 +152,54 @@ export function StepBasics({
         )}
       </div>
 
-      {/* Date + Duration */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Fecha y hora{" "}
-            <span className="text-[10px] text-destructive normal-case tracking-normal">
-              Oblig.
-            </span>
-          </label>
-          <DateTimePicker
-            value={state.scheduledAt}
-            onChange={(v) =>
-              update(
-                state.useCodeTitle
-                  ? {
-                      scheduledAt: v,
-                      title: codeFor(v, state.groupName ?? ""),
-                    }
-                  : { scheduledAt: v }
-              )
-            }
-            error={!!errors.scheduledAt}
+      {/* Duración */}
+      <div className="space-y-2">
+        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Duración{" "}
+          <span className="text-[10px] normal-case tracking-normal text-muted-foreground font-normal">
+            min
+          </span>
+        </label>
+        <div className="flex max-w-sm items-center gap-2">
+          <button
+            type="button"
+            onClick={() => bumpDuration(-5)}
+            className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Disminuir duración"
+          >
+            <Minus className="size-4" />
+          </button>
+          <input
+            type="number"
+            min={5}
+            max={600}
+            value={state.durationMinutes}
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10);
+              if (!isNaN(v))
+                update({ durationMinutes: v, durationManual: true });
+            }}
+            className="w-full h-11 text-center text-base font-bold bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground"
           />
-          {errors.scheduledAt && (
-            <p className="text-xs text-destructive font-medium">
-              {errors.scheduledAt}
-            </p>
-          )}
+          <button
+            type="button"
+            onClick={() => bumpDuration(5)}
+            className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Aumentar duración"
+          >
+            <Plus className="size-4" />
+          </button>
         </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Duración{" "}
-            <span className="text-[10px] normal-case tracking-normal text-muted-foreground font-normal">
-              min
-            </span>
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => bumpDuration(-5)}
-              className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Disminuir duración"
-            >
-              <Minus className="size-4" />
-            </button>
-            <input
-              type="number"
-              min={5}
-              max={600}
-              value={state.durationMinutes}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (!isNaN(v))
-                  update({ durationMinutes: v, durationManual: true });
-              }}
-              className="w-full h-11 text-center text-base font-bold bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground"
-            />
-            <button
-              type="button"
-              onClick={() => bumpDuration(5)}
-              className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Aumentar duración"
-            >
-              <Plus className="size-4" />
-            </button>
-          </div>
-          {errors.durationMinutes && (
-            <p className="text-xs text-destructive font-medium">
-              {errors.durationMinutes}
-            </p>
-          )}
-          {hasPlanContent(state) && (
-            <p className="text-[11px] text-muted-foreground">
-              Se recalcula sola a partir de los ejercicios y textos del plan.
-            </p>
-          )}
-        </div>
+        {errors.durationMinutes && (
+          <p className="text-xs text-destructive font-medium">
+            {errors.durationMinutes}
+          </p>
+        )}
+        {hasPlanContent(state) && (
+          <p className="text-[11px] text-muted-foreground">
+            Se recalcula sola a partir de los ejercicios y textos del plan.
+          </p>
+        )}
       </div>
     </div>
   );
