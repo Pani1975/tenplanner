@@ -144,6 +144,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         itemKind: sessionBlockItems.kind,
         itemStations: sessionBlockItems.stations,
         itemAspectoJuego: sessionBlockItems.aspectoJuego,
+        itemCourt: sessionBlockItems.court,
+        itemLedBy: sessionBlockItems.ledBy,
         itemCoachComment: sessionBlockItems.coachComment,
         itemCoachAudioPath: sessionBlockItems.coachAudioPath,
         itemCoachAudioSeconds: sessionBlockItems.coachAudioSeconds,
@@ -262,6 +264,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         kind: "exercise" | "text" | "warmup" | "stations";
         stations: StationItemJson[];
         aspectoJuego: string | null;
+        court: number;
+        ledBy: string | null;
         coachComment: string | null;
         coachAudioPath: string | null;
         coachAudioSeconds: number | null;
@@ -297,6 +301,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         }),
         stations: (row.itemStations as StationItemJson[] | null) ?? [],
         aspectoJuego: row.itemAspectoJuego,
+        court: row.itemCourt ?? 1,
+        ledBy: row.itemLedBy,
         coachComment: row.itemCoachComment,
         coachAudioPath: row.itemCoachAudioPath,
         coachAudioSeconds: row.itemCoachAudioSeconds,
@@ -455,6 +461,7 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         tags,
         location: session.location,
         placeName: placeRow?.name ?? null,
+        courts: session.courts === 2 ? 2 : 1,
         status: session.status,
       }}
       sessionExercises={resolvedExercises}

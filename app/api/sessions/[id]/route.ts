@@ -52,6 +52,8 @@ type SessionBlockInputItem = {
     durationMinutes?: number | null;
   }> | null;
   aspecto?: string | null;
+  court?: number;
+  ledBy?: string | null;
 };
 
 type SessionBlockInput = {
@@ -503,6 +505,7 @@ export async function PUT(request: Request, context: RouteContext) {
         coachId: sessions.coachId,
         clubId: sessions.clubId,
         status: sessions.status,
+        courts: sessions.courts,
       })
       .from(sessions)
       .where(eq(sessions.id, id))
@@ -523,10 +526,12 @@ export async function PUT(request: Request, context: RouteContext) {
       studentIds,
       tags,
       durationManual,
+      courts: requestedCourts,
       generation,
       absentStudentIds,
       ...sessionFields
     } = parsedBody.data;
+    const courts = (requestedCourts ?? existing.courts) === 2 ? 2 : 1;
 
     if (studentIds !== undefined) {
       const unique = Array.from(new Set(studentIds));
@@ -605,6 +610,12 @@ export async function PUT(request: Request, context: RouteContext) {
     const normalizedBlocks = replacesPlan
       ? normalizeBlocks(blocks, exerciseItems ?? [])
       : [];
+    // Sin dos pistas todo va en la pista 1 (aunque el cliente mande otra cosa).
+    for (const block of normalizedBlocks) {
+      for (const item of block.items) {
+        item.court = courts === 2 && item.court === 2 ? 2 : 1;
+      }
+    }
     const compatibilityExercises = replacesPlan
       ? buildCompatibilityExercises(normalizedBlocks, exerciseItems ?? [])
       : [];
@@ -627,6 +638,8 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     const updateValues: Record<string, unknown> = {};
+    // Las pistas solo cambian junto con el plan (los items llevan su pista).
+    if (replacesPlan) updateValues.courts = courts;
     // Plan diseñado por Ten Planner (motor F1) sobre una sesión existente.
     if (generation) {
       updateValues.generatedBy = "auto_v1";
@@ -915,6 +928,8 @@ export async function PUT(request: Request, context: RouteContext) {
                       ? buildStations(item.stations)
                       : null,
                   aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
+                  court: item.court ?? 1,
+                  ledBy: courts === 2 ? (item.ledBy ?? null) : null,
                 };
               })
             );

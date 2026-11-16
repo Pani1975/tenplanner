@@ -420,6 +420,9 @@ export const sessions = pgTable(
     // Deporte de la sesión. Si viene de una clase/grupo, hereda el suyo al
     // crearse; default "tenis" para que lo existente migre sin tocar datos.
     sport: sportEnum("sport").default("tenis").notNull(),
+    // Pistas que usa la sesión (1 o 2). Con 2, cada item del plan indica su
+    // pista (session_block_items.court). Default 1 = como siempre.
+    courts: smallint("courts").default(1).notNull(),
     status: sessionStatusEnum("status").notNull().default("scheduled"),
     statusNote: text("status_note"), // notas de completada / motivo de cancelada
     // Comentario libre del monitor sobre la sesión en general; se puede
@@ -557,6 +560,12 @@ export const sessionBlockItems = pgTable(
     // Nota de voz sobre este ejercicio/actividad (bucket "session-audio").
     coachAudioPath: text("coach_audio_path"),
     coachAudioSeconds: integer("coach_audio_seconds"),
+    // Pista en la que se hace el item (1 o 2). Solo importa si la sesión
+    // tiene sessions.courts = 2; los items antiguos quedan en la pista 1.
+    court: smallint("court").default(1).notNull(),
+    // Quién dirige el item: "coach" (con monitor) | "auto" (autónomo).
+    // null = sin indicar.
+    ledBy: varchar("led_by", { length: 8 }),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),

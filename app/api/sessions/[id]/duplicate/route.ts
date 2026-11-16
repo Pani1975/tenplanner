@@ -131,6 +131,7 @@ export async function POST(request: Request, ctx: Ctx) {
         clubId: original.clubId,
         groupId: original.groupId,
         sport: original.sport,
+        courts: original.courts,
         // Si quien duplica puede editar la original, mantiene el monitor;
         // si es otro monitor del club, la copia la imparte él.
         coachId: editableOriginal ? original.coachId : null,
@@ -161,6 +162,8 @@ export async function POST(request: Request, ctx: Ctx) {
             kind: item.kind,
             stations: item.stations,
             aspectoJuego: item.aspectoJuego,
+            court: item.court,
+            ledBy: item.ledBy,
             orderIndex: item.orderIndex,
             durationMinutes: item.durationMinutes,
             notes: item.notes,

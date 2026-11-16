@@ -27,7 +27,14 @@ type ExerciseDetails = {
   materials: string[];
 };
 
-export type SessionPlanItem =
+/** Pista y quién dirige cada item (sesiones con dos pistas). */
+export type SessionPlanLane = {
+  court?: 1 | 2;
+  ledBy?: "coach" | "auto" | null;
+};
+
+export type SessionPlanItem = SessionPlanLane &
+  (
   | ({
       kind: "exercise";
       key: string;
@@ -67,7 +74,8 @@ export type SessionPlanItem =
       stations: StationItemJson[];
       durationMinutes: number | null;
       notes: string | null;
-    };
+    }
+  );
 
 export type SessionPlanBlock = {
   orderIndex: 1 | 2 | 3;
@@ -144,6 +152,8 @@ export async function loadSessionPlan(
       itemKind: sessionBlockItems.kind,
       itemStations: sessionBlockItems.stations,
       itemAspectoJuego: sessionBlockItems.aspectoJuego,
+      itemCourt: sessionBlockItems.court,
+      itemLedBy: sessionBlockItems.ledBy,
       exId: exercises.id,
       exName: exercises.name,
       exDescription: exercises.description,
@@ -264,6 +274,27 @@ export async function loadSessionPlan(
         notes: row.itemNotes ?? null,
         aspecto: (row.itemAspectoJuego as AspectoJuego | null) ?? null,
       });
+    }
+    // Pista y quién dirige: se añaden al final para no repetirlo en cada tipo.
+    const laneByKey = new Map(
+      rows
+        .filter((row) => row.itemId !== null)
+        .map((row) => [
+          row.itemId as string,
+          {
+            court: (row.itemCourt === 2 ? 2 : 1) as 1 | 2,
+            ledBy: (row.itemLedBy === "coach" || row.itemLedBy === "auto"
+              ? row.itemLedBy
+              : null) as "coach" | "auto" | null,
+          },
+        ])
+    );
+    for (const item of items) {
+      const lane = laneByKey.get(item.key);
+      if (lane) {
+        item.court = lane.court;
+        item.ledBy = lane.ledBy;
+      }
     }
     return { blocks, items };
   }

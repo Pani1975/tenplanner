@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { CourtsBoard } from "./courts-board";
 import {
   EMPTY_PICKER_FILTERS,
   ExercisePickerFilters,
@@ -64,6 +65,7 @@ import {
   type WizardState,
 } from "./types";
 import {
+  computeTimelineDuration,
   createStationsItem,
   createTextItem,
   createWarmupItem,
@@ -253,10 +255,11 @@ export function StepExercises({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const totalDuration = selected.reduce(
-    (sum, e) => sum + (e.overrideDuration ?? e.durationMinutes),
-    0
-  );
+  // Con dos pistas lo de cada pista ocurre a la vez (ver timeline.ts).
+  const totalDuration = computeTimelineDuration({
+    exercises: selected,
+    courts: state.courts,
+  });
   const selectedIds = new Set(selected.map((e) => e.exerciseId));
   // Sumatorio del tiempo por tipo de elemento (ejercicios, descansos...).
   const minutesByKind = { exercise: 0, rest: 0, text: 0, stations: 0 };
@@ -1231,6 +1234,7 @@ export function StepExercises({
       </Dialog>
 
       <div className="space-y-4">
+        <CourtsBoard state={state} update={update} />
         {selected.length > 0 && (
           <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
             <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">

@@ -46,6 +46,10 @@ const exerciseItemSchema = z.object({
     .nullable(),
 });
 
+export const LED_BY_VALUES = ["coach", "auto"] as const;
+
+const courtsSchema = z.union([z.literal(1), z.literal(2)]).optional();
+
 const sessionBlockItemSchema = z
   .object({
     kind: z.enum(BLOCK_ITEM_KINDS).optional(),
@@ -67,6 +71,10 @@ const sessionBlockItemSchema = z
     // Aspecto del juego (técnica/táctica/física/mental) para items de texto
     // sin ejercicio de biblioteca asociado; opcional.
     aspecto: z.enum(ASPECTO_JUEGO_VALUES).optional().nullable(),
+    // Sesiones con dos pistas: pista del item y quién lo dirige. Se ignoran
+    // (pista 1) si la sesión no tiene courts = 2.
+    court: z.union([z.literal(1), z.literal(2)]).optional(),
+    ledBy: z.enum(LED_BY_VALUES).optional().nullable(),
   })
   .refine(
     (item) => {
@@ -151,6 +159,8 @@ export const createSessionSchema = z.object({
     .optional(),
   /** La duración la fijó el monitor: no se recalcula a partir del plan. */
   durationManual: z.boolean().optional(),
+  /** Pistas que usa la sesión (1 o 2). */
+  courts: courtsSchema,
   objective: z
     .string()
     .trim()
@@ -210,6 +220,7 @@ export const updateSessionSchema = z
       .max(600, "Máximo 600 minutos")
       .optional(),
     durationManual: z.boolean().optional(),
+    courts: courtsSchema,
     objective: z
       .string()
       .trim()

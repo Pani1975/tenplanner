@@ -54,7 +54,13 @@ export interface WizardExercise {
    * en items "exercise" (su aspecto sale de la ficha del ejercicio).
    */
   aspecto?: AspectoJuego | null;
+  /** Pista del item (solo cuenta si la sesión tiene dos pistas). Por defecto 1. */
+  court?: 1 | 2;
+  /** Quién lo dirige: con monitor o autónomo. null = sin indicar. */
+  ledBy?: LedBy | null;
 }
+
+export type LedBy = "coach" | "auto";
 
 export interface WizardBlockItem {
   kind?: "exercise" | "text" | "warmup" | "stations";
@@ -111,6 +117,8 @@ export interface WizardState {
   coachId?: string | null;
   /** El monitor ha fijado la duración a mano: no se recalcula del plan. */
   durationManual?: boolean;
+  /** Pistas que usa la sesión (1 o 2). Con 2, cada item lleva su pista. */
+  courts?: 1 | 2;
   /** Grupos marcados en el paso de alumnos (selección independiente). */
   selectedGroupIds?: string[];
   /** Si está activo, cada sesión se llama AAMMDD_Grupo según su fecha. */

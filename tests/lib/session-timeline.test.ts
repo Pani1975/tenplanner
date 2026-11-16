@@ -210,4 +210,70 @@ describe("session timeline", () => {
     ]);
     expect(sumBlocksDuration(blocks, exerciseDurationById)).toBe(10 + 15 + 5);
   });
+
+  describe("dos pistas", () => {
+    const a = "11111111-1111-1111-1111-111111111111";
+    const b = "22222222-2222-2222-2222-222222222222";
+
+    it("cada bloque dura lo que dure su pista más larga", () => {
+      const state = {
+        courts: 2 as const,
+        exercises: [
+          { ...ex(a, "main"), overrideDuration: 20, court: 1 as const },
+          { ...ex(b, "main"), overrideDuration: 30, court: 2 as const },
+          { ...ex(a, "cooldown"), overrideDuration: 5 },
+        ],
+      };
+      expect(computeTimelineDuration(state)).toBe(30 + 5);
+    });
+
+    it("con una pista suma todo, aunque los items lleven pista 2", () => {
+      const state = {
+        courts: 1 as const,
+        exercises: [
+          { ...ex(a, "main"), court: 1 as const },
+          { ...ex(b, "main"), court: 2 as const },
+        ],
+      };
+      expect(computeTimelineDuration(state)).toBe(20);
+    });
+
+    it("solo envía pista y quién dirige con dos pistas", () => {
+      const exercises = [
+        { ...ex(a, "main"), court: 2 as const, ledBy: "auto" as const },
+      ];
+      const two = buildBlocksPayload({ blocks: [], exercises, courts: 2 });
+      expect(two[1].items[0]).toMatchObject({ court: 2, ledBy: "auto" });
+      const one = buildBlocksPayload({ blocks: [], exercises, courts: 1 });
+      expect(one[1].items[0].court).toBeUndefined();
+    });
+
+    it("el servidor calcula la duración igual (en paralelo por bloque)", () => {
+      const blocks = [
+        {
+          items: [
+            { kind: "text", freeText: "cesta", durationMinutes: 20, court: 1 },
+            { kind: "text", freeText: "peloteo", durationMinutes: 30, court: 2 },
+          ],
+        },
+      ];
+      expect(sumBlocksDuration(blocks, new Map())).toBe(30);
+    });
+
+    it("conserva pista y quién dirige al reabrir una sesión", () => {
+      const [item] = planItemsToWizard([
+        {
+          kind: "text",
+          text: "peloteo",
+          title: null,
+          durationMinutes: 10,
+          notes: null,
+          phase: "main",
+          court: 2,
+          ledBy: "auto",
+        },
+      ]);
+      expect(item).toMatchObject({ court: 2, ledBy: "auto" });
+    });
+  });
 });

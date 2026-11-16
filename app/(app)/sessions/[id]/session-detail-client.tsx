@@ -101,6 +101,8 @@ export interface SessionData {
   location: string | null;
   /** Nombre del lugar (Mis lugares) donde se imparte. */
   placeName?: string | null;
+  /** Pistas que usa la sesión (2 = trabajo distinto en cada pista). */
+  courts?: 1 | 2;
   status: "scheduled" | "completed" | "cancelled";
 }
 
@@ -216,6 +218,9 @@ export interface SessionBlockData {
     /** Aspecto del juego (técnica/táctica/física/mental) para items sin
      * ejercicio de biblioteca, elegido al crear el texto libre. */
     aspectoJuego?: string | null;
+    /** Pista (1 o 2) y quién lo dirige; solo cuenta con courts = 2. */
+    court?: number;
+    ledBy?: string | null;
     /** Comentario del monitor sobre este ejercicio/actividad. */
     coachComment?: string | null;
     /** Nota de voz sobre este ejercicio (URL firmada; solo el dueño). */
@@ -1078,6 +1083,21 @@ export function SessionDetailClient({
                                   ] ?? item.aspectoJuego}
                                 </span>
                               )}
+                            {session.courts === 2 && (
+                              <span className="ml-2 inline-flex items-center gap-1 align-middle">
+                                <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
+                                  Pista {item.court === 2 ? 2 : 1}
+                                </span>
+                                {(item.ledBy === "coach" ||
+                                  item.ledBy === "auto") && (
+                                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                    {item.ledBy === "coach"
+                                      ? "Con monitor"
+                                      : "Autónomo"}
+                                  </span>
+                                )}
+                              </span>
+                            )}
                           </div>
                           <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
                             <Clock className="size-3" />

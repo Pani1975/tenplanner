@@ -221,6 +221,7 @@ export default async function EditSessionPage({
                   intensity: sessionRow.intensity ?? null,
                   tags: Array.isArray(sessionRow.tags) ? sessionRow.tags : [],
                   studentIds: studentRows.map((row) => row.studentId),
+                  courts: sessionRow.courts === 2 ? 2 : 1,
                   exercises: planItemsToWizard(plan.items),
                   blocks: plan.blocks.map((block) => ({
                     orderIndex: block.orderIndex,

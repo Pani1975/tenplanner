@@ -79,6 +79,8 @@ type SessionBlockInputItem = {
     durationMinutes?: number | null;
   }> | null;
   aspecto?: string | null;
+  court?: number;
+  ledBy?: string | null;
 };
 
 type SessionBlockInput = {
@@ -458,6 +460,7 @@ export async function POST(request: Request) {
     scheduledAt,
     durationMinutes: providedDuration,
     durationManual,
+    courts: requestedCourts,
     objective,
     material,
     observations,
@@ -593,6 +596,13 @@ export async function POST(request: Request) {
     }
 
     const normalizedBlocks = normalizeBlocks(blocks, exerciseItems);
+    // Sin dos pistas todo va en la pista 1 (aunque el cliente mande otra cosa).
+    const courts = requestedCourts === 2 ? 2 : 1;
+    for (const block of normalizedBlocks) {
+      for (const item of block.items) {
+        item.court = courts === 2 && item.court === 2 ? 2 : 1;
+      }
+    }
     const compatibilityExercises = buildCompatibilityExercises(
       normalizedBlocks,
       exerciseItems
@@ -662,6 +672,7 @@ export async function POST(request: Request) {
           clubId: clubId ?? null,
           coachId,
           sport: sessionSport,
+          courts,
           createdVia: createdVia ?? "wizard",
           generatedBy: isEngine ? "auto_v1" : null,
           generationInput: isEngine ? (generation?.input ?? null) : null,
@@ -731,6 +742,8 @@ export async function POST(request: Request) {
                     ? buildStations(item.stations)
                     : null,
                 aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
+                court: item.court ?? 1,
+                ledBy: courts === 2 ? (item.ledBy ?? null) : null,
               };
             })
           );
