@@ -30,13 +30,28 @@ function DotGrid() {
       className="grid gap-1.5"
       style={{ gridTemplateColumns: "repeat(14, minmax(0, 1fr))" }}
     >
-      {Array.from({ length: 98 }, (_, i) => (
-        <span
-          key={i}
-          className="aspect-square rounded-full bg-[#050505]"
-          style={{ opacity: 0.18 + ((i * 37) % 83) / 100 }}
-        />
-      ))}
+      {Array.from({ length: 98 }, (_, i) => {
+        // Algunas pelotas en verde de marca: lima y oliva.
+        const lime = i % 4 === 0;
+        const olive = !lime && i % 7 === 3;
+        return (
+          <span
+            key={i}
+            className={
+              lime
+                ? "aspect-square rounded-full bg-[#d6ff38] ring-1 ring-[#5f7000]/40"
+                : olive
+                  ? "aspect-square rounded-full bg-[#5f7000]"
+                  : "aspect-square rounded-full bg-[#050505]"
+            }
+            style={
+              lime || olive
+                ? undefined
+                : { opacity: 0.18 + ((i * 37) % 83) / 100 }
+            }
+          />
+        );
+      })}
     </div>
   );
 }
@@ -118,7 +133,7 @@ export function StatsSection({ stats }: { stats: LandingStats }) {
   return (
     <section
       aria-label="Ten Planner en cifras"
-      className="relative overflow-hidden bg-[#d6ff38] px-5 py-20 text-[#050505] lg:py-28"
+      className="relative overflow-hidden bg-[#e8e8e1] px-5 py-20 text-[#050505] lg:py-28"
     >
       <div className="mx-auto max-w-[1240px]">
         <p className="text-center text-[12px] font-semibold uppercase tracking-[0.28em] text-[#050505]/60">
