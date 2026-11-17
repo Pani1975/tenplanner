@@ -734,6 +734,21 @@ export function SessionDetailClient({
     }
     return Math.max(0, ...byCourt.values());
   };
+  // Con dos pistas, el bloque se muestra en dos columnas (lo de cada pista
+  // pasa a la vez); con una, una sola lista como siempre.
+  const lanesOf = (block: SessionBlockData) =>
+    session.courts === 2
+      ? [1, 2].map((court) => {
+          const items = block.items.filter(
+            (item) => (item.court === 2 ? 2 : 1) === court
+          );
+          return {
+            court,
+            items,
+            minutes: items.reduce((sum, item) => sum + itemMinutes(item), 0),
+          };
+        })
+      : [{ court: 0, items: block.items, minutes: 0 }];
   const blockMinutes = (block: SessionBlockData) =>
     session.courts === 2
       ? laneLongest(block) * (block.rotates ? 2 : 1)
@@ -1036,7 +1051,12 @@ export function SessionDetailClient({
               min
             </span>
           </div>
-          <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-3">
+          <div
+            className={cn(
+              "grid gap-3 p-4 sm:p-5",
+              session.courts === 2 ? "grid-cols-1" : "lg:grid-cols-3"
+            )}
+          >
             {sessionBlocks.map((block) => (
               <div
                 key={block.id}
@@ -1047,16 +1067,15 @@ export function SessionDetailClient({
                     {block.title ?? `Bloque ${block.orderIndex}`}
                   </p>
                   <span className="shrink-0 text-[11px] font-semibold tabular-nums text-foreground">
-                    {blockMinutes(block)}{" "}
-                    min
+                    {blockMinutes(block)} min
                   </span>
                 </div>
                 {session.courts === 2 && block.rotates && (
                   <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-2.5 py-2 text-xs text-foreground">
                     <p className="font-bold">Los grupos rotan</p>
                     <p>
-                      Ronda 1 (0–{laneLongest(block)} min): grupo A en la pista 1
-                      · grupo B en la pista 2
+                      Ronda 1 (0–{laneLongest(block)} min): grupo A en la pista
+                      1 · grupo B en la pista 2
                     </p>
                     <p>
                       Ronda 2 ({laneLongest(block)}–{laneLongest(block) * 2}{" "}
@@ -1075,147 +1094,176 @@ export function SessionDetailClient({
                       Sin items definidos.
                     </p>
                   ) : (
-                    block.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 text-sm font-medium text-foreground">
-                            {item.kind === "warmup" ? (
-                              "Descanso"
-                            ) : item.kind === "stations" ? (
-                              `Estaciones (${item.stations?.length ?? 0})`
-                            ) : item.exerciseId && item.exerciseName ? (
-                              <Link
-                                href={`/exercises/${item.exerciseId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-brand hover:underline"
-                              >
-                                {item.exerciseName}
-                              </Link>
-                            ) : (
-                              item.title ||
-                              item.exerciseName ||
-                              item.freeText ||
-                              "Texto libre"
-                            )}
-                            {!item.exerciseId &&
-                              item.kind !== "warmup" &&
-                              item.kind !== "stations" &&
-                              item.aspectoJuego && (
-                                <span className="ml-2 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground align-middle">
-                                  {ASPECTO_JUEGO_LABELS[
-                                    item.aspectoJuego as keyof typeof ASPECTO_JUEGO_LABELS
-                                  ] ?? item.aspectoJuego}
-                                </span>
-                              )}
-                            {session.courts === 2 && (
-                              <span className="ml-2 inline-flex items-center gap-1 align-middle">
-                                <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
-                                  Pista {item.court === 2 ? 2 : 1}
-                                </span>
-                                {(item.ledBy === "coach" ||
-                                  item.ledBy === "auto") && (
-                                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                    {item.ledBy === "coach"
-                                      ? "Con monitor"
-                                      : "Autónomo"}
-                                  </span>
-                                )}
-                                {(item.turnMinutes ?? 0) > 0 && (
-                                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                    Por turnos: {item.turnMinutes} min cada
-                                    alumno
-                                    {(item.turnSize ?? 1) > 1
-                                      ? `, de ${item.turnSize} en ${item.turnSize}`
-                                      : ""}
-                                  </span>
-                                )}
+                    <div
+                      className={
+                        session.courts === 2
+                          ? "grid gap-3 md:grid-cols-2"
+                          : "space-y-2"
+                      }
+                    >
+                      {lanesOf(block).map((lane) => (
+                        <div key={lane.court} className="min-w-0 space-y-2">
+                          {session.courts === 2 && (
+                            <div className="flex items-center justify-between rounded-md bg-brand/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-foreground">
+                              <span>Pista {lane.court}</span>
+                              <span className="tabular-nums">
+                                {lane.minutes} min
                               </span>
-                            )}
-                          </div>
-                          <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
-                            <Clock className="size-3" />
-                            {itemMinutes(item)} min
-                            {item.kind === "stations" ? " en total" : ""}
-                          </span>
-                        </div>
-                        {item.kind === "stations" && (
-                          <>
-                            {item.freeText && (
-                              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                                {item.freeText}
-                              </p>
-                            )}
-                            <ul className="mt-2 space-y-1">
-                              {(item.stations ?? []).map((station, idx) => (
-                                <li
-                                  key={idx}
-                                  className="text-xs text-muted-foreground"
-                                >
-                                  {idx + 1}.{" "}
-                                  {station.kind === "exercise" &&
-                                  station.exerciseId ? (
-                                    <Link
-                                      href={`/exercises/${station.exerciseId}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-foreground hover:text-brand hover:underline"
-                                    >
-                                      {station.exerciseName ?? "Ejercicio"}
-                                    </Link>
-                                  ) : (
-                                    (station.freeText ?? station.exerciseName)
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
-                        {item.kind !== "stations" &&
-                          item.kind !== "warmup" &&
-                          !item.exerciseId &&
-                          item.title &&
-                          item.freeText && (
-                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                              {item.freeText}
+                            </div>
+                          )}
+                          {session.courts === 2 && lane.items.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Nada en esta pista.
                             </p>
                           )}
-                        {item.exerciseDescription && (
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                            {item.exerciseDescription}
-                          </p>
-                        )}
-                        {item.notes && (
-                          <p className="mt-1 text-[11px] text-muted-foreground">
-                            {item.notes}
-                          </p>
-                        )}
-                        {item.kind !== "warmup" && (
-                          <div className="mt-2 space-y-2">
-                            <SessionCommentBox
-                              value={item.coachComment}
-                              readOnly={!isOwner}
-                              onSave={(comment) =>
-                                saveItemComment(item.id, comment)
-                              }
-                              placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
-                            />
-                            <SessionVoiceNote
-                              url={item.coachAudioUrl}
-                              seconds={item.coachAudioSeconds}
-                              readOnly={!isOwner}
-                              onUpload={(blob, seconds) =>
-                                uploadVoiceNote(blob, seconds, item.id)
-                              }
-                              onDelete={() => deleteVoiceNote(item.id)}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))
+                          {lane.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="rounded-md border border-border/60 bg-muted/20 px-3 py-2"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0 text-sm font-medium text-foreground">
+                                  {item.kind === "warmup" ? (
+                                    "Descanso"
+                                  ) : item.kind === "stations" ? (
+                                    `Estaciones (${item.stations?.length ?? 0})`
+                                  ) : item.exerciseId && item.exerciseName ? (
+                                    <Link
+                                      href={`/exercises/${item.exerciseId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-brand hover:underline"
+                                    >
+                                      {item.exerciseName}
+                                    </Link>
+                                  ) : (
+                                    item.title ||
+                                    item.exerciseName ||
+                                    item.freeText ||
+                                    "Texto libre"
+                                  )}
+                                  {!item.exerciseId &&
+                                    item.kind !== "warmup" &&
+                                    item.kind !== "stations" &&
+                                    item.aspectoJuego && (
+                                      <span className="ml-2 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground align-middle">
+                                        {ASPECTO_JUEGO_LABELS[
+                                          item.aspectoJuego as keyof typeof ASPECTO_JUEGO_LABELS
+                                        ] ?? item.aspectoJuego}
+                                      </span>
+                                    )}
+                                  {session.courts === 2 && (
+                                    <span className="ml-2 inline-flex items-center gap-1 align-middle">
+                                      <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
+                                        Pista {item.court === 2 ? 2 : 1}
+                                      </span>
+                                      {(item.ledBy === "coach" ||
+                                        item.ledBy === "auto") && (
+                                        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                          {item.ledBy === "coach"
+                                            ? "Con monitor"
+                                            : "Autónomo"}
+                                        </span>
+                                      )}
+                                      {(item.turnMinutes ?? 0) > 0 && (
+                                        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                          Por turnos: {item.turnMinutes} min
+                                          cada alumno
+                                          {(item.turnSize ?? 1) > 1
+                                            ? `, de ${item.turnSize} en ${item.turnSize}`
+                                            : ""}
+                                        </span>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
+                                  <Clock className="size-3" />
+                                  {itemMinutes(item)} min
+                                  {item.kind === "stations" ? " en total" : ""}
+                                </span>
+                              </div>
+                              {item.kind === "stations" && (
+                                <>
+                                  {item.freeText && (
+                                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                                      {item.freeText}
+                                    </p>
+                                  )}
+                                  <ul className="mt-2 space-y-1">
+                                    {(item.stations ?? []).map(
+                                      (station, idx) => (
+                                        <li
+                                          key={idx}
+                                          className="text-xs text-muted-foreground"
+                                        >
+                                          {idx + 1}.{" "}
+                                          {station.kind === "exercise" &&
+                                          station.exerciseId ? (
+                                            <Link
+                                              href={`/exercises/${station.exerciseId}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-foreground hover:text-brand hover:underline"
+                                            >
+                                              {station.exerciseName ??
+                                                "Ejercicio"}
+                                            </Link>
+                                          ) : (
+                                            (station.freeText ??
+                                            station.exerciseName)
+                                          )}
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </>
+                              )}
+                              {item.kind !== "stations" &&
+                                item.kind !== "warmup" &&
+                                !item.exerciseId &&
+                                item.title &&
+                                item.freeText && (
+                                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                                    {item.freeText}
+                                  </p>
+                                )}
+                              {item.exerciseDescription && (
+                                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                                  {item.exerciseDescription}
+                                </p>
+                              )}
+                              {item.notes && (
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                  {item.notes}
+                                </p>
+                              )}
+                              {item.kind !== "warmup" && (
+                                <div className="mt-2 space-y-2">
+                                  <SessionCommentBox
+                                    value={item.coachComment}
+                                    readOnly={!isOwner}
+                                    onSave={(comment) =>
+                                      saveItemComment(item.id, comment)
+                                    }
+                                    placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
+                                  />
+                                  <SessionVoiceNote
+                                    url={item.coachAudioUrl}
+                                    seconds={item.coachAudioSeconds}
+                                    readOnly={!isOwner}
+                                    onUpload={(blob, seconds) =>
+                                      uploadVoiceNote(blob, seconds, item.id)
+                                    }
+                                    onDelete={() => deleteVoiceNote(item.id)}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

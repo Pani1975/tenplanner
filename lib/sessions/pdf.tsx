@@ -35,6 +35,13 @@ export type PdfExercise = {
   materials?: string[] | null;
   /** Esquema de pista del ejercicio (si existe). */
   diagram?: Diagram | null;
+  /** Solo con dos pistas: pista del ejercicio, quién lo dirige y turnos. */
+  court?: 1 | 2;
+  ledBy?: "coach" | "auto" | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
+  /** El bloque rota: dos grupos que cambian de pista. */
+  blockRotates?: boolean;
 };
 
 export type PdfSession = {
@@ -52,7 +59,6 @@ export type PdfSession = {
   students: { name: string; playerLevel: string | null }[];
   coachName: string;
 };
-
 
 export const styles = StyleSheet.create({
   page: {
@@ -348,6 +354,113 @@ export function groupByPhase(exercises: PdfExercise[]) {
     .map((k) => ({ phase: k, items: groups.get(k)! }));
 }
 
+/** Un bloque con dos pistas: dos columnas en paralelo (lo de cada pista pasa
+ * a la vez). Sin esquemas ni pasos, para que quepa en media página. */
+function TwoCourtsBlock({ items }: { items: PdfExercise[] }) {
+  const lanes = ([1, 2] as const).map((court) => {
+    const laneItems = items.filter((ex) => (ex.court === 2 ? 2 : 1) === court);
+    return {
+      court,
+      items: laneItems,
+      minutes: laneItems.reduce((s, ex) => s + (ex.durationMinutes ?? 0), 0),
+    };
+  });
+  const longest = Math.max(...lanes.map((l) => l.minutes));
+  const rotates = items.some((ex) => ex.blockRotates);
+  return (
+    <View>
+      {rotates ? (
+        <Text style={{ fontSize: 9, color: GRAY, marginBottom: 4 }}>
+          Los grupos rotan: ronda 1 (0–{longest} min) grupo A en la pista 1 y
+          grupo B en la pista 2; ronda 2 ({longest}–{longest * 2} min) cambian.
+        </Text>
+      ) : null}
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {lanes.map((lane) => (
+          <View key={lane.court} style={{ flex: 1 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                backgroundColor: BRAND_LIGHT,
+                padding: 4,
+                marginBottom: 4,
+              }}
+            >
+              <Text style={{ fontSize: 9, fontWeight: 700 }}>
+                PISTA {lane.court}
+              </Text>
+              <Text style={{ fontSize: 9, fontWeight: 700 }}>
+                {lane.minutes} min
+              </Text>
+            </View>
+            {lane.items.length === 0 ? (
+              <Text style={{ fontSize: 8, color: GRAY }}>
+                Nada en esta pista.
+              </Text>
+            ) : null}
+            {lane.items.map((ex) => (
+              <View
+                key={`${ex.orderIndex}-${ex.name}`}
+                style={{
+                  borderWidth: 0.5,
+                  borderColor: BORDER,
+                  padding: 5,
+                  marginBottom: 4,
+                }}
+                wrap={false}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text style={{ fontSize: 10, fontWeight: 700, flex: 1 }}>
+                    {ex.orderIndex + 1}. {ex.name}
+                  </Text>
+                  {ex.durationMinutes ? (
+                    <Text style={{ fontSize: 9, color: GRAY }}>
+                      {ex.durationMinutes} min
+                    </Text>
+                  ) : null}
+                </View>
+                {ex.ledBy || (ex.turnMinutes ?? 0) > 0 ? (
+                  <Text style={{ fontSize: 8, color: GRAY, marginTop: 1 }}>
+                    {ex.ledBy === "coach"
+                      ? "Con monitor"
+                      : ex.ledBy === "auto"
+                        ? "Autónomo"
+                        : ""}
+                    {ex.ledBy && (ex.turnMinutes ?? 0) > 0 ? " · " : ""}
+                    {(ex.turnMinutes ?? 0) > 0
+                      ? `Por turnos: ${ex.turnMinutes} min cada alumno${
+                          (ex.turnSize ?? 1) > 1
+                            ? `, de ${ex.turnSize} en ${ex.turnSize}`
+                            : ""
+                        }`
+                      : ""}
+                  </Text>
+                ) : null}
+                {ex.description ? (
+                  <Text style={{ fontSize: 8, marginTop: 2 }}>
+                    {ex.description}
+                  </Text>
+                ) : null}
+                {ex.notes ? (
+                  <Text style={{ fontSize: 8, color: GRAY, marginTop: 2 }}>
+                    Notas: {ex.notes}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 /** Lista de ejercicios/textos agrupada por bloque, con su título de sección
  * ("Plan de entrenamiento"). Compartida por el PDF de sesión y el de clase
  * (plantilla de biblioteca), que tienen idéntico contenido de bloques. */
@@ -371,7 +484,10 @@ export function TrainingItemsSection({
           <Text style={styles.phaseTitle} minPresenceAhead={80}>
             {items[0]?.blockTitle || PHASE_LABEL[phase]}
           </Text>
-          {items.map((ex) =>
+          {items.some((ex) => ex.court) ? (
+            <TwoCourtsBlock items={items} />
+          ) : null}
+          {(items.some((ex) => ex.court) ? [] : items).map((ex) =>
             ex.kind === "text" ? (
               <View
                 key={`${phase}-${ex.orderIndex}`}

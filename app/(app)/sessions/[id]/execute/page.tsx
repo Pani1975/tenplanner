@@ -119,6 +119,25 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
     };
   });
 
+  // Dos pistas: cada elemento indica su pista, bloque y rotación.
+  const twoCourts = sessionRow.courts === 2;
+  const rotatingBlocks = new Set(
+    plan.blocks.filter((b) => b.rotates).map((b) => b.orderIndex)
+  );
+  const exercisesForClient = resolvedExercises.map((e, i) => {
+    const item = plan.items[i];
+    if (!twoCourts || !item) return e;
+    return {
+      ...e,
+      court: item.court === 2 ? (2 as const) : (1 as const),
+      ledBy: item.ledBy ?? null,
+      turnMinutes: item.turnMinutes ?? null,
+      turnSize: item.turnSize ?? null,
+      blockOrder: item.blockOrder,
+      blockRotates: rotatingBlocks.has(item.blockOrder),
+    };
+  });
+
   return (
     <ExecuteSessionClient
       userId={user.id}
@@ -130,9 +149,10 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
         status: sessionRow.status,
         coachRating: sessionRow.coachRating,
         coachComment: sessionRow.coachComment,
+        courts: twoCourts ? 2 : 1,
       }}
       students={studentRows}
-      exercises={resolvedExercises}
+      exercises={exercisesForClient}
       diagrams={getExerciseDiagrams(
         resolvedExercises
           .map((e) => e.exerciseId)

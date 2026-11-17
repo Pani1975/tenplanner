@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CourtBoardDialog } from "@/components/app/court-board-dialog";
+import { TwoCourtsLive } from "./two-courts-live";
 import {
   PLAN_CHANGE_REASONS,
   type PlanChangeReason,
@@ -86,9 +87,18 @@ interface ExerciseData {
   steps: Array<{ title: string; description: string }>;
   tips: string | null;
   materials: string[];
+  /** Solo con dos pistas. */
+  court?: 1 | 2;
+  ledBy?: "coach" | "auto" | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
+  blockOrder?: number;
+  blockRotates?: boolean;
 }
 
 interface SessionData {
+  /** 2 = trabajo en paralelo en dos pistas. */
+  courts?: 1 | 2;
   id: string;
   title: string;
   durationMinutes: number;
@@ -1524,7 +1534,20 @@ export function ExecuteSessionClient({
             {renderRoadmap()}
           </div>
         </aside>
-        <main className="flex-1 flex flex-col px-4 py-6 max-w-2xl mx-auto w-full gap-5 lg:px-0">
+        <main
+          className={cn(
+            "mx-auto flex w-full flex-1 flex-col gap-5 px-4 py-6 lg:px-0",
+            session.courts === 2 ? "max-w-4xl" : "max-w-2xl"
+          )}
+        >
+          {session.courts === 2 && (
+            <TwoCourtsLive
+              exercises={exercises}
+              currentIdx={currentIdx}
+              onPick={selectExercise}
+              onNextBlock={selectExercise}
+            />
+          )}
           {/* Category + name */}
           <div
             ref={exerciseTopRef}
@@ -1644,78 +1667,83 @@ export function ExecuteSessionClient({
             )}
           </div>
 
-          {/* Timer */}
-          <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
-            {/* Countdown progress bar */}
-            {countdownMode && (
-              <div className="h-1 bg-border">
-                <div
+          {/* Timer (con dos pistas manda el cronómetro del bloque, arriba) */}
+          <div
+            className={cn("overflow-hidden", session.courts === 2 && "hidden")}
+            hidden={session.courts === 2}
+          >
+            <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
+              {/* Countdown progress bar */}
+              {countdownMode && (
+                <div className="h-1 bg-border">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-1000",
+                      countdownPct > 30
+                        ? "bg-brand"
+                        : countdownPct > 10
+                          ? "bg-amber-400"
+                          : "bg-red-400"
+                    )}
+                    style={{ width: `${countdownPct}%` }}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4 p-5">
+                <span
                   className={cn(
-                    "h-full transition-all duration-1000",
-                    countdownPct > 30
-                      ? "bg-brand"
-                      : countdownPct > 10
-                        ? "bg-amber-400"
-                        : "bg-red-400"
+                    "font-mono text-3xl tabular-nums flex-1",
+                    countdownMode && timerSeconds === 0
+                      ? "text-red-400"
+                      : "text-foreground"
                   )}
-                  style={{ width: `${countdownPct}%` }}
-                />
-              </div>
-            )}
-            <div className="flex items-center gap-4 p-5">
-              <span
-                className={cn(
-                  "font-mono text-3xl tabular-nums flex-1",
-                  countdownMode && timerSeconds === 0
-                    ? "text-red-400"
-                    : "text-foreground"
-                )}
-              >
-                {formatTime(timerSeconds)}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setTimerRunning((r) => !r)}
-                  className="flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
-                  aria-label={timerRunning ? "Pausar" : "Iniciar"}
                 >
-                  {timerRunning ? (
-                    <Pause className="size-5" />
-                  ) : (
-                    <Play className="size-5 translate-x-0.5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setTimerRunning(false);
-                    setTimerSeconds(
-                      countdownMode ? current.durationMinutes * 60 : 0
-                    );
-                  }}
-                  className="flex size-11 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
-                  aria-label="Reiniciar"
-                >
-                  <RotateCcw className="size-4" />
-                </button>
-                <button
-                  onClick={toggleCountdown}
-                  title={
-                    countdownMode
-                      ? "Cambiar a cronómetro"
-                      : "Cambiar a cuenta atrás"
-                  }
-                  className={cn(
-                    "flex size-11 items-center justify-center rounded-full border transition-colors",
-                    countdownMode
-                      ? "border-brand bg-brand/10 text-brand"
-                      : "border-[#050505]/10 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10"
-                  )}
-                  aria-label={
-                    countdownMode ? "Modo cronómetro" : "Modo cuenta atrás"
-                  }
-                >
-                  <Timer className="size-4" />
-                </button>
+                  {formatTime(timerSeconds)}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTimerRunning((r) => !r)}
+                    className="flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
+                    aria-label={timerRunning ? "Pausar" : "Iniciar"}
+                  >
+                    {timerRunning ? (
+                      <Pause className="size-5" />
+                    ) : (
+                      <Play className="size-5 translate-x-0.5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTimerRunning(false);
+                      setTimerSeconds(
+                        countdownMode ? current.durationMinutes * 60 : 0
+                      );
+                    }}
+                    className="flex size-11 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
+                    aria-label="Reiniciar"
+                  >
+                    <RotateCcw className="size-4" />
+                  </button>
+                  <button
+                    onClick={toggleCountdown}
+                    title={
+                      countdownMode
+                        ? "Cambiar a cronómetro"
+                        : "Cambiar a cuenta atrás"
+                    }
+                    className={cn(
+                      "flex size-11 items-center justify-center rounded-full border transition-colors",
+                      countdownMode
+                        ? "border-brand bg-brand/10 text-brand"
+                        : "border-[#050505]/10 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10"
+                    )}
+                    aria-label={
+                      countdownMode ? "Modo cronómetro" : "Modo cuenta atrás"
+                    }
+                  >
+                    <Timer className="size-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
