@@ -6,6 +6,7 @@ import { Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TenPlannerMark } from "./ten-planner-mark";
 import { InstallAppButton } from "./install-app-button";
+import { InstagramIcon } from "./instagram-icon";
 
 const navItems = [
   { label: "Cómo funciona", href: "#como-funciona" },
@@ -49,6 +50,15 @@ export function LandingNav() {
         </nav>
         <div className="flex items-center gap-2">
           <InstallAppButton className="hidden md:inline-flex" />
+          <a
+            href="https://www.instagram.com/tenplanner/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram de TenPlanner (se abre en una pestaña nueva)"
+            className="grid size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+          >
+            <InstagramIcon className="size-5" />
+          </a>
           <Link
             href="/login"
             aria-label="Iniciar sesión o registrarte"
