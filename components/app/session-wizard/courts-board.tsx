@@ -8,6 +8,7 @@ import {
   Clock,
   Columns2,
   Plus,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,8 @@ export interface LaneEditor {
   onMinutes: (id: string, minutes: number) => void;
   onMove: (id: string, direction: -1 | 1) => void;
   onText: (id: string, patch: { title?: string; text?: string }) => void;
+  /** Sustituir por otro ejercicio sin tener que quitar y volver a añadir. */
+  onReplace?: (id: string) => void;
 }
 
 interface CourtsBoardViewProps {
@@ -89,6 +92,8 @@ interface CourtsBoardViewProps {
   editor?: LaneEditor;
   /** Alumnos de la sesión (para comprobar los turnos). */
   studentCount?: number;
+  /** Contenido bajo las pistas de un bloque (p. ej. el buscador de ejercicios). */
+  phasePanel?: (phase: TrainingPhase) => ReactNode;
   /** Contenido extra bajo la cabecera (p. ej. los lugares de cada pista). */
   extra?: ReactNode;
 }
@@ -115,6 +120,7 @@ export function CourtsBoardView({
   onToggleRotate,
   editor,
   studentCount = 0,
+  phasePanel,
   extra,
 }: CourtsBoardViewProps) {
   if (!twoCourts) {
@@ -338,6 +344,17 @@ export function CourtsBoardView({
                                 )}
                                 {editor && (
                                   <div className="flex shrink-0 items-center">
+                                    {editor.onReplace && (
+                                      <button
+                                        type="button"
+                                        onClick={() => editor.onReplace?.(it.id)}
+                                        title="Sustituir por otro ejercicio (mantiene pista, minutos y turnos)"
+                                        className="mr-1 inline-flex items-center gap-1 rounded px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                                      >
+                                        <RefreshCw className="size-3" />
+                                        Sustituir
+                                      </button>
+                                    )}
                                     <button
                                       type="button"
                                       onClick={() => editor.onMove(it.id, -1)}
@@ -489,6 +506,19 @@ export function CourtsBoardView({
               })}
             </div>
 
+            {!rotating &&
+              lane(1).length > 0 &&
+              lane(2).length > 0 &&
+              total(1) !== total(2) && (
+                <p className="mt-2 text-xs text-amber-600">
+                  Las pistas duran distinto ({total(1)} y {total(2)} min): la
+                  más corta termina antes y el bloque dura {laneMax} min. Si
+                  no es lo que quieres, ajusta los minutos.
+                </p>
+              )}
+
+            {phasePanel?.(phase)}
+
             {perStudent.perStudent.length > 0 && (
               <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-3 py-2 text-xs text-foreground">
                 <p className="font-bold">
@@ -544,6 +574,10 @@ interface CourtsBoardProps {
   places?: { id: string; name: string }[];
   /** Abre el buscador de ejercicios para añadir uno a una pista. */
   onPickExercise?: (phase: TrainingPhase, court: 1 | 2) => void;
+  /** Sustituye un elemento por otro ejercicio (por su posición). */
+  onReplace?: (index: number) => void;
+  /** Buscador de ejercicios bajo las pistas del bloque que lo tiene abierto. */
+  phasePanel?: (phase: TrainingPhase) => ReactNode;
 }
 
 /** Tablero de pistas del Paso 2 del asistente de sesiones. */
@@ -552,6 +586,8 @@ export function CourtsBoard({
   update,
   places = [],
   onPickExercise,
+  onReplace,
+  phasePanel,
 }: CourtsBoardProps) {
   const exercises = state.exercises;
   const items: LaneItem[] = exercises.map((ex, i) => ({
@@ -605,6 +641,7 @@ export function CourtsBoard({
       [next[idx], next[j]] = [next[j], next[idx]];
       update({ exercises: next });
     },
+    onReplace: onReplace ? (id) => onReplace(Number(id)) : undefined,
     onText: (id, patch) =>
       setAt(id, {
         ...(patch.title !== undefined ? { title: patch.title } : {}),
@@ -632,6 +669,7 @@ export function CourtsBoard({
       onSetTwoCourts={(on) => update({ courts: on ? 2 : 1 })}
       items={items}
       editor={editor}
+      phasePanel={phasePanel}
       studentCount={state.studentIds.length}
       onPatchItem={(id, patch) => setAt(id, patch)}
       extra={

@@ -247,8 +247,7 @@ export function StepExercises({
   const [pickerPhase, setPickerPhase] = useState<TrainingPhase | null>(null);
   // Dos pistas: lo que se añade desde una pista se queda en ella mientras el
   // buscador siga abierto en ese bloque.
-  const [pendingCourt, setPendingCourt] = useState<1 | 2 | null>(null);
-  const prevCountRef = useRef(state.exercises.length);
+  const pendingCourtRef = useRef<1 | 2 | null>(null);
   /** Elemento con el menú "Sustituir por…" abierto (índice en la sesión). */
   const [replaceMenuIdx, setReplaceMenuIdx] = useState<number | null>(null);
   /** Elemento que se está sustituyendo por un ejercicio de la biblioteca o
@@ -340,20 +339,8 @@ export function StepExercises({
   }, [editingDurationIdx]);
 
   useEffect(() => {
-    const prev = prevCountRef.current;
-    prevCountRef.current = state.exercises.length;
-    if (pendingCourt && state.exercises.length > prev) {
-      update({
-        exercises: state.exercises.map((e, i) =>
-          i >= prev ? { ...e, court: pendingCourt } : e
-        ),
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.exercises.length]);
-
-  useEffect(() => {
-    if (pickerPhase === null) setPendingCourt(null);
+    // Al cerrar el buscador, lo siguiente que se añada vuelve a la pista 1.
+    if (pickerPhase === null) pendingCourtRef.current = null;
   }, [pickerPhase]);
 
   function setExercises(next: WizardExercise[]) {
@@ -370,6 +357,8 @@ export function StepExercises({
       notes: "",
       phase,
       intensity: null,
+      // Dos pistas: se queda en la pista desde la que se abrió el buscador.
+      ...(pendingCourtRef.current ? { court: pendingCourtRef.current } : {}),
     };
     setExercises([...selected, item]);
   }
@@ -392,6 +381,12 @@ export function StepExercises({
       ...next,
       phase: old.phase,
       overrideDuration: keepTime ? oldMinutes : next.overrideDuration,
+      // Con dos pistas, lo que sustituye se queda en su pista, con quien lo
+      // dirige y sus turnos.
+      court: old.court,
+      ledBy: old.ledBy,
+      turnMinutes: old.turnMinutes,
+      turnSize: old.turnSize,
     };
     setExercises(selected.map((e, i) => (i === idx ? item : e)));
     setReplacing(null);
@@ -506,6 +501,7 @@ export function StepExercises({
         notes: "",
         phase,
         intensity: null,
+        ...(pendingCourtRef.current ? { court: pendingCourtRef.current } : {}),
       }));
 
     if (nextItems.length === 0) return;
@@ -1291,8 +1287,12 @@ export function StepExercises({
           state={state}
           update={update}
           places={places}
+          onReplace={(idx) => startReplace(idx, "exercise")}
+          phasePanel={(phase) =>
+            pickerPhase === phase && !pickingStation ? sourcesPanel : null
+          }
           onPickExercise={(phase, court) => {
-            setPendingCourt(court);
+            pendingCourtRef.current = court;
             setAddPhaseOverride(phase);
             setPickingStation(null);
             setReplacing(null);
@@ -1301,10 +1301,6 @@ export function StepExercises({
             setPickerPhase(phase);
           }}
         />
-        {state.courts === 2 &&
-          pickerPhase &&
-          replacing?.target !== "exercise" &&
-          sourcesPanel}
         {selected.length > 0 && (
           <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
             <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
@@ -1690,7 +1686,9 @@ export function StepExercises({
                                     className="scroll-mt-24 border-t border-border/40 px-3 pb-3 pt-2"
                                   >
                                     {replacing.target === "exercise"
-                                      ? sourcesPanel
+                                      ? state.courts === 2
+                                        ? null
+                                        : sourcesPanel
                                       : stationsDraftPhase
                                         ? stationsDraftPanel
                                         : null}
@@ -2068,6 +2066,7 @@ export function StepExercises({
                         <button
                           type="button"
                           onClick={() => {
+                            pendingCourtRef.current = null;
                             setAddPhaseOverride(phase);
                             setPickingStation(null);
                             setReplacing(null);
