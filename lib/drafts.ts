@@ -60,6 +60,11 @@ export interface SessionDraftPayload {
    * borradores antiguos no los traen. */
   courts?: 1 | 2;
   secondPlaceId?: string | null;
+  /** Grupo elegido y nombre automático (los borradores antiguos no los traen). */
+  groupId?: string | null;
+  groupName?: string;
+  selectedGroupIds?: string[];
+  useCodeTitle?: boolean;
   objective: string;
   material: string;
   observations: string;

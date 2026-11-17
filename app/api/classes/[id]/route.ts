@@ -54,6 +54,8 @@ const blockExerciseSchema = z
     // Plantillas con dos pistas: pista del elemento y quién lo dirige.
     court: z.union([z.literal(1), z.literal(2)]).optional(),
     ledBy: z.enum(["coach", "auto"]).optional().nullable(),
+    turnMinutes: z.number().int().min(1).max(120).optional().nullable(),
+    turnSize: z.number().int().min(1).max(8).optional().nullable(),
   })
   .refine(
     (item) => {
@@ -168,6 +170,8 @@ export async function GET(_req: Request, ctx: Ctx) {
           stations: classBlockExercises.stations,
           court: classBlockExercises.court,
           ledBy: classBlockExercises.ledBy,
+          turnMinutes: classBlockExercises.turnMinutes,
+          turnSize: classBlockExercises.turnSize,
           exerciseName: exercises.name,
           exerciseCategory: exercises.category,
           exerciseDescription: exercises.description,
@@ -376,6 +380,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
                 // Sin dos pistas todo va en la pista 1, sin "quién dirige".
                 court: courts === 2 && item.court === 2 ? 2 : 1,
                 ledBy: courts === 2 ? (item.ledBy ?? null) : null,
+                turnMinutes: courts === 2 ? (item.turnMinutes ?? null) : null,
+                turnSize:
+                  courts === 2 && item.turnMinutes ? (item.turnSize ?? 1) : null,
               }))
             );
           }

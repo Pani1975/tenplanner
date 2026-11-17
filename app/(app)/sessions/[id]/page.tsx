@@ -147,6 +147,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         itemAspectoJuego: sessionBlockItems.aspectoJuego,
         itemCourt: sessionBlockItems.court,
         itemLedBy: sessionBlockItems.ledBy,
+        itemTurnMinutes: sessionBlockItems.turnMinutes,
+        itemTurnSize: sessionBlockItems.turnSize,
         itemCoachComment: sessionBlockItems.coachComment,
         itemCoachAudioPath: sessionBlockItems.coachAudioPath,
         itemCoachAudioSeconds: sessionBlockItems.coachAudioSeconds,
@@ -281,6 +283,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         aspectoJuego: string | null;
         court: number;
         ledBy: string | null;
+        turnMinutes: number | null;
+        turnSize: number | null;
         coachComment: string | null;
         coachAudioPath: string | null;
         coachAudioSeconds: number | null;
@@ -319,6 +323,8 @@ export default async function SessionPage({ params, searchParams }: PageProps) {
         aspectoJuego: row.itemAspectoJuego,
         court: row.itemCourt ?? 1,
         ledBy: row.itemLedBy,
+        turnMinutes: row.itemTurnMinutes ?? null,
+        turnSize: row.itemTurnSize ?? null,
         coachComment: row.itemCoachComment,
         coachAudioPath: row.itemCoachAudioPath,
         coachAudioSeconds: row.itemCoachAudioSeconds,

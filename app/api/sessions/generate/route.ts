@@ -9,7 +9,9 @@ import { buildProposal } from "@/lib/session-engine/today";
 // POST /api/sessions con createdVia = "engine".
 
 const bodySchema = z.object({
-  groupId: z.string().uuid(),
+  // Un grupo guardado o, si es una clase suelta, los alumnos (sin grupo).
+  groupId: z.string().uuid().optional(),
+  studentIds: z.array(z.string().uuid()).min(1).max(12).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   // Duración de la sesión (la del calendario / paso 1 del asistente).
   durationMinutes: z.number().int().min(10).max(240),
@@ -41,6 +43,8 @@ const bodySchema = z.object({
   variant: z.number().int().min(0).max(10_000).optional(),
   courts: z.union([z.literal(1), z.literal(2)]).optional(),
   rotate: z.boolean().optional(),
+}).refine((b) => !!b.groupId || (b.studentIds?.length ?? 0) > 0, {
+  message: "Indica un grupo o unos alumnos",
 });
 
 export async function POST(request: Request) {

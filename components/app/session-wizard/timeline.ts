@@ -192,6 +192,8 @@ export type BlockPayloadItem = {
   aspecto?: AspectoJuego | null;
   court?: 1 | 2;
   ledBy?: "coach" | "auto" | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
 };
 
 export type BlockPayload = {
@@ -224,9 +226,17 @@ export function buildBlocksPayload(
   for (const item of state.exercises) {
     const block = byOrder.get(phaseToBlockOrder(item.phase))!;
     // Pista y quién dirige: solo se envían con dos pistas.
-    const lane: Pick<BlockPayloadItem, "court" | "ledBy"> =
+    const lane: Pick<
+      BlockPayloadItem,
+      "court" | "ledBy" | "turnMinutes" | "turnSize"
+    > =
       state.courts === 2
-        ? { court: item.court === 2 ? 2 : 1, ledBy: item.ledBy ?? null }
+        ? {
+            court: item.court === 2 ? 2 : 1,
+            ledBy: item.ledBy ?? null,
+            turnMinutes: item.turnMinutes ?? null,
+            turnSize: item.turnMinutes ? (item.turnSize ?? 1) : null,
+          }
         : {};
     if (isWarmupItem(item)) {
       block.items.push({
@@ -342,6 +352,8 @@ export function hasPlanContent(state: Pick<WizardState, "exercises">) {
 type PlanItemLike = {
   court?: 1 | 2;
   ledBy?: "coach" | "auto" | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
 } & PlanItemShape;
 
 type PlanItemShape =
@@ -389,8 +401,14 @@ type PlanItemShape =
 export function planItemsToWizard(items: PlanItemLike[]): WizardExercise[] {
   return items.map((item) => {
     const exercise = planItemToWizard(item);
-    return item.court === 2 || item.ledBy
-      ? { ...exercise, court: item.court, ledBy: item.ledBy ?? null }
+    return item.court === 2 || item.ledBy || item.turnMinutes
+      ? {
+          ...exercise,
+          court: item.court,
+          ledBy: item.ledBy ?? null,
+          turnMinutes: item.turnMinutes ?? null,
+          turnSize: item.turnSize ?? null,
+        }
       : exercise;
   });
 }

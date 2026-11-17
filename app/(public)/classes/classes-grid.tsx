@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, FileDown, Heart, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AddToPendingSessionButton } from "@/components/app/pending-session-target";
 import { autoriaLabel, nivelLabel } from "@/lib/exercise-taxonomy";
 import { AddClassesToListDialog } from "@/components/app/add-classes-to-list-dialog";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
@@ -296,6 +297,13 @@ export function ClassesGrid({
                 >
                   {cardBody}
                 </Link>
+              )}
+              {!selecting && (
+                <AddToPendingSessionButton
+                  classId={cls.id}
+                  compact
+                  className="absolute bottom-4 left-4 z-10"
+                />
               )}
               {animated && !selecting && (
                 <ClassAnimationButton

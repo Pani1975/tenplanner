@@ -27,6 +27,7 @@ export function BeforeProposalForm({
   places,
   defaultPlaceId,
   defaultBall,
+  defaultTwoCourts = false,
 }: {
   /** URL del asistente sin los parámetros de esta pantalla. */
   baseHref: string;
@@ -37,13 +38,15 @@ export function BeforeProposalForm({
   places: { id: string; name: string }[];
   defaultPlaceId: string | null;
   defaultBall: BallId | null;
+  /** Ya se eligieron dos pistas en el primer paso. */
+  defaultTwoCourts?: boolean;
 }) {
   const router = useRouter();
   const [duration, setDuration] = useState(defaultDuration);
   const [custom, setCustom] = useState(!DURATIONS.includes(defaultDuration));
   const [objectives, setObjectives] = useState(defaultObjectives);
   const [placeId, setPlaceId] = useState(defaultPlaceId ?? "");
-  const [twoCourts, setTwoCourts] = useState(false);
+  const [twoCourts, setTwoCourts] = useState(defaultTwoCourts);
   const [rotate, setRotate] = useState(false);
   const [showError, setShowError] = useState(false);
   const [going, setGoing] = useState(false);

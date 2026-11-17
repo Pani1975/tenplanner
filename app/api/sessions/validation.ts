@@ -75,6 +75,9 @@ const sessionBlockItemSchema = z
     // (pista 1) si la sesión no tiene courts = 2.
     court: z.union([z.literal(1), z.literal(2)]).optional(),
     ledBy: z.enum(LED_BY_VALUES).optional().nullable(),
+    // Por turnos: minutos de cada alumno y de cuántos en cuántos pasan.
+    turnMinutes: z.number().int().min(1).max(120).optional().nullable(),
+    turnSize: z.number().int().min(1).max(8).optional().nullable(),
   })
   .refine(
     (item) => {

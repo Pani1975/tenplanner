@@ -1,8 +1,27 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRightLeft, Clock, Columns2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRightLeft,
+  ArrowUp,
+  Clock,
+  Columns2,
+  Plus,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  blockStudentMinutes,
+  type LaneTimeItem,
+} from "@/lib/sessions/lane-time";
+import {
+  createTextItem,
+  createWarmupItem,
+  isStationsItem,
+  isTextItem,
+  isWarmupItem,
+} from "./timeline";
 import {
   PHASE_LABELS,
   type LedBy,
@@ -18,6 +37,8 @@ const LED_BY_OPTIONS: Array<{ value: LedBy; label: string }> = [
   { value: "auto", label: "Autónomo" },
 ];
 
+export type LaneItemKind = "exercise" | "text" | "warmup" | "stations";
+
 /** Un elemento del plan tal como lo pinta el tablero (sesión o clase). */
 export interface LaneItem {
   id: string;
@@ -27,27 +48,62 @@ export interface LaneItem {
   minutes: number | null;
   court: 1 | 2;
   ledBy: LedBy | null;
+  kind?: LaneItemKind;
+  /** Textos libres: título y texto (editables en la pista). */
+  title?: string;
+  text?: string;
+  /** Por turnos: minutos de cada alumno y de cuántos en cuántos pasan. */
+  turnMinutes?: number | null;
+  turnSize?: number | null;
+}
+
+export type LanePatch = {
+  court?: 1 | 2;
+  ledBy?: LedBy | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
+};
+
+/** Acciones para montar el contenido directamente en cada pista. */
+export interface LaneEditor {
+  onAdd: (
+    phase: TrainingPhase,
+    court: 1 | 2,
+    kind: "exercise" | "text" | "warmup"
+  ) => void;
+  onRemove: (id: string) => void;
+  onMinutes: (id: string, minutes: number) => void;
+  onMove: (id: string, direction: -1 | 1) => void;
+  onText: (id: string, patch: { title?: string; text?: string }) => void;
 }
 
 interface CourtsBoardViewProps {
   twoCourts: boolean;
   onSetTwoCourts: (value: boolean) => void;
   items: LaneItem[];
-  onPatchItem: (id: string, patch: { court?: 1 | 2; ledBy?: LedBy | null }) => void;
+  onPatchItem: (id: string, patch: LanePatch) => void;
   /** Bloques con rotación (dos grupos que cambian de pista a mitad). */
   rotates?: Partial<Record<TrainingPhase, boolean>>;
   onToggleRotate?: (phase: TrainingPhase, on: boolean) => void;
+  /** Con editor, el contenido se monta aquí, debajo de cada pista. */
+  editor?: LaneEditor;
+  /** Alumnos de la sesión (para comprobar los turnos). */
+  studentCount?: number;
   /** Contenido extra bajo la cabecera (p. ej. los lugares de cada pista). */
   extra?: ReactNode;
 }
+
+const inputCls =
+  "h-8 rounded-md border border-foreground/15 bg-background px-2 text-sm text-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/30";
 
 /**
  * Tablero de pistas. Con una sola pista es solo el interruptor «Usar dos
  * pistas». Con dos, cada bloque muestra dos carriles en paralelo: en uno se
  * hace un trabajo y en el otro otro (p. ej. cesta con el monitor y peloteo
- * autónomo). Cada elemento se pasa de una pista a otra y se marca si lo
- * dirige el monitor o es autónomo. Lo de cada pista ocurre a la vez, así que
- * un bloque dura lo que dure su pista más larga. Lo usan las sesiones y las
+ * autónomo). En cada pista puede haber varios ejercicios. Un elemento puede
+ * hacerse por turnos (cada alumno X min): el tablero calcula cuántos minutos
+ * hace cada alumno de cada cosa. Lo de cada pista ocurre a la vez, así que un
+ * bloque dura lo que dure su pista más larga. Lo usan las sesiones y las
  * plantillas de clase.
  */
 export function CourtsBoardView({
@@ -57,6 +113,8 @@ export function CourtsBoardView({
   onPatchItem,
   rotates = {},
   onToggleRotate,
+  editor,
+  studentCount = 0,
   extra,
 }: CourtsBoardViewProps) {
   if (!twoCourts) {
@@ -91,8 +149,9 @@ export function CourtsBoardView({
             Tablero de pistas
           </p>
           <p className="text-xs text-muted-foreground">
-            Lo de cada pista pasa a la vez: cada bloque dura lo que dure su
-            pista más larga.
+            Monta cada pista por separado, con los ejercicios que quieras. Lo
+            de cada pista pasa a la vez: cada bloque dura lo que dure su pista
+            más larga.
           </p>
         </div>
         <button
@@ -115,6 +174,14 @@ export function CourtsBoardView({
         const rotating = !!rotates[phase];
         // Con rotación los minutos son por grupo: el bloque dura el doble.
         const blockMax = rotating ? laneMax * 2 : laneMax;
+        const timeItems: LaneTimeItem[] = items.map((it) => ({
+          label: it.label,
+          court: it.court,
+          minutes: it.minutes ?? 0,
+          turnMinutes: it.turnMinutes,
+          turnSize: it.turnSize,
+        }));
+        const perStudent = blockStudentMinutes(timeItems, studentCount);
 
         return (
           <div
@@ -171,7 +238,7 @@ export function CourtsBoardView({
               </div>
             )}
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 xl:grid-cols-2">
               {([1, 2] as const).map((court) => {
                 const entries = lane(court);
                 const laneMinutes = total(court);
@@ -206,70 +273,247 @@ export function CourtsBoardView({
                       </p>
                     ) : (
                       <ul className="space-y-1.5">
-                        {entries.map((it) => (
-                          <li
-                            key={it.id}
-                            className="rounded-md border border-foreground/10 bg-card p-2"
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">
-                                {it.label}
-                              </span>
-                              {it.minutes !== null && (
-                                <span className="shrink-0 text-xs text-muted-foreground">
-                                  {it.minutes} min
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                              <div
-                                role="group"
-                                aria-label="Quién lo dirige"
-                                className="inline-flex overflow-hidden rounded-md border border-foreground/15 text-[11px] font-semibold"
-                              >
-                                {LED_BY_OPTIONS.map((opt) => {
-                                  const active = it.ledBy === opt.value;
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      aria-pressed={active}
-                                      onClick={() =>
-                                        onPatchItem(it.id, {
-                                          ledBy: active ? null : opt.value,
+                        {entries.map((it, pos) => {
+                          const turn = (it.turnMinutes ?? 0) > 0;
+                          return (
+                            <li
+                              key={it.id}
+                              className="rounded-md border border-foreground/10 bg-card p-2"
+                            >
+                              <div className="flex items-start gap-2">
+                                {editor && it.kind === "text" ? (
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <input
+                                      type="text"
+                                      value={it.title ?? ""}
+                                      onChange={(e) =>
+                                        editor.onText(it.id, {
+                                          title: e.target.value,
                                         })
                                       }
-                                      className={cn(
-                                        "px-2 py-1 transition-colors",
-                                        active
-                                          ? "bg-brand text-brand-foreground"
-                                          : "text-muted-foreground hover:text-foreground"
-                                      )}
+                                      placeholder="Título (ej.: cesta de derecha)"
+                                      maxLength={120}
+                                      className={cn(inputCls, "w-full")}
+                                    />
+                                    <input
+                                      type="text"
+                                      value={it.text ?? ""}
+                                      onChange={(e) =>
+                                        editor.onText(it.id, {
+                                          text: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Texto (opcional)"
+                                      className={cn(inputCls, "w-full")}
+                                    />
+                                  </div>
+                                ) : (
+                                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">
+                                    {it.label}
+                                  </span>
+                                )}
+                                {editor ? (
+                                  <label className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      max={300}
+                                      value={it.minutes ?? ""}
+                                      onChange={(e) => {
+                                        const v = parseInt(e.target.value, 10);
+                                        if (!isNaN(v) && v > 0)
+                                          editor.onMinutes(it.id, v);
+                                      }}
+                                      aria-label="Minutos"
+                                      className={cn(inputCls, "w-16 text-center")}
+                                    />
+                                    min
+                                  </label>
+                                ) : (
+                                  it.minutes !== null && (
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                      {it.minutes} min
+                                    </span>
+                                  )
+                                )}
+                                {editor && (
+                                  <div className="flex shrink-0 items-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => editor.onMove(it.id, -1)}
+                                      disabled={pos === 0}
+                                      aria-label="Subir"
+                                      className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                     >
-                                      {opt.label}
+                                      <ArrowUp className="size-3.5" />
                                     </button>
-                                  );
-                                })}
+                                    <button
+                                      type="button"
+                                      onClick={() => editor.onMove(it.id, 1)}
+                                      disabled={pos === entries.length - 1}
+                                      aria-label="Bajar"
+                                      className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                    >
+                                      <ArrowDown className="size-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => editor.onRemove(it.id)}
+                                      aria-label="Quitar de la sesión"
+                                      className="rounded p-1 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <X className="size-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  onPatchItem(it.id, { court: other })
-                                }
-                                className="ml-auto inline-flex items-center gap-1 rounded-md border border-foreground/15 px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-brand hover:text-brand"
-                              >
-                                <ArrowRightLeft className="size-3" />
-                                Pasar a pista {other}
-                              </button>
-                            </div>
-                          </li>
-                        ))}
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <div
+                                  role="group"
+                                  aria-label="Quién lo dirige"
+                                  className="inline-flex overflow-hidden rounded-md border border-foreground/15 text-[11px] font-semibold"
+                                >
+                                  {LED_BY_OPTIONS.map((opt) => {
+                                    const active = it.ledBy === opt.value;
+                                    return (
+                                      <button
+                                        key={opt.value}
+                                        type="button"
+                                        aria-pressed={active}
+                                        onClick={() =>
+                                          onPatchItem(it.id, {
+                                            ledBy: active ? null : opt.value,
+                                          })
+                                        }
+                                        className={cn(
+                                          "px-2 py-1 transition-colors",
+                                          active
+                                            ? "bg-brand text-brand-foreground"
+                                            : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                      >
+                                        {opt.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <label className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+                                  <input
+                                    type="checkbox"
+                                    checked={turn}
+                                    onChange={(e) =>
+                                      onPatchItem(
+                                        it.id,
+                                        e.target.checked
+                                          ? { turnMinutes: 5, turnSize: 1 }
+                                          : { turnMinutes: null, turnSize: null }
+                                      )
+                                    }
+                                    className="size-3.5 accent-[#D6FF38]"
+                                  />
+                                  Por turnos
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onPatchItem(it.id, { court: other })
+                                  }
+                                  className="ml-auto inline-flex items-center gap-1 rounded-md border border-foreground/15 px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-brand hover:text-brand"
+                                >
+                                  <ArrowRightLeft className="size-3" />
+                                  Pasar a pista {other}
+                                </button>
+                              </div>
+                              {turn && (
+                                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                                  Cada alumno
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={120}
+                                    value={it.turnMinutes ?? 1}
+                                    onChange={(e) => {
+                                      const v = parseInt(e.target.value, 10);
+                                      if (!isNaN(v) && v > 0)
+                                        onPatchItem(it.id, { turnMinutes: v });
+                                    }}
+                                    aria-label="Minutos por alumno"
+                                    className={cn(inputCls, "w-14 text-center")}
+                                  />
+                                  min ·
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={8}
+                                    value={it.turnSize ?? 1}
+                                    onChange={(e) => {
+                                      const v = parseInt(e.target.value, 10);
+                                      if (!isNaN(v) && v > 0)
+                                        onPatchItem(it.id, { turnSize: v });
+                                    }}
+                                    aria-label="Alumnos por turno"
+                                    className={cn(inputCls, "w-14 text-center")}
+                                  />
+                                  alumno(s) a la vez en cada turno
+                                </div>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
+                    )}
+
+                    {editor && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {(
+                          [
+                            { kind: "exercise", label: "Añadir ejercicio" },
+                            { kind: "text", label: "Texto libre" },
+                            { kind: "warmup", label: "Descanso" },
+                          ] as const
+                        ).map(({ kind, label }) => (
+                          <button
+                            key={kind}
+                            type="button"
+                            onClick={() => editor.onAdd(phase, court, kind)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:border-brand/50 hover:bg-brand/10"
+                          >
+                            <Plus className="size-3" />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
               })}
             </div>
+
+            {perStudent.perStudent.length > 0 && (
+              <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-3 py-2 text-xs text-foreground">
+                <p className="font-bold">
+                  Por alumno (bloque de {perStudent.blockMinutes} min)
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {perStudent.perStudent.map((p, i) => (
+                    <li key={`${p.label}-${i}`}>
+                      {p.label}: <strong>{p.minutes} min</strong>
+                      {p.kind === "turno" ? " (en su turno)" : ""}
+                    </li>
+                  ))}
+                </ul>
+                {studentCount > 0 && (
+                  <p className="mt-1 text-muted-foreground">
+                    Calculado para {studentCount} alumnos.
+                  </p>
+                )}
+                {perStudent.warnings.map((w) => (
+                  <p key={w} className="mt-1 font-medium text-amber-600">
+                    {w}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
@@ -282,8 +526,15 @@ function itemLabel(ex: WizardExercise) {
     ex.title?.trim() ||
     ex.name?.trim() ||
     ex.freeText?.trim().slice(0, 40) ||
-    "Actividad"
+    (isWarmupItem(ex) ? "Descanso" : "Actividad")
   );
+}
+
+function kindOf(ex: WizardExercise): LaneItemKind {
+  if (isWarmupItem(ex)) return "warmup";
+  if (isStationsItem(ex)) return "stations";
+  if (isTextItem(ex)) return "text";
+  return "exercise";
 }
 
 interface CourtsBoardProps {
@@ -291,18 +542,75 @@ interface CourtsBoardProps {
   update: (patch: Partial<WizardState>) => void;
   /** Mis lugares: cada pista puede estar en un lugar distinto. */
   places?: { id: string; name: string }[];
+  /** Abre el buscador de ejercicios para añadir uno a una pista. */
+  onPickExercise?: (phase: TrainingPhase, court: 1 | 2) => void;
 }
 
 /** Tablero de pistas del Paso 2 del asistente de sesiones. */
-export function CourtsBoard({ state, update, places = [] }: CourtsBoardProps) {
-  const items: LaneItem[] = state.exercises.map((ex, i) => ({
+export function CourtsBoard({
+  state,
+  update,
+  places = [],
+  onPickExercise,
+}: CourtsBoardProps) {
+  const exercises = state.exercises;
+  const items: LaneItem[] = exercises.map((ex, i) => ({
     id: String(i),
     phase: ex.phase ?? "main",
     label: itemLabel(ex),
     minutes: ex.overrideDuration ?? ex.durationMinutes,
     court: ex.court === 2 ? 2 : 1,
     ledBy: ex.ledBy ?? null,
+    kind: kindOf(ex),
+    title: ex.title ?? "",
+    text: ex.freeText ?? "",
+    turnMinutes: ex.turnMinutes ?? null,
+    turnSize: ex.turnSize ?? null,
   }));
+
+  const setAt = (id: string, patch: Partial<WizardExercise>) =>
+    update({
+      exercises: exercises.map((ex, i) =>
+        String(i) === id ? { ...ex, ...patch } : ex
+      ),
+    });
+
+  const editor: LaneEditor = {
+    onAdd: (phase, court, kind) => {
+      if (kind === "exercise") {
+        onPickExercise?.(phase, court);
+        return;
+      }
+      const base =
+        kind === "text" ? createTextItem("", phase) : createWarmupItem(phase);
+      update({
+        exercises: [...exercises, { ...base, court, ledBy: null }],
+      });
+    },
+    onRemove: (id) =>
+      update({ exercises: exercises.filter((_, i) => String(i) !== id) }),
+    onMinutes: (id, minutes) => setAt(id, { overrideDuration: minutes }),
+    onMove: (id, direction) => {
+      const idx = Number(id);
+      const me = exercises[idx];
+      if (!me) return;
+      // Intercambia con el vecino de la misma pista y bloque.
+      const same = (ex: WizardExercise) =>
+        (ex.phase ?? "main") === (me.phase ?? "main") &&
+        (ex.court === 2 ? 2 : 1) === (me.court === 2 ? 2 : 1);
+      let j = idx + direction;
+      while (j >= 0 && j < exercises.length && !same(exercises[j])) j += direction;
+      if (j < 0 || j >= exercises.length) return;
+      const next = [...exercises];
+      [next[idx], next[j]] = [next[j], next[idx]];
+      update({ exercises: next });
+    },
+    onText: (id, patch) =>
+      setAt(id, {
+        ...(patch.title !== undefined ? { title: patch.title } : {}),
+        ...(patch.text !== undefined ? { freeText: patch.text } : {}),
+      }),
+  };
 
   return (
     <CourtsBoardView
@@ -323,13 +631,9 @@ export function CourtsBoard({ state, update, places = [] }: CourtsBoardProps) {
       twoCourts={state.courts === 2}
       onSetTwoCourts={(on) => update({ courts: on ? 2 : 1 })}
       items={items}
-      onPatchItem={(id, patch) =>
-        update({
-          exercises: state.exercises.map((ex, i) =>
-            String(i) === id ? { ...ex, ...patch } : ex
-          ),
-        })
-      }
+      editor={editor}
+      studentCount={state.studentIds.length}
+      onPatchItem={(id, patch) => setAt(id, patch)}
       extra={
         places.length > 0 ? (
           <div className="grid gap-2 sm:grid-cols-2">

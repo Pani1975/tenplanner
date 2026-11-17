@@ -68,6 +68,8 @@ export default async function EditClassPage({ params }: PageProps) {
           stations: classBlockExercises.stations,
           court: classBlockExercises.court,
           ledBy: classBlockExercises.ledBy,
+          turnMinutes: classBlockExercises.turnMinutes,
+          turnSize: classBlockExercises.turnSize,
           exerciseName: exercises.name,
         })
         .from(classBlockExercises)
@@ -147,6 +149,8 @@ export default async function EditClassPage({ params }: PageProps) {
             ledBy: (it.ledBy === "coach" || it.ledBy === "auto"
               ? it.ledBy
               : null) as "coach" | "auto" | null,
+            turnMinutes: it.turnMinutes ?? null,
+            turnSize: it.turnSize ?? null,
           };
           const itemKind = resolveItemKind(it);
           if (itemKind === "warmup") {

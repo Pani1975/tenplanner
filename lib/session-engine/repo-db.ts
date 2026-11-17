@@ -47,7 +47,48 @@ export type EngineGroup = {
   defaultLevel: string | null;
   weeklySchedule: GroupScheduleEntry[] | null;
   students: { id: string; name: string; playerLevel: string | null }[];
+  /** Clase suelta (alumnos sin grupo): sin histórico del grupo. */
+  adHoc?: boolean;
 };
+
+/** Prefijo del id de una clase suelta (no es un grupo guardado). */
+export const AD_HOC_PREFIX = "suelta:";
+
+/**
+ * Clase suelta: unos alumnos del monitor sin grupo. Se trata como un grupo
+ * virtual (con sus niveles, para elegir los ejercicios) pero sin histórico
+ * de sesiones: el motor se apoya entonces en los objetivos que indique el
+ * monitor.
+ */
+export async function loadAdHocGroup(
+  userId: string,
+  studentIds: string[],
+  sport: string
+): Promise<EngineGroup | null> {
+  const ids = Array.from(new Set(studentIds));
+  if (ids.length === 0) return null;
+  const rows = await db
+    .select({
+      id: students.id,
+      name: students.name,
+      playerLevel: students.playerLevel,
+    })
+    .from(students)
+    .where(and(eq(students.coachId, userId), inArray(students.id, ids)))
+    .orderBy(asc(students.name));
+  if (rows.length === 0) return null;
+  return {
+    id: `${AD_HOC_PREFIX}${rows.map((r) => r.id).sort().join(",")}`,
+    name: rows.map((r) => r.name).join(", "),
+    sport,
+    clubId: null,
+    coachId: userId,
+    defaultLevel: null,
+    weeklySchedule: null,
+    students: rows,
+    adHoc: true,
+  };
+}
 
 /** Grupo accesible para el usuario en su espacio activo, con sus alumnos. */
 export async function loadEngineGroup(
@@ -282,7 +323,8 @@ export async function loadEngineData(
   const [levels, pool, recentSessions] = await Promise.all([
     loadSkillLevels(),
     loadEnginePool(userId, group.sport),
-    loadRecentGroupSessions(group.id),
+    // Una clase suelta no tiene histórico de grupo.
+    group.adHoc ? Promise.resolve([] as string[][]) : loadRecentGroupSessions(group.id),
   ]);
   const wanted = new Set(attendeeIds);
   const attendeeLevels = group.students

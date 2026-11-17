@@ -15,6 +15,7 @@ import {
 import { SessionFavoriteToggle } from "@/components/app/session-favorite-toggle";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
+import { AddToPendingSessionButton } from "@/components/app/pending-session-target";
 
 export interface SessionListItem {
   id: string;
@@ -293,6 +294,11 @@ export function SessionsBulkList({
                       <ArrowRight className="size-4" />
                     </span>
                   </Link>
+                  <AddToPendingSessionButton
+                    sessionId={session.id}
+                    compact
+                    className="absolute right-[7.5rem] top-1/2 z-10 -translate-y-1/2"
+                  />
                   {session.status === "cancelled" ? (
                     <button
                       type="button"

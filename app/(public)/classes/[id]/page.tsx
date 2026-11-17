@@ -15,6 +15,8 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { AddClassMenuButton } from "@/components/app/add-class-menu-button";
+import { AddToPendingSessionButton } from "@/components/app/pending-session-target";
+import { PendingTargetBanner } from "@/components/app/pending-session-target";
 import {
   CopyToSpaceButton,
   type CopyTarget,
@@ -454,6 +456,7 @@ export default async function ClassDetailPage({
   return (
     <div className="relative min-h-full overflow-hidden bg-[#F4F4F1] px-4 py-6 text-[#050505] dark:bg-[#050505] dark:text-[#F4F4F1] sm:px-6 md:px-10 lg:px-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.22),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.16),transparent_34%)]" />
+      <PendingTargetBanner className="relative mb-4" />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -586,7 +589,10 @@ export default async function ClassDetailPage({
                 Uso en tus sesiones
               </h2>
             </div>
-            <AddClassMenuButton classId={cls.id} />
+            <div className="flex flex-wrap items-center gap-2">
+              <AddToPendingSessionButton classId={cls.id} />
+              <AddClassMenuButton classId={cls.id} />
+            </div>
           </div>
 
           {classUsageSessions.length === 0 ? (

@@ -32,7 +32,13 @@ import {
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import { generateSession } from "./index";
 import { levelLabel, resolveGroupLevel } from "./level";
-import { loadEngineData, loadEngineGroup, type EngineGroup } from "./repo-db";
+import {
+  loadAdHocGroup,
+  loadEngineData,
+  loadEngineGroup,
+  type EngineGroup,
+} from "./repo-db";
+import { getActiveSport } from "@/lib/sports";
 import type {
   Duration,
   Focus,
@@ -170,7 +176,10 @@ export async function findNextTraining(
 }
 
 export type ProposalRequest = {
-  groupId: string;
+  /** Un grupo guardado… */
+  groupId?: string;
+  /** …o una clase suelta: alumnos del monitor sin grupo. */
+  studentIds?: string[];
   date: string;
   durationMinutes: Duration;
   intensity: Intensity;
@@ -202,7 +211,13 @@ export async function buildProposal(
   activeClubId: string | null,
   req: ProposalRequest
 ): Promise<Proposal | null> {
-  const group = await loadEngineGroup(userId, activeClubId, req.groupId);
+  const group = req.groupId
+    ? await loadEngineGroup(userId, activeClubId, req.groupId)
+    : await loadAdHocGroup(
+        userId,
+        req.studentIds ?? [],
+        await getActiveSport(userId)
+      );
   if (!group) return null;
   const memberIds = new Set(group.students.map((s) => s.id));
   const attendeeIds =
@@ -249,6 +264,38 @@ export type BeforeProposalContext = {
   groupObjetivos: string | null;
   places: { id: string; name: string }[];
 };
+
+/**
+ * "Antes de la propuesta" para una clase suelta (alumnos sin grupo): su nivel
+ * sale de los alumnos y no hay histórico ni objetivos del grupo.
+ */
+export async function loadAdHocBeforeContext(
+  userId: string,
+  studentIds: string[]
+): Promise<BeforeProposalContext> {
+  const group = await loadAdHocGroup(userId, studentIds, "tenis");
+  const [levels, placeRows] = await Promise.all([
+    loadSkillLevels(),
+    db
+      .select({ id: places.id, name: places.name })
+      .from(places)
+      .where(eq(places.coachId, userId))
+      .orderBy(asc(places.name)),
+  ]);
+  const level = resolveGroupLevel(
+    levels,
+    (group?.students ?? []).map((s) => s.playerLevel),
+    null
+  );
+  return {
+    levelCode: level.code,
+    levelLabel: levelLabel(levels, level.code),
+    historyCount: 0,
+    usualDuration: 60,
+    groupObjetivos: null,
+    places: placeRows,
+  };
+}
 
 /** Datos para la pantalla "Antes de la propuesta". */
 export async function loadBeforeProposalContext(

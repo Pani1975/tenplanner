@@ -36,6 +36,7 @@ import {
 } from "@/lib/sessions/permissions";
 import { SessionDraftsPanel } from "@/components/app/session-drafts-panel";
 import { SessionsSearchInput } from "@/components/app/sessions-search-input";
+import { PendingTargetBanner } from "@/components/app/pending-session-target";
 import { getAppSettings } from "@/lib/app-settings";
 import { cn } from "@/lib/utils";
 import {
@@ -317,6 +318,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
       <div className="w-full space-y-6 px-4 py-8 sm:px-6 md:px-10">
+        <PendingTargetBanner />
         <header className="relative overflow-hidden rounded-lg border border-[#050505]/10 bg-white p-5 shadow-[0_18px_60px_rgba(5,5,5,0.06)] dark:border-white/10 dark:bg-white/[0.045] sm:p-6">
           <div
             aria-hidden

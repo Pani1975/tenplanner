@@ -223,6 +223,8 @@ export interface SessionBlockData {
     /** Pista (1 o 2) y quién lo dirige; solo cuenta con courts = 2. */
     court?: number;
     ledBy?: string | null;
+    turnMinutes?: number | null;
+    turnSize?: number | null;
     /** Comentario del monitor sobre este ejercicio/actividad. */
     coachComment?: string | null;
     /** Nota de voz sobre este ejercicio (URL firmada; solo el dueño). */
@@ -1120,6 +1122,15 @@ export function SessionDetailClient({
                                     {item.ledBy === "coach"
                                       ? "Con monitor"
                                       : "Autónomo"}
+                                  </span>
+                                )}
+                                {(item.turnMinutes ?? 0) > 0 && (
+                                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                    Por turnos: {item.turnMinutes} min cada
+                                    alumno
+                                    {(item.turnSize ?? 1) > 1
+                                      ? `, de ${item.turnSize} en ${item.turnSize}`
+                                      : ""}
                                   </span>
                                 )}
                               </span>

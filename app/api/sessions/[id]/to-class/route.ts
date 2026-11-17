@@ -143,6 +143,8 @@ export async function POST(_request: Request, ctx: Ctx) {
             aspectoJuego: item.aspectoJuego,
             court: item.court,
             ledBy: item.ledBy,
+            turnMinutes: item.turnMinutes,
+            turnSize: item.turnSize,
           };
         })
       );

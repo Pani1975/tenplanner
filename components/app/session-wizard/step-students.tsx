@@ -6,6 +6,7 @@ import {
   Check,
   ChevronDown,
   Loader2,
+  Plus,
   Search,
   UserPlus,
   Users,
@@ -13,15 +14,33 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StudentOption, WizardState } from "./types";
+import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+
+// Niveles que se ofrecen al dar de alta a un alumno (los mismos que en su ficha).
+const NEW_STUDENT_LEVELS = [
+  { id: "descubrimiento", label: "Descubrimiento", desc: "4-6 años" },
+  { id: "desarrollo", label: "Desarrollo", desc: "6-8 años" },
+  { id: "consolidacion", label: "Consolidación", desc: "8-10 años" },
+  { id: "especializacion", label: "Especialización", desc: "10-12 años" },
+  { id: "precompeticion", label: "Precompetición", desc: "12-14 años" },
+  { id: "competicion", label: "Competición", desc: "14-18 años" },
+];
 
 interface StepStudentsProps {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
+  /** Se llama al elegir un grupo (p. ej. para proponer su próximo entreno). */
+  onGroupPicked?: (group: {
+    id: string;
+    name: string;
+    weeklySchedule?: GroupScheduleEntry[] | null;
+  }) => void;
 }
 
 interface GroupOption {
   id: string;
   name: string;
+  weeklySchedule?: GroupScheduleEntry[] | null;
   description: string | null;
   memberCount: number;
   studentIds: string[];
@@ -29,12 +48,22 @@ interface GroupOption {
 
 type LoadStatus = "loading" | "ready" | "unavailable";
 
-export function StepStudents({ state, update }: StepStudentsProps) {
+export function StepStudents({
+  state,
+  update,
+  onGroupPicked,
+}: StepStudentsProps) {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"individual" | "groups">("groups");
+  // Alta rápida de un alumno que aún no está en el sistema.
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newLevel, setNewLevel] = useState("");
+  const [savingNew, setSavingNew] = useState(false);
+  const [newError, setNewError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +101,48 @@ export function StepStudents({ state, update }: StepStudentsProps) {
       cancelled = true;
     };
   }, []);
+
+  async function createStudent() {
+    const name = newName.trim();
+    if (!name) {
+      setNewError("Escribe el nombre del alumno.");
+      return;
+    }
+    setSavingNew(true);
+    setNewError(null);
+    try {
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, playerLevel: newLevel || null }),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: { id?: string; name?: string; playerLevel?: string | null };
+      };
+      if (!res.ok || !json.data?.id) {
+        setNewError("No se pudo dar de alta al alumno. Inténtalo de nuevo.");
+        return;
+      }
+      const created: StudentOption = {
+        id: json.data.id,
+        name: json.data.name ?? name,
+        playerLevel: json.data.playerLevel ?? (newLevel || null),
+      } as StudentOption;
+      setStudents((prev) => [...prev, created]);
+      // Queda elegido para la sesión, en la pestaña de clase suelta.
+      update({
+        studentIds: Array.from(new Set([...state.studentIds, created.id])),
+      });
+      setTab("individual");
+      setCreating(false);
+      setNewName("");
+      setNewLevel("");
+    } catch {
+      setNewError("Error de red. Inténtalo de nuevo.");
+    } finally {
+      setSavingNew(false);
+    }
+  }
 
   function toggleStudent(id: string) {
     const set = new Set(state.studentIds);
@@ -121,6 +192,7 @@ export function StepStudents({ state, update }: StepStudentsProps) {
       // y el nombre lleva SG).
       groupName: groups.find((g) => g.id === nextGroupId)?.name ?? "",
     });
+    if (!isSelected) onGroupPicked?.(group);
   }
 
   const filtered = students.filter((s) =>
@@ -136,7 +208,7 @@ export function StepStudents({ state, update }: StepStudentsProps) {
     );
   }
 
-  if (status === "unavailable" || students.length === 0) {
+  if (status === "unavailable") {
     return (
       <div className="flex flex-col items-center text-center py-12 px-4 rounded-2xl border border-dashed border-border">
         <Users className="size-10 text-muted-foreground mb-3" />
@@ -168,6 +240,71 @@ export function StepStudents({ state, update }: StepStudentsProps) {
           {state.studentIds.length !== 1 ? "s" : ""}
         </span>
       </div>
+
+      {/* Nuevo alumno: alguien que aún no está dado de alta */}
+      {creating ? (
+        <div className="space-y-3 rounded-xl border border-brand/40 bg-brand/5 p-3">
+          <p className="text-sm font-semibold text-foreground">Nuevo alumno</p>
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Nombre y apellidos"
+            maxLength={120}
+            autoFocus
+            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
+          />
+          <select
+            value={newLevel}
+            onChange={(e) => setNewLevel(e.target.value)}
+            aria-label="Nivel del alumno"
+            className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+          >
+            <option value="">Nivel (opcional)</option>
+            {NEW_STUDENT_LEVELS.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label} · {l.desc}
+              </option>
+            ))}
+          </select>
+          {newError && (
+            <p className="text-xs font-medium text-destructive">{newError}</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void createStudent()}
+              disabled={savingNew}
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-brand-foreground hover:bg-brand/90 disabled:opacity-60"
+            >
+              {savingNew && <Loader2 className="size-4 animate-spin" />}
+              Dar de alta y elegir
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreating(false);
+                setNewError(null);
+              }}
+              className="h-9 rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:bg-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Queda guardado en tus alumnos; puedes completar su ficha después.
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-foreground/25 px-3 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
+        >
+          <Plus className="size-4" />
+          Nuevo alumno
+        </button>
+      )}
 
       {/* Tab selector */}
       <div className="flex gap-1 p-1 bg-muted/50 rounded-xl border border-border">
@@ -326,10 +463,17 @@ export function StepStudents({ state, update }: StepStudentsProps) {
                 </button>
               );
             })}
-            {filtered.length === 0 && (
-              <p className="text-xs text-muted-foreground col-span-full text-center py-6">
-                Sin resultados para &ldquo;{search}&rdquo;
+            {students.length === 0 ? (
+              <p className="col-span-full py-6 text-center text-xs text-muted-foreground">
+                Aún no tienes alumnos. Usa «Nuevo alumno» para dar de alta al
+                primero.
               </p>
+            ) : (
+              filtered.length === 0 && (
+                <p className="text-xs text-muted-foreground col-span-full text-center py-6">
+                  Sin resultados para &ldquo;{search}&rdquo;
+                </p>
+              )
             )}
           </div>
         </>

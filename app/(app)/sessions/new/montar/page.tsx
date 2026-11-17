@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { groups, groupStudents, sessions } from "@/db/schema";
+import { groups, groupStudents, sessions, students } from "@/db/schema";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
@@ -24,6 +24,7 @@ import {
 import {
   countSessionItems,
   loadBeforeProposalContext,
+  loadAdHocBeforeContext,
   ENGINE_TIME_ZONE,
 } from "@/lib/session-engine/today";
 import { ANTES, MONTAR } from "@/lib/session-engine/messages";
@@ -33,7 +34,16 @@ import { OtherDatePicker } from "./other-date-picker";
 import { BeforeProposalForm } from "./before-proposal-form";
 
 interface PageProps {
-  searchParams: Promise<{ group?: string; session?: string; at?: string }>;
+  searchParams: Promise<{
+    group?: string;
+    session?: string;
+    at?: string;
+    /** Clase suelta: alumnos (ids) sin grupo. */
+    students?: string;
+    pistas?: string;
+    lugar?: string;
+    lugar2?: string;
+  }>;
 }
 
 const CARD =
@@ -160,7 +170,71 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
 
   let body: React.ReactNode;
 
-  if (selected && (params.session || params.at)) {
+  // Clase suelta: alumnos del monitor sin grupo (uno nuevo, por ejemplo).
+  // No hay histórico de grupo: la propuesta se apoya en los objetivos.
+  const adHocIds = (params.students ?? "")
+    .split(",")
+    .filter((id) => /^[0-9a-f-]{36}$/i.test(id));
+  const adHocAt = parseLocalAt(params.at);
+
+  if (!selected && adHocIds.length > 0 && adHocAt) {
+    const adHocRows = await db
+      .select({ id: students.id, name: students.name })
+      .from(students)
+      .where(and(eq(students.coachId, user.id), inArray(students.id, adHocIds)));
+    if (adHocRows.length === 0) {
+      body = (
+        <p className="text-sm text-muted-foreground">
+          No se encontraron esos alumnos.
+        </p>
+      );
+    } else {
+      const ctx = await loadAdHocBeforeContext(
+        user.id,
+        adHocRows.map((r) => r.id)
+      );
+      const baseQs = new URLSearchParams({
+        students: adHocRows.map((r) => r.id).join(","),
+        at: params.at!,
+      });
+      if (params.lugar2) baseQs.set("lugar2", params.lugar2);
+      body = (
+        <div className="flex flex-col gap-4">
+          <section className={CARD}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              {ANTES.title}
+            </p>
+            <h2 className="mt-1 font-heading text-xl text-foreground">
+              {adHocRows.map((r) => r.name).join(", ")}{" "}
+              <span className="text-muted-foreground">
+                · {WHEN.format(adHocAt)}
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {ANTES.level(ctx.levelLabel)} · Clase suelta, sin histórico de
+              grupo
+            </p>
+            <p className="mt-2 text-sm text-foreground">
+              Para proponerte la clase, Ten Planner necesita que indiques los
+              objetivos de la sesión.
+            </p>
+            <div className="mt-5">
+              <BeforeProposalForm
+                baseHref={`/sessions/new?${baseQs.toString()}`}
+                defaultDuration={ctx.usualDuration}
+                defaultObjectives=""
+                suggestions={[]}
+                places={ctx.places}
+                defaultPlaceId={params.lugar ?? null}
+                defaultTwoCourts={params.pistas === "2"}
+                defaultBall={ballFromLevels([ctx.levelCode])}
+              />
+            </div>
+          </section>
+        </div>
+      );
+    }
+  } else if (selected && (params.session || params.at)) {
     // ── Paso 3: antes de la propuesta (duración, objetivos y lugar) ──
     let target: {
       at: Date;
@@ -202,7 +276,9 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
         const qs = new URLSearchParams({ group: selected.id, at: params.at! });
         target = {
           at,
-          baseHref: `/sessions/new?${qs.toString()}`,
+          baseHref: `/sessions/new?${qs.toString()}${
+            params.lugar2 ? `&lugar2=${params.lugar2}` : ""
+          }`,
           // La duración sale del horario del grupo (inicio–fin) si ese día
           // tiene clase fija; si no, la habitual.
           durationMinutes: scheduleMinutesForDate(
@@ -263,7 +339,8 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                 defaultObjectives={target.objective ?? ""}
                 suggestions={groupObjectives}
                 places={ctx.places}
-                defaultPlaceId={target.placeId}
+                defaultPlaceId={target.placeId ?? params.lugar ?? null}
+                defaultTwoCourts={params.pistas === "2"}
                 defaultBall={ballFromLevels([ctx.levelCode])}
               />
             </div>

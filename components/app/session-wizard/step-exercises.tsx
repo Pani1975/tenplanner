@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, DragEvent, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  DragEvent,
+  useEffect,
+  type ReactNode,
+} from "react";
 import NextLink from "next/link";
 import {
   BookOpen,
@@ -156,6 +162,28 @@ function groupByPhase(
   return groups;
 }
 
+/**
+ * Con dos pistas el tablero es el editor principal; la lista por bloques
+ * (notas, estaciones, ajustes de cada elemento) queda plegada debajo.
+ */
+function DetailsWhen({
+  when,
+  children,
+}: {
+  when: boolean;
+  children: ReactNode;
+}) {
+  if (!when) return <>{children}</>;
+  return (
+    <details className="rounded-lg border border-dashed border-foreground/20 bg-card/50 p-3">
+      <summary className="cursor-pointer text-sm font-semibold text-foreground">
+        Edición detallada (notas, estaciones, ajustes de cada elemento…)
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  );
+}
+
 const ITEM_KIND_FALLBACK_NAME = "este elemento";
 
 export function StepExercises({
@@ -217,6 +245,10 @@ export function StepExercises({
   } | null>(null);
   /** Bloque en el que está abierto el buscador de ejercicios (como en Clases). */
   const [pickerPhase, setPickerPhase] = useState<TrainingPhase | null>(null);
+  // Dos pistas: lo que se añade desde una pista se queda en ella mientras el
+  // buscador siga abierto en ese bloque.
+  const [pendingCourt, setPendingCourt] = useState<1 | 2 | null>(null);
+  const prevCountRef = useRef(state.exercises.length);
   /** Elemento con el menú "Sustituir por…" abierto (índice en la sesión). */
   const [replaceMenuIdx, setReplaceMenuIdx] = useState<number | null>(null);
   /** Elemento que se está sustituyendo por un ejercicio de la biblioteca o
@@ -306,6 +338,23 @@ export function StepExercises({
   useEffect(() => {
     if (editingDurationIdx !== null) durationInputRef.current?.focus();
   }, [editingDurationIdx]);
+
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    prevCountRef.current = state.exercises.length;
+    if (pendingCourt && state.exercises.length > prev) {
+      update({
+        exercises: state.exercises.map((e, i) =>
+          i >= prev ? { ...e, court: pendingCourt } : e
+        ),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.exercises.length]);
+
+  useEffect(() => {
+    if (pickerPhase === null) setPendingCourt(null);
+  }, [pickerPhase]);
 
   function setExercises(next: WizardExercise[]) {
     update({ exercises: next });
@@ -1238,7 +1287,24 @@ export function StepExercises({
       </Dialog>
 
       <div className="space-y-4">
-        <CourtsBoard state={state} update={update} places={places} />
+        <CourtsBoard
+          state={state}
+          update={update}
+          places={places}
+          onPickExercise={(phase, court) => {
+            setPendingCourt(court);
+            setAddPhaseOverride(phase);
+            setPickingStation(null);
+            setReplacing(null);
+            setSourceTab("library");
+            setSearch("");
+            setPickerPhase(phase);
+          }}
+        />
+        {state.courts === 2 &&
+          pickerPhase &&
+          replacing?.target !== "exercise" &&
+          sourcesPanel}
         {selected.length > 0 && (
           <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border border-border bg-background/95 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
             <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
@@ -1257,6 +1323,7 @@ export function StepExercises({
           </div>
         )}
 
+        <DetailsWhen when={state.courts === 2}>
         <div>
           {/* Los 3 bloques predefinidos */}
           <div className="flex flex-col gap-3">
@@ -2050,7 +2117,8 @@ export function StepExercises({
                       </div>
                     )}
 
-                    {pickerPhase === phase &&
+                    {state.courts !== 2 &&
+                      pickerPhase === phase &&
                       replacing?.target !== "exercise" &&
                       sourcesPanel}
                   </div>
@@ -2059,6 +2127,7 @@ export function StepExercises({
             })}
           </div>
         </div>
+        </DetailsWhen>
       </div>
     </>
   );

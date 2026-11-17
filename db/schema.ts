@@ -575,6 +575,10 @@ export const sessionBlockItems = pgTable(
     // Quién dirige el item: "coach" (con monitor) | "auto" (autónomo).
     // null = sin indicar.
     ledBy: varchar("led_by", { length: 8 }),
+    // Por turnos: cada alumno turn_minutes minutos, de turn_size en turn_size
+    // (null = todos a la vez). Ver 0104.
+    turnMinutes: smallint("turn_minutes"),
+    turnSize: smallint("turn_size"),
   },
   (t) => [
     index("session_block_items_block_id_idx").on(t.blockId),
@@ -1311,6 +1315,8 @@ export const classBlockExercises = pgTable(
     // solo cuentan si classes.courts = 2. Igual que en session_block_items.
     court: smallint("court").default(1).notNull(),
     ledBy: varchar("led_by", { length: 8 }),
+    turnMinutes: smallint("turn_minutes"),
+    turnSize: smallint("turn_size"),
   },
   (t) => [
     index("class_block_exercises_block_id_idx").on(t.blockId),

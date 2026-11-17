@@ -101,7 +101,12 @@ interface AvailableExercise extends PickerTaggedExercise {
 }
 
 /** Pista y quién dirige cada elemento (plantillas con dos pistas). */
-type BlockItemLane = { court?: 1 | 2; ledBy?: "coach" | "auto" | null };
+type BlockItemLane = {
+  court?: 1 | 2;
+  ledBy?: "coach" | "auto" | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
+};
 
 type BlockItem = BlockItemLane & BlockItemShape;
 
@@ -938,6 +943,10 @@ export function ClassForm({
                 ? {
                     court: b.items[i].court === 2 ? (2 as const) : (1 as const),
                     ledBy: b.items[i].ledBy ?? null,
+                    turnMinutes: b.items[i].turnMinutes ?? null,
+                    turnSize: b.items[i].turnMinutes
+                      ? (b.items[i].turnSize ?? 1)
+                      : null,
                   }
                 : {}),
             })),
@@ -1440,6 +1449,9 @@ export function ClassForm({
                 minutes: item.durationMinutes,
                 court: item.court === 2 ? (2 as const) : (1 as const),
                 ledBy: item.ledBy ?? null,
+                kind: item.kind,
+                turnMinutes: item.turnMinutes ?? null,
+                turnSize: item.turnSize ?? null,
               }))
             )}
             onPatchItem={(id, patch) => {

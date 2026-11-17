@@ -55,6 +55,8 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
       itemStations: classBlockExercises.stations,
       itemCourt: classBlockExercises.court,
       itemLedBy: classBlockExercises.ledBy,
+      itemTurnMinutes: classBlockExercises.turnMinutes,
+      itemTurnSize: classBlockExercises.turnSize,
       exId: exercises.id,
       exName: exercises.name,
       exDescription: exercises.description,
@@ -179,6 +181,8 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
           ledBy: (row.itemLedBy === "coach" || row.itemLedBy === "auto"
             ? row.itemLedBy
             : null) as "coach" | "auto" | null,
+          turnMinutes: row.itemTurnMinutes ?? null,
+          turnSize: row.itemTurnSize ?? null,
         },
       ])
   );
@@ -187,6 +191,8 @@ export async function loadClassPlan(classId: string): Promise<ClassPlan> {
     if (lane) {
       item.court = lane.court;
       item.ledBy = lane.ledBy;
+      item.turnMinutes = lane.turnMinutes;
+      item.turnSize = lane.turnSize;
     }
   }
 

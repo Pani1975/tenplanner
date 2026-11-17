@@ -58,6 +58,10 @@ export interface WizardExercise {
   court?: 1 | 2;
   /** Quién lo dirige: con monitor o autónomo. null = sin indicar. */
   ledBy?: LedBy | null;
+  /** Por turnos: minutos de cada alumno (null/ausente = todos a la vez). */
+  turnMinutes?: number | null;
+  /** De cuántos en cuántos alumnos pasan por turnos (por defecto 1). */
+  turnSize?: number | null;
 }
 
 export type LedBy = "coach" | "auto";

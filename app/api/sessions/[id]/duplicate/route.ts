@@ -166,6 +166,8 @@ export async function POST(request: Request, ctx: Ctx) {
             aspectoJuego: item.aspectoJuego,
             court: item.court,
             ledBy: item.ledBy,
+            turnMinutes: item.turnMinutes,
+            turnSize: item.turnSize,
             orderIndex: item.orderIndex,
             durationMinutes: item.durationMinutes,
             notes: item.notes,

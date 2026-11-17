@@ -34,6 +34,7 @@ import {
 } from "@/lib/nav/class-nav";
 import { AUTORIAS, nivelesForSport } from "@/lib/exercise-taxonomy";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
+import { PendingTargetBanner } from "@/components/app/pending-session-target";
 import { spaceLabels } from "@/lib/space-labels";
 import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
@@ -403,6 +404,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     <div className="relative min-h-full overflow-hidden bg-[#F4F4F1] px-4 py-6 text-[#050505] dark:bg-[#050505] dark:text-[#F4F4F1] sm:px-6 md:px-10 lg:px-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.24),transparent_34%),linear-gradient(180deg,rgba(5,5,5,0.06),transparent)] dark:bg-[radial-gradient(circle_at_78%_18%,rgba(214,255,56,0.18),transparent_34%)]" />
       <div className="relative space-y-6">
+        <PendingTargetBanner />
         <header className="overflow-hidden rounded-lg bg-[#050505] text-white shadow-[0_24px_80px_rgba(5,5,5,0.18)]">
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:p-8">
             <div>

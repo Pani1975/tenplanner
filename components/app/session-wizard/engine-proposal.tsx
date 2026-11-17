@@ -13,7 +13,10 @@ import type { Proposal } from "@/lib/session-engine/today";
 import type { AvailableExercise, WizardExercise, WizardState } from "./types";
 
 export type EngineConfig = {
-  groupId: string;
+  /** Un grupo guardado… */
+  groupId?: string;
+  /** …o una clase suelta: los alumnos (sin grupo). */
+  studentIds?: string[];
   /** Edición de una sesión con ejercicios: cuántos se sustituyen. */
   replacesCount?: number;
   /** Abrir ya en el Paso 2 y preparar la propuesta al cargar. */
@@ -83,7 +86,9 @@ export function useEngineProposal({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        groupId: engine.groupId,
+        ...(engine.groupId
+          ? { groupId: engine.groupId }
+          : { studentIds: engine.studentIds }),
         date: state.scheduledAt.slice(0, 10),
         durationMinutes: state.durationMinutes,
         objectives: state.objective || null,

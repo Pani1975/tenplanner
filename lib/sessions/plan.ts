@@ -31,6 +31,9 @@ type ExerciseDetails = {
 export type SessionPlanLane = {
   court?: 1 | 2;
   ledBy?: "coach" | "auto" | null;
+  /** Por turnos: minutos de cada alumno y de cuántos en cuántos pasan. */
+  turnMinutes?: number | null;
+  turnSize?: number | null;
 };
 
 export type SessionPlanItem = SessionPlanLane &
@@ -157,6 +160,8 @@ export async function loadSessionPlan(
       itemAspectoJuego: sessionBlockItems.aspectoJuego,
       itemCourt: sessionBlockItems.court,
       itemLedBy: sessionBlockItems.ledBy,
+      itemTurnMinutes: sessionBlockItems.turnMinutes,
+      itemTurnSize: sessionBlockItems.turnSize,
       exId: exercises.id,
       exName: exercises.name,
       exDescription: exercises.description,
@@ -290,6 +295,8 @@ export async function loadSessionPlan(
             ledBy: (row.itemLedBy === "coach" || row.itemLedBy === "auto"
               ? row.itemLedBy
               : null) as "coach" | "auto" | null,
+            turnMinutes: row.itemTurnMinutes ?? null,
+            turnSize: row.itemTurnSize ?? null,
           },
         ])
     );
@@ -298,6 +305,8 @@ export async function loadSessionPlan(
       if (lane) {
         item.court = lane.court;
         item.ledBy = lane.ledBy;
+        item.turnMinutes = lane.turnMinutes;
+        item.turnSize = lane.turnSize;
       }
     }
     return { blocks, items };

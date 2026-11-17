@@ -194,12 +194,42 @@ export function StepConfiguration({
           allowCodeTitle={!hideRecurrence}
         />
 
+        {/* Una o dos pistas: se fija al empezar */}
+        <div className="space-y-1.5">
+          <p className="block text-sm font-semibold text-foreground">
+            Pistas
+          </p>
+          <div className="grid max-w-md grid-cols-2 gap-2">
+            {(
+              [
+                { value: 1, title: "Una pista" },
+                { value: 2, title: "Dos pistas" },
+              ] as const
+            ).map(({ value, title }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={(state.courts === 2 ? 2 : 1) === value}
+                onClick={() => update({ courts: value })}
+                className={cn(
+                  "rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors",
+                  (state.courts === 2 ? 2 : 1) === value
+                    ? "border-brand bg-brand/10 text-foreground"
+                    : "border-border text-muted-foreground hover:border-brand/50"
+                )}
+              >
+                {title}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-1.5">
           <label
             htmlFor="placeId"
             className="block text-sm font-semibold text-foreground"
           >
-            Lugar{" "}
+            {state.courts === 2 ? "Lugar de la pista 1" : "Lugar"}{" "}
             <span className="font-normal text-muted-foreground">
               (opcional)
             </span>
@@ -232,6 +262,35 @@ export function StepConfiguration({
             </select>
           )}
         </div>
+
+        {state.courts === 2 && places.length > 0 && (
+          <div className="space-y-1.5">
+            <label
+              htmlFor="secondPlaceId"
+              className="block text-sm font-semibold text-foreground"
+            >
+              Lugar de la pista 2{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional)
+              </span>
+            </label>
+            <select
+              id="secondPlaceId"
+              value={state.secondPlaceId ?? ""}
+              onChange={(e) =>
+                update({ secondPlaceId: e.target.value ? e.target.value : null })
+              }
+              className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
+            >
+              <option value="">Sin lugar asignado</option>
+              {places.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {coaches.length > 0 ? (
           <div className="space-y-1.5">

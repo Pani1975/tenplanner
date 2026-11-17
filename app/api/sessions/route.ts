@@ -81,6 +81,8 @@ type SessionBlockInputItem = {
   aspecto?: string | null;
   court?: number;
   ledBy?: string | null;
+  turnMinutes?: number | null;
+  turnSize?: number | null;
 };
 
 type SessionBlockInput = {
@@ -752,6 +754,9 @@ export async function POST(request: Request) {
                 aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
                 court: item.court ?? 1,
                 ledBy: courts === 2 ? (item.ledBy ?? null) : null,
+                turnMinutes: courts === 2 ? (item.turnMinutes ?? null) : null,
+                turnSize:
+                  courts === 2 && item.turnMinutes ? (item.turnSize ?? 1) : null,
               };
             })
           );

@@ -26,6 +26,7 @@ import {
 import { StepExercises } from "./step-exercises";
 import { computeSessionDates, sessionCode } from "./recurrence";
 import { fetchSgNumbers } from "./sg-number";
+import { clearTarget } from "@/lib/session-target";
 import {
   buildBlocksPayload,
   buildExercisesPayload,
@@ -56,6 +57,8 @@ interface SessionWizardProps {
   initialBlocks?: WizardSessionBlock[];
   initialLocation?: string;
   initialPlaceId?: string | null;
+  /** Lugar de la segunda pista (con dos pistas). */
+  initialSecondPlaceId?: string | null;
   /** Sesión que parte de una plantilla/sesión de dos pistas. */
   initialCourts?: 1 | 2;
   /** Con dos pistas, el bloque principal rota entre dos grupos. */
@@ -178,6 +181,7 @@ function createInitialState({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialSecondPlaceId,
   initialCourts,
   initialRotation,
   initialGroupId,
@@ -197,6 +201,7 @@ function createInitialState({
   | "initialBlocks"
   | "initialLocation"
   | "initialPlaceId"
+  | "initialSecondPlaceId"
   | "initialCourts"
   | "initialRotation"
   | "initialGroupId"
@@ -218,6 +223,7 @@ function createInitialState({
     durationMinutes: initialDurationMinutes ?? 60,
     location: initialLocation ?? "",
     placeId: initialPlaceId ?? null,
+    secondPlaceId: initialSecondPlaceId ?? null,
     courts: initialCourts === 2 ? 2 : 1,
     objective: initialObjective ?? "",
     material: initialMaterial ?? "",
@@ -258,6 +264,10 @@ function toDraftPayload(state: WizardState): SessionDraftPayload {
     placeId: state.placeId,
     courts: state.courts === 2 ? 2 : 1,
     secondPlaceId: state.secondPlaceId ?? null,
+    groupId: state.groupId ?? null,
+    groupName: state.groupName ?? "",
+    selectedGroupIds: state.selectedGroupIds ?? [],
+    useCodeTitle: !!state.useCodeTitle,
     objective: state.objective,
     material: state.material,
     observations: state.observations,
@@ -350,6 +360,25 @@ function sanitizeDraftPayload(
       ? normalizeBlocks(payload.blocks.filter(isWizardSessionBlock))
       : fallback.blocks,
     recurrence: fallback.recurrence,
+    // El grupo y el nombre automático: los del borrador si los trae; si no,
+    // los que vienen de la URL (grupo ya elegido en el primer paso).
+    groupId:
+      typeof payload.groupId === "string" || payload.groupId === null
+        ? payload.groupId
+        : fallback.groupId,
+    groupName:
+      typeof payload.groupName === "string"
+        ? payload.groupName
+        : fallback.groupName,
+    selectedGroupIds: Array.isArray(payload.selectedGroupIds)
+      ? payload.selectedGroupIds.filter(
+          (id): id is string => typeof id === "string"
+        )
+      : fallback.selectedGroupIds,
+    useCodeTitle:
+      typeof payload.useCodeTitle === "boolean"
+        ? payload.useCodeTitle
+        : fallback.useCodeTitle,
   };
 }
 
@@ -365,6 +394,7 @@ export function SessionWizard({
   initialBlocks,
   initialLocation,
   initialPlaceId,
+  initialSecondPlaceId,
   initialCourts,
   initialRotation,
   initialGroupId,
@@ -405,6 +435,7 @@ export function SessionWizard({
       initialBlocks,
       initialLocation,
       initialPlaceId,
+      initialSecondPlaceId,
       initialCourts,
       initialRotation,
       initialGroupId,
@@ -912,6 +943,12 @@ export function SessionWizard({
       }
 
       submittedRef.current = true;
+
+
+      // La sesión ya está creada: se acaba el «preparando una sesión».
+
+
+      clearTarget();
       if (draftIdRef.current) {
         void removeSessionDraft(draftIdRef.current);
         draftIdRef.current = null;

@@ -70,6 +70,8 @@ type LoadedBlockItem = {
   notes: string | null;
   court: number;
   ledBy: string | null;
+  turnMinutes: number | null;
+  turnSize: number | null;
 };
 
 type LoadedBlock = {
@@ -228,6 +230,8 @@ export async function POST(request: Request) {
         itemNotes: classBlockExercises.notes,
         itemCourt: classBlockExercises.court,
         itemLedBy: classBlockExercises.ledBy,
+        itemTurnMinutes: classBlockExercises.turnMinutes,
+        itemTurnSize: classBlockExercises.turnSize,
       })
       .from(classBlocks)
       .leftJoin(
@@ -272,6 +276,8 @@ export async function POST(request: Request) {
           notes: row.itemNotes ?? null,
           court: row.itemCourt === 2 ? 2 : 1,
           ledBy: row.itemLedBy ?? null,
+          turnMinutes: row.itemTurnMinutes ?? null,
+          turnSize: row.itemTurnSize ?? null,
         });
       }
       blockMap.set(orderIndex, block);
@@ -423,6 +429,8 @@ export async function POST(request: Request) {
                   aspectoJuego: item.exerciseId ? null : (item.aspecto ?? null),
                   court: cls.courts === 2 && item.court === 2 ? 2 : 1,
                   ledBy: cls.courts === 2 ? item.ledBy : null,
+                  turnMinutes: cls.courts === 2 ? item.turnMinutes : null,
+                  turnSize: cls.courts === 2 ? item.turnSize : null,
                 };
               })
             );
