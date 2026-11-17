@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { classes, exercises } from "@/db/schema";
 import { siteUrl } from "@/lib/site";
 import { getLandingContent } from "@/lib/landing-content";
+import { getLandingStats } from "@/lib/landing-stats";
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getLandingContent();
@@ -63,8 +64,9 @@ const structuredData = {
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const [content, exerciseCards, classCards] = await Promise.all([
+  const [content, stats, exerciseCards, classCards] = await Promise.all([
     getLandingContent(),
+    getLandingStats(),
     db
       .select({
         id: exercises.id,
@@ -107,6 +109,7 @@ export default async function LandingPage() {
         exerciseCards={exerciseCards}
         classCards={classCards}
         content={content}
+        stats={stats}
       />
     </>
   );
