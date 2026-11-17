@@ -628,6 +628,14 @@ function Footer({ content }: { content: LandingContent }) {
             <div className="mt-3 grid gap-2 text-sm text-white/58">
               <Link href="mailto:hola@tenplanner.app">Contacto</Link>
               <Link href="#como-funciona">Preguntas frecuentes</Link>
+              <a
+                href="https://www.instagram.com/tenplanner/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram de TenPlanner (se abre en una pestaña nueva)"
+              >
+                Instagram
+              </a>
             </div>
           </div>
         </div>

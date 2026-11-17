@@ -36,6 +36,7 @@ const structuredData = {
       name: "TenPlanner",
       url: siteUrl,
       logo: `${siteUrl}/icon-512x512.png`,
+      sameAs: ["https://www.instagram.com/tenplanner/"],
     },
     {
       "@type": "WebSite",
