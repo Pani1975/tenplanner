@@ -437,7 +437,8 @@ export function HelpGuide({
   defaultTab: string;
   defaultLevel?: "quick" | "full";
 }) {
-  const [tab, setTab] = useState(defaultTab);
+  // La pestaña de administradores ya no se muestra en el centro de ayuda.
+  const [tab, setTab] = useState(defaultTab === "admin" ? "coach" : defaultTab);
   const [level, setLevel] = useState<"quick" | "full">(defaultLevel);
 
   const stepsByTab: Record<string, Step[]> = {
@@ -483,11 +484,10 @@ export function HelpGuide({
       <Tabs value={tab} onValueChange={setTab} className="items-start">
         <TabsList className="rounded-lg border border-foreground/12 bg-card/90">
           <TabsTrigger value="coach">Monitores</TabsTrigger>
-          <TabsTrigger value="admin">Administradores</TabsTrigger>
-          <TabsTrigger value="club">Clubs patrocinadores</TabsTrigger>
+          <TabsTrigger value="club">Clubes</TabsTrigger>
         </TabsList>
 
-        {(["coach", "admin", "club"] as const).map((key) => (
+        {(["coach", "club"] as const).map((key) => (
           <TabsContent key={key} value={key} className="mt-4 w-full">
             {level === "quick" ? (
               <StepList steps={stepsByTab[key]} />
