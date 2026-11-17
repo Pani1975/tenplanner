@@ -16,7 +16,7 @@ import {
   localToUtc,
   minutesLabel,
 } from "@/lib/bookings/availability";
-import { expandSessionPlaces, sessionAtPlaces } from "@/lib/bookings/server";
+import { sessionAtPlaces } from "@/lib/bookings/server";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { ClubBookingButton } from "./club-booking-button";
@@ -34,6 +34,9 @@ type Block = {
   startMinute: number;
   endMinute: number;
   status?: string;
+  /** Sesión de dos pistas: 2 = ocupa también la columna de al lado y se
+   * dibuja una sola vez a lo ancho; "split" = pistas no contiguas. */
+  span?: 2 | "split";
 };
 
 function shiftDay(dateStr: string, days: number) {
@@ -152,19 +155,41 @@ export default async function CourtBookingsPage({
 
   const blocksByPlace = new Map<string, Block[]>();
   // Una sesión de dos pistas pinta un bloque en cada lugar que ocupa.
-  for (const s of expandSessionPlaces(sessionRows)) {
+  // Si las dos pistas son columnas contiguas, la sesión se dibuja una sola
+  // vez cubriendo las dos; si no, un bloque en cada una marcado «2 pistas».
+  const placeIndex = new Map(placeRows.map((p, i) => [p.id, i]));
+  for (const s of sessionRows) {
     const b = toBlock(s.start, s.minutes);
     if (!b) continue;
-    const list = blocksByPlace.get(s.placeId) ?? [];
-    list.push({
-      key: `s-${s.id}`,
-      kind: "session",
-      id: s.id,
-      label: s.title,
-      status: s.status,
-      ...b,
-    });
-    blocksByPlace.set(s.placeId, list);
+    const ids = [s.placeId, s.secondPlaceId].filter(
+      (id): id is string => !!id && placeIndex.has(id)
+    );
+    const two = !!s.placeId && !!s.secondPlaceId && ids.length === 2;
+    const adjacent =
+      two &&
+      Math.abs(
+        (placeIndex.get(ids[0]) ?? 0) - (placeIndex.get(ids[1]) ?? 0)
+      ) === 1;
+    const targets = adjacent
+      ? [
+          ids.reduce((a, c) =>
+            (placeIndex.get(a) ?? 0) < (placeIndex.get(c) ?? 0) ? a : c
+          ),
+        ]
+      : ids;
+    for (const placeId of targets) {
+      const list = blocksByPlace.get(placeId) ?? [];
+      list.push({
+        key: `s-${s.id}-${placeId}`,
+        kind: "session",
+        id: s.id,
+        label: s.title,
+        status: s.status,
+        span: adjacent ? 2 : two ? "split" : undefined,
+        ...b,
+      });
+      blocksByPlace.set(placeId, list);
+    }
   }
   for (const r of bookingRows) {
     const b = toBlock(r.start, r.minutes);
@@ -385,6 +410,7 @@ export default async function CourtBookingsPage({
                           </span>
                           <span className="block text-[10px] tabular-nums opacity-75">
                             {time}
+                            {b.span ? " · 2 pistas" : ""}
                             {b.kind === "session" && b.status === "completed"
                               ? " · completada"
                               : ""}
@@ -395,8 +421,18 @@ export default async function CourtBookingsPage({
                         <Link
                           key={b.key}
                           href={`/sessions/${b.id}`}
-                          className="absolute inset-x-1 overflow-hidden rounded-lg border border-brand/60 bg-brand/25 px-2 py-1 text-foreground hover:bg-brand/40"
-                          style={{ top: top(b.startMinute) + 1, height }}
+                          className={cn(
+                            "absolute left-1 overflow-hidden rounded-lg border border-brand/60 bg-brand/25 px-2 py-1 text-foreground hover:bg-brand/40",
+                            b.span === 2 ? "z-10" : "right-1"
+                          )}
+                          style={{
+                            top: top(b.startMinute) + 1,
+                            height,
+                            // Cubre su columna y la siguiente.
+                            ...(b.span === 2
+                              ? { width: "calc(200% - 0.5rem + 1px)" }
+                              : {}),
+                          }}
                         >
                           {content}
                         </Link>
