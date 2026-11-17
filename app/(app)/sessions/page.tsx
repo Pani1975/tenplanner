@@ -277,6 +277,28 @@ export default async function SessionsPage({ searchParams }: PageProps) {
 
   const favoritedIds = await getFavoritedSessionIds(user.id, sessionIds);
 
+  // Últimas 5 sesiones creadas (por fecha de creación, no de la clase), para
+  // recuperar una sesión de la que no se recuerda el nombre.
+  const lastCreated = await db
+    .select({
+      id: sessionsTable.id,
+      title: sessionsTable.title,
+      scheduledAt: sessionsTable.scheduledAt,
+      createdAt: sessionsTable.createdAt,
+      authorName: usersTable.name,
+    })
+    .from(sessionsTable)
+    .leftJoin(
+      usersTable,
+      eq(
+        usersTable.id,
+        sql`COALESCE(${sessionsTable.coachId}, ${sessionsTable.userId})`
+      )
+    )
+    .where(baseCountClause)
+    .orderBy(sql`${sessionsTable.createdAt} desc`)
+    .limit(5);
+
   const now = new Date();
 
   function sessionsHref(opts: {
@@ -363,6 +385,33 @@ export default async function SessionsPage({ searchParams }: PageProps) {
         </header>
 
         <>
+          {lastCreated.length > 0 && (
+            <section className="rounded-lg border border-[#050505]/10 bg-white p-3 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
+              <h2 className="px-1 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/45">
+                Últimas creadas
+              </h2>
+              <ul className="divide-y divide-foreground/10">
+                {lastCreated.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      href={`/sessions/${s.id}`}
+                      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-md px-2 py-2 text-[13px] transition-colors hover:bg-foreground/[0.04]"
+                    >
+                      <span className="min-w-0 truncate font-semibold text-foreground">
+                        {s.title}
+                      </span>
+                      <span className="text-foreground/55 tabular-nums">
+                        Clase: {formatDayMonth(new Date(s.scheduledAt))} ·
+                        creada {formatDayMonth(new Date(s.createdAt))}{" "}
+                        {formatTime(new Date(s.createdAt))}
+                        {s.authorName ? ` · ${s.authorName}` : ""}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {/* Tabs */}
           <nav className="flex flex-wrap gap-2 rounded-lg border border-[#050505]/10 bg-white p-1.5 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
             {FILTERS.map(({ key, label, n }) => {
