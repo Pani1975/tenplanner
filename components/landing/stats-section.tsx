@@ -134,7 +134,7 @@ export function StatsSection({ stats }: { stats: LandingStats }) {
         <RevealStagger className="mt-14 grid gap-5 md:grid-cols-3">
           {cards.map(({ icon: Icon, value, label, text, visual }) => (
             <RevealItem key={label} className="h-full">
-              <article className="flex h-full flex-col rounded-[28px] bg-white/55 p-7 shadow-[0_18px_45px_rgba(5,5,5,0.08)] ring-1 ring-[#050505]/10 backdrop-blur-sm lg:p-8">
+              <article className="flex h-full flex-col rounded-[28px] bg-white p-7 shadow-[0_18px_45px_rgba(5,5,5,0.08)] ring-1 ring-[#050505]/10 lg:p-8">
                 <span className="grid size-11 place-items-center rounded-xl bg-[#050505] text-[#d6ff38]">
                   <Icon className="size-5" />
                 </span>
