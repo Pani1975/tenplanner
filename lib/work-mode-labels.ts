@@ -30,7 +30,7 @@ export function workModeOwner(mode: WorkMode): string {
 
 const SECTION_EN: Record<string, string> = {
   Calendario: "Calendar",
-  Clases: "Classes",
+  Clases: "Lessons",
   Ejercicios: "Exercises",
   Grupos: "Groups",
   Objetivos: "Goals",

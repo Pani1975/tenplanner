@@ -62,7 +62,7 @@ export const LANDING_SCREENS_EN: LandingScreen[] = [
   },
   {
     src: "/landing/app/en/dashboard.webp",
-    alt: "Coach dashboard with the next class and a summary",
+    alt: "Coach dashboard with the next lesson and a summary",
     label: "Your day at a glance",
   },
 ];
