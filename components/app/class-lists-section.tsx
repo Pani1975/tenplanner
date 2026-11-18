@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
 import { spaceLabels } from "@/lib/space-labels";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface ListedClass {
   id: string;
@@ -101,6 +102,7 @@ function ListCard({
   onItemRemoved: (listId: string, classId: string) => void;
   onReload: () => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_classlistssection");
   const [expanded, setExpanded] = useState(false);
   const [pickOpen, setPickOpen] = useState(false);
@@ -347,7 +349,7 @@ function ListCard({
                         </span>
                         {item.nivel && (
                           <span className="font-sans text-[9px] text-foreground/40 px-1.5 py-0.5 rounded border border-foreground/10">
-                            {nivelLabel(item.nivel)}
+                            {term(nivelLabel(item.nivel))}
                           </span>
                         )}
                         {item.alumnosTipo && (

@@ -759,6 +759,7 @@ function QuestionForm({
   preguntas: Pregunta[];
   onSubmit: (a: Record<string, string>) => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_id_chatclient");
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(preguntas.map((p) => [p.id, ""]))
@@ -774,7 +775,7 @@ function QuestionForm({
       {preguntas.map((p) => (
         <div key={p.id} className="space-y-1.5">
           <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55">
-            {p.label}
+            {term(p.label)}
           </label>
           {p.tipo === "select" && p.opciones ? (
             <select

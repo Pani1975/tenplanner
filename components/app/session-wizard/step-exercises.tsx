@@ -80,6 +80,7 @@ import {
   isWarmupItem,
 } from "./timeline";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -198,6 +199,7 @@ export function StepExercises({
   canAutoChange,
   autoChangingIdx = null,
 }: StepExercisesProps) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_sessionwizard_stepexercises");
   const [libraryExercises, setLibraryExercises] = useState(availableExercises);
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
@@ -1305,7 +1307,7 @@ export function StepExercises({
             <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
               {timeParts.map((part) => (
                 <span key={part.label}>
-                  {part.label}{" "}
+                  {term(part.label)}{" "}
                   <strong className="font-semibold text-foreground">
                     {formatMinutes(part.minutes)}
                   </strong>
@@ -1340,7 +1342,7 @@ export function StepExercises({
                       {String(PHASE_ORDER.indexOf(phase) + 1).padStart(2, "0")}
                     </span>
                     <span className="font-heading text-lg text-foreground">
-                      {PHASE_LABELS[phase]}
+                      {term(PHASE_LABELS[phase])}
                     </span>
                     {blockDuration > 0 && (
                       <span className="ml-auto flex items-center gap-1.5 text-xs font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-lg">
@@ -1974,7 +1976,7 @@ export function StepExercises({
                                                 : "bg-background border-border text-muted-foreground hover:text-foreground"
                                             )}
                                           >
-                                            {PHASE_LABELS[p]}
+                                            {term(PHASE_LABELS[p])}
                                           </button>
                                         ))}
                                       </div>
@@ -2022,7 +2024,7 @@ export function StepExercises({
                                                   : "bg-background border-border text-muted-foreground hover:text-foreground"
                                               )}
                                             >
-                                              {ASPECTO_JUEGO_LABELS[a]}
+                                              {term(ASPECTO_JUEGO_LABELS[a])}
                                             </button>
                                           ))}
                                         </div>

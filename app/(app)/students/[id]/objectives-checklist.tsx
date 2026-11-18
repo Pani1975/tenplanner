@@ -36,6 +36,7 @@ import {
   updateObjective,
 } from "./objective-actions";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type BallFilter = BallId | "todas";
 type AspectFilter = AspectId | "todos";
@@ -83,6 +84,7 @@ export function ObjectivesChecklist({
   defaultBall,
   scopes,
 }: Props) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_id_objectiveschecklist");
   const router = useRouter();
   const [state, setState] = useState<Record<string, boolean>>(() =>
@@ -458,7 +460,7 @@ export function ObjectivesChecklist({
                     onClick={() => setScope(s.id)}
                     className={chipClass(scope === s.id)}
                   >
-                    {s.label}
+                    {term(s.label)}
                   </button>
                 ))}
               </div>
@@ -483,7 +485,7 @@ export function ObjectivesChecklist({
               className="size-2.5 rounded-full"
               style={{ backgroundColor: b.color }}
             />
-            {b.label} · {b.stage}
+            {term(b.label)} · {b.stage}
             <span className="tabular-nums text-foreground/45">
               {countFor(b.id)}
             </span>
@@ -516,7 +518,7 @@ export function ObjectivesChecklist({
             onClick={() => setAspect(a.id)}
             className={chipClass(aspect === a.id)}
           >
-            {a.label}
+            {term(a.label)}
           </button>
         ))}
       </div>

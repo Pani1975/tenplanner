@@ -84,6 +84,7 @@ import {
 } from "lucide-react";
 import { getLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -168,6 +169,7 @@ function jsonbArrayHasAny(column: AnyColumn, values: string[]) {
 }
 
 export default async function ExercisesPage({ searchParams }: PageProps) {
+  const term = await getTerm();
   const tx = await getTranslations("ui.s_exercises_page");
   const supabase = await createClient();
   const {
@@ -859,7 +861,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                       className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground/35 transition-colors hover:bg-[#050505]/5 hover:text-foreground/55 dark:hover:bg-white/8"
                     >
                       <Lock className="size-3" strokeWidth={1.8} />
-                      {TAB_LABELS[t]}
+                      {term(TAB_LABELS[t])}
                     </Link>
                   );
                 }
@@ -879,7 +881,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                         : "text-muted-foreground hover:bg-[#050505]/5 hover:text-foreground dark:hover:bg-white/8"
                     }`}
                   >
-                    {TAB_LABELS[t]}
+                    {term(TAB_LABELS[t])}
                     {tabCounts[t] > 0 && (
                       <span className="ml-1.5 text-[11px] tabular-nums opacity-60">
                         {tabCounts[t]}
@@ -919,7 +921,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                               <p
                                 className={`font-sans text-[10px] uppercase tracking-[0.2em] ${isActive ? "text-[#050505]/70" : "text-foreground/45"}`}
                               >
-                                {code} · {label}
+                                {term(code)} · {term(label)}
                               </p>
                               {isActive && (
                                 <span className="size-1.5 rounded-full bg-[#050505]" />
@@ -1118,7 +1120,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                               : "border-foreground/15 text-foreground/55 hover:border-foreground/30 hover:text-foreground"
                           }`}
                         >
-                          {SORT_LABELS[s]}
+                          {term(SORT_LABELS[s])}
                         </Link>
                       );
                     })}
@@ -1172,12 +1174,12 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                             className="size-2.5 shrink-0 rounded-full"
                             style={{ backgroundColor: n.color }}
                           />
-                          {n.label}
+                          {term(n.label)}
                           {n.edad && (
                             <span
                               className={`font-normal ${isActive ? "opacity-70" : "text-foreground/45"}`}
                             >
-                              {n.edad}
+                              {term(n.edad)}
                             </span>
                           )}
                         </Link>
@@ -1488,7 +1490,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                                     className="size-2.5"
                                     strokeWidth={1.8}
                                   />
-                                  {owner.label}
+                                  {term(owner.label)}
                                 </span>
                               )}
                               {exercise.videoUrl && (
@@ -1534,7 +1536,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                             className="group block flex-1 px-4 pb-6 pt-5 transition-colors hover:bg-[#D6FF38]/[0.05] sm:px-6"
                           >
                             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#6D7F00] dark:text-[#D6FF38]">
-                              {catLabel}
+                              {term(catLabel)}
                             </p>
                             <h3 className="mb-2 font-heading text-[19px] font-semibold leading-snug text-foreground transition-colors group-hover:text-[#6D7F00] dark:group-hover:text-[#D6FF38]">
                               {exercise.name}

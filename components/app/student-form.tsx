@@ -36,6 +36,7 @@ import {
   type LeftReason,
 } from "@/lib/students/membership";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -191,6 +192,7 @@ export function StudentForm({
   videos,
   studentName,
 }: StudentFormProps) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_studentform");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -630,7 +632,7 @@ export function StudentForm({
                       <p className="text-[11px] text-muted-foreground">
                         {tx("nivelActual")}{" "}
                         <span className="font-medium">
-                          {LEGACY_LEVEL_LABELS[field.value as string]}
+                          {term(LEGACY_LEVEL_LABELS[field.value as string])}
                         </span>
                         . Selecciona uno nuevo para sustituirlo.
                       </p>
@@ -795,7 +797,7 @@ export function StudentForm({
                 <option value="">{tx("sinIndicar")}</option>
                 {HOW_FOUND_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>
-                    {o.label}
+                    {term(o.label)}
                   </option>
                 ))}
               </select>
@@ -858,7 +860,7 @@ export function StudentForm({
                   <option value="">{tx("sinIndicar")}</option>
                   {LEFT_REASON_OPTIONS.map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.label}
+                      {term(o.label)}
                     </option>
                   ))}
                 </select>

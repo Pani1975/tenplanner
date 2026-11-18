@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const FONT_SIZES = [
   { id: "sm", label: "A", size: "text-xs", desc: "Compacto" },
@@ -74,6 +75,7 @@ const TABS: { id: Tab; label: string; code: string }[] = [
 ];
 
 export function ProfileClient({ user, stats }: ProfileClientProps) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_profile_profileclient");
   const [tab, setTab] = useState<Tab>("profile");
@@ -466,7 +468,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
               ) : saved ? (
                 <CheckCircle2 className="size-4" />
               ) : null}
-              {saving ? "Guardando…" : saved ? "Guardado" : "Guardar cambios"}
+              {term(saving ? "Guardando…" : saved ? "Guardado" : "Guardar cambios")}
             </button>
             <p
               role="status"
@@ -503,7 +505,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                     className="size-3 rounded-full shrink-0 border border-foreground/10"
                     style={{ backgroundColor: c.preview }}
                   />
-                  {c.label}
+                  {term(c.label)}
                 </button>
               ))}
             </div>
@@ -525,9 +527,9 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                       : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]"
                   )}
                 >
-                  <span className={cn("font-bold", f.size)}>{f.label}</span>
+                  <span className={cn("font-bold", f.size)}>{term(f.label)}</span>
                   <span className="text-[11px] font-medium text-muted-foreground mt-0.5">
-                    {f.desc}
+                    {term(f.desc)}
                   </span>
                 </button>
               ))}

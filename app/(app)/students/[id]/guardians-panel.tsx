@@ -292,7 +292,7 @@ export function GuardiansPanel({
             >
               {relationshipOptions.map((r) => (
                 <option key={r} value={r}>
-                  {GUARDIAN_RELATIONSHIP_LABELS[r]}
+                  {term(GUARDIAN_RELATIONSHIP_LABELS[r])}
                 </option>
               ))}
             </select>

@@ -118,6 +118,7 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 export default async function PanelPage() {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_panel_page");
   const supabase = await createClient();
@@ -329,7 +330,7 @@ export default async function PanelPage() {
                         {day.max}° / {day.min}°
                       </p>
                       <p className="text-[11px] text-foreground/55">
-                        {day.label}
+                        {term(day.label)}
                         {day.rainChance !== null && day.rainChance > 0
                           ? ` · ${day.rainChance}% lluvia`
                           : ""}

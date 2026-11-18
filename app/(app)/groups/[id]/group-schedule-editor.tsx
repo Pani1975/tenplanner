@@ -16,6 +16,7 @@ import {
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 /**
  * Días (y hora) en que el grupo tiene clase habitualmente. Esto es lo que
@@ -29,6 +30,7 @@ export function GroupScheduleEditor({
   groupId: string;
   initialSchedule: GroupScheduleEntry[] | null;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_id_groupscheduleeditor");
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -85,7 +87,7 @@ export function GroupScheduleEditor({
               key={e.weekday}
               className="rounded-full bg-[#D6FF38]/20 px-2.5 py-1 text-xs font-bold text-foreground"
             >
-              {WEEKDAY_LABELS[e.weekday]} {formatScheduleTimes(e)}
+              {term(WEEKDAY_LABELS[e.weekday])} {formatScheduleTimes(e)}
             </span>
           ))}
         </div>

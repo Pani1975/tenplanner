@@ -52,6 +52,7 @@ import { ClassAnimationButton } from "@/components/app/class-animation-player";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -164,6 +165,7 @@ export default async function ClassDetailPage({
   params,
   searchParams,
 }: PageProps) {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_id_page");
   const { id } = await params;
@@ -506,7 +508,7 @@ export default async function ClassDetailPage({
                 )}
                 {cls.autoria && cls.autoria !== "libre" && (
                   <span className="rounded-full border border-white/14 bg-white/[0.06] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/62">
-                    {autoriaLabel(cls.autoria)}
+                    {term(autoriaLabel(cls.autoria))}
                   </span>
                 )}
                 {classNiveles.map((nivel) => (
@@ -514,7 +516,7 @@ export default async function ClassDetailPage({
                     key={nivel}
                     className="rounded-full border border-white/14 bg-white/[0.06] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/62"
                   >
-                    {nivelLabel(nivel)}
+                    {term(nivelLabel(nivel))}
                   </span>
                 ))}
                 {classAspectos.map((aspecto) => (

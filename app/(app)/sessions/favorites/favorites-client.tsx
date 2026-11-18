@@ -16,6 +16,7 @@ import {
 import type { FavoriteSessionList } from "@/lib/sessions/favorites";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 function formatDate(iso: string, loc: string = "es-ES") {
   return new Intl.DateTimeFormat(loc, {
@@ -37,6 +38,7 @@ export function FavoritesClient({
 }: {
   initialLists: FavoriteSessionList[];
 }) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_favorites_favoritesclient");
   const router = useRouter();
@@ -284,7 +286,7 @@ export function FavoritesClient({
                         <Clock className="size-3" />
                         {s.durationMinutes}{" "}{tx("min")}
                       </span>
-                      <span>{STATUS_LABEL[s.status]}</span>
+                      <span>{term(STATUS_LABEL[s.status])}</span>
                     </p>
                   </Link>
                   <button

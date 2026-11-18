@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export interface ExerciseFiltersProps {
   currentFilters: {
@@ -96,6 +97,7 @@ function CheckboxRow({
   checked: boolean;
   onToggle: () => void;
 }) {
+  const term = useTerm();
   return (
     <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 font-sans text-sm text-foreground/80 transition-colors hover:bg-muted">
       <input
@@ -104,7 +106,7 @@ function CheckboxRow({
         onChange={onToggle}
         className="size-4 shrink-0 cursor-pointer accent-[#050505]"
       />
-      {option.label}
+      {term(option.label)}
     </label>
   );
 }
@@ -118,6 +120,7 @@ function SwatchButton({
   checked: boolean;
   onToggle: () => void;
 }) {
+  const term = useTerm();
   return (
     <button
       type="button"
@@ -137,7 +140,7 @@ function SwatchButton({
           <Check className="size-4 text-black/70" strokeWidth={2.5} />
         )}
       </span>
-      {option.label}
+      {term(option.label)}
     </button>
   );
 }
@@ -151,6 +154,7 @@ function FilterDropdown({
   selected: string[];
   onToggle: (param: string, id: string) => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_exercisefilters");
   const count = selected.length;
   return (
@@ -163,7 +167,7 @@ function FilterDropdown({
             : "border-foreground/20 text-foreground/70 hover:border-foreground/40 hover:text-foreground"
         )}
       >
-        {def.label}
+        {term(def.label)}
         {count > 0 && <CountBadge count={count} />}
         <ChevronDown
           className="size-3.5 transition-transform group-data-popup-open:rotate-180"
@@ -173,7 +177,7 @@ function FilterDropdown({
       <PopoverContent>
         <div className="flex items-center justify-between pb-2">
           <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-foreground/40">
-            {def.label}
+            {term(def.label)}
           </p>
           <PopoverClose
             aria-label={tx("cerrar")}

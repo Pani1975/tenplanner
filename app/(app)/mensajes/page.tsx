@@ -25,6 +25,7 @@ import { isFamilyOnlyUser } from "@/lib/family";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 // Mensajes del club. Quién envía y quién lee lo deciden las funciones de
 // la base de datos (migraciones 0054 y 0055), vía lib/messages.ts.
@@ -56,6 +57,7 @@ async function loadMessages(userId: string): Promise<MessageListItem[]> {
 }
 
 export default async function MensajesPage() {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_mensajes_page");
   const supabase = await createClient();
@@ -113,7 +115,7 @@ export default async function MensajesPage() {
             </h2>
             <MessageComposer
               options={options}
-              sportLabel={SPORT_LABELS[ctx!.sport]}
+              sportLabel={term(SPORT_LABELS[ctx!.sport])}
             />
           </section>
         )}

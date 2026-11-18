@@ -13,6 +13,7 @@ import {
 } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 /** Campos de clasificación que usa el buscador de ejercicios. */
 export interface PickerTaggedExercise {
@@ -119,6 +120,7 @@ export function ExercisePickerFilters({
   /** Deporte activo: limita los niveles ofrecidos en modo `showAllOptions`. */
   sport?: string | null;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_exercisepickerfilters");
   const niveles = showAllOptions
     ? nivelesForSport(sport).map((n) => n.id as string)
@@ -171,7 +173,7 @@ export function ExercisePickerFilters({
           <option value="">{tx("faseTodas")}</option>
           {fases.map((f) => (
             <option key={f.id} value={f.id}>
-              {f.label}
+              {term(f.label)}
             </option>
           ))}
         </select>

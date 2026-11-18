@@ -22,6 +22,7 @@ import {
 } from "./recurrence";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface StepConfigurationProps {
   state: WizardState;
@@ -361,6 +362,7 @@ function RecurrenceBlock({
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
 }) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_sessionwizard_stepconfiguration");
   const r = state.recurrence;
@@ -504,7 +506,7 @@ function RecurrenceBlock({
                       : "border-border text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  {option.label}
+                  {term(option.label)}
                 </button>
               ))}
             </div>

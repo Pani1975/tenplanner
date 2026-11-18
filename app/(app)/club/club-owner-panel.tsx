@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { SPORT_LABELS, SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface Member {
   id: string;
@@ -50,6 +51,7 @@ export function ClubOwnerPanel({
   initialInvites: Invite[];
   defaultSport?: Sport;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_club_clubownerpanel");
   const router = useRouter();
   const [members, setMembers] = useState(initialMembers);
@@ -208,7 +210,7 @@ export function ClubOwnerPanel({
                     : "border-border text-muted-foreground hover:bg-muted"
                 )}
               >
-                {option.label}
+                {term(option.label)}
               </button>
             ))}
           </div>
@@ -241,7 +243,7 @@ export function ClubOwnerPanel({
                     ? `${invite.inviteeName} · ${invite.email}`
                     : invite.email}
                   <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
-                    {SPORT_LABELS[invite.sport]}
+                    {term(SPORT_LABELS[invite.sport])}
                   </span>
                 </span>
                 <div className="flex shrink-0 items-center gap-1.5">
@@ -309,7 +311,7 @@ export function ClubOwnerPanel({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70">
-                    {SPORT_LABELS[member.sport]}
+                    {term(SPORT_LABELS[member.sport])}
                   </span>
                   {editingMembers && (
                     <button

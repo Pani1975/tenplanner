@@ -12,6 +12,7 @@ import { ClassAnimationButton } from "@/components/app/class-animation-player";
 import { hasClassAnimation } from "@/lib/classes/animation";
 import { LevelBalls } from "@/components/app/level-balls";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export interface ClassGridItem {
   id: string;
@@ -48,6 +49,7 @@ export function ClassesGrid({
   navQs: string;
   canSelect: boolean;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_classes_classesgrid");
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -202,7 +204,7 @@ export function ClassesGrid({
                     )}
                     {cls.autoria && cls.autoria !== "libre" && (
                       <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/80">
-                        {autoriaLabel(cls.autoria)}
+                        {term(autoriaLabel(cls.autoria))}
                       </span>
                     )}
                     {cls.favorited && (
@@ -232,10 +234,10 @@ export function ClassesGrid({
               >
                 <span className="rounded-full border border-border px-2 py-1 text-[10.5px] text-foreground/60">
                   {cls.numAlumnos
-                    ? `${cls.numAlumnos} alumnos`
+                    ? `${cls.numAlumnos} ${term("alumnos")}`
                     : cls.alumnosTipo === "individual"
-                      ? "1 alumno"
-                      : "Grupo"}
+                      ? term("1 alumno")
+                      : term("Grupo")}
                 </span>
                 {cls.alumnosTipo && (
                   <span className="rounded-full border border-border px-2 py-1 text-[10.5px] capitalize text-foreground/60">
@@ -247,7 +249,7 @@ export function ClassesGrid({
                     key={nivel}
                     className="rounded-full border border-[#D6FF38]/40 bg-[#D6FF38]/15 px-2 py-1 text-[10.5px] text-[#5E6F00] dark:text-[#D6FF38]"
                   >
-                    {nivelLabel(nivel)}
+                    {term(nivelLabel(nivel))}
                   </span>
                 ))}
                 {classValues(cls.aspectosJuego, cls.aspectoJuego).map(

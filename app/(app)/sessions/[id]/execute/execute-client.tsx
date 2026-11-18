@@ -958,7 +958,7 @@ export function ExecuteSessionClient({
                     : "border-[#050505]/10 text-muted-foreground hover:bg-muted dark:border-white/10"
                 )}
               >
-                {r.label}
+                {term(r.label)}
               </button>
             ))}
           </div>

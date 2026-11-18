@@ -13,6 +13,7 @@ import { BookOpen, Users2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 function ObjectivesLink({ clubId }: { clubId: string }) {
   const tx = useTranslations("ui.s_club_page");
@@ -28,6 +29,7 @@ function ObjectivesLink({ clubId }: { clubId: string }) {
 }
 
 export default async function ClubPage() {
+  const term = await getTerm();
   const tx = await getTranslations("ui.s_club_page");
   const supabase = await createClient();
   const {
@@ -129,7 +131,7 @@ export default async function ClubPage() {
                       key={sport}
                       className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/70"
                     >
-                      {SPORT_LABELS[sport]}
+                      {term(SPORT_LABELS[sport])}
                     </span>
                   ))}
                 </span>

@@ -784,7 +784,7 @@ export function CalendarClient({
                     : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                 )}
               >
-                {SCOPE_LABELS[s]}
+                {term(SCOPE_LABELS[s])}
               </button>
             ))}
           </div>

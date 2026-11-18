@@ -24,6 +24,8 @@ type Translator = {
 };
 
 function translate(t: Translator, es: string): string {
+  // Valores vacios o que no son texto se devuelven tal cual (nunca rompen la pagina).
+  if (typeof es !== "string" || !es) return es;
   const key = termKey(es);
   return key && t.has(key) ? t(key) : es;
 }

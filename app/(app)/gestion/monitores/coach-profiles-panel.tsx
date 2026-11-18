@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type Member = { name: string; email: string };
 
@@ -591,6 +592,7 @@ function RequestLinkForm({
 }
 
 function ProfileSummary({ profile }: { profile: CoachProfileView }) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_monitores_coachprofilespanel");
   const availability = summarizeAvailability(profile.availability);
@@ -649,7 +651,7 @@ function ProfileSummary({ profile }: { profile: CoachProfileView }) {
         {rows.map((row) => (
           <div key={row.label} className="min-w-0">
             <dt className="text-[11px] font-black uppercase tracking-wide text-foreground/45">
-              {row.label}
+              {term(row.label)}
             </dt>
             <dd className="mt-0.5 whitespace-pre-line break-words text-sm text-foreground">
               {row.value}

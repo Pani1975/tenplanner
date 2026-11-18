@@ -70,6 +70,7 @@ export default async function CourtBookingsPage({
 }: {
   searchParams: Promise<{ dia?: string }>;
 }) {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_reservaspistas_page");
   const supabase = await createClient();
@@ -411,7 +412,7 @@ export default async function CourtBookingsPage({
                       const content = (
                         <>
                           <span className="block truncate text-[12px] font-bold leading-tight">
-                            {b.label}
+                            {term(b.label)}
                           </span>
                           <span className="block text-[10px] tabular-nums opacity-75">
                             {time}

@@ -48,6 +48,7 @@ import { LevelBallDot } from "@/components/app/level-balls";
 import { AutoSubmitRadio } from "@/components/app/auto-submit-radio";
 import { getLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 
@@ -126,6 +127,7 @@ function paramList(value: string | string[] | undefined) {
 }
 
 export default async function ClassesPage({ searchParams }: PageProps) {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_classes_page");
   const params = await searchParams;
@@ -489,7 +491,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     : "text-muted-foreground hover:bg-[#050505]/5 hover:text-foreground dark:hover:bg-white/8"
                 }`}
               >
-                {TAB_LABELS[t]}
+                {term(TAB_LABELS[t])}
                 {t === "drafts" && draftCount > 0 && (
                   <span className="ml-1.5 text-[10px] tabular-nums opacity-60">
                     ({draftCount})
@@ -612,7 +614,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     <span className="flex items-center gap-2">
                       {nivel && <LevelBallDot nivel={nivel} />}
                       {nivelFiltersForSport(sport).find((n) => n.id === nivel)
-                        ?.label ?? "Todos"}
+                        ?.label ?? term("Todos")}
                     </span>
                     <ChevronDown className="size-4 text-muted-foreground" />
                   </summary>
@@ -633,7 +635,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         ) : (
                           <span className="size-4 shrink-0" />
                         )}
-                        {n.label}
+                        {term(n.label)}
                       </label>
                     ))}
                   </div>
@@ -654,7 +656,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 >
                   {DURACION_FILTERS.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.label}
+                      {term(d.label)}
                     </option>
                   ))}
                 </select>
@@ -689,7 +691,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                           defaultChecked={aspectoList.includes(a.id)}
                           className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
                         />
-                        {a.label}
+                        {term(a.label)}
                       </label>
                     ))}
                     {/* En el móvil el desplegable tapa el botón Filtrar:
@@ -731,7 +733,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                           defaultChecked={golpeList.includes(g.id)}
                           className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
                         />
-                        {g.label}
+                        {term(g.label)}
                       </label>
                     ))}
                     {/* En el móvil el desplegable tapa el botón Filtrar:
@@ -773,7 +775,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                           defaultChecked={autoriaList.includes(g.id)}
                           className="size-4 rounded border-foreground/20 text-[#D6FF38] focus:ring-[#D6FF38]/30"
                         />
-                        {g.label}
+                        {term(g.label)}
                       </label>
                     ))}
                     {/* En el móvil el desplegable tapa el botón Filtrar:
@@ -812,7 +814,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         : "border-foreground/15 text-foreground/55 hover:border-foreground/30 hover:text-foreground"
                     }`}
                   >
-                    {SORT_LABELS[s]}
+                    {term(SORT_LABELS[s])}
                   </Link>
                 );
               })}

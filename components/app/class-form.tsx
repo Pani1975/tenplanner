@@ -57,6 +57,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 function nivelOptionsForSport(sport?: string | null) {
   return nivelesForSport(sport).map((n) => ({
@@ -220,6 +221,7 @@ export function ClassForm({
   initialData,
   sport,
 }: ClassFormProps) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_classform");
   const router = useRouter();
   const NIVELES = nivelOptionsForSport(sport);
@@ -1191,7 +1193,7 @@ export function ClassForm({
                         : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {n.label}
+                    {term(n.label)}
                   </button>
                 );
               })}
@@ -1220,7 +1222,7 @@ export function ClassForm({
                         : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {a.label}
+                    {term(a.label)}
                   </button>
                 );
               })}
@@ -1249,7 +1251,7 @@ export function ClassForm({
                         : "border-foreground/15 text-muted-foreground hover:border-foreground/30 hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {g.label}
+                    {term(g.label)}
                   </button>
                 );
               })}

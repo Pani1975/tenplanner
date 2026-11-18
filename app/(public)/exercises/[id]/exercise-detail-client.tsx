@@ -59,6 +59,7 @@ import {
   type CopyTarget,
 } from "@/components/app/copy-to-space-button";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -241,6 +242,7 @@ export function ExerciseDetailClient({
   /** Colección desde la que se llegó a la ficha. */
   backToListHref?: string | null;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_id_exercisedetailclient");
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -553,7 +555,7 @@ export function ExerciseDetailClient({
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-[#D6FF38]">
-                {cat.label}
+                {term(cat.label)}
               </p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 text-xs text-white/66">
@@ -564,7 +566,7 @@ export function ExerciseDetailClient({
                   <>
                     <span className="text-xs text-white/35">·</span>
                     <span className="text-xs text-white/66">
-                      {LOCATION_LABELS[exercise.location]}
+                      {term(LOCATION_LABELS[exercise.location])}
                     </span>
                   </>
                 )}
@@ -573,7 +575,7 @@ export function ExerciseDetailClient({
                     <span className="text-xs text-white/35">·</span>
                     <span className="inline-flex items-center gap-1 text-xs text-[#D6FF38]">
                       <BookMarked className="size-3" />
-                      {autoriaLabel(exercise.autoria)}
+                      {term(autoriaLabel(exercise.autoria))}
                     </span>
                   </>
                 )}
@@ -728,7 +730,7 @@ export function ExerciseDetailClient({
             <div className="flex flex-wrap gap-2">
               {exercise.formato && (
                 <span className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10">
-                  👥 {FORMATO_LABELS[exercise.formato]}
+                  👥 {term(FORMATO_LABELS[exercise.formato])}
                 </span>
               )}
               {exercise.numJugadores && (
@@ -779,7 +781,7 @@ export function ExerciseDetailClient({
               )}
               {exercise.tipoPelota && (
                 <span className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10">
-                  🎾 {pelotaLabel(exercise.tipoPelota)}
+                  🎾 {term(pelotaLabel(exercise.tipoPelota))}
                 </span>
               )}
               {exercise.caracter?.map((c) => (
@@ -787,7 +789,7 @@ export function ExerciseDetailClient({
                   key={`caracter-${c}`}
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
-                  {caracterLabel(c)}
+                  {term(caracterLabel(c))}
                 </span>
               ))}
               {exercise.situacionJuego?.map((sj) => (

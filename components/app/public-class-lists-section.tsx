@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
 import { spaceLabels } from "@/lib/space-labels";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface PublicList {
   id: string;
@@ -36,6 +37,7 @@ export function PublicClassListsSection({
   /** Trabajando como un club: la copia va a "Listas club". */
   inClub?: boolean;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_publicclasslistssection");
   const listsLabel = spaceLabels(inClub).lists;
   const [lists, setLists] = useState<PublicList[]>([]);
@@ -149,7 +151,7 @@ export function PublicClassListsSection({
                         </span>
                         {item.nivel && (
                           <span className="shrink-0 text-[10px] text-foreground/45">
-                            {nivelLabel(item.nivel)}
+                            {term(nivelLabel(item.nivel))}
                           </span>
                         )}
                         <span className="shrink-0 text-[10px] tabular-nums text-foreground/45">

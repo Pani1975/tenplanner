@@ -45,6 +45,7 @@ import {
 } from "./video-actions";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -115,6 +116,7 @@ const PAST_RENDER_LIMIT = 120;
 const UPCOMING_RENDER_LIMIT = 120;
 
 export default async function StudentDetailPage({ params }: PageProps) {
+  const term = await getTerm();
   const tx = await getTranslations("ui.s_id_page");
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const { id } = await params;
@@ -388,7 +390,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 )}
                 {level && (
                   <span className="rounded-full bg-white/8 px-3 py-1 text-[10px] font-black uppercase text-white/62">
-                    {LEVEL_CODE[level]} · {LEVEL_LABEL[level]}
+                    {LEVEL_CODE[level]} · {term(LEVEL_LABEL[level])}
                   </span>
                 )}
                 {age != null && (

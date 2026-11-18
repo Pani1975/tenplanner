@@ -43,6 +43,7 @@ import { loadStudentsStats } from "@/lib/students/load-stats";
 import { StudentsStatsSection } from "@/components/app/students/students-stats-section";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 const PAGE_SIZE = 30;
 
@@ -84,6 +85,7 @@ function initialsFromName(name: string) {
 }
 
 export default async function StudentsPage({ searchParams }: PageProps) {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_students_page");
   const supabase = await createClient();
@@ -450,7 +452,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
                             {LEVEL_CODE[level]}
                           </span>
                           <span className="text-[12px] text-foreground/70">
-                            {LEVEL_LABEL[level]}
+                            {term(LEVEL_LABEL[level])}
                           </span>
                         </div>
                       ) : (

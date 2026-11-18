@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export type CatalogObjective = {
   id: string;
@@ -89,6 +90,7 @@ export function ObjectivesPicker({
   label?: string;
   className?: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_objectives_objectivespicker");
   const [open, setOpen] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -251,7 +253,7 @@ export function ObjectivesPicker({
                           }}
                         />
                       )}
-                      {ASPECT_LABEL[g.aspect]} · {g.block}
+                      {term(ASPECT_LABEL[g.aspect])} · {g.block}
                     </p>
                     <ul className="divide-y divide-border rounded-xl border border-border">
                       {g.rows.map((item) => {

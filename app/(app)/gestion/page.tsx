@@ -88,6 +88,7 @@ export default async function ManagementPage({
     plantilla?: string;
   }>;
 }) {
+  const term = await getTerm();
   const tx = await getTranslations("ui.s_gestion_page");
   const supabase = await createClient();
   const {
@@ -180,7 +181,7 @@ export default async function ManagementPage({
                     : "border-border text-muted-foreground hover:bg-muted"
                 )}
               >
-                {PERIOD_LABELS[p]}
+                {term(PERIOD_LABELS[p])}
               </Link>
             ))}
             <Link

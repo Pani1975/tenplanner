@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AcceptInviteButton } from "./accept-invite-button";
 import { SPORT_LABELS } from "@/lib/sport-constants";
 import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
 function isInviteExpired(invite: { status: string; expiresAt: Date }) {
   return invite.status === "expired" || invite.expiresAt.getTime() < Date.now();
@@ -16,6 +17,7 @@ export default async function InvitePage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const term = await getTerm();
   const tx = await getTranslations("ui.s_token_page");
   const { token } = await params;
 
@@ -103,7 +105,7 @@ export default async function InvitePage({
       <p className="mt-3 text-sm leading-6 text-foreground/62">
         {tx("invitacionEnviadaA")}{" "}
         <span className="font-semibold text-foreground">{invite.email}</span>{" "}
-        {tx("para")}{" "}<strong>{SPORT_LABELS[invite.sport]}</strong>. Al aceptar, el club
+        {tx("para")}{" "}<strong>{term(SPORT_LABELS[invite.sport])}</strong>. Al aceptar, el club
         tendrá acceso compartido a tus sesiones, alumnos, grupos y calendario de
         ese deporte. Tu cuenta sigue siendo tuya.
       </p>

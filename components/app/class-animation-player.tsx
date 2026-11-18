@@ -613,6 +613,7 @@ function Sentences({
   t: number;
   reduceMotion: boolean;
 }) {
+  const term = useTerm();
   const visible = sentences.filter((s) => t >= s.at);
   const current = visible.length - 1;
   const listRef = useRef<HTMLUListElement>(null);
@@ -643,7 +644,7 @@ function Sentences({
         >
           {s.label && (
             <span className="mr-1.5 inline-block rounded bg-[#D6FF38]/15 px-1.5 py-px align-[1px] text-[10px] font-bold uppercase tracking-wider text-[#D6FF38]">
-              {s.label}
+              {term(s.label)}
             </span>
           )}
           {s.text}

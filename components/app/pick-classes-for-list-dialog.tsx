@@ -17,6 +17,7 @@ import {
 import { nivelesForSport } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export interface ListableClass {
   id: string;
@@ -100,6 +101,7 @@ export function PickClassesForListDialog({
   onRemoved: (classId: string) => void;
   onBulkAdded?: () => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_pickclassesforlistdialog");
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<ClassFilters>(EMPTY_FILTERS);
@@ -252,7 +254,7 @@ export function PickClassesForListDialog({
               <option value="">{tx("nivelTodos")}</option>
               {niveles.map((n) => (
                 <option key={n.id} value={n.id}>
-                  {n.label}
+                  {term(n.label)}
                 </option>
               ))}
             </select>
@@ -267,7 +269,7 @@ export function PickClassesForListDialog({
               <option value="">{tx("duracionCualquiera")}</option>
               {DURACIONES.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.label}
+                  {term(d.label)}
                 </option>
               ))}
             </select>
@@ -282,7 +284,7 @@ export function PickClassesForListDialog({
               <option value="">{tx("aspectoTodos")}</option>
               {ASPECTOS.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.label}
+                  {term(a.label)}
                 </option>
               ))}
             </select>
@@ -297,7 +299,7 @@ export function PickClassesForListDialog({
               <option value="">{tx("golpeTodos")}</option>
               {GOLPES.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.label}
+                  {term(g.label)}
                 </option>
               ))}
             </select>

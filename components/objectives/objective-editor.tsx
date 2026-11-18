@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 /** Estado del editor: crear un objetivo nuevo o editar uno existente. */
 export type EditorState =
@@ -51,6 +52,7 @@ export function ObjectiveEditor({
   onClose: () => void;
   onSubmit: (values: EditorValues) => Promise<boolean>;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_objectives_objectiveeditor");
   const editing = state?.mode === "edit" ? state.item : null;
   const [values, setValues] = useState<EditorValues>({
@@ -130,7 +132,7 @@ export function ObjectiveEditor({
                   >
                     {BALLS.map((b) => (
                       <option key={b.id} value={b.id}>
-                        {b.label} · {b.stage}
+                        {term(b.label)} · {b.stage}
                       </option>
                     ))}
                   </select>
@@ -150,7 +152,7 @@ export function ObjectiveEditor({
                   >
                     {ASPECTS.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.label}
+                        {term(a.label)}
                       </option>
                     ))}
                   </select>

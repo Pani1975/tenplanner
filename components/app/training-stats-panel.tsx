@@ -216,7 +216,7 @@ export function TrainingStatsPanel({
                     className="size-2.5 shrink-0 rounded-full"
                     style={{ background: PHASE_COLOR[p.key] }}
                   />
-                  <span className="text-foreground">{PHASE_LABEL[p.key]}</span>
+                  <span className="text-foreground">{term(PHASE_LABEL[p.key])}</span>
                   <span className="ml-auto tabular-nums text-muted-foreground">
                     {formatMinutes(p.minutes)} · {pct(p.pct)}
                   </span>

@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type SessionOption = {
   id: string;
@@ -52,6 +53,7 @@ export function AddToSessionDialog({
   /** Nombre del ejercicio o de la lista, para el título. */
   label: string;
 }) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_app_addtosessiondialog");
   const [includePast, setIncludePast] = useState(false);
@@ -240,7 +242,7 @@ export function AddToSessionDialog({
                         : "border-border text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {block.label}
+                    {term(block.label)}
                   </button>
                 ))}
               </div>

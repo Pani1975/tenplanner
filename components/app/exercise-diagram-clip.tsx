@@ -18,6 +18,7 @@ import {
   StudentMarker,
   W,
 } from "@/components/app/class-court";
+import { useTerm } from "@/lib/i18n-terms";
 
 // Esquema con movimiento garantizado y su línea de tiempo, calculados una vez.
 const prepared = new WeakMap<
@@ -52,6 +53,7 @@ export function DiagramLayer({
   time: number;
   ballColor: string;
 }) {
+  const term = useTerm();
   const { diagram, timeline } = prepare(source);
   const P = (p: Pt) => courtPoint(diagram.court, p);
 
@@ -108,7 +110,7 @@ export function DiagramLayer({
                     fontWeight={700}
                     fill="#D6FF38"
                   >
-                    {el.label}
+                    {term(el.label)}
                   </text>
                 )}
               </g>

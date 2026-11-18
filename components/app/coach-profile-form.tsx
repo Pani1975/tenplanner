@@ -21,6 +21,7 @@ import {
   type ExperienceEntry,
 } from "@/lib/coach-profile";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type ExperienceRow = {
   startYear: string;
@@ -92,6 +93,7 @@ export function CoachProfileForm({
   ) => Promise<CoachProfileSubmitResult>;
   onCancel?: () => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_coachprofileform");
   const [fullName, setFullName] = useState(initial?.fullName ?? "");
   const [email, setEmail] = useState(initial?.email ?? "");
@@ -286,7 +288,7 @@ export function CoachProfileForm({
               key={block.id}
               className="text-center text-[11px] font-black uppercase text-foreground/50"
             >
-              {block.label}
+              {term(block.label)}
             </span>
           ))}
           <span />

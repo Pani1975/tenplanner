@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type DraftClassOption = {
   id: string;
@@ -41,6 +42,7 @@ export function AddToClassDialog({
   /** Nombre del ejercicio, para el título. */
   label: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_addtoclassdialog");
   const [options, setOptions] = useState<DraftClassOption[] | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -293,7 +295,7 @@ export function AddToClassDialog({
                         : "border-border text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {block.label}
+                    {term(block.label)}
                   </button>
                 ))}
               </div>

@@ -25,6 +25,7 @@ import {
 } from "@/lib/club-identity";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const inputClass =
   "h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:opacity-70";
@@ -104,6 +105,7 @@ export function ClubIdentityForm({
   /** Calculados: monitores dados de alta y alumnos del club. */
   stats?: { monitors: number; students: number };
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_clubidentityform");
   const router = useRouter();
   const [name, setName] = useState(initial.name);
@@ -327,7 +329,7 @@ export function ClubIdentityForm({
               className="rounded-2xl border border-border bg-background px-4 py-3"
             >
               <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/50">
-                {s.label}
+                {term(s.label)}
               </p>
               <p className="mt-1 text-2xl font-black tabular-nums text-foreground">
                 {s.value}
@@ -512,7 +514,7 @@ export function ClubIdentityForm({
             {COURT_TYPES.map((c) => (
               <label key={c.id} className="space-y-1">
                 <span className="block text-xs font-semibold text-foreground/70">
-                  {c.label}
+                  {term(c.label)}
                 </span>
                 <input
                   type="number"

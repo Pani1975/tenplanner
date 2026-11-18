@@ -198,7 +198,7 @@ export function CourtsBoardView({
           >
             <div className="mb-2 flex items-center gap-2">
               <span className="font-heading text-sm text-foreground">
-                {PHASE_LABELS[phase]}
+                {term(PHASE_LABELS[phase])}
               </span>
               {blockMax > 0 && (
                 <span className="ml-auto flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">
@@ -314,7 +314,7 @@ export function CourtsBoardView({
                                   </div>
                                 ) : (
                                   <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-foreground">
-                                    {it.label}
+                                    {term(it.label)}
                                   </span>
                                 )}
                                 {editor ? (
@@ -521,7 +521,7 @@ export function CourtsBoardView({
                 <ul className="mt-1 space-y-0.5">
                   {perStudent.perStudent.map((p, i) => (
                     <li key={`${p.label}-${i}`}>
-                      {p.label}: <strong>{tx("v1Min", { v1: p.minutes })}</strong>
+                      {term(p.label)}: <strong>{tx("v1Min", { v1: p.minutes })}</strong>
                       {p.kind === "turno" ? tx("enSuTurno") : ""}
                     </li>
                   ))}

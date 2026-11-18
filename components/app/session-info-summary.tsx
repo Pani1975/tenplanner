@@ -1,6 +1,7 @@
 import { Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 // Objetivo, material, observaciones y etiquetas de una sesión. Se usa igual en
 // la ficha (pendiente, completada o cancelada) y en las tarjetas de borrador.
@@ -46,6 +47,7 @@ export function SessionInfoSummary({
   showEmptyObjective = false,
   className,
 }: SessionInfoSummaryProps) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sessioninfosummary");
   if (
     !showEmptyObjective &&
@@ -84,7 +86,7 @@ export function SessionInfoSummary({
                   compact ? "text-[9px]" : "mb-2 text-[10px]"
                 )}
               >
-                {f.label}
+                {term(f.label)}
               </p>
               <p
                 className={cn(

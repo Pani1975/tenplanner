@@ -20,6 +20,7 @@ import type {
 } from "@/lib/sessions/analytics";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const PHASE_LABELS: Record<TrainingPhase, string> = {
   activation: "Activación",
@@ -92,6 +93,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 function PhaseTargetsCard({ analytics }: { analytics: SessionAnalytics }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sessionanalytics");
   if (analytics.totalMinutes === 0) {
     return (
@@ -146,7 +148,7 @@ function PhaseTargetsCard({ analytics }: { analytics: SessionAnalytics }) {
                       className={cn("size-2.5 rounded-sm", PHASE_BG[t.phase])}
                     />
                     <span className="font-medium text-foreground">
-                      {PHASE_LABELS[t.phase]}
+                      {term(PHASE_LABELS[t.phase])}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 font-mono text-muted-foreground">

@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type Place = {
   id: string;
@@ -107,6 +108,7 @@ function usageTone(place: Place) {
 }
 
 export function PlacesClient({ initialPlaces }: PlacesClientProps) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_places_placesclient");
   const router = useRouter();
@@ -467,7 +469,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                               usageTone(place)
                             )}
                           >
-                            {usageLabel(place)}
+                            {term(usageLabel(place))}
                           </span>
                           <h3 className="mt-3 line-clamp-2 text-2xl font-black leading-none text-foreground">
                             {place.name}
@@ -611,7 +613,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                   },
                   {
                     label: tx("estado"),
-                    value: usageLabel(selected),
+                    value: term(usageLabel(selected)),
                     icon: CheckCircle2,
                   },
                 ].map(({ label, value, icon: Icon }) => (
@@ -665,7 +667,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                     className="grid grid-cols-[112px_1fr] gap-3 py-3 text-sm"
                   >
                     <dt className="font-bold text-foreground/48">
-                      {item.label}
+                      {term(item.label)}
                     </dt>
                     <dd className="text-right font-semibold text-foreground">
                       {item.value}

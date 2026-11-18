@@ -61,6 +61,7 @@ function MetricCard({
 }
 
 export default async function ReportsPage() {
+  const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_informes_page");
   const supabase = await createClient();
@@ -162,7 +163,7 @@ export default async function ReportsPage() {
               >
                 <item.icon className="size-4 shrink-0 text-brand" />
                 <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
-                  {item.label}
+                  {term(item.label)}
                 </span>
                 <span className="font-heading text-xl font-black tabular-nums text-foreground">
                   {item.value}

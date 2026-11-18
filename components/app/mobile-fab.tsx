@@ -5,6 +5,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, X, Bot, UserPlus, Dumbbell, CalendarPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTerm } from "@/lib/i18n-terms";
 
 type IconName = "plus" | "bot" | "user-plus" | "dumbbell" | "calendar-plus";
 
@@ -73,6 +74,7 @@ export function MobileFabSpeedDial({
   actions: FabAction[];
   primaryLabel?: string;
 }) {
+  const term = useTerm();
   const [open, setOpen] = useState(false);
 
   return (
@@ -97,7 +99,7 @@ export function MobileFabSpeedDial({
                   className="size-4 text-brand"
                   strokeWidth={1.8}
                 />
-                {action.label}
+                {term(action.label)}
               </Link>
             </motion.div>
           ))}

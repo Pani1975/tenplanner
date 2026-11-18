@@ -8,6 +8,7 @@ import {
   type PlanChangeReason,
 } from "@/lib/sessions/plan-change";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export type SessionCloseRating = {
   planFollowed: boolean;
@@ -55,6 +56,7 @@ export function SessionCloseDialog({
   summary?: string;
   initialNote?: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sessionclosedialog");
   const [step, setStep] = useState<Step>(initialStep);
   const [reason, setReason] = useState<PlanChangeReason | null>(null);
@@ -170,7 +172,7 @@ export function SessionCloseDialog({
                       : "border-border text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  {r.label}
+                  {term(r.label)}
                 </button>
               ))}
             </div>

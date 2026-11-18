@@ -28,6 +28,7 @@ import {
   type EditorValues,
 } from "@/components/objectives/objective-editor";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type BallFilter = BallId | "todas";
 type AspectFilter = AspectId | "todos";
@@ -112,6 +113,7 @@ export function ObjectivesManager({
   scope: ManagerScope;
   actions: ObjectiveActions;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_objectives_objectivesmanager");
   const copy = COPY[scope];
   const router = useRouter();
@@ -380,7 +382,7 @@ export function ObjectivesManager({
                 className="size-2.5 rounded-full"
                 style={{ backgroundColor: b.color }}
               />
-              {b.label} · {b.stage}
+              {term(b.label)} · {term(b.stage)}
               <span className="tabular-nums text-foreground/45">
                 {countFor(b.id)}
               </span>
@@ -422,7 +424,7 @@ export function ObjectivesManager({
             onClick={() => setAspect(a.id)}
             className={chipClass(aspect === a.id)}
           >
-            {a.label}
+            {term(a.label)}
           </button>
         ))}
       </div>
@@ -457,7 +459,7 @@ export function ObjectivesManager({
                   />
                   {first.block}
                   <span className="text-foreground/35">
-                    · {aspectLabel} · {ballName(first.ball)}
+                    · {term(aspectLabel)} · {term(ballName(first.ball))}
                   </span>
                 </h3>
                 <ul
