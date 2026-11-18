@@ -1,13 +1,26 @@
-import { createElement } from "react";
+import { createElement, type ReactElement } from "react";
+import { NextIntlClientProvider } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CoachProfileForm } from "@/components/app/coach-profile-form";
+import es from "../../messages/es.json";
+
+// El formulario usa next-intl: los tests lo renderizan en español.
+function render(element: ReactElement) {
+  return renderToStaticMarkup(
+    createElement(NextIntlClientProvider, {
+      locale: "es",
+      messages: es,
+      children: element,
+    })
+  );
+}
 
 const noop = async () => ({ ok: true as const });
 
 describe("CoachProfileForm", () => {
   it("muestra todos los campos de la ficha", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       createElement(CoachProfileForm, {
         submitLabel: "Guardar",
         onSubmit: noop,
@@ -30,7 +43,7 @@ describe("CoachProfileForm", () => {
   });
 
   it("ofrece 7 días × 3 bloques y el botón 'Todos'", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       createElement(CoachProfileForm, {
         submitLabel: "Guardar",
         onSubmit: noop,
@@ -44,7 +57,7 @@ describe("CoachProfileForm", () => {
   });
 
   it("marca la disponibilidad y la experiencia recibidas", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       createElement(CoachProfileForm, {
         submitLabel: "Guardar",
         onSubmit: noop,
@@ -66,7 +79,7 @@ describe("CoachProfileForm", () => {
   });
 
   it("bloquea el email y pide consentimiento en el enlace público", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       createElement(CoachProfileForm, {
         submitLabel: "Enviar",
         onSubmit: noop,
