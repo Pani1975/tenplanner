@@ -1,5 +1,6 @@
+"use client";
 
-import { useLocale } from "next-intl";"use client";
+import { useLocale } from "next-intl";
 
 /**
  * Fecha/hora en la zona horaria del navegador (como el calendario del
