@@ -3926,7 +3926,22 @@
     "bola_naranja": "Orange ball",
     "bola_verde": "Green ball",
     "bola_amarilla": "Yellow ball",
-    "mental": "Mental"
+    "mental": "Mental",
+    "biblioteca": "Library",
+    "mis_ejercicios": "My exercises",
+    "favoritos": "Favorites",
+    "borradores": "Drafts",
+    "mis_clases": "My classes",
+    "mis_listas": "My lists",
+    "listas": "Lists",
+    "ejercicios_club": "Club exercises",
+    "favoritos_club": "Club favorites",
+    "clases_club": "Club classes",
+    "listas_club": "Club lists",
+    "mis_sesiones": "My sessions",
+    "sesiones_club": "Club sessions",
+    "recursos_club": "Club resources",
+    "your_day_at_a_glance": "Your day at a glance"
   },
   "meta": {
     "title": "TenPlanner - Planner for Racket Sports",

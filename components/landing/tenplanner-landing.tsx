@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AppScreensPhone } from "./app-screens-phone";
-import { LANDING_SCREENS } from "@/lib/landing-screens";
+import { LANDING_SCREENS, LANDING_SCREENS_EN } from "@/lib/landing-screens";
 import {
   ArrowDown,
   BarChart3,
@@ -210,6 +210,8 @@ function PhoneMock() {
 
 function HeroSection({ content }: { content: LandingContent }) {
   const t = useTranslations("landing.hero");
+  // En inglés, capturas de la interfaz en inglés.
+  const screens = useLocale() === "en" ? LANDING_SCREENS_EN : LANDING_SCREENS;
   const hero = splitTitle(content.home_hero_title);
   return (
     <section className="relative min-h-[780px] overflow-hidden border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20 lg:py-28">
@@ -269,8 +271,8 @@ function HeroSection({ content }: { content: LandingContent }) {
           <div className="absolute right-[2%] top-[20%] hidden rounded-2xl bg-white px-5 py-3 text-sm font-medium text-[#050505] shadow-[0_20px_55px_rgba(5,5,5,0.12)] lg:block">
             {t("ready")}
           </div>
-          {LANDING_SCREENS.length > 0 ? (
-            <AppScreensPhone screens={LANDING_SCREENS} />
+          {screens.length > 0 ? (
+            <AppScreensPhone screens={screens} />
           ) : (
             <PhoneMock />
           )}

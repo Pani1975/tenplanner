@@ -44,3 +44,25 @@ export const LANDING_SCREENS: LandingScreen[] = [
     label: "Seguimiento del trabajo hecho",
   },
 ];
+
+/**
+ * Versión en inglés: solo pantallas de interfaz, porque el contenido
+ * (ejercicios y clases) todavía está en español.
+ */
+export const LANDING_SCREENS_EN: LandingScreen[] = [
+  {
+    src: "/landing/app/en/exercise-filters.webp",
+    alt: "Exercise filters by level, aspect, phase and game situation",
+    label: "Filter by level and goal",
+  },
+  {
+    src: "/landing/app/en/calendar.webp",
+    alt: "Yearly calendar of sessions",
+    label: "Your session calendar",
+  },
+  {
+    src: "/landing/app/en/dashboard.webp",
+    alt: "Coach dashboard with the next class and a summary",
+    label: "Your day at a glance",
+  },
+];

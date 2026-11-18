@@ -164,7 +164,7 @@ export function TrainingStatsPanel({
               icon={Clock}
               label={tx("tiempoJugado")}
               value={formatHours(stats.totalMinutes)}
-              hint={`${stats.sessionCount} sesiones`}
+              hint={`${stats.sessionCount} ${term(stats.sessionCount === 1 ? "sesión" : "sesiones")}`}
             />
             <Tile
               icon={Trophy}
