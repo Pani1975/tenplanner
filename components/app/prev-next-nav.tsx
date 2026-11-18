@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface PrevNextNavProps {
   prevHref: string | null;
@@ -22,6 +23,7 @@ export function PrevNextNav({
   total,
   className,
 }: PrevNextNavProps) {
+  const tx = useTranslations("ui.s_app_prevnextnav");
   const btnBase =
     "flex size-8 shrink-0 items-center justify-center rounded-full border text-sm transition-colors";
   const enabled =
@@ -34,8 +36,8 @@ export function PrevNextNav({
       {prevHref ? (
         <Link
           href={prevHref}
-          title="Anterior"
-          aria-label="Elemento anterior"
+          title={tx("anterior")}
+          aria-label={tx("elementoAnterior")}
           className={cn(btnBase, enabled)}
         >
           <ChevronLeft className="size-4" />
@@ -55,8 +57,8 @@ export function PrevNextNav({
       {nextHref ? (
         <Link
           href={nextHref}
-          title="Siguiente"
-          aria-label="Siguiente elemento"
+          title={tx("siguiente")}
+          aria-label={tx("siguienteElemento")}
           className={cn(btnBase, enabled)}
         >
           <ChevronRight className="size-4" />

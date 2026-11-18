@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Cookie, X } from "lucide-react";
 
 const STORAGE_KEY = "cookie-consent";
@@ -26,6 +27,7 @@ function getServerSnapshot(): string | null {
 }
 
 export function CookieBanner() {
+  const t = useTranslations("cookieBanner");
   const stored = useSyncExternalStore(
     subscribe,
     getSnapshot,
@@ -65,6 +67,7 @@ export function CookieBanner() {
 
   if (!needsBanner) return null;
 
+
   return (
     <div
       role="dialog"
@@ -82,28 +85,23 @@ export function CookieBanner() {
               id="cookie-banner-title"
               className="text-sm font-black uppercase tracking-[0.14em]"
             >
-              Solo cookies técnicas
+              {t("title")}
             </p>
             <p
               id="cookie-banner-copy"
               className="mt-1.5 text-[13px] font-medium leading-relaxed text-[#050505]/68 dark:text-white/62 sm:mt-2"
             >
               <span className="sm:hidden">
-                Sin publicidad ni rastreo: solo lo necesario para que la app
-                funcione y una analítica anónima. Más en la{" "}
+                {t("short")}{" "}
               </span>
               <span className="hidden sm:inline">
-                Usamos cookies y almacenamiento local estrictamente necesarios
-                (sesión y preferencias). Además medimos las visitas de forma
-                agregada y anónima con Vercel Analytics, que no usa cookies ni
-                te identifica. No hay publicidad ni tracking entre sitios. Más
-                info en la{" "}
+                {t("long")}{" "}
               </span>
               <Link
                 href="/cookies"
                 className="font-bold underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:decoration-white/24 dark:hover:text-white"
               >
-                política de cookies
+                {t("policyLink")}
               </Link>
               .
             </p>
@@ -112,19 +110,19 @@ export function CookieBanner() {
                 onClick={acknowledge}
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-[#050505] px-4 text-[12px] font-black text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
               >
-                Entendido
+                {t("ok")}
               </button>
               <Link
                 href="/privacidad"
                 className="inline-flex min-h-11 items-center text-[12px] font-bold text-[#050505]/54 underline decoration-[#050505]/24 underline-offset-4 hover:text-[#050505] dark:text-white/52 dark:decoration-white/24 dark:hover:text-white"
               >
-                Ver política de privacidad
+                {t("privacy")}
               </Link>
             </div>
           </div>
           <button
             onClick={acknowledge}
-            aria-label="Cerrar aviso"
+            aria-label={t("close")}
             className="-m-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-[#050505]/46 transition-colors hover:bg-[#050505]/5 hover:text-[#050505] dark:text-white/46 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <X className="size-4" strokeWidth={1.6} />

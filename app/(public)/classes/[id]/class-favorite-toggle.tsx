@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClassListPicker } from "./class-list-picker";
+import { useTranslations } from "next-intl";
 
 /**
  * Corazón de la ficha de clase: abre el selector de listas. Si al abrirlo
@@ -20,6 +21,7 @@ export function ClassFavoriteToggle({
   className?: string;
   initialFavorited: boolean;
 }) {
+  const tx = useTranslations("ui.s_id_classfavoritetoggle");
   const [favorited, setFavorited] = useState(initialFavorited);
   const [open, setOpen] = useState(false);
 
@@ -28,8 +30,8 @@ export function ClassFavoriteToggle({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={favorited ? "Gestionar listas" : "Añadir a favoritos"}
-        title={favorited ? "Guardada en listas" : "Añadir a favoritos"}
+        aria-label={favorited ? "Gestionar listas" : tx("anadirAFavoritos")}
+        title={favorited ? tx("guardadaEnListas") : tx("anadirAFavoritos")}
         className={cn(
           "flex size-10 items-center justify-center rounded-full border transition-colors",
           favorited

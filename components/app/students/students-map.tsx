@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { OriginPoint } from "@/lib/students/stats";
+import { useTranslations } from "next-intl";
 
 const ACCENT = "#A3C520";
 
@@ -19,6 +20,7 @@ function radiusFor(count: number, max: number) {
  * de los alumnos, solo se piden las imágenes del mapa.
  */
 export function StudentsMap({ origins }: { origins: OriginPoint[] }) {
+  const tx = useTranslations("ui.s_students_studentsmap");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function StudentsMap({ origins }: { origins: OriginPoint[] }) {
     <div
       ref={containerRef}
       role="img"
-      aria-label="Mapa de procedencia de los alumnos"
+      aria-label={tx("mapaDeProcedenciaDe")}
       className="h-72 w-full overflow-hidden rounded-xl border border-border"
     />
   );

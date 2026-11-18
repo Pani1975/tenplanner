@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTerm } from "@/lib/i18n-terms";
+import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 
 const DAYS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 const MONTHS = [
@@ -41,6 +44,9 @@ export function DateTimePicker({
   onChange,
   error,
 }: DateTimePickerProps) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_datetimepicker");
+  const term = useTerm();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -115,7 +121,7 @@ export function DateTimePicker({
   const firstDow = getFirstDayOfWeek(viewYear, viewMonth);
 
   const displayValue = parsed
-    ? new Intl.DateTimeFormat("es-ES", {
+    ? new Intl.DateTimeFormat(intlLocale, {
         weekday: "short",
         day: "numeric",
         month: "short",
@@ -137,7 +143,7 @@ export function DateTimePicker({
         )}
       >
         <Calendar className="size-4 shrink-0 text-muted-foreground" />
-        {displayValue ?? "Selecciona fecha y hora"}
+        {displayValue ?? term("Selecciona fecha y hora")}
       </button>
 
       {open && (
@@ -152,7 +158,7 @@ export function DateTimePicker({
               <ChevronLeft className="size-4" />
             </button>
             <span className="text-sm font-semibold text-foreground">
-              {MONTHS[viewMonth]} {viewYear}
+              {term(MONTHS[viewMonth])} {viewYear}
             </span>
             <button
               type="button"
@@ -170,7 +176,7 @@ export function DateTimePicker({
                 key={d}
                 className="text-center text-[10px] font-semibold text-muted-foreground py-1"
               >
-                {d}
+                {term(d)}
               </div>
             ))}
           </div>
@@ -213,7 +219,7 @@ export function DateTimePicker({
             <div className="flex items-center gap-2">
               <Clock className="size-3.5 text-muted-foreground shrink-0" />
               <span className="text-xs font-medium text-muted-foreground">
-                Hora
+                {tx("hora")}
               </span>
               <div className="flex items-center gap-1 ml-auto">
                 <input
@@ -275,7 +281,7 @@ export function DateTimePicker({
               onClick={() => setOpen(false)}
               className="mt-3 w-full bg-brand text-brand-foreground text-sm font-semibold py-2 rounded-xl hover:bg-brand/90 transition-colors"
             >
-              Confirmar
+              {tx("confirmar")}
             </button>
           )}
         </div>

@@ -3,12 +3,14 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useCallback, useRef } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function SessionsSearchInput({
   defaultValue,
 }: {
   defaultValue: string;
 }) {
+  const tx = useTranslations("ui.s_app_sessionssearchinput");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -43,7 +45,7 @@ export function SessionsSearchInput({
       />
       <input
         type="search"
-        placeholder="Buscar por título, objetivo, descripción o etiquetas…"
+        placeholder={tx("buscarPorTituloObjetivo")}
         defaultValue={defaultValue}
         onChange={handleChange}
         className="h-10 w-full rounded-md border border-foreground/20 bg-transparent pl-9 pr-4 text-[13px] text-foreground placeholder:text-foreground/40 transition-colors focus:border-brand/60 focus:outline-none"

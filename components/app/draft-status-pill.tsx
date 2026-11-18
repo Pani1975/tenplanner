@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface DraftStatusPillProps {
   status: "idle" | "saving" | "saved";
@@ -24,6 +25,7 @@ export function DraftStatusPill({
   savedAt,
   className,
 }: DraftStatusPillProps) {
+  const tx = useTranslations("ui.s_app_draftstatuspill");
   const [, tick] = useState(0);
 
   // Re-render every 30s to update the relative timestamp
@@ -48,12 +50,12 @@ export function DraftStatusPill({
       {status === "saving" ? (
         <>
           <Loader2 className="size-3 animate-spin" />
-          Guardando…
+          {tx("guardando")}
         </>
       ) : (
         <>
           <Check className="size-3" strokeWidth={2.5} />
-          Guardado automático {savedAt ? `· ${formatRelative(savedAt)}` : ""}
+          {tx("guardadoAutomatico")}{" "}{savedAt ? `· ${formatRelative(savedAt)}` : ""}
         </>
       )}
     </span>

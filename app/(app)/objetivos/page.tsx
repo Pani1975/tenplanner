@@ -9,10 +9,17 @@ import {
 import { getWorkMode, spaceTitle, workModeKicker } from "@/lib/work-mode";
 import { WorkspaceObjectivesManager } from "./workspace-objectives-manager";
 import { BulkObjectivesActions } from "./bulk-objectives-actions";
+import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Objetivos" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Objetivos") };
+}
 
 export default async function ObjectivesPage() {
+  const tx = await getTranslations("ui.s_objetivos_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -37,10 +44,10 @@ export default async function ObjectivesPage() {
 
   const intro =
     mode.kind === "tenplanner"
-      ? "Catálogo de objetivos de Ten Planner. Lo que cambies aquí lo verán todos los clubes y monitores de la plataforma."
+      ? tx("catalogoDeObjetivosDe")
       : mode.kind === "club"
-        ? "Objetivos que ven todos los alumnos del club en su ficha. Parten del catálogo de Ten Planner: puedes añadir, editar o quitar cualquiera, y los originales se pueden restaurar."
-        : "Objetivos de tus alumnos particulares. Parten del catálogo de Ten Planner: puedes añadir, editar o quitar cualquiera, y los originales se pueden restaurar.";
+        ? tx("objetivosQueVenTodos")
+        : tx("objetivosDeTusAlumnos");
 
   return (
     <div className="tp-page">
@@ -48,10 +55,10 @@ export default async function ObjectivesPage() {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <Target className="size-3.5" />
-            {workModeKicker(mode)}
+            {workModeKicker(mode, await getLocale())}
           </div>
           <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
-            {spaceTitle("Objetivos", mode)}
+            {spaceTitle("Objetivos", mode, await getLocale())}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
             {intro}
@@ -61,9 +68,7 @@ export default async function ObjectivesPage() {
         {mode.kind === "tenplanner" && (
           <p className="flex items-start gap-2 rounded-xl border border-brand/40 bg-brand/10 px-4 py-3 text-sm font-semibold text-foreground">
             <Globe2 className="mt-0.5 size-4 shrink-0 text-brand" />
-            Estás en Modo Ten Planner: cada cambio es público e inmediato para
-            toda la plataforma. Para cambios solo tuyos o de un club, cambia de
-            modo en el menú lateral.
+            {tx("estasEnModoTen")}
           </p>
         )}
 

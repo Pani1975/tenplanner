@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ClipboardList,
@@ -53,13 +54,13 @@ const tabs: Array<{
 }> = [
   {
     id: "exercises",
-    label: "Ejercicios",
-    cta: { href: "/exercises", label: "Ver todos los ejercicios" },
+    label: "tabExercises",
+    cta: { href: "/exercises", label: "ctaExercises" },
   },
   {
     id: "classes",
-    label: "Clases completas",
-    cta: { href: "/classes", label: "Ver todas las clases" },
+    label: "tabClasses",
+    cta: { href: "/classes", label: "ctaClasses" },
   },
 ];
 
@@ -91,7 +92,9 @@ function levelLabel(value: string | null, fallback: string) {
   return value ? nivelLabel(value) : fallback;
 }
 
-function buildExerciseCards(cards: LandingExerciseCard[]): LibraryPreview[] {
+type T = (key: string, values?: Record<string, string | number>) => string;
+
+function buildExerciseCards(cards: LandingExerciseCard[], t: T): LibraryPreview[] {
   return cards.slice(0, 3).map((card, index) => {
     const style = cardStyles[index] ?? cardStyles[0];
 
@@ -99,15 +102,15 @@ function buildExerciseCards(cards: LandingExerciseCard[]): LibraryPreview[] {
       href: `/exercises/${card.id}`,
       title: card.name,
       top: style.top,
-      tag: cleanLabel(card.aspectoJuego, "Biblioteca"),
-      level: levelLabel(card.nivel, "Todos"),
+      tag: cleanLabel(card.aspectoJuego, t("fallbackTag")),
+      level: levelLabel(card.nivel, t("allLevels")),
       time: `${card.durationMinutes} min`,
       icon: style.exerciseIcon,
     };
   });
 }
 
-function buildClassCards(cards: LandingClassCard[]): LibraryPreview[] {
+function buildClassCards(cards: LandingClassCard[], t: T): LibraryPreview[] {
   return cards.slice(0, 3).map((card, index) => {
     const style = cardStyles[index] ?? cardStyles[0];
 
@@ -116,7 +119,7 @@ function buildClassCards(cards: LandingClassCard[]): LibraryPreview[] {
       title: card.name,
       top: style.top,
       tag: "Clase",
-      level: levelLabel(card.nivel, `${card.numAlumnos ?? "Grupo"} alumnos`),
+      level: levelLabel(card.nivel, t("studentsCount", { n: card.numAlumnos ?? t("group") })),
       time: `${card.duracionMinutes} min`,
       icon: style.classIcon,
     };
@@ -161,42 +164,43 @@ export function LibrarySection({
   exerciseCards: LandingExerciseCard[];
   classCards: LandingClassCard[];
 }) {
+  const t = useTranslations("landing.library");
   const [tab, setTab] = useState<Tab>("exercises");
   const reduced = useReducedMotion();
 
   const items =
     tab === "exercises"
-      ? buildExerciseCards(exerciseCards)
-      : buildClassCards(classCards);
-  const active = tabs.find((t) => t.id === tab) ?? tabs[0];
+      ? buildExerciseCards(exerciseCards, t)
+      : buildClassCards(classCards, t);
+  const active = tabs.find((x) => x.id === tab) ?? tabs[0];
 
   return (
     <section className="bg-[#050505] px-5 py-24 text-white lg:py-32">
       <div className="mx-auto max-w-[1100px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.25em] text-white/45">
-          Contenido real de tenis
+          {t("eyebrow")}
         </p>
         <h2 className="mt-6 font-heading text-[clamp(2.5rem,4.4vw,4.25rem)] font-bold leading-[0.95]">
-          Ejercicios y clases
+          {t("title1")}
           <span className="block font-heading font-light italic text-white/45">
-            creados por expertos
+            {t("title2")}
           </span>
         </h2>
 
         <div
           role="tablist"
-          aria-label="Tipo de contenido"
+          aria-label={t("tablistLabel")}
           className="mt-12 inline-flex rounded-full bg-white/8 p-1"
         >
-          {tabs.map((t) => {
-            const isActive = t.id === tab;
+          {tabs.map((tb) => {
+            const isActive = tb.id === tab;
             return (
               <button
-                key={t.id}
+                key={tb.id}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tb.id)}
                 className={cn(
                   "rounded-full px-6 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6ff38]",
                   isActive
@@ -204,7 +208,7 @@ export function LibrarySection({
                     : "text-white/62 hover:text-white"
                 )}
               >
-                {t.label}
+                {t(tb.label)}
               </button>
             );
           })}
@@ -241,7 +245,7 @@ export function LibrarySection({
           </motion.div>
         ) : (
           <div className="mt-9 rounded-xl border border-white/10 bg-white/[0.045] px-5 py-8 text-sm font-semibold text-white/55">
-            Aún no hay contenido visible en esta biblioteca.
+            {t("empty")}
           </div>
         )}
 
@@ -250,7 +254,7 @@ export function LibrarySection({
             href={active.cta.href}
             className="rounded-full border border-white/18 bg-white/8 px-7 py-4 text-sm font-bold text-white transition hover:bg-white hover:text-[#050505]"
           >
-            {active.cta.label} →
+            {t(active.cta.label)} →
           </Link>
         </div>
       </div>

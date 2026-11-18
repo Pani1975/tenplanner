@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 function toInputDate(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -35,6 +36,7 @@ export function ReportDialogButton({
   studentId: string;
   studentName: string;
 }) {
+  const tx = useTranslations("ui.s_id_reportdialog");
   const [open, setOpen] = useState(false);
   const [range, setRange] = useState(defaultRange);
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,7 @@ export function ReportDialogButton({
       URL.revokeObjectURL(url);
       setOpen(false);
     } catch {
-      setError("No se pudo generar el informe. Inténtalo de nuevo.");
+      setError(tx("noSePudoGenerar"));
     } finally {
       setLoading(false);
     }
@@ -83,22 +85,20 @@ export function ReportDialogButton({
         className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
       >
         <FileText className="size-3" strokeWidth={1.6} />
-        Informe
+        {tx("informe")}
       </button>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Informe de {studentName}</DialogTitle>
+            <DialogTitle>{tx("informeDeV1", { v1: studentName })}</DialogTitle>
             <DialogDescription>
-              Elige el periodo del informe. Incluirá las sesiones realizadas,
-              las estadísticas, los objetivos por nivel y las anotaciones del
-              alumno.
+              {tx("eligeElPeriodoDel")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="report-from">Desde</Label>
+              <Label htmlFor="report-from">{tx("desde")}</Label>
               <Input
                 id="report-from"
                 type="date"
@@ -110,7 +110,7 @@ export function ReportDialogButton({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="report-to">Hasta</Label>
+              <Label htmlFor="report-to">{tx("hasta")}</Label>
               <Input
                 id="report-to"
                 type="date"
@@ -125,7 +125,7 @@ export function ReportDialogButton({
 
           {range.from && range.to && range.from > range.to && (
             <p className="text-sm font-medium text-destructive">
-              La fecha de inicio debe ser anterior a la de fin.
+              {tx("laFechaDeInicio")}
             </p>
           )}
           {error && (
@@ -138,7 +138,7 @@ export function ReportDialogButton({
               onClick={() => setOpen(false)}
               className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"
@@ -151,7 +151,7 @@ export function ReportDialogButton({
               ) : (
                 <FileText className="size-4" />
               )}
-              Generar informe
+              {tx("generarInforme")}
             </button>
           </div>
         </DialogContent>

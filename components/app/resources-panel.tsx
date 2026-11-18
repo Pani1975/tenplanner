@@ -23,6 +23,7 @@ import {
 import { CourtBoardDialog } from "@/components/app/court-board-dialog";
 import { isDrawingUrl } from "@/lib/court-board";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type SubTab = "all" | "favorites";
 
@@ -39,6 +40,7 @@ export function ResourcesPanel({
   canManageClub?: boolean;
   canCopyToParticular?: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_resourcespanel");
   const [resources, setResources] = useState<ResourceData[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [subTab, setSubTab] = useState<SubTab>("all");
@@ -64,7 +66,7 @@ export function ResourcesPanel({
         const json = (await res.json()) as { data: ResourceData[] };
         if (active) setResources(json.data);
       } catch {
-        if (active) setLoadError("No se pudieron cargar tus recursos.");
+        if (active) setLoadError(tx("noSePudieronCargar"));
       }
     })();
     return () => {
@@ -106,7 +108,7 @@ export function ResourcesPanel({
             r.id === resource.id ? { ...r, isFavorite: !next } : r
           ) ?? prev
       );
-      setActionError("No se pudo actualizar el favorito.");
+      setActionError(tx("noSePudoActualizar"));
     } finally {
       setTogglingId(null);
     }
@@ -123,7 +125,7 @@ export function ResourcesPanel({
       if (!res.ok) throw new Error("failed");
       setNotice(`«${resource.title}» se copió a tu espacio particular.`);
     } catch {
-      setActionError("No se pudo copiar el recurso. Inténtalo de nuevo.");
+      setActionError(tx("noSePudoCopiar"));
     } finally {
       setCopyingId(null);
     }
@@ -139,7 +141,7 @@ export function ResourcesPanel({
       if (!res.ok) throw new Error("failed");
       setResources((prev) => prev?.filter((r) => r.id !== resource.id) ?? prev);
     } catch {
-      setActionError("No se pudo eliminar el recurso. Inténtalo de nuevo.");
+      setActionError(tx("noSePudoEliminar"));
     } finally {
       setDeletingId(null);
     }
@@ -171,7 +173,7 @@ export function ResourcesPanel({
               href={r.imageUrl}
               target="_blank"
               rel="noopener noreferrer"
-              title="Ver imagen"
+              title={tx("verImagen")}
               className="shrink-0"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- stored/external url preview */}
@@ -206,10 +208,10 @@ export function ResourcesPanel({
               onClick={() => void toggleFavorite(r)}
               disabled={togglingId === r.id}
               aria-label={
-                r.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"
+                r.isFavorite ? tx("quitarDeFavoritos") : tx("anadirAFavoritos")
               }
               title={
-                r.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"
+                r.isFavorite ? tx("quitarDeFavoritos") : tx("anadirAFavoritos")
               }
               className="shrink-0 text-muted-foreground transition-colors hover:text-brand disabled:opacity-50"
             >
@@ -231,7 +233,7 @@ export function ResourcesPanel({
               className="inline-flex items-center gap-1.5 rounded-full border border-foreground/10 px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-brand/40 hover:text-brand"
             >
               <Link2 className="size-3.5" />
-              Enlace
+              {tx("enlace")}
               <ExternalLink className="size-3" />
             </a>
           )}
@@ -265,7 +267,7 @@ export function ResourcesPanel({
               className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 px-3 py-1.5 text-xs font-bold text-brand transition-colors hover:bg-brand/10"
             >
               <PenTool className="size-3.5" />
-              Editar dibujo
+              {tx("editarDibujo")}
             </button>
           )}
 
@@ -279,7 +281,7 @@ export function ResourcesPanel({
                     : setDialogState({ resource: r })
                 }
                 aria-label={`Editar ${r.title}`}
-                title="Editar recurso"
+                title={tx("editarRecurso")}
                 className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Pencil className="size-4" />
@@ -290,7 +292,7 @@ export function ResourcesPanel({
                 type="button"
                 onClick={() => void copyToParticular(r)}
                 disabled={copyingId === r.id}
-                title="Copiar a mi espacio particular"
+                title={tx("copiarAMiEspacio")}
                 className="inline-flex h-8 items-center gap-1 rounded-full border border-foreground/10 px-2.5 text-[11px] font-bold text-muted-foreground transition-colors hover:border-brand/40 hover:text-brand disabled:opacity-50"
               >
                 {copyingId === r.id ? (
@@ -298,7 +300,7 @@ export function ResourcesPanel({
                 ) : (
                   <Copy className="size-3.5" />
                 )}
-                Copiar a mi espacio
+                {tx("copiarAMiEspacio2")}
               </button>
             )}
             {canDelete && (
@@ -307,7 +309,7 @@ export function ResourcesPanel({
                 onClick={() => setToDelete(r)}
                 disabled={deletingId === r.id}
                 aria-label={`Eliminar ${r.title}`}
-                title="Eliminar recurso"
+                title={tx("eliminarRecurso")}
                 className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
               >
                 {deletingId === r.id ? (
@@ -334,8 +336,8 @@ export function ResourcesPanel({
         >
           {(
             [
-              { id: "all" as SubTab, label: "Todos" },
-              { id: "favorites" as SubTab, label: "Favoritos" },
+              { id: "all" as SubTab, label: tx("todos") },
+              { id: "favorites" as SubTab, label: tx("favoritos") },
             ] as const
           ).map(({ id, label }) => (
             <button
@@ -360,7 +362,7 @@ export function ResourcesPanel({
             className="inline-flex h-10 items-center gap-1.5 rounded-full border border-brand/40 px-4 text-sm font-black text-brand transition-colors hover:bg-brand/10"
           >
             <PenTool className="size-4" />
-            Nueva pizarra
+            {tx("nuevaPizarra")}
           </button>
           <button
             type="button"
@@ -368,7 +370,7 @@ export function ResourcesPanel({
             className="inline-flex h-10 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground transition-colors hover:bg-brand/90"
           >
             <Plus className="size-4" />
-            Nuevo recurso
+            {tx("nuevoRecurso")}
           </button>
         </div>
       </div>
@@ -391,8 +393,8 @@ export function ResourcesPanel({
         <div className="tp-panel border-dashed p-8 text-center">
           <p className="mb-3 text-sm text-muted-foreground">
             {subTab === "favorites"
-              ? "Aún no tienes recursos favoritos."
-              : "Aún no has añadido recursos. Guarda enlaces, documentos, imágenes o dibujos de pizarra útiles para tu labor."}
+              ? tx("aunNoTienesRecursos")
+              : tx("aunNoHasAnadido")}
           </p>
           <button
             type="button"
@@ -400,7 +402,7 @@ export function ResourcesPanel({
             className="inline-flex items-center gap-1.5 text-sm font-black text-brand transition-colors hover:text-brand/80"
           >
             <Plus className="size-4" />
-            Añadir recurso
+            {tx("anadirRecurso")}
           </button>
         </div>
       ) : inClub ? (
@@ -459,11 +461,11 @@ export function ResourcesPanel({
         onOpenChange={(open) => {
           if (!open) setToDelete(null);
         }}
-        title="¿Eliminar este recurso?"
+        title={tx("eliminarEsteRecurso")}
         description={
           toDelete ? `“${toDelete.title}” se eliminará de tu lista.` : undefined
         }
-        confirmLabel="Eliminar"
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (toDelete) void deleteResource(toDelete);

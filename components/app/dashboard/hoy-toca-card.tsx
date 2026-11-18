@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarClock, Sparkles } from "lucide-react";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
-import { HOY_TOCA, MONTAR } from "@/lib/session-engine/messages";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ENGINE_TIME_ZONE,
   findNextTraining,
@@ -23,7 +23,9 @@ export async function HoyTocaCard({
   userId: string;
   sessionCreationEnabled: boolean;
 }) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   if (!sessionCreationEnabled) return null;
+  const t = await getTranslations("dashboard.hoyToca");
   const [activeClubId, sport] = await Promise.all([
     getActiveWorkClubId(userId),
     getActiveSport(userId),
@@ -34,22 +36,22 @@ export async function HoyTocaCard({
     return (
       <section className={CARD} aria-labelledby="hoy-toca-title">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-          {HOY_TOCA.kicker}
+          {t("kicker")}
         </p>
         <h2
           id="hoy-toca-title"
           className="mt-1 text-lg font-black text-foreground"
         >
-          {HOY_TOCA.title}
+          {t("title")}
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {HOY_TOCA.noGroups}
+          {t("noGroups")}
         </p>
         <Link
           href="/groups"
           className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
         >
-          {HOY_TOCA.goGroups}
+          {t("goGroups")}
         </Link>
       </section>
     );
@@ -59,27 +61,27 @@ export async function HoyTocaCard({
     return (
       <section className={CARD} aria-labelledby="hoy-toca-title">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-          {HOY_TOCA.kicker}
+          {t("kicker")}
         </p>
         <h2
           id="hoy-toca-title"
           className="mt-1 flex items-center gap-2 text-lg font-black text-foreground"
         >
           <CalendarClock className="size-5 text-brand" />
-          {HOY_TOCA.alreadyHave(next.groupName)}
+          {t("alreadyHave", { group: next.groupName })}
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={`/sessions/${next.existingSessionId}`}
             className="inline-flex min-h-11 items-center rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
           >
-            {HOY_TOCA.openSession}
+            {t("openSession")}
           </Link>
           <Link
             href={`/sessions/${next.existingSessionId}/edit?disenar=1`}
             className="inline-flex min-h-11 items-center rounded-full border border-foreground/15 px-4 text-sm font-bold text-foreground hover:bg-muted"
           >
-            {MONTAR.designWithTenPlanner}
+            {t("design")}
           </Link>
         </div>
       </section>
@@ -87,7 +89,7 @@ export async function HoyTocaCard({
   }
 
   // Acceso al asistente: la propuesta se prepara allí, en el Paso 2.
-  const when = new Intl.DateTimeFormat("es-ES", {
+  const when = new Intl.DateTimeFormat(intlLocale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -98,7 +100,7 @@ export async function HoyTocaCard({
   return (
     <section className={CARD} aria-labelledby="hoy-toca-title">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        {HOY_TOCA.kicker}
+        {t("kicker")}
       </p>
       <h2
         id="hoy-toca-title"
@@ -115,7 +117,7 @@ export async function HoyTocaCard({
         className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-sm font-bold text-[#050505]"
       >
         <Sparkles className="size-4" />
-        {MONTAR.designWithTenPlanner}
+        {t("design")}
       </Link>
     </section>
   );

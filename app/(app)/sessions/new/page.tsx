@@ -48,6 +48,8 @@ import { SessionTargetStep } from "@/components/app/session-wizard/session-targe
 import { TargetModeCards } from "@/components/app/session-wizard/target-mode-cards";
 import type { SessionTarget } from "@/lib/session-target";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 interface PageProps {
   searchParams: Promise<{
@@ -77,6 +79,8 @@ interface PageProps {
 }
 
 export default async function NewSessionPage({ searchParams }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_new_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -91,8 +95,8 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   if (!sessionCreationEnabled) {
     return (
       <FeatureLocked
-        title="Crear sesiones está bloqueado"
-        description="Un administrador ha desactivado temporalmente la creación manual de sesiones."
+        title={tx("crearSesionesEstaBloqueado")}
+        description={tx("unAdministradorHaDesactivado")}
         href="/sessions"
         cta="Volver a sesiones"
       />
@@ -564,9 +568,9 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
     ? fromGroup.name
     : targetStudents.length > 0
       ? targetStudents.map((st) => st.name).join(", ")
-      : "Clase suelta (sin alumnos todavía)";
+      : tx("claseSueltaSinAlumnos");
   const targetWhen = targetAt
-    ? new Intl.DateTimeFormat("es-ES", {
+    ? new Intl.DateTimeFormat(intlLocale, {
         weekday: "long",
         day: "numeric",
         month: "long",
@@ -594,7 +598,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
           <div className="relative flex items-center gap-4">
             <Link
               href="/sessions"
-              aria-label="Volver a sesiones"
+              aria-label={tx("volverASesiones")}
               className="flex size-10 shrink-0 items-center justify-center rounded-full border border-foreground/15 bg-[#F4F4F1] text-[0px] text-foreground/60 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
             >
               <ArrowLeft className="size-4 text-foreground/60" />←
@@ -602,34 +606,31 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
             <div className="min-w-0">
               <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/60 dark:bg-[#050505]/70">
                 <Sparkles className="size-3.5 text-brand" />
-                Wizard de sesión
+                {tx("wizardDeSesion")}
               </p>
               <h1 className="font-heading text-2xl leading-tight tracking-tight text-foreground md:text-3xl">
                 {fromSession ? (
                   <>
-                    Reutilizando{" "}
+                    {tx("reutilizando")}{" "}
                     <em className="italic text-brand">
-                      &ldquo;{fromSession.title}&rdquo;
-                    </em>
+                      {tx("v1", { v1: fromSession.title })}</em>
                   </>
                 ) : fromClass ? (
                   <>
-                    Desde clase{" "}
+                    {tx("desdeClase")}{" "}
                     <em className="italic text-brand">
-                      &ldquo;{fromClass.name}&rdquo;
-                    </em>
+                      {tx("v1", { v1: fromClass.name })}</em>
                   </>
                 ) : preSelected.length > 0 ? (
                   <>
                     <em className="italic text-brand">
-                      {preSelected.length} ejercicio
-                      {preSelected.length !== 1 ? "s" : ""}
+                      {tx("v1EjercicioV2", { v1: preSelected.length, v2: preSelected.length !== 1 ? "s" : "" })}
                     </em>{" "}
-                    cargados
+                    {tx("cargados")}
                   </>
                 ) : (
                   <>
-                    Nueva <em className="italic text-brand">sesión</em>
+                    {tx("nueva")}{" "}<em className="italic text-brand">{tx("sesion")}</em>
                   </>
                 )}
               </h1>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Mic, RotateCcw, Square, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /** Duración máxima de una nota de voz (debe coincidir con el servidor). */
 const MAX_SECONDS = 120;
@@ -61,6 +62,7 @@ export function SessionVoiceNote({
   addLabel = "Nota de voz",
   className,
 }: SessionVoiceNoteProps) {
+  const tx = useTranslations("ui.s_app_sessionvoicenote");
   const [saved, setSaved] = useState<VoiceNoteSaved | null>(
     url ? { url, seconds: seconds ?? 0 } : null
   );
@@ -105,7 +107,7 @@ export function SessionVoiceNote({
       !navigator.mediaDevices?.getUserMedia ||
       typeof MediaRecorder === "undefined"
     ) {
-      setError("Este navegador no permite grabar audio.");
+      setError(tx("esteNavegadorNoPermite"));
       return;
     }
 
@@ -114,7 +116,7 @@ export function SessionVoiceNote({
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       setError(
-        "No se pudo acceder al micrófono. Revisa el permiso del navegador."
+        tx("noSePudoAcceder")
       );
       return;
     }
@@ -144,7 +146,7 @@ export function SessionVoiceNote({
       });
       if (blob.size === 0) {
         setPhase("idle");
-        setError("No se grabó nada. Inténtalo de nuevo.");
+        setError(tx("noSeGraboNada"));
         return;
       }
       setPhase("uploading");
@@ -157,7 +159,7 @@ export function SessionVoiceNote({
         setSaved(result);
         setConfirmDelete(false);
       } else {
-        setError("No se pudo guardar la nota de voz. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
       }
     };
 
@@ -188,7 +190,7 @@ export function SessionVoiceNote({
       setSaved(null);
       setConfirmDelete(false);
     } else {
-      setError("No se pudo eliminar la nota de voz.");
+      setError(tx("noSePudoEliminar"));
     }
   }
 
@@ -213,7 +215,7 @@ export function SessionVoiceNote({
           className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-destructive/90"
         >
           <Square className="size-3 fill-current" />
-          Parar y guardar
+          {tx("pararYGuardar")}
         </button>
       </div>
     );
@@ -228,7 +230,7 @@ export function SessionVoiceNote({
         )}
       >
         <Loader2 className="size-3.5 animate-spin" />
-        Guardando nota de voz…
+        {tx("guardandoNotaDeVoz")}
       </div>
     );
   }
@@ -243,7 +245,7 @@ export function SessionVoiceNote({
             src={saved.url}
             className="h-9 w-full max-w-md"
           >
-            Tu navegador no puede reproducir este audio.
+            {tx("tuNavegadorNoPuede")}
           </audio>
           {!readOnly && (
             <div className="flex flex-wrap items-center gap-2 text-[11px]">
@@ -256,12 +258,12 @@ export function SessionVoiceNote({
                 className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
               >
                 <RotateCcw className="size-3" />
-                Volver a grabar
+                {tx("volverAGrabar")}
               </button>
               {confirmDelete ? (
                 <>
                   <span className="text-muted-foreground">
-                    ¿Eliminar la nota?
+                    {tx("eliminarLaNota")}
                   </span>
                   <button
                     type="button"
@@ -270,14 +272,14 @@ export function SessionVoiceNote({
                     className="inline-flex items-center gap-1 rounded-full bg-destructive px-2.5 py-1 font-semibold text-white disabled:opacity-60"
                   >
                     {deleting && <Loader2 className="size-3 animate-spin" />}
-                    Eliminar
+                    {tx("eliminar")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(false)}
                     className="rounded-full px-2 py-1 font-medium text-muted-foreground hover:text-foreground"
                   >
-                    Cancelar
+                    {tx("cancelar")}
                   </button>
                 </>
               ) : (
@@ -287,7 +289,7 @@ export function SessionVoiceNote({
                   className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
                 >
                   <Trash2 className="size-3" />
-                  Eliminar
+                  {tx("eliminar")}
                 </button>
               )}
             </div>

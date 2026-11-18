@@ -15,6 +15,7 @@ import {
   WEEKDAY_LABELS,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
 
 /**
  * Días (y hora) en que el grupo tiene clase habitualmente. Esto es lo que
@@ -28,6 +29,7 @@ export function GroupScheduleEditor({
   groupId: string;
   initialSchedule: GroupScheduleEntry[] | null;
 }) {
+  const tx = useTranslations("ui.s_id_groupscheduleeditor");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [schedule, setSchedule] = useState<Map<number, ScheduleSlot>>(
@@ -57,13 +59,13 @@ export function GroupScheduleEditor({
         body: JSON.stringify({ weeklySchedule }),
       });
       if (!res.ok) {
-        setError("No se pudo guardar el horario.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       setOpen(false);
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -74,7 +76,7 @@ export function GroupScheduleEditor({
       <CalendarClock className="size-4 shrink-0 text-brand" />
       {currentEntries.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Este grupo aún no tiene días de clase fijados.
+          {tx("esteGrupoAunNo")}
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -107,16 +109,16 @@ export function GroupScheduleEditor({
             <div className="flex items-center justify-between border-b border-foreground/10 px-5 pb-4 pt-5">
               <div className="min-w-0">
                 <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
-                  Horario habitual
+                  {tx("horarioHabitual")}
                 </p>
                 <h2 className="truncate text-lg font-black text-foreground">
-                  Días de clase del grupo
+                  {tx("diasDeClaseDel")}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar"
+                aria-label={tx("cerrar")}
                 className="flex size-8 items-center justify-center rounded-xl text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
               >
                 <X className="size-4" />
@@ -125,10 +127,7 @@ export function GroupScheduleEditor({
 
             <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
               <p className="mb-1 text-xs text-foreground/50">
-                Elige los días en que este grupo tiene clase, con la hora de
-                inicio y la de finalización. &ldquo;Asignar clase&rdquo;
-                propondrá sola la próxima fecha (y la duración) a partir de
-                esto, aunque siempre podrás cambiarla o añadir un día suelto.
+                {tx("eligeLosDiasEn")}
               </p>
               <WeeklySchedulePicker value={schedule} onChange={setSchedule} />
               {error && (
@@ -144,7 +143,7 @@ export function GroupScheduleEditor({
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6FF38] py-2.5 text-sm font-bold text-[#050505] disabled:opacity-60"
               >
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Guardar
+                {tx("guardar")}
               </button>
             </div>
           </div>

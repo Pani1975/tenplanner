@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,39 +29,40 @@ type AccountType = "club" | "monitor" | "familia" | "jugador";
 type FamilyKind = "familia" | "jugador";
 type Step = "choice" | "form";
 
-const registerSchema = z
-  .object({
-    name: z.string().trim().min(2, "Escribe tu nombre"),
-    email: z.string().trim().email("Email no válido"),
-    password: z.string().min(8, "Mínimo 8 caracteres"),
-    confirmPassword: z.string(),
-    isClub: z.boolean(),
-    isPlayer: z.boolean(),
-    confirmAdult: z.boolean(),
-    clubName: z.string().trim().optional(),
-    clubSeats: z.string().optional(),
-    clubAddress: z.string().trim().max(500, "Demasiado largo").optional(),
-    clubPhone: z.string().trim().max(50, "Demasiado largo").optional(),
-    clubWebsite: z.string().trim().max(255, "Demasiado largo").optional(),
-    accepted: z
-      .boolean()
-      .refine(Boolean, "Debes aceptar las condiciones para crear la cuenta"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Las contraseñas no coinciden",
-  })
-  .refine((data) => !data.isClub || (data.clubName?.length ?? 0) >= 2, {
-    path: ["clubName"],
-    message: "Escribe el nombre del club",
-  })
-  .refine((data) => !data.isPlayer || data.confirmAdult, {
-    path: ["confirmAdult"],
-    message:
-      "Si eres menor de edad, la cuenta la crea tu madre, padre o tutor como familia",
-  });
+type Translator = (key: string) => string;
 
-type RegisterForm = z.infer<typeof registerSchema>;
+function makeRegisterSchema(t: Translator) {
+  return z
+    .object({
+      name: z.string().trim().min(2, t("errName")),
+      email: z.string().trim().email(t("errEmail")),
+      password: z.string().min(8, t("errPasswordMin")),
+      confirmPassword: z.string(),
+      isClub: z.boolean(),
+      isPlayer: z.boolean(),
+      confirmAdult: z.boolean(),
+      clubName: z.string().trim().optional(),
+      clubSeats: z.string().optional(),
+      clubAddress: z.string().trim().max(500, t("errTooLong")).optional(),
+      clubPhone: z.string().trim().max(50, t("errTooLong")).optional(),
+      clubWebsite: z.string().trim().max(255, t("errTooLong")).optional(),
+      accepted: z.boolean().refine(Boolean, t("errAccept")),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"],
+      message: t("errPasswordMatch"),
+    })
+    .refine((data) => !data.isClub || (data.clubName?.length ?? 0) >= 2, {
+      path: ["clubName"],
+      message: t("errClubName"),
+    })
+    .refine((data) => !data.isPlayer || data.confirmAdult, {
+      path: ["confirmAdult"],
+      message: t("errAdult"),
+    });
+}
+
+type RegisterForm = z.infer<ReturnType<typeof makeRegisterSchema>>;
 
 const initialForm: RegisterForm = {
   name: "",
@@ -86,6 +88,9 @@ function isAlreadyRegisteredMessage(message: string) {
 }
 
 export default function RegisterPage() {
+  const tx = useTranslations("ui.s_register_page");
+  const t = useTranslations("auth.register");
+  const registerSchema = useMemo(() => makeRegisterSchema(t), [t]);
   const router = useRouter();
   const [step, setStep] = useState<Step>("choice");
   const [form, setForm] = useState<RegisterForm>(initialForm);
@@ -163,10 +168,9 @@ export default function RegisterPage() {
   function setExistingEmailError() {
     setFieldErrors((prev) => ({
       ...prev,
-      email:
-        "Ya existe una cuenta con este correo. Entra o recupera la contraseña.",
+      email: t("errEmailExists"),
     }));
-    setError("Ese email ya está registrado en TenPlanner.");
+    setError(t("errEmailRegistered"));
   }
 
   async function resendConfirmation() {
@@ -185,9 +189,7 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      setResendError(
-        "No se pudo reenviar el correo. Prueba de nuevo en unos minutos."
-      );
+      setResendError(t("errResend"));
     } else {
       setResendSent(true);
     }
@@ -339,28 +341,31 @@ export default function RegisterPage() {
               <CheckCircle2 className="size-8" />
             </div>
             <div>
-              <p className="tp-kicker">Cuenta creada</p>
+              <p className="tp-kicker">{t("createdKicker")}</p>
               <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-                Confirma tu correo
+                {t("confirmTitle")}
               </h1>
               <p className="mt-3 text-sm leading-6 text-foreground/62">
-                Hemos enviado un enlace de verificación a{" "}
-                <span className="break-all font-black text-foreground">
-                  {confirmationEmail}
-                </span>
-                . Cuando lo confirmes podrás iniciar sesión.
+                {t.rich("confirmText", {
+                  email: confirmationEmail,
+                  b: (chunks) => (
+                    <span className="break-all font-black text-foreground">
+                      {chunks}
+                    </span>
+                  ),
+                })}
               </p>
             </div>
           </div>
 
           <div className="rounded-[24px] border border-brand/30 bg-brand/10 px-5 py-4 text-left">
             <p className="text-xs font-black uppercase text-foreground">
-              Si no aparece
+              {t("ifMissing")}
             </p>
             <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
-              <li>Revisa spam o promociones.</li>
-              <li>Comprueba que el email está bien escrito.</li>
-              <li>Puedes reenviar el enlace desde aquí.</li>
+              <li>{t("tip1")}</li>
+              <li>{t("tip2")}</li>
+              <li>{t("tip3")}</li>
             </ul>
           </div>
 
@@ -376,7 +381,7 @@ export default function RegisterPage() {
               ) : (
                 <Mail className="size-4" />
               )}
-              Reenviar correo
+              {t("resend")}
             </button>
             <Link
               href={`/login?message=check_email&email=${encodeURIComponent(
@@ -384,13 +389,13 @@ export default function RegisterPage() {
               )}`}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-brand px-4 text-sm font-black text-brand-foreground transition-colors hover:bg-brand/90"
             >
-              Ir al login
+              {t("goLogin")}
             </Link>
           </div>
 
           {resendSent && (
             <p className="text-xs font-bold text-foreground/70">
-              Correo reenviado.
+              {t("resent")}
             </p>
           )}
           {resendError && (
@@ -405,13 +410,12 @@ export default function RegisterPage() {
     return (
       <div className="w-full rounded-[32px] border border-[#050505]/10 bg-white p-5 shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
         <div>
-          <p className="tp-kicker">Acceso anticipado</p>
+          <p className="tp-kicker">{t("earlyAccess")}</p>
           <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-            ¿Cómo quieres usar Ten Planner?
+            {t("choiceTitle")}
           </h1>
           <p className="mt-2 text-sm leading-6 text-foreground/62">
-            Elige el tipo de cuenta. Podrás cambiarlo más adelante si hace
-            falta.
+            {t("choiceSubtitle")}
           </p>
         </div>
 
@@ -426,11 +430,10 @@ export default function RegisterPage() {
             </span>
             <span>
               <span className="block text-base font-black text-foreground">
-                Como Club
+                {t("asClub")}
               </span>
               <span className="mt-1 block text-sm leading-5 text-foreground/62">
-                Diriges una escuela o academia y quieres invitar a tus
-                monitores.
+                {t("asClubText")}
               </span>
             </span>
           </button>
@@ -445,10 +448,10 @@ export default function RegisterPage() {
             </span>
             <span>
               <span className="block text-base font-black text-foreground">
-                Como Monitor
+                {t("asCoach")}
               </span>
               <span className="mt-1 block text-sm leading-5 text-foreground/62">
-                Planificas tus propias sesiones, con o sin un club detrás.
+                {t("asCoachText")}
               </span>
             </span>
           </button>
@@ -463,11 +466,10 @@ export default function RegisterPage() {
             </span>
             <span>
               <span className="block text-base font-black text-foreground">
-                Como Familia
+                {t("asFamily")}
               </span>
               <span className="mt-1 block text-sm leading-5 text-foreground/62">
-                Eres madre, padre o tutor de un jugador y quieres ver su
-                calendario, sus clases y los mensajes del club.
+                {t("asFamilyText")}
               </span>
             </span>
           </button>
@@ -482,20 +484,19 @@ export default function RegisterPage() {
             </span>
             <span>
               <span className="block text-base font-black text-foreground">
-                Como Jugador
+                {t("asPlayer")}
               </span>
               <span className="mt-1 block text-sm leading-5 text-foreground/62">
-                Eres mayor de edad y juegas en un club: consulta tus clases, tu
-                asistencia y los mensajes.
+                {t("asPlayerText")}
               </span>
             </span>
           </button>
         </div>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          Ya tienes cuenta?{" "}
+          {t("haveAccount")}{" "}
           <Link href="/login" className="font-semibold text-brand">
-            Entrar
+            {t("enter")}
           </Link>
         </p>
       </div>
@@ -511,35 +512,29 @@ export default function RegisterPage() {
           className="mb-4 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-foreground/50 transition-colors hover:text-foreground"
         >
           <ChevronLeft className="size-3.5" />
-          Cambiar tipo de cuenta
+          {t("changeType")}
         </button>
       )}
 
       <div>
         <p className="tp-kicker">
-          {isFamily ? "Mensajes del club" : "Acceso anticipado"}
+          {isFamily ? t("clubMessages") : t("earlyAccess")}
         </p>
         <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
           {familyKind === "familia"
-            ? "Crear cuenta de familia"
+            ? t("createFamily")
             : familyKind === "jugador"
-              ? "Crear cuenta de jugador"
+              ? t("createPlayer")
               : form.isClub
-                ? "Crear cuenta de club"
-                : "Crear cuenta de monitor"}
+                ? t("createClub")
+                : t("createCoach")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
           {isFamily
-            ? `${
-                familyKind === "jugador"
-                  ? "Para consultar tus clases, tu asistencia y los mensajes del club."
-                  : "Para seguir el calendario, las clases y los mensajes del club."
-              } El club te enviará un enlace de invitación para vincular ${
-                familyKind === "jugador" ? "tu ficha" : "a tu jugador"
-              }; si te pedimos confirmar el email, después vuelve a abrir ese enlace.`
+            ? t(familyKind === "jugador" ? "subPlayer" : "subFamily")
             : form.isClub
-              ? "Registra tu escuela o academia. Después podrás invitar a tus monitores por email."
-              : "Alta mínima para empezar a ordenar sesiones, alumnos y biblioteca."}
+              ? t("subClub")
+              : t("subCoach")}
         </p>
       </div>
 
@@ -568,12 +563,12 @@ export default function RegisterPage() {
               fill="#EA4335"
             />
           </svg>
-          Continuar con Google
+          {t("google")}
         </Button>
 
         <div className="flex items-center gap-3">
           <Separator className="flex-1" />
-          <span className="text-xs text-muted-foreground">o</span>
+          <span className="text-xs text-muted-foreground">{t("or")}</span>
           <Separator className="flex-1" />
         </div>
       </div>
@@ -582,7 +577,7 @@ export default function RegisterPage() {
         {form.isClub && (
           <div className="grid gap-4 rounded-[22px] border border-brand/30 bg-brand/5 p-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="clubName">Nombre del club</Label>
+              <Label htmlFor="clubName">{t("clubName")}</Label>
               <Input
                 id="clubName"
                 value={form.clubName}
@@ -597,9 +592,9 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="clubAddress">
-                Dirección{" "}
+                {t("address")}{" "}
                 <span className="font-normal text-foreground/50">
-                  (opcional)
+                  {t("optional")}
                 </span>
               </Label>
               <Input
@@ -612,9 +607,9 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="clubPhone">
-                Teléfono{" "}
+                {t("phone")}{" "}
                 <span className="font-normal text-foreground/50">
-                  (opcional)
+                  {t("optional")}
                 </span>
               </Label>
               <Input
@@ -628,15 +623,15 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="clubWebsite">
-                Página web{" "}
+                {t("website")}{" "}
                 <span className="font-normal text-foreground/50">
-                  (opcional)
+                  {t("optional")}
                 </span>
               </Label>
               <Input
                 id="clubWebsite"
                 inputMode="url"
-                placeholder="www.miclub.es"
+                placeholder={tx("wwwMiclubEs")}
                 value={form.clubWebsite}
                 onChange={(e) => update("clubWebsite", e.target.value)}
                 autoComplete="url"
@@ -645,9 +640,9 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="clubSeats">
-                Monitores previstos{" "}
+                {t("plannedCoaches")}{" "}
                 <span className="font-normal text-foreground/50">
-                  (opcional, solo informativo)
+                  {t("optionalInfo")}
                 </span>
               </Label>
               <Input
@@ -663,7 +658,7 @@ export default function RegisterPage() {
 
         <div className="space-y-2">
           <Label htmlFor="name">
-            {form.isClub ? "Nombre y apellidos del responsable" : "Nombre"}
+            {form.isClub ? t("nameClub") : t("name")}
           </Label>
           <Input
             id="name"
@@ -678,7 +673,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -693,7 +688,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Contraseña</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <div className="relative">
             <Input
               id="password"
@@ -709,7 +704,7 @@ export default function RegisterPage() {
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={
-                showPassword ? "Ocultar contraseña" : "Ver contraseña"
+                showPassword ? t("hidePassword") : t("showPassword")
               }
             >
               {showPassword ? (
@@ -725,7 +720,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+          <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
           <Input
             id="confirmPassword"
             type={showPassword ? "text" : "password"}
@@ -751,8 +746,7 @@ export default function RegisterPage() {
                 className="mt-1"
               />
               <span>
-                Confirmo que tengo 18 años o más. Si eres menor, la cuenta la
-                crea tu madre, padre o tutor como familia.
+                {t("adultConfirm")}
               </span>
             </label>
             {fieldErrors.confirmAdult && (
@@ -771,15 +765,18 @@ export default function RegisterPage() {
             className="mt-1"
           />
           <span>
-            Acepto la{" "}
-            <Link href="/privacidad" className="font-semibold text-brand">
-              privacidad
-            </Link>{" "}
-            y los{" "}
-            <Link href="/terminos" className="font-semibold text-brand">
-              términos
-            </Link>
-            .
+            {t.rich("accept", {
+              privacy: (chunks) => (
+                <Link href="/privacidad" className="font-semibold text-brand">
+                  {chunks}
+                </Link>
+              ),
+              terms: (chunks) => (
+                <Link href="/terminos" className="font-semibold text-brand">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </span>
         </label>
         {fieldErrors.accepted && (
@@ -798,14 +795,14 @@ export default function RegisterPage() {
           className="h-11 w-full rounded-full font-black"
         >
           {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-          Crear cuenta
+          {t("submit")}
         </Button>
       </form>
 
       <p className="mt-5 text-center text-sm text-muted-foreground">
-        Ya tienes cuenta?{" "}
+        {t("haveAccount")}{" "}
         <Link href="/login" className="font-semibold text-brand">
-          Entrar
+          {t("enter")}
         </Link>
       </p>
     </div>

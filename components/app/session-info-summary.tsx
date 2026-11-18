@@ -1,5 +1,6 @@
 import { Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // Objetivo, material, observaciones y etiquetas de una sesión. Se usa igual en
 // la ficha (pendiente, completada o cancelada) y en las tarjetas de borrador.
@@ -45,6 +46,7 @@ export function SessionInfoSummary({
   showEmptyObjective = false,
   className,
 }: SessionInfoSummaryProps) {
+  const tx = useTranslations("ui.s_app_sessioninfosummary");
   if (
     !showEmptyObjective &&
     !hasSessionInfo({ objective, material, observations, tags })
@@ -54,13 +56,13 @@ export function SessionInfoSummary({
 
   const fields = [
     {
-      label: "Objetivo",
+      label: tx("objetivo"),
       value: objective,
       empty: showEmptyObjective && !objective?.trim(),
     },
-    { label: "Lugar", value: place, empty: false },
-    { label: "Material", value: material, empty: false },
-    { label: "Observaciones", value: observations, empty: false },
+    { label: tx("lugar"), value: place, empty: false },
+    { label: tx("material"), value: material, empty: false },
+    { label: tx("observaciones"), value: observations, empty: false },
   ].filter((f) => f.empty || f.value?.trim());
 
   return (
@@ -94,7 +96,7 @@ export function SessionInfoSummary({
               >
                 {f.empty ? (
                   <span className="italic text-muted-foreground">
-                    Sin objetivo indicado
+                    {tx("sinObjetivoIndicado")}
                   </span>
                 ) : (
                   f.value

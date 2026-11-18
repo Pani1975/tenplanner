@@ -30,6 +30,8 @@ import {
   type WizardExercise,
   type WizardState,
 } from "./types";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const PHASES: TrainingPhase[] = ["activation", "main", "cooldown"];
 
@@ -123,15 +125,17 @@ export function CourtsBoardView({
   phasePanel,
   extra,
 }: CourtsBoardViewProps) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_sessionwizard_courtsboard");
   if (!twoCourts) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-foreground/15 bg-card px-4 py-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            ¿Usas dos pistas?
+            {tx("usasDosPistas")}
           </p>
           <p className="text-xs text-muted-foreground">
-            En una pista un trabajo y en otra otro, a la vez.
+            {tx("enUnaPistaUn")}
           </p>
         </div>
         <button
@@ -140,7 +144,7 @@ export function CourtsBoardView({
           className="inline-flex items-center gap-2 rounded-lg border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
         >
           <Columns2 className="size-4" />
-          Usar dos pistas
+          {tx("usarDosPistas")}
         </button>
       </div>
     );
@@ -152,12 +156,10 @@ export function CourtsBoardView({
         <div className="min-w-0">
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Columns2 className="size-4 text-brand" />
-            Tablero de pistas
+            {tx("tableroDePistas")}
           </p>
           <p className="text-xs text-muted-foreground">
-            Monta cada pista por separado, con los ejercicios que quieras. Lo
-            de cada pista pasa a la vez: cada bloque dura lo que dure su pista
-            más larga.
+            {tx("montaCadaPistaPor")}
           </p>
         </div>
         <button
@@ -165,7 +167,7 @@ export function CourtsBoardView({
           onClick={() => onSetTwoCourts(false)}
           className="rounded-lg border border-foreground/15 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
         >
-          Volver a una pista
+          {tx("volverAUnaPista")}
         </button>
       </div>
 
@@ -201,7 +203,7 @@ export function CourtsBoardView({
               {blockMax > 0 && (
                 <span className="ml-auto flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-xs font-bold text-brand">
                   <Clock className="size-3" />
-                  {blockMax} min
+                  {blockMax}{" "}{tx("min")}
                 </span>
               )}
             </div>
@@ -217,11 +219,10 @@ export function CourtsBoardView({
                   />
                   <span>
                     <span className="font-semibold text-foreground">
-                      Los grupos rotan
+                      {tx("losGruposRotan")}
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      Dos grupos: cada uno hace las dos pistas. Los minutos son
-                      por grupo.
+                      {tx("dosGruposCadaUno")}
                     </span>
                   </span>
                 </label>
@@ -229,15 +230,13 @@ export function CourtsBoardView({
                   <ol className="mt-2 space-y-1 text-xs text-foreground">
                     <li>
                       <span className="font-bold">
-                        Ronda 1 · 0–{laneMax} min:
-                      </span>{" "}
-                      grupo A en la pista 1 · grupo B en la pista 2
+                        {tx("ronda10V1", { v1: laneMax })}</span>{" "}
+                      {tx("round1Desc")}
                     </li>
                     <li>
                       <span className="font-bold">
-                        Ronda 2 · {laneMax}–{laneMax * 2} min:
-                      </span>{" "}
-                      rotan: grupo A en la pista 2 · grupo B en la pista 1
+                        {tx("ronda2V1V2", { v1: laneMax, v2: laneMax * 2 })}</span>{" "}
+                      {tx("round2Desc")}
                     </li>
                   </ol>
                 )}
@@ -256,10 +255,10 @@ export function CourtsBoardView({
                   >
                     <div className="mb-1.5 flex items-center justify-between text-xs">
                       <span className="font-bold uppercase tracking-wider text-foreground/70">
-                        Pista {court}
+                        {tx("pistaV1", { v1: court })}
                       </span>
                       <span className="text-muted-foreground">
-                        {laneMinutes} min{rotating ? " por grupo" : ""}
+                        {tx("v1MinV2", { v1: laneMinutes, v2: rotating ? tx("perGroupSuffix") : "" })}
                       </span>
                     </div>
                     {laneMax > 0 && (
@@ -275,7 +274,7 @@ export function CourtsBoardView({
 
                     {entries.length === 0 ? (
                       <p className="py-3 text-center text-xs text-muted-foreground">
-                        Nada en esta pista
+                        {tx("nadaEnEstaPista")}
                       </p>
                     ) : (
                       <ul className="space-y-1.5">
@@ -297,7 +296,7 @@ export function CourtsBoardView({
                                           title: e.target.value,
                                         })
                                       }
-                                      placeholder="Título (ej.: cesta de derecha)"
+                                      placeholder={tx("tituloEjCestaDe")}
                                       maxLength={120}
                                       className={cn(inputCls, "w-full")}
                                     />
@@ -309,7 +308,7 @@ export function CourtsBoardView({
                                           text: e.target.value,
                                         })
                                       }
-                                      placeholder="Texto (opcional)"
+                                      placeholder={tx("textoOpcional")}
                                       className={cn(inputCls, "w-full")}
                                     />
                                   </div>
@@ -330,16 +329,15 @@ export function CourtsBoardView({
                                         if (!isNaN(v) && v > 0)
                                           editor.onMinutes(it.id, v);
                                       }}
-                                      aria-label="Minutos"
+                                      aria-label={tx("minutos")}
                                       className={cn(inputCls, "w-16 text-center")}
                                     />
-                                    min
+                                    {tx("min")}
                                   </label>
                                 ) : (
                                   it.minutes !== null && (
                                     <span className="shrink-0 text-xs text-muted-foreground">
-                                      {it.minutes} min
-                                    </span>
+                                      {tx("v1Min", { v1: it.minutes })}</span>
                                   )
                                 )}
                                 {editor && (
@@ -348,18 +346,18 @@ export function CourtsBoardView({
                                       <button
                                         type="button"
                                         onClick={() => editor.onReplace?.(it.id)}
-                                        title="Sustituir por otro ejercicio (mantiene pista, minutos y turnos)"
+                                        title={tx("sustituirPorOtroEjercicio")}
                                         className="mr-1 inline-flex items-center gap-1 rounded px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
                                       >
                                         <RefreshCw className="size-3" />
-                                        Sustituir
+                                        {tx("sustituir")}
                                       </button>
                                     )}
                                     <button
                                       type="button"
                                       onClick={() => editor.onMove(it.id, -1)}
                                       disabled={pos === 0}
-                                      aria-label="Subir"
+                                      aria-label={tx("subir")}
                                       className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                     >
                                       <ArrowUp className="size-3.5" />
@@ -368,7 +366,7 @@ export function CourtsBoardView({
                                       type="button"
                                       onClick={() => editor.onMove(it.id, 1)}
                                       disabled={pos === entries.length - 1}
-                                      aria-label="Bajar"
+                                      aria-label={tx("bajar")}
                                       className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
                                     >
                                       <ArrowDown className="size-3.5" />
@@ -376,7 +374,7 @@ export function CourtsBoardView({
                                     <button
                                       type="button"
                                       onClick={() => editor.onRemove(it.id)}
-                                      aria-label="Quitar de la sesión"
+                                      aria-label={tx("quitarDeLaSesion")}
                                       className="rounded p-1 text-muted-foreground hover:text-destructive"
                                     >
                                       <X className="size-3.5" />
@@ -387,7 +385,7 @@ export function CourtsBoardView({
                               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                                 <div
                                   role="group"
-                                  aria-label="Quién lo dirige"
+                                  aria-label={tx("quienLoDirige")}
                                   className="inline-flex overflow-hidden rounded-md border border-foreground/15 text-[11px] font-semibold"
                                 >
                                   {LED_BY_OPTIONS.map((opt) => {
@@ -409,7 +407,7 @@ export function CourtsBoardView({
                                             : "text-muted-foreground hover:text-foreground"
                                         )}
                                       >
-                                        {opt.label}
+                                        {term(opt.label)}
                                       </button>
                                     );
                                   })}
@@ -428,7 +426,7 @@ export function CourtsBoardView({
                                     }
                                     className="size-3.5 accent-[#D6FF38]"
                                   />
-                                  Por turnos
+                                  {tx("porTurnos")}
                                 </label>
                                 <button
                                   type="button"
@@ -438,12 +436,12 @@ export function CourtsBoardView({
                                   className="ml-auto inline-flex items-center gap-1 rounded-md border border-foreground/15 px-2 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-brand hover:text-brand"
                                 >
                                   <ArrowRightLeft className="size-3" />
-                                  Pasar a pista {other}
+                                  {tx("pasarAPista")}{" "}{other}
                                 </button>
                               </div>
                               {turn && (
                                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                                  Cada alumno
+                                  {tx("cadaAlumno")}
                                   <input
                                     type="number"
                                     min={1}
@@ -454,10 +452,10 @@ export function CourtsBoardView({
                                       if (!isNaN(v) && v > 0)
                                         onPatchItem(it.id, { turnMinutes: v });
                                     }}
-                                    aria-label="Minutos por alumno"
+                                    aria-label={tx("minutosPorAlumno")}
                                     className={cn(inputCls, "w-14 text-center")}
                                   />
-                                  min ·
+                                  {tx("min2")}
                                   <input
                                     type="number"
                                     min={1}
@@ -468,10 +466,10 @@ export function CourtsBoardView({
                                       if (!isNaN(v) && v > 0)
                                         onPatchItem(it.id, { turnSize: v });
                                     }}
-                                    aria-label="Alumnos por turno"
+                                    aria-label={tx("alumnosPorTurno")}
                                     className={cn(inputCls, "w-14 text-center")}
                                   />
-                                  alumno(s) a la vez en cada turno
+                                  {tx("studentsAtOnce")}
                                 </div>
                               )}
                             </li>
@@ -484,9 +482,9 @@ export function CourtsBoardView({
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {(
                           [
-                            { kind: "exercise", label: "Añadir ejercicio" },
-                            { kind: "text", label: "Texto libre" },
-                            { kind: "warmup", label: "Descanso" },
+                            { kind: "exercise", label: tx("anadirEjercicio") },
+                            { kind: "text", label: tx("textoLibre") },
+                            { kind: "warmup", label: tx("descanso") },
                           ] as const
                         ).map(({ kind, label }) => (
                           <button
@@ -511,10 +509,7 @@ export function CourtsBoardView({
               lane(2).length > 0 &&
               total(1) !== total(2) && (
                 <p className="mt-2 text-xs text-amber-600">
-                  Las pistas duran distinto ({total(1)} y {total(2)} min): la
-                  más corta termina antes y el bloque dura {laneMax} min. Si
-                  no es lo que quieres, ajusta los minutos.
-                </p>
+                  {tx("lasPistasDuranDistinto", { v1: total(1), v2: total(2), v3: laneMax })}</p>
               )}
 
             {phasePanel?.(phase)}
@@ -522,20 +517,18 @@ export function CourtsBoardView({
             {perStudent.perStudent.length > 0 && (
               <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-3 py-2 text-xs text-foreground">
                 <p className="font-bold">
-                  Por alumno (bloque de {perStudent.blockMinutes} min)
-                </p>
+                  {tx("porAlumnoBloqueDe", { v1: perStudent.blockMinutes })}</p>
                 <ul className="mt-1 space-y-0.5">
                   {perStudent.perStudent.map((p, i) => (
                     <li key={`${p.label}-${i}`}>
-                      {p.label}: <strong>{p.minutes} min</strong>
-                      {p.kind === "turno" ? " (en su turno)" : ""}
+                      {p.label}: <strong>{tx("v1Min", { v1: p.minutes })}</strong>
+                      {p.kind === "turno" ? tx("enSuTurno") : ""}
                     </li>
                   ))}
                 </ul>
                 {studentCount > 0 && (
                   <p className="mt-1 text-muted-foreground">
-                    Calculado para {studentCount} alumnos.
-                  </p>
+                    {tx("calculadoParaV1Alumnos", { v1: studentCount })}</p>
                 )}
                 {perStudent.warnings.map((w) => (
                   <p key={w} className="mt-1 font-medium text-amber-600">
@@ -589,6 +582,7 @@ export function CourtsBoard({
   onReplace,
   phasePanel,
 }: CourtsBoardProps) {
+  const tx = useTranslations("ui.s_sessionwizard_courtsboard");
   const exercises = state.exercises;
   const items: LaneItem[] = exercises.map((ex, i) => ({
     id: String(i),
@@ -685,13 +679,13 @@ export function CourtsBoard({
                 key={court}
                 className="flex flex-col gap-1 text-xs font-semibold text-foreground/70"
               >
-                Lugar de la pista {court}
+                {tx("lugarDeLaPista")}{" "}{court}
                 <select
                   value={value ?? ""}
                   onChange={(e) => update({ [key]: e.target.value || null })}
                   className="h-9 rounded-md border border-foreground/15 bg-background px-2 text-sm font-normal text-foreground"
                 >
-                  <option value="">Sin lugar asignado</option>
+                  <option value="">{tx("sinLugarAsignado")}</option>
                   {places.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}

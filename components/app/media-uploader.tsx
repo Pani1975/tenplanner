@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { isDrawingUrl } from "@/lib/court-board";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Tab = "upload" | "drawings" | "stock" | "url";
 
@@ -53,6 +54,7 @@ export function MediaUploader({
   label = "Imagen",
   searchSuggestion = "deportes de raqueta",
 }: MediaUploaderProps) {
+  const tx = useTranslations("ui.s_app_mediauploader");
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("upload");
 
@@ -93,7 +95,7 @@ export function MediaUploader({
             }))
         );
       } catch {
-        if (active) setDrawingsError("No se pudieron cargar tus dibujos.");
+        if (active) setDrawingsError(tx("noSePudieronCargar"));
       }
     })();
     return () => {
@@ -106,11 +108,11 @@ export function MediaUploader({
 
   async function uploadFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      setUploadError("Solo se admiten imágenes (JPG, PNG, WebP…)");
+      setUploadError(tx("soloSeAdmitenImagenes"));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      setUploadError("El archivo no puede superar 8 MB");
+      setUploadError(tx("elArchivoNoPuede"));
       return;
     }
     setUploading(true);
@@ -156,7 +158,7 @@ export function MediaUploader({
         setPhotos([]);
       } else setPhotos(data.photos ?? []);
     } catch {
-      setStockError("Error al conectar con la API de imágenes");
+      setStockError(tx("errorAlConectarCon"));
     } finally {
       setSearching(false);
     }
@@ -201,14 +203,14 @@ export function MediaUploader({
               }}
               className="text-xs font-semibold text-white bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg hover:bg-white/30 transition-colors"
             >
-              Cambiar
+              {tx("cambiar")}
             </button>
             <button
               type="button"
               onClick={() => onChange(null)}
               className="text-xs font-semibold text-white bg-destructive/60 backdrop-blur px-3 py-1.5 rounded-lg hover:bg-destructive/80 transition-colors"
             >
-              Eliminar
+              {tx("eliminar")}
             </button>
           </div>
         </div>
@@ -220,9 +222,9 @@ export function MediaUploader({
         >
           <ImageIcon className="size-7 group-hover:scale-110 transition-transform" />
           <div className="text-center">
-            <p className="text-sm font-medium">Añadir imagen</p>
+            <p className="text-sm font-medium">{tx("anadirImagen")}</p>
             <p className="text-xs opacity-70">
-              Sube un archivo, busca en stock o pega una URL
+              {tx("subeUnArchivoBusca")}
             </p>
           </div>
         </button>
@@ -235,14 +237,14 @@ export function MediaUploader({
           <div className="flex border-b border-border bg-muted/30">
             {(
               [
-                { id: "upload" as Tab, label: "Subir archivo", icon: Upload },
-                { id: "drawings" as Tab, label: "Mis dibujos", icon: PenTool },
+                { id: "upload" as Tab, label: tx("subirArchivo"), icon: Upload },
+                { id: "drawings" as Tab, label: tx("misDibujos"), icon: PenTool },
                 {
                   id: "stock" as Tab,
-                  label: "Banco de imágenes",
+                  label: tx("bancoDeImagenes"),
                   icon: Search,
                 },
-                { id: "url" as Tab, label: "URL", icon: Link2 },
+                { id: "url" as Tab, label: tx("url"), icon: Link2 },
               ] as const
             ).map(({ id, label: lbl, icon: Icon }) => (
               <button
@@ -292,17 +294,17 @@ export function MediaUploader({
                     <div className="flex flex-col items-center gap-2">
                       <Loader2 className="size-7 animate-spin text-brand" />
                       <p className="text-sm font-medium text-brand">
-                        Subiendo imagen…
+                        {tx("subiendoImagen")}
                       </p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-2">
                       <Upload className="size-7" />
                       <p className="text-sm font-medium">
-                        Arrastra o haz clic para elegir
+                        {tx("arrastraOHazClic")}
                       </p>
                       <p className="text-xs opacity-60">
-                        JPG, PNG, WebP · Máx. 8 MB
+                        {tx("jpgPngWebpMax")}
                       </p>
                     </div>
                   )}
@@ -323,9 +325,9 @@ export function MediaUploader({
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground text-center">
-                  Necesitas el bucket{" "}
-                  <code className="bg-muted px-1 rounded">exercise-media</code>{" "}
-                  (público) en Supabase Storage.
+                  {tx("necesitasElBucket")}{" "}
+                  <code className="bg-muted px-1 rounded">{"exercise-media"}</code>{" "}
+                  {tx("publicoEnSupabaseStorage")}
                 </p>
               </div>
             )}
@@ -345,8 +347,7 @@ export function MediaUploader({
                 )}
                 {drawings !== null && drawings.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-4">
-                    Aún no tienes dibujos. Crea uno en Recursos con «Nueva
-                    pizarra».
+                    {tx("aunNoTienesDibujos")}
                   </p>
                 )}
                 {drawings !== null && drawings.length > 0 && (
@@ -385,7 +386,7 @@ export function MediaUploader({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleSearchKey}
-                    placeholder="Ej: raqueta, entrenamiento, pista"
+                    placeholder={tx("ejRaquetaEntrenamientoPista")}
                     className="flex-1 h-9 px-3 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
                   />
                   <button
@@ -399,7 +400,7 @@ export function MediaUploader({
                     ) : (
                       <Search className="size-3.5" />
                     )}
-                    Buscar
+                    {tx("buscar")}
                   </button>
                 </div>
 
@@ -430,14 +431,14 @@ export function MediaUploader({
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-xs text-muted-foreground">
-                        Fotos por{" "}
+                        {tx("fotosPor")}{" "}
                         <a
                           href="https://www.pexels.com"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="underline hover:text-brand inline-flex items-center gap-0.5"
                         >
-                          Pexels <ExternalLink className="size-2.5" />
+                          {tx("pexels")}{" "}<ExternalLink className="size-2.5" />
                         </a>
                       </p>
                     </div>
@@ -446,14 +447,14 @@ export function MediaUploader({
                   <div className="text-center py-8">
                     <Search className="size-7 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      Busca fotos gratuitas de alta calidad
+                      {tx("buscaFotosGratuitasDe")}
                     </p>
                     <p className="text-xs text-muted-foreground/60 mt-1">
-                      Añade{" "}
+                      {tx("anade")}{" "}
                       <code className="bg-muted px-1 rounded">
-                        PEXELS_API_KEY
+                        {tx("pexelsApiKey")}
                       </code>{" "}
-                      al .env para activar
+                      {tx("alEnvParaActivar")}
                     </p>
                   </div>
                 )}
@@ -465,14 +466,14 @@ export function MediaUploader({
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">
-                    URL de la imagen
+                    {tx("urlDeLaImagen")}
                   </label>
                   <input
                     type="url"
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && applyUrl()}
-                    placeholder="https://…"
+                    placeholder={tx("https")}
                     className="w-full h-9 px-3 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
@@ -480,7 +481,7 @@ export function MediaUploader({
                   <div className="rounded-lg overflow-hidden border border-border aspect-video bg-muted">
                     <img
                       src={urlInput}
-                      alt="Preview"
+                      alt={tx("preview")}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
@@ -494,7 +495,7 @@ export function MediaUploader({
                   disabled={!urlInput.trim()}
                   className="w-full h-9 bg-brand text-brand-foreground text-sm font-semibold rounded-lg hover:bg-brand/90 transition-colors disabled:opacity-40"
                 >
-                  Usar esta imagen
+                  {tx("usarEstaImagen")}
                 </button>
               </div>
             )}

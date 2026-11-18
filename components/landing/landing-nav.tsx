@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { useEffect, useState } from "react";
 import { Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,12 +11,13 @@ import { InstallAppButton } from "./install-app-button";
 import { InstagramIcon } from "./instagram-icon";
 
 const navItems = [
-  { label: "Cómo funciona", href: "#como-funciona" },
-  { label: "Ejercicios de tenis", href: "/exercises" },
-  { label: "Clases de tenis", href: "/classes" },
-];
+  { key: "labelHow", href: "#como-funciona" },
+  { key: "ex", href: "/exercises" },
+  { key: "cl", href: "/classes" },
+] as const;
 
 export function LandingNav() {
+  const t = useTranslations("landing.nav");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -44,24 +47,25 @@ export function LandingNav() {
               href={item.href}
               className="text-sm font-medium text-[#4d4d45] transition hover:text-[#5f7000]"
             >
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <InstallAppButton className="hidden md:inline-flex" />
           <a
             href="https://www.instagram.com/tenplanner/"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Instagram de TenPlanner (se abre en una pestaña nueva)"
+            aria-label={t("ig")}
             className="grid size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
           >
             <InstagramIcon className="size-5" />
           </a>
           <Link
             href="/login"
-            aria-label="Iniciar sesión o registrarte"
+            aria-label={t("login")}
             className="grid size-11 place-items-center rounded-full bg-[#d6ff38] text-[#050505] transition hover:bg-[#050505] hover:text-[#d6ff38]"
           >
             <UserRound className="size-5" />
@@ -69,7 +73,7 @@ export function LandingNav() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            aria-label={open ? t("close") : t("open")}
             aria-expanded={open}
             aria-controls="landing-mobile-nav"
             className="grid size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] md:hidden"
@@ -97,7 +101,7 @@ export function LandingNav() {
                 onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 text-sm font-medium text-[#050505] transition hover:bg-[#f4f4f1]"
               >
-                {item.label}
+                {t(item.key)}
               </Link>
             ))}
             <InstallAppButton className="mt-1 w-full justify-center" />

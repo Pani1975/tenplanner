@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 
 export interface ResourceData {
   id: string;
@@ -51,6 +52,7 @@ export function ResourceFormDialog({
   resource?: ResourceData | null;
   onSaved: (resource: ResourceData) => void;
 }) {
+  const tx = useTranslations("ui.s_app_resourceformdialog");
   const [title, setTitle] = useState(resource?.title ?? "");
   const [description, setDescription] = useState(resource?.description ?? "");
   const [url, setUrl] = useState(resource?.url ?? "");
@@ -77,11 +79,11 @@ export function ResourceFormDialog({
 
   async function uploadImage(file: File) {
     if (!file.type.startsWith("image/")) {
-      setUploadError("Solo se admiten imágenes");
+      setUploadError(tx("soloSeAdmitenImagenes"));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      setUploadError("La imagen no puede superar 8 MB");
+      setUploadError(tx("laImagenNoPuede"));
       return;
     }
     setUploadingImage(true);
@@ -100,7 +102,7 @@ export function ResourceFormDialog({
       setImageUrl(publicUrl);
     } catch (e: unknown) {
       setUploadError(
-        e instanceof Error ? e.message : "No se pudo subir la imagen"
+        e instanceof Error ? e.message : tx("noSePudoSubir")
       );
     } finally {
       setUploadingImage(false);
@@ -109,7 +111,7 @@ export function ResourceFormDialog({
 
   async function uploadDocument(file: File) {
     if (file.size > 15 * 1024 * 1024) {
-      setUploadError("El documento no puede superar 15 MB");
+      setUploadError(tx("elDocumentoNoPuede"));
       return;
     }
     setUploadingDoc(true);
@@ -132,7 +134,7 @@ export function ResourceFormDialog({
       setDocumentName(file.name);
     } catch (e: unknown) {
       setUploadError(
-        e instanceof Error ? e.message : "No se pudo subir el documento"
+        e instanceof Error ? e.message : tx("noSePudoSubir2")
       );
     } finally {
       setUploadingDoc(false);
@@ -161,14 +163,14 @@ export function ResourceFormDialog({
         }
       );
       if (!res.ok) {
-        setError("No se pudo guardar el recurso. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const json = (await res.json()) as { data: ResourceData };
       onOpenChange(false);
       onSaved(json.data);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -182,7 +184,7 @@ export function ResourceFormDialog({
             {resource ? "Editar recurso" : "Nuevo recurso"}
           </DialogTitle>
           <DialogDescription>
-            Enlaces, documentos o imágenes útiles para tu labor como monitor.
+            {tx("enlacesDocumentosOImagenes")}
           </DialogDescription>
         </DialogHeader>
 
@@ -192,14 +194,14 @@ export function ResourceFormDialog({
               htmlFor="resource-title"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Título
+              {tx("titulo")}
             </label>
             <input
               id="resource-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={255}
-              placeholder="Ej: Guía PMV nivel iniciación"
+              placeholder={tx("ejGuiaPmvNivel")}
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm focus:border-brand focus:outline-none"
             />
           </div>
@@ -209,7 +211,7 @@ export function ResourceFormDialog({
               htmlFor="resource-description"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Descripción
+              {tx("descripcion")}
             </label>
             <textarea
               id="resource-description"
@@ -217,7 +219,7 @@ export function ResourceFormDialog({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               maxLength={4000}
-              placeholder="Para qué sirve este recurso (opcional)"
+              placeholder={tx("paraQueSirveEste")}
               className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-brand focus:outline-none"
             />
           </div>
@@ -228,14 +230,14 @@ export function ResourceFormDialog({
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
               <Link2 className="inline size-3 mr-1 -mt-0.5" />
-              Enlace
+              {tx("enlace")}
             </label>
             <input
               id="resource-url"
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://…"
+              placeholder={tx("https")}
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm focus:border-brand focus:outline-none"
             />
           </div>
@@ -244,7 +246,7 @@ export function ResourceFormDialog({
             {/* Documento */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Documento
+                {tx("documento")}
               </label>
               {documentUrl ? (
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
@@ -275,7 +277,7 @@ export function ResourceFormDialog({
                   ) : (
                     <Paperclip className="size-5" />
                   )}
-                  <span className="text-xs font-medium">Subir archivo</span>
+                  <span className="text-xs font-medium">{tx("subirArchivo")}</span>
                 </button>
               )}
               <input
@@ -292,14 +294,14 @@ export function ResourceFormDialog({
             {/* Imagen */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Imagen
+                {tx("imagen")}
               </label>
               {imageUrl ? (
                 <div className="relative h-20 w-full overflow-hidden rounded-xl border border-border bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element -- preview of an uploaded/external url */}
                   <img
                     src={imageUrl}
-                    alt="Vista previa"
+                    alt={tx("vistaPrevia")}
                     className="size-full object-cover"
                   />
                   <button
@@ -322,7 +324,7 @@ export function ResourceFormDialog({
                   ) : (
                     <ImageIcon className="size-5" />
                   )}
-                  <span className="text-xs font-medium">Subir imagen</span>
+                  <span className="text-xs font-medium">{tx("subirImagen")}</span>
                 </button>
               )}
               <input
@@ -344,9 +346,8 @@ export function ResourceFormDialog({
             </p>
           )}
           <p className="text-[11px] text-muted-foreground">
-            Necesitas el bucket{" "}
-            <code className="bg-muted px-1 rounded">resources</code> (público)
-            en Supabase Storage.
+            {tx("necesitasElBucket")}{" "}
+            <code className="bg-muted px-1 rounded">{tx("resources")}</code>{" "}{tx("publicoEnSupabaseStorage")}
           </p>
 
           {error && (
@@ -359,7 +360,7 @@ export function ResourceFormDialog({
               onClick={() => onOpenChange(false)}
               className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"

@@ -19,6 +19,8 @@ import {
   GUARDIAN_RELATIONSHIP_LABELS,
   type GuardianRelationship,
 } from "@/lib/guardian-labels";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export interface GuardianItem {
   id: string;
@@ -63,6 +65,8 @@ export function GuardiansPanel({
   adult: boolean;
   initialGuardians: GuardianItem[];
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_id_guardianspanel");
   const [guardians, setGuardians] = useState(initialGuardians);
   const [showForm, setShowForm] = useState(initialGuardians.length === 0);
   const [name, setName] = useState("");
@@ -90,7 +94,7 @@ export function GuardiansPanel({
       const body = await res.json().catch(() => null);
       if (!res.ok) {
         setError(
-          typeof body?.error === "string" ? body.error : "No se pudo guardar."
+          typeof body?.error === "string" ? body.error : tx("noSePudoGuardar")
         );
         return false;
       }
@@ -104,7 +108,7 @@ export function GuardiansPanel({
   async function onAdd(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Escribe el nombre del contacto.");
+      setError(tx("escribeElNombreDel"));
       return;
     }
     const ok = await call(
@@ -127,7 +131,7 @@ export function GuardiansPanel({
     if (
       act === "revoke" &&
       !window.confirm(
-        "¿Dar de baja este contacto? Dejará de recibir los mensajes del club."
+        tx("darDeBajaEste")
       )
     ) {
       return;
@@ -149,7 +153,7 @@ export function GuardiansPanel({
     const text = `Hola, ${g.name}. ${clubName} te invita a recibir sus mensajes sobre ${studentName} en Ten Planner. Activa tu acceso aquí:`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Mensajes del club", text, url });
+        await navigator.share({ title: tx("mensajesDelClub"), text, url });
         return;
       } catch {
         // cancelado: se copia el enlace
@@ -200,7 +204,7 @@ export function GuardiansPanel({
                     STATUS[g.status].cls
                   )}
                 >
-                  {STATUS[g.status].label}
+                  {term(STATUS[g.status].label)}
                 </span>
               </div>
               {(g.email || g.phone) && (
@@ -214,7 +218,7 @@ export function GuardiansPanel({
                   <>
                     <Button type="button" size="sm" onClick={() => share(g)}>
                       <Share2 className="size-3.5" />
-                      Enviar invitación
+                      {tx("enviarInvitacion")}
                     </Button>
                     <Button
                       type="button"
@@ -255,7 +259,7 @@ export function GuardiansPanel({
                   onClick={() => action(g.id, "revoke")}
                 >
                   <UserMinus className="size-3.5" />
-                  Dar de baja
+                  {tx("darDeBaja")}
                 </Button>
               </div>
             </li>
@@ -266,7 +270,7 @@ export function GuardiansPanel({
       {revokedCount > 0 && (
         <p className="text-[11px] text-foreground/45">
           {revokedCount === 1
-            ? "1 contacto dado de baja."
+            ? tx("1ContactoDadoDe")
             : `${revokedCount} contactos dados de baja.`}
         </p>
       )}
@@ -277,7 +281,7 @@ export function GuardiansPanel({
           className="space-y-3 rounded-2xl border border-dashed border-[#050505]/15 p-3 dark:border-white/15"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="g-rel">Relación</Label>
+            <Label htmlFor="g-rel">{tx("relacion")}</Label>
             <select
               id="g-rel"
               className={selectClass}
@@ -294,7 +298,7 @@ export function GuardiansPanel({
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="g-name">Nombre</Label>
+            <Label htmlFor="g-name">{tx("nombre")}</Label>
             <Input
               id="g-name"
               value={name}
@@ -304,7 +308,7 @@ export function GuardiansPanel({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="g-email">Email</Label>
+              <Label htmlFor="g-email">{tx("email")}</Label>
               <Input
                 id="g-email"
                 type="email"
@@ -313,7 +317,7 @@ export function GuardiansPanel({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-phone">Teléfono</Label>
+              <Label htmlFor="g-phone">{tx("telefono")}</Label>
               <Input
                 id="g-phone"
                 type="tel"
@@ -323,8 +327,7 @@ export function GuardiansPanel({
             </div>
           </div>
           <p className="text-[11px] leading-5 text-foreground/50">
-            Si indicas el email, solo una cuenta con ese email podrá activar la
-            invitación.
+            {tx("siIndicasElEmail")}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" size="sm" disabled={busy === "add"}>
@@ -333,7 +336,7 @@ export function GuardiansPanel({
               ) : (
                 <UserPlus className="size-3.5" />
               )}
-              Añadir contacto
+              {tx("anadirContacto")}
             </Button>
             {guardians.length > 0 && (
               <Button
@@ -342,7 +345,7 @@ export function GuardiansPanel({
                 variant="ghost"
                 onClick={() => setShowForm(false)}
               >
-                Cancelar
+                {tx("cancelar")}
               </Button>
             )}
           </div>
@@ -358,7 +361,7 @@ export function GuardiansPanel({
           }}
         >
           <UserPlus className="size-3.5" />
-          Añadir contacto
+          {tx("anadirContacto")}
         </Button>
       )}
 

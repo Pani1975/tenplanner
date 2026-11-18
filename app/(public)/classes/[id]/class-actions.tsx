@@ -7,6 +7,7 @@ import { Loader2, FileDown, Trash2, X, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClassFavoriteToggle } from "./class-favorite-toggle";
 import { ShareButton } from "@/components/app/share-button";
+import { useTranslations } from "next-intl";
 
 interface ClassActionsProps {
   classId: string;
@@ -29,6 +30,7 @@ export function ClassActions({
   canDelete = false,
   loggedIn = true,
 }: ClassActionsProps) {
+  const tx = useTranslations("ui.s_id_classactions");
   const router = useRouter();
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -40,7 +42,7 @@ export function ClassActions({
     setDeleteError(null);
     const res = await fetch(`/api/classes/${classId}`, { method: "DELETE" });
     if (!res.ok) {
-      setDeleteError("No se pudo eliminar la clase. Inténtalo de nuevo.");
+      setDeleteError(tx("noSePudoEliminar"));
       setDeleting(false);
       return;
     }
@@ -73,8 +75,8 @@ export function ClassActions({
     <>
       <div className="flex flex-wrap items-center gap-2">
         <ShareButton
-          title="Clase"
-          text="Mira esta clase en Ten Planner"
+          title={tx("clase")}
+          text={tx("miraEstaClaseEn")}
           iconOnly
           className="flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
         />
@@ -82,8 +84,8 @@ export function ClassActions({
           type="button"
           onClick={handleDownloadPdf}
           disabled={downloadingPdf}
-          aria-label="Descargar PDF"
-          title="Descargar PDF"
+          aria-label={tx("descargarPdf")}
+          title={tx("descargarPdf")}
           className={cn(
             "flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]",
             downloadingPdf && "opacity-60"
@@ -104,8 +106,8 @@ export function ClassActions({
         ) : (
           <Link
             href="/login"
-            aria-label="Inicia sesión para guardar en una lista"
-            title="Inicia sesión para guardar en una lista"
+            aria-label={tx("iniciaSesionParaGuardar")}
+            title={tx("iniciaSesionParaGuardar")}
             className="flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
           >
             <Lock className="size-4" strokeWidth={1.6} />
@@ -115,8 +117,8 @@ export function ClassActions({
           <button
             type="button"
             onClick={() => setShowDeleteConfirm(true)}
-            aria-label="Eliminar clase"
-            title="Eliminar clase"
+            aria-label={tx("eliminarClase")}
+            title={tx("eliminarClase")}
             className="flex size-10 items-center justify-center rounded-full border border-white/16 text-white/55 transition-colors hover:border-destructive hover:text-destructive"
           >
             <Trash2 className="size-4" strokeWidth={1.6} />
@@ -137,10 +139,10 @@ export function ClassActions({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground">
-                  Eliminar clase
+                  {tx("eliminarClase")}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  ¿Seguro que quieres eliminar{" "}
+                  {tx("seguroQueQuieresEliminar")}{" "}
                   <span className="font-medium text-foreground">
                     {className ?? "esta clase"}
                   </span>
@@ -167,7 +169,7 @@ export function ClassActions({
                 disabled={deleting}
                 className="flex-1 text-sm font-medium text-muted-foreground border border-border px-4 py-2.5 rounded-xl hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleDelete}
@@ -175,7 +177,7 @@ export function ClassActions({
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-destructive text-destructive-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-destructive/90 active:scale-95 transition-all duration-150 disabled:opacity-60"
               >
                 {deleting && <Loader2 className="size-4 animate-spin" />}
-                Eliminar
+                {tx("eliminar")}
               </button>
             </div>
           </div>

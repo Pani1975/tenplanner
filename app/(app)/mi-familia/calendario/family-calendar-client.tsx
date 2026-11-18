@@ -7,6 +7,8 @@ import {
   type CalendarHolidayData,
 } from "@/lib/calendar/holidays";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 interface SessionData {
   id: string;
@@ -39,8 +41,8 @@ const MONTHS = [
 const pad2 = (n: number) => n.toString().padStart(2, "0");
 const dateKey = (d: Date) =>
   `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-const timeLabel = (d: Date) =>
-  new Intl.DateTimeFormat("es-ES", {
+const timeLabel = (d: Date, loc: string = "es-ES") =>
+  new Intl.DateTimeFormat(loc, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
@@ -60,6 +62,8 @@ export function FamilyCalendarClient({
   holidays: CalendarHolidayData[];
   groupNames: Record<string, string>;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_calendario_familycalendarclient");
   const today = new Date();
   const todayKey = dateKey(today);
   const [year, setYear] = useState(today.getFullYear());
@@ -99,7 +103,7 @@ export function FamilyCalendarClient({
   const selectedSessions = sessionsByDay.get(selected) ?? [];
   const selectedHolidays = holidaysOn(selected);
   const [sy, sm, sd] = selected.split("-").map(Number);
-  const selectedLabel = new Intl.DateTimeFormat("es-ES", {
+  const selectedLabel = new Intl.DateTimeFormat(intlLocale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -111,7 +115,7 @@ export function FamilyCalendarClient({
         <button
           type="button"
           onClick={() => shift(-1)}
-          aria-label="Mes anterior"
+          aria-label={tx("mesAnterior")}
           className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 bg-white hover:bg-brand dark:border-white/10 dark:bg-white/[0.04] dark:hover:text-brand-foreground"
         >
           <ChevronLeft className="size-4" />
@@ -124,12 +128,12 @@ export function FamilyCalendarClient({
           onClick={goToday}
           className="h-10 rounded-full border border-[#050505]/10 bg-white px-4 text-sm font-black text-foreground/62 hover:bg-muted dark:border-white/10 dark:bg-white/[0.04]"
         >
-          Hoy
+          {tx("hoy")}
         </button>
         <button
           type="button"
           onClick={() => shift(1)}
-          aria-label="Mes siguiente"
+          aria-label={tx("mesSiguiente")}
           className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 bg-white hover:bg-brand dark:border-white/10 dark:bg-white/[0.04] dark:hover:text-brand-foreground"
         >
           <ChevronRight className="size-4" />
@@ -203,13 +207,12 @@ export function FamilyCalendarClient({
                             "line-through opacity-60"
                         )}
                       >
-                        {timeLabel(new Date(s.scheduledAt))} {s.title}
+                        {timeLabel(new Date(s.scheduledAt), intlLocale)} {s.title}
                       </div>
                     ))}
                     {daySessions.length > 2 && (
                       <div className="px-1.5 text-[10px] text-muted-foreground">
-                        +{daySessions.length - 2} más
-                      </div>
+                        {tx("v1Mas", { v1: daySessions.length - 2 })}</div>
                     )}
                   </div>
                 </button>
@@ -224,7 +227,7 @@ export function FamilyCalendarClient({
           {selectedLabel}
           {selectedSessions.length === 0 && selectedHolidays.length === 0 && (
             <span className="ml-2 text-sm font-semibold normal-case text-muted-foreground">
-              — Sin clases
+              {tx("sinClases")}
             </span>
           )}
         </h3>
@@ -251,7 +254,7 @@ export function FamilyCalendarClient({
               )}
             </div>
             <span className="ml-auto rounded-full bg-[#e11d48]/15 px-3 py-1.5 text-xs font-black text-[#be123c] dark:text-[#fda4af]">
-              Festivo
+              {tx("festivo")}
             </span>
           </div>
         ))}
@@ -264,7 +267,7 @@ export function FamilyCalendarClient({
             <div key={s.id} className="tp-panel space-y-2 p-4">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="rounded-full bg-brand/15 px-3 py-1 text-xs font-black text-brand">
-                  {timeLabel(start)} – {timeLabel(end)}
+                  {timeLabel(start, intlLocale)} – {timeLabel(end, intlLocale)}
                 </span>
                 <p
                   className={cn(
@@ -276,14 +279,14 @@ export function FamilyCalendarClient({
                 </p>
                 {s.groupId && groupNames[s.groupId] && (
                   <span className="text-xs text-muted-foreground">
-                    Grupo {groupNames[s.groupId]}
+                    {tx("grupoV1", { v1: groupNames[s.groupId] })}
                   </span>
                 )}
                 {off && (
                   <span className="rounded-full bg-[#e11d48]/15 px-2.5 py-1 text-[11px] font-black text-[#be123c] dark:text-[#fda4af]">
                     {s.status === "cancelled"
                       ? "Cancelada"
-                      : "No se imparte (festivo)"}
+                      : tx("noSeImparteFestivo")}
                   </span>
                 )}
               </div>
@@ -295,7 +298,7 @@ export function FamilyCalendarClient({
               )}
               {s.objective && !off && (
                 <p className="text-sm leading-6 text-foreground/75">
-                  <span className="font-black text-foreground">Objetivo: </span>
+                  <span className="font-black text-foreground">{tx("objetivo")}</span>
                   {s.objective}
                 </p>
               )}

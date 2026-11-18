@@ -6,6 +6,7 @@ import {
   WEEKDAY_LABELS,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
 
 // Lunes primero en el selector (más natural aquí), aunque weekday sigue
 // siendo 0=domingo..6=sábado por debajo (igual que el resto de la app).
@@ -66,6 +67,7 @@ export function WeeklySchedulePicker({
   value: Map<number, ScheduleSlot>;
   onChange: (next: Map<number, ScheduleSlot>) => void;
 }) {
+  const tx = useTranslations("ui.s_app_weeklyschedulepicker");
   function toggleDay(weekday: number) {
     const next = new Map(value);
     if (next.has(weekday)) next.delete(weekday);
@@ -150,7 +152,7 @@ export function WeeklySchedulePicker({
             </div>
             {invalid && (
               <p className="mt-1 text-xs text-destructive">
-                La hora de finalización debe ser posterior a la de inicio.
+                {tx("laHoraDeFinalizacion")}
               </p>
             )}
           </div>

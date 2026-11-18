@@ -29,6 +29,8 @@ import type {
   StudentVideoItem,
   VideoActionResult,
 } from "@/lib/student-videos";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type FormValues = {
   location: string;
@@ -56,9 +58,9 @@ function sortVideos(list: StudentVideoItem[]) {
   });
 }
 
-function formatDay(isoDate: string) {
+function formatDay(isoDate: string, loc: string = "es-ES") {
   const [y, m, d] = isoDate.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(loc, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -85,6 +87,7 @@ export function StudentVideosPanel({
   initialVideos: StudentVideoItem[];
   actions: StudentVideoActions;
 }) {
+  const tx = useTranslations("ui.s_app_studentvideospanel");
   const [videos, setVideos] = useState(() => sortVideos(initialVideos));
   // null = sin formulario abierto; "new" = alta; id = edición de esa ficha.
   const [editing, setEditing] = useState<string | null>(null);
@@ -98,7 +101,7 @@ export function StudentVideosPanel({
     const res = await actions.remove(studentId, video.id);
     setDeletingId(null);
     if (!res.ok) {
-      setError("No se pudo borrar la ficha. Inténtalo de nuevo.");
+      setError(tx("noSePudoBorrar"));
       return;
     }
     setVideos((list) => list.filter((v) => v.id !== video.id));
@@ -107,10 +110,7 @@ export function StudentVideosPanel({
   return (
     <div className="space-y-4 pt-4">
       <p className="text-[13px] leading-relaxed text-foreground/60">
-        Guarda los vídeos de {studentName} en torneos y entrenamientos. Sube el
-        vídeo a YouTube (como «no listado») o a Google Drive y pega aquí el
-        enlace.
-      </p>
+        {tx("guardaLosVideosDe", { v1: studentName })}</p>
 
       {error && (
         <p className="text-sm font-semibold text-destructive" role="alert">
@@ -120,7 +120,7 @@ export function StudentVideosPanel({
 
       {videos.length === 0 && editing !== "new" && (
         <p className="text-[13px] italic text-foreground/45">
-          Todavía no hay fichas de vídeo.
+          {tx("todaviaNoHayFichas")}
         </p>
       )}
 
@@ -186,7 +186,7 @@ export function StudentVideosPanel({
             onClick={() => setEditing("new")}
           >
             <Plus className="size-3.5" />
-            Añadir ficha de vídeo
+            {tx("anadirFichaDeVideo")}
           </Button>
         ))}
 
@@ -195,9 +195,9 @@ export function StudentVideosPanel({
         onOpenChange={(open) => {
           if (!open) setToDelete(null);
         }}
-        title="¿Borrar esta ficha de vídeo?"
-        description="Se borra la ficha de Ten Planner. El vídeo sigue en YouTube o Google Drive."
-        confirmLabel="Borrar"
+        title={tx("borrarEstaFichaDe")}
+        description={tx("seBorraLaFicha")}
+        confirmLabel={tx("borrar")}
         destructive
         onConfirm={() => {
           if (toDelete) void onDelete(toDelete);
@@ -221,10 +221,12 @@ function VideoCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_studentvideospanel");
   const [playing, setPlaying] = useState(false);
   const thumbnail = getYouTubeThumbnailUrl(video.videoUrl);
   const embed = getYouTubeEmbedUrl(video.videoUrl);
-  const title = video.event || video.location || "Vídeo sin título";
+  const title = video.event || video.location || tx("videoSinTitulo");
 
   return (
     <li className="overflow-hidden rounded-2xl border border-[#050505]/10 dark:border-white/10">
@@ -273,7 +275,7 @@ function VideoCard({
           {video.recordedOn && (
             <span className="inline-flex items-center gap-1">
               <CalendarDays className="size-3" />
-              {formatDay(video.recordedOn)}
+              {formatDay(video.recordedOn, intlLocale)}
             </span>
           )}
         </div>
@@ -304,7 +306,7 @@ function VideoCard({
                 onClick={onEdit}
               >
                 <Pencil className="size-3.5" />
-                Editar
+                {tx("editar")}
               </Button>
               <Button
                 type="button"
@@ -318,7 +320,7 @@ function VideoCard({
                 ) : (
                   <Trash2 className="size-3.5" />
                 )}
-                Borrar
+                {tx("borrar")}
               </Button>
             </>
           )}
@@ -341,6 +343,7 @@ function VideoForm({
   onSubmit: (values: FormValues) => Promise<VideoActionResult>;
   onSaved: (video: StudentVideoItem) => void;
 }) {
+  const tx = useTranslations("ui.s_app_studentvideospanel");
   const [values, setValues] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -362,7 +365,7 @@ function VideoForm({
 
   async function handleSubmit() {
     if (!link) {
-      setError("Pega un enlace válido de YouTube, Google Drive u otra web.");
+      setError(tx("pegaUnEnlaceValido"));
       return;
     }
     setSaving(true);
@@ -372,16 +375,16 @@ function VideoForm({
       if (!res.ok) {
         setError(
           res.error === "Forbidden" || res.error === "Unauthorized"
-            ? "No tienes permiso para editar los vídeos de este alumno."
+            ? tx("noTienesPermisoPara")
             : res.error === "Not found" || res.error === "Invalid input"
-              ? "No se pudo guardar la ficha. Recarga la página."
+              ? tx("noSePudoGuardar")
               : res.error
         );
         return;
       }
       onSaved(res.video);
     } catch {
-      setError("No se pudo guardar la ficha. Inténtalo de nuevo.");
+      setError(tx("noSePudoGuardar2"));
     } finally {
       setSaving(false);
     }
@@ -393,13 +396,13 @@ function VideoForm({
       className="space-y-3 rounded-2xl border border-dashed border-[#050505]/15 p-3 dark:border-white/15"
     >
       <div className="space-y-1.5">
-        <Label htmlFor="video-url">Enlace al vídeo</Label>
+        <Label htmlFor="video-url">{tx("enlaceAlVideo")}</Label>
         <Input
           id="video-url"
           type="url"
           inputMode="url"
           required
-          placeholder="https://youtu.be/… o https://drive.google.com/…"
+          placeholder={tx("httpsYoutuBeO")}
           value={values.videoUrl}
           maxLength={2000}
           onChange={set("videoUrl")}
@@ -407,46 +410,45 @@ function VideoForm({
         />
         {values.videoUrl.trim() !== "" && !link && (
           <p className="text-xs text-destructive">
-            El enlace no es válido. Cópialo entero desde YouTube o Drive.
+            {tx("elEnlaceNoEs")}
           </p>
         )}
         {link && link.kind === "drive" && (
           <p className="text-xs text-foreground/55">
-            Enlace de Google Drive: comprueba que está compartido con «Cualquier
-            persona con el enlace».
+            {tx("enlaceDeGoogleDrive")}
           </p>
         )}
         {thumbnail && (
           <img
             src={thumbnail}
-            alt="Vista previa del vídeo"
+            alt={tx("vistaPreviaDelVideo")}
             className="mt-2 aspect-video w-full max-w-xs rounded-xl object-cover"
           />
         )}
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="video-event">Evento (torneo)</Label>
+          <Label htmlFor="video-event">{tx("eventoTorneo")}</Label>
           <Input
             id="video-event"
             value={values.event}
             maxLength={200}
-            placeholder="Ej.: Torneo Juvenil de Otoño"
+            placeholder={tx("ejTorneoJuvenilDe")}
             onChange={set("event")}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="video-location">Lugar de grabación</Label>
+          <Label htmlFor="video-location">{tx("lugarDeGrabacion")}</Label>
           <Input
             id="video-location"
             value={values.location}
             maxLength={200}
-            placeholder="Ej.: Club de Tenis Valencia, pista 3"
+            placeholder={tx("ejClubDeTenis")}
             onChange={set("location")}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="video-date">Fecha</Label>
+          <Label htmlFor="video-date">{tx("fecha")}</Label>
           <Input
             id="video-date"
             type="date"
@@ -456,13 +458,13 @@ function VideoForm({
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="video-notes">Observaciones</Label>
+        <Label htmlFor="video-notes">{tx("observaciones")}</Label>
         <Textarea
           id="video-notes"
           value={values.notes}
           maxLength={2000}
           rows={3}
-          placeholder="Qué se ve en el vídeo, aspectos a trabajar…"
+          placeholder={tx("queSeVeEn")}
           onChange={set("notes")}
         />
       </div>
@@ -488,7 +490,7 @@ function VideoForm({
           onClick={onCancel}
           disabled={saving}
         >
-          Cancelar
+          {tx("cancelar")}
         </Button>
       </div>
     </div>

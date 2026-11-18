@@ -1,6 +1,7 @@
 import type { ReportBlockId, ReportMetricId } from "@/lib/club-report/catalog";
 import type { MetricView, ViewPart } from "@/lib/club-report/views";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // Datos del informe de gestión en pantalla, por bloques. Pinta las mismas
 // vistas que el PDF (lib/club-report/views.ts).
@@ -154,10 +155,11 @@ export function ReportView({
   }[];
   views: Map<ReportMetricId, MetricView>;
 }) {
+  const tx = useTranslations("ui.s_gestion_reportview");
   return (
     <div className="space-y-8">
       {blocks.length > 1 && (
-        <nav aria-label="Bloques" className="flex flex-wrap gap-2 text-sm">
+        <nav aria-label={tx("bloques")} className="flex flex-wrap gap-2 text-sm">
           {blocks.map((b) => (
             <a
               key={b.id}

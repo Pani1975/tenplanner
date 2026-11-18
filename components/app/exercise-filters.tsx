@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export interface ExerciseFiltersProps {
   currentFilters: {
@@ -150,6 +151,7 @@ function FilterDropdown({
   selected: string[];
   onToggle: (param: string, id: string) => void;
 }) {
+  const tx = useTranslations("ui.s_app_exercisefilters");
   const count = selected.length;
   return (
     <Popover>
@@ -174,7 +176,7 @@ function FilterDropdown({
             {def.label}
           </p>
           <PopoverClose
-            aria-label="Cerrar"
+            aria-label={tx("cerrar")}
             className="grid size-7 place-items-center rounded-full text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" />
@@ -213,6 +215,7 @@ export function ExerciseFilters({
   preserved,
   sport,
 }: ExerciseFiltersProps) {
+  const tx = useTranslations("ui.s_app_exercisefilters");
   const router = useRouter();
   const primaryFilters = showsTipoPelota(sport)
     ? PRIMARY_FILTERS
@@ -308,7 +311,7 @@ export function ExerciseFilters({
             className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 font-sans text-[11px] text-foreground/50 transition-colors hover:text-foreground"
           >
             <X className="size-3" />
-            Limpiar ({activeCount})
+            {tx("limpiar")}{activeCount})
           </button>
         )}
       </div>

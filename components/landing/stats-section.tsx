@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { CalendarCheck, Layers3, Tags, type LucideIcon } from "lucide-react";
 
 import type { LandingStats } from "@/lib/landing-stats";
@@ -5,22 +6,10 @@ import { CountUp } from "./count-up";
 import { RevealItem, RevealStagger } from "./landing-reveal";
 
 // Etiquetas reales de los filtros, solo para ilustrar la tarjeta.
-const SAMPLE_TAGS = [
-  "Técnica",
-  "Táctica",
-  "Volea",
-  "Saque",
-  "Liftado",
-  "Roja",
-  "Dobles",
-  "Peloteo",
-  "Defensa",
-  "Juego de puntos",
-  "Cooperativo",
-  "10-15 min",
-  "Grupal",
-  "Parte principal",
-];
+const SAMPLE_TAG_KEYS = [
+  "technique", "tactics", "volley", "serve", "topspin", "red", "doubles",
+  "rally", "defense", "pointPlay", "cooperative", "time", "group", "mainPart",
+] as const;
 
 function DotGrid() {
   // 7 filas x 14 columnas de "pelotas": el conjunto transmite volumen.
@@ -79,9 +68,10 @@ function ClassStack() {
 }
 
 function TagCloud() {
+  const t = useTranslations("landing.stats.tags");
   return (
     <div aria-hidden className="flex flex-wrap gap-1.5">
-      {SAMPLE_TAGS.map((tag, i) => (
+      {SAMPLE_TAG_KEYS.map((tag, i) => (
         <span
           key={tag}
           className={
@@ -90,7 +80,7 @@ function TagCloud() {
               : "rounded-full border border-[#050505]/25 px-3 py-1 text-xs font-semibold text-[#050505]/75"
           }
         >
-          {tag}
+          {t(tag)}
         </span>
       ))}
     </div>
@@ -106,43 +96,44 @@ type Card = {
 };
 
 export function StatsSection({ stats }: { stats: LandingStats }) {
+  const t = useTranslations("landing.stats");
   const cards: Card[] = [
     {
       icon: Layers3,
       value: stats.exercises,
-      label: "ejercicios",
-      text: "Listos para usar en tu próxima clase. Nunca más los mismos 10.",
+      label: t("exercises.label"),
+      text: t("exercises.text"),
       visual: <DotGrid />,
     },
     {
       icon: CalendarCheck,
       value: stats.classes,
-      label: "clases montadas",
-      text: "Sesiones completas de principio a fin. Úsalas tal cual o ajústalas.",
+      label: t("classes.label"),
+      text: t("classes.text"),
       visual: <ClassStack />,
     },
     {
       icon: Tags,
       value: stats.tags,
-      label: "etiquetas para buscar",
-      text: "Nivel, golpe, objetivo, duración… encuentra el ejercicio justo en segundos.",
+      label: t("tagsCard.label"),
+      text: t("tagsCard.text"),
       visual: <TagCloud />,
     },
   ];
 
   return (
     <section
-      aria-label="Ten Planner en cifras"
+      aria-label={t("eyebrow")}
       className="relative overflow-hidden bg-[#e8e8e1] px-5 py-20 text-[#050505] lg:py-28"
     >
       <div className="mx-auto max-w-[1240px]">
         <p className="text-center text-[12px] font-semibold uppercase tracking-[0.28em] text-[#050505]/60">
-          Ten Planner en cifras
+          {t("eyebrow")}
         </p>
         <h2 className="mx-auto mt-5 max-w-3xl text-center font-heading text-[clamp(2.2rem,4.4vw,3.9rem)] font-bold leading-[0.97]">
-          Tu clase de mañana,
+          {t("title1")}
           <span className="block font-light italic text-[#050505]/55">
-            ya está medio hecha.
+            {t("title2")}
           </span>
         </h2>
 

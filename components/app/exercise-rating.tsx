@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface ExerciseRatingProps {
   exerciseId: string;
@@ -19,6 +20,7 @@ export function ExerciseRating({
   totalRatings: initialTotal,
   readonly = false,
 }: ExerciseRatingProps) {
+  const tx = useTranslations("ui.s_app_exerciserating");
   const [userRating, setUserRating] = useState<number | null>(initialRating);
   const [hovered, setHovered] = useState<number | null>(null);
   const [avg, setAvg] = useState(initialAvg);
@@ -97,18 +99,16 @@ export function ExerciseRating({
               {avg.toFixed(1)}
             </span>
             <span className="font-sans text-[11px] text-foreground/45 tabular-nums">
-              ({total} valoración{total !== 1 ? "es" : ""})
-            </span>
+              {tx("v1ValoracionV2", { v1: total, v2: total !== 1 ? "es" : "" })}</span>
           </>
         ) : (
           <span className="font-sans text-[11px] text-foreground/40 italic">
-            Sin valoraciones aún
+            {tx("sinValoracionesAun")}
           </span>
         )}
         {userRating && !readonly && (
           <span className="font-sans text-[10px] text-brand ml-1">
-            · Tu nota: {userRating}★
-          </span>
+            {tx("tuNotaV1", { v1: userRating })}</span>
         )}
       </div>
     </div>

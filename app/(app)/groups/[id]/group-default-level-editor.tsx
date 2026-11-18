@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gauge, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type LevelOption = { code: string; labelEs: string };
 
@@ -21,6 +22,7 @@ export function GroupDefaultLevelEditor({
   levels: LevelOption[];
   canEdit: boolean;
 }) {
+  const tx = useTranslations("ui.s_id_groupdefaultleveleditor");
   const router = useRouter();
   const [value, setValue] = useState(initialLevel ?? "");
   const [saving, setSaving] = useState(false);
@@ -42,13 +44,13 @@ export function GroupDefaultLevelEditor({
       });
       if (!res.ok) {
         setValue(previous);
-        setError("No se pudo guardar el nivel.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       router.refresh();
     } catch {
       setValue(previous);
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -61,7 +63,7 @@ export function GroupDefaultLevelEditor({
         htmlFor={`default-level-${groupId}`}
         className="text-sm font-semibold text-foreground"
       >
-        Nivel por defecto
+        {tx("nivelPorDefecto")}
       </label>
       {canEdit ? (
         <select
@@ -71,7 +73,7 @@ export function GroupDefaultLevelEditor({
           onChange={(e) => save(e.target.value)}
           className="min-h-9 rounded-md border border-foreground/15 bg-background px-2 text-sm text-foreground"
         >
-          <option value="">Sin definir</option>
+          <option value="">{tx("sinDefinir")}</option>
           {levels.map((l) => (
             <option key={l.code} value={l.code}>
               {l.labelEs}
@@ -87,7 +89,7 @@ export function GroupDefaultLevelEditor({
         <Loader2 className="size-4 animate-spin text-muted-foreground" />
       )}
       <p className="w-full text-xs text-muted-foreground">
-        Se usa cuando los alumnos que vienen no tienen nivel en su ficha.
+        {tx("seUsaCuandoLos")}
       </p>
       {error && <p className="w-full text-xs text-destructive">{error}</p>}
     </div>

@@ -7,8 +7,10 @@ import {
 } from "lucide-react";
 import { findInactiveStudents, getCoachStats } from "@/lib/dr-planner/insights";
 import { cn } from "@/lib/utils";
+import { getTranslations } from "next-intl/server";
 
 export async function AiInsightsWidget({ coachId }: { coachId: string }) {
+  const tx = await getTranslations("ui.s_dashboard_aiinsightswidget");
   const [stats, inactive] = await Promise.all([
     getCoachStats(coachId),
     findInactiveStudents(coachId, 14),
@@ -43,7 +45,7 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
             id="ai-insights-heading"
             className="font-mono text-[10px] uppercase text-foreground/55"
           >
-            Insights de IA
+            {tx("insightsDeIa")}
           </h2>
         </div>
       </div>
@@ -63,12 +65,10 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
               />
               <div className="min-w-0 flex-1">
                 <p className="font-mono text-[9px] uppercase text-destructive">
-                  Alerta
+                  {tx("alerta")}
                 </p>
                 <p className="mt-0.5 font-heading text-[16px] leading-tight">
-                  {inactive.length} alumno
-                  {inactive.length !== 1 ? "s" : ""} sin entrenar
-                </p>
+                  {tx("v1AlumnoV2Sin", { v1: inactive.length, v2: inactive.length !== 1 ? "s" : "" })}</p>
                 <p className="mt-1 text-[12px] text-foreground/65">
                   {inactive
                     .slice(0, 3)
@@ -81,7 +81,7 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
                   {inactive.length > 3 && "…"}
                 </p>
                 <span className="mt-2 inline-flex font-mono text-[10px] uppercase text-brand">
-                  Revisar seguimiento
+                  {tx("revisarSeguimiento")}
                 </span>
               </div>
             </div>
@@ -91,14 +91,14 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
             <div className="flex items-center gap-2">
               <Activity className="size-3.5 text-brand" strokeWidth={1.6} />
               <p className="font-mono text-[9px] uppercase text-foreground/55">
-                Estado
+                {tx("estado")}
               </p>
             </div>
             <p className="mt-1 font-heading text-[16px] leading-tight">
-              Roster al día
+              {tx("rosterAlDia")}
             </p>
             <p className="mt-1 text-[12px] text-foreground/65">
-              Todos tus alumnos han entrenado en los últimos 14 días.
+              {tx("todosTusAlumnosHan")}
             </p>
           </div>
         )}
@@ -107,7 +107,7 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
           <div className="flex items-center gap-2">
             <TrendingUp className="size-3.5 text-brand" strokeWidth={1.6} />
             <p className="font-mono text-[9px] uppercase text-foreground/55">
-              Actividad
+              {tx("actividad")}
             </p>
           </div>
           <div className="mt-2 flex items-end justify-between gap-3">
@@ -122,23 +122,19 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
                 sessionDelta === 0 && "text-foreground/50"
               )}
             >
-              {deltaLabel} mes ant.
-            </span>
+              {tx("v1MesAnt", { v1: deltaLabel })}</span>
           </div>
           <p className="mt-2 text-[12px] text-foreground/65">
-            {stats.minutesThisMonth} min / intensidad media{" "}
-            {stats.avgIntensityThisMonth !== null
+            {tx("v1MinIntensidadMedia", { v1: stats.minutesThisMonth, v2: stats.avgIntensityThisMonth !== null
               ? stats.avgIntensityThisMonth.toFixed(1)
-              : "—"}
-            /5
-          </p>
+              : "—" })}</p>
         </div>
 
         <div className="border border-foreground/12 bg-card/75 p-4">
           <div className="flex items-center gap-2">
             <Flame className="size-3.5 text-brand" strokeWidth={1.6} />
             <p className="font-mono text-[9px] uppercase text-foreground/55">
-              Más usado
+              {tx("masUsado")}
             </p>
           </div>
           {stats.topExercises.length > 0 ? (
@@ -147,13 +143,11 @@ export async function AiInsightsWidget({ coachId }: { coachId: string }) {
                 {stats.topExercises[0].name}
               </p>
               <p className="mt-1 text-[12px] text-foreground/65">
-                {stats.topExercises[0].uses} usos /{" "}
-                {stats.categoryDistribution.length} categorías activas
-              </p>
+                {tx("v1UsosV2Categorias", { v1: stats.topExercises[0].uses, v2: stats.categoryDistribution.length })}</p>
             </>
           ) : (
             <p className="mt-2 text-[12px] text-foreground/60">
-              Aún sin datos de uso en tu biblioteca.
+              {tx("aunSinDatosDe")}
             </p>
           )}
         </div>

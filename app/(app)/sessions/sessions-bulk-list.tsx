@@ -16,6 +16,7 @@ import { SessionFavoriteToggle } from "@/components/app/session-favorite-toggle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { AddToPendingSessionButton } from "@/components/app/pending-session-target";
+import { useTranslations } from "next-intl";
 
 export interface SessionListItem {
   id: string;
@@ -50,6 +51,7 @@ export function SessionsBulkList({
   /** Querystring (filter/search) carried into each session's detail link for Next/Previous navigation. */
   navQuery?: string;
 }) {
+  const tx = useTranslations("ui.s_sessions_sessionsbulklist");
   const router = useRouter();
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -87,13 +89,13 @@ export function SessionsBulkList({
         body: JSON.stringify({ ids }),
       });
       if (!res.ok) {
-        setError("No se pudieron eliminar. Inténtalo de nuevo.");
+        setError(tx("noSePudieronEliminar"));
         return;
       }
       stopSelecting();
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setDeleting(false);
     }
@@ -109,12 +111,12 @@ export function SessionsBulkList({
         body: JSON.stringify({ status: "scheduled" }),
       });
       if (!res.ok) {
-        setError("No se pudo recuperar la sesión. Inténtalo de nuevo.");
+        setError(tx("noSePudoRecuperar"));
         return;
       }
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setRecovering(null);
     }
@@ -134,8 +136,7 @@ export function SessionsBulkList({
                 onClick={() => setSelected(new Set(pageIds))}
                 className="rounded-full border border-border px-3 py-1.5 font-semibold text-foreground/70 hover:border-[#D6FF38]/70 hover:text-foreground"
               >
-                Esta página ({pageIds.length})
-              </button>
+                {tx("estaPaginaV1", { v1: pageIds.length })}</button>
               {totalFiltered > pageIds.length && (
                 <button
                   type="button"
@@ -147,16 +148,14 @@ export function SessionsBulkList({
                       : "border-border text-foreground/70"
                   )}
                 >
-                  Todas las de este filtro ({allIds.length}
-                  {totalFiltered > allIds.length ? "+" : ""})
-                </button>
+                  {tx("todasLasDeEste", { v1: allIds.length, v2: totalFiltered > allIds.length ? "+" : "" })}</button>
               )}
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
                 className="rounded-full px-3 py-1.5 font-semibold text-muted-foreground hover:text-foreground"
               >
-                Ninguna
+                {tx("ninguna")}
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -165,7 +164,7 @@ export function SessionsBulkList({
                 onClick={stopSelecting}
                 className="rounded-full px-3 py-1.5 text-[13px] font-semibold text-muted-foreground hover:bg-muted"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 type="button"
@@ -178,7 +177,7 @@ export function SessionsBulkList({
                 ) : (
                   <Trash2 className="size-3.5" />
                 )}
-                Eliminar{count > 0 ? ` (${count})` : ""}
+                {tx("eliminar")}{count > 0 ? ` (${count})` : ""}
               </button>
             </div>
           </>
@@ -191,7 +190,7 @@ export function SessionsBulkList({
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
             >
               <Check className="size-3.5" />
-              Seleccionar
+              {tx("seleccionar")}
             </button>
           </>
         )}
@@ -241,7 +240,7 @@ export function SessionsBulkList({
                 <p className="mt-1 text-[12px] tabular-nums text-foreground/55">
                   <span className="inline-flex items-center gap-1">
                     <Clock className="size-3" />
-                    {session.durationMinutes} min
+                    {session.durationMinutes}{" "}{tx("min")}
                   </span>{" "}
                   <span className="mx-1 text-foreground/25">/</span>
                   <span className="inline-flex items-center gap-1">
@@ -302,8 +301,8 @@ export function SessionsBulkList({
                   {session.status === "cancelled" ? (
                     <button
                       type="button"
-                      aria-label="Recuperar sesión"
-                      title="Recuperar sesión"
+                      aria-label={tx("recuperarSesion")}
+                      title={tx("recuperarSesion")}
                       disabled={recovering === session.id}
                       onClick={() => void recoverSession(session.id)}
                       className="absolute right-[4.25rem] top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#D6FF38]/15 hover:text-foreground disabled:opacity-50"
@@ -333,10 +332,10 @@ export function SessionsBulkList({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={
-          count === 1 ? "¿Eliminar 1 sesión?" : `¿Eliminar ${count} sesiones?`
+          count === 1 ? tx("eliminar1Sesion") : `¿Eliminar ${count} sesiones?`
         }
-        description="Se borrarán con su plan de ejercicios y sus notas. Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
+        description={tx("seBorraranConSu")}
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => void deleteSelected()}
       />

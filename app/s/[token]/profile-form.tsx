@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { CheckCircle2, ChevronDown, Loader2, ShieldCheck } from "lucide-react";
 import { submitStudentProfile } from "./actions";
+import { useTranslations } from "next-intl";
 
 const MIN_AGE = 14;
 const CONSENT_VERSION = "1.0";
@@ -25,6 +26,7 @@ function computeAge(birthDate: string): number | null {
 }
 
 export function ProfileForm({ token, initialName, coachName }: Props) {
+  const tx = useTranslations("ui.s_token_profileform");
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [dominantHand, setDominantHand] = useState("");
@@ -43,13 +45,13 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!consent) {
-      setError("Debes aceptar que tu entrenador trate tus datos.");
+      setError(tx("debesAceptarQueTu"));
       return;
     }
     setError("");
 
     if (!birthDate) {
-      setError("Necesitamos tu fecha de nacimiento para continuar.");
+      setError(tx("necesitamosTuFechaDe"));
       return;
     }
     if (ageTooLow) {
@@ -59,7 +61,7 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
       return;
     }
     if (!consent) {
-      setError("Debes aceptar el tratamiento de tus datos para continuar.");
+      setError(tx("debesAceptarElTratamiento"));
       return;
     }
 
@@ -90,11 +92,9 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
           <CheckCircle2 className="size-7" />
         </div>
         <p className="text-xl font-black text-foreground">
-          ¡Perfecto, {initialName}!
-        </p>
+          {tx("perfectoV1", { v1: initialName })}</p>
         <p className="max-w-xs text-sm leading-6 text-foreground/62">
-          Tu entrenador ya puede ver tu información actualizada. Puedes cerrar
-          esta página.
+          {tx("tuEntrenadorYaPuede")}
         </p>
       </div>
     );
@@ -110,22 +110,22 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       <div>
-        <label className={labelCls}>Género</label>
+        <label className={labelCls}>{tx("genero")}</label>
         <select
           value={gender}
           onChange={(e) => setGender(e.target.value)}
           className={inputCls}
         >
-          <option value="">Sin especificar</option>
-          <option value="male">Masculino</option>
-          <option value="female">Femenino</option>
-          <option value="other">Otro</option>
+          <option value="">{tx("sinEspecificar")}</option>
+          <option value="male">{tx("masculino")}</option>
+          <option value="female">{tx("femenino")}</option>
+          <option value="other">{tx("otro")}</option>
         </select>
       </div>
 
       <div>
         <label className={labelCls}>
-          Fecha de nacimiento <span className="text-destructive">*</span>
+          {tx("fechaDeNacimiento")}{" "}<span className="text-destructive">*</span>
         </label>
         <input
           type="date"
@@ -137,28 +137,26 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
         />
         {ageTooLow && (
           <p id="birth-help" className="mt-1.5 text-[12px] text-destructive">
-            Esta aplicación requiere al menos {MIN_AGE} años. Pide a un adulto
-            responsable que contacte con tu entrenador.
-          </p>
+            {tx("estaAplicacionRequiereAl", { v1: MIN_AGE })}</p>
         )}
       </div>
 
       <div>
-        <label className={labelCls}>Mano dominante</label>
+        <label className={labelCls}>{tx("manoDominante")}</label>
         <select
           value={dominantHand}
           onChange={(e) => setDominantHand(e.target.value)}
           className={inputCls}
         >
-          <option value="">Sin especificar</option>
-          <option value="right">Diestro/a</option>
-          <option value="left">Zurdo/a</option>
+          <option value="">{tx("sinEspecificar")}</option>
+          <option value="right">{tx("diestroA")}</option>
+          <option value="left">{tx("zurdoA")}</option>
         </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Altura (cm)</label>
+          <label className={labelCls}>{tx("alturaCm")}</label>
           <input
             type="number"
             min={100}
@@ -170,7 +168,7 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
           />
         </div>
         <div>
-          <label className={labelCls}>Peso (kg)</label>
+          <label className={labelCls}>{tx("pesoKg")}</label>
           <input
             type="number"
             min={30}
@@ -185,7 +183,7 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
 
       <div>
         <label className={labelCls}>
-          Años de experiencia en deportes de raqueta
+          {tx("anosDeExperienciaEn")}
         </label>
         <input
           type="number"
@@ -207,7 +205,7 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
         >
           <span className="flex items-center gap-2 text-[12px] font-black text-foreground">
             <ShieldCheck className="size-4 text-brand" />
-            Información sobre el tratamiento de tus datos
+            {tx("informacionSobreElTratamiento")}
           </span>
           <ChevronDown
             className={`size-4 text-muted-foreground transition-transform ${infoOpen ? "rotate-180" : ""}`}
@@ -216,37 +214,37 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
         {infoOpen && (
           <div className="space-y-2 border-t border-[#050505]/10 px-4 pb-4 pt-3 text-[12px] leading-relaxed text-foreground/62 dark:border-white/10">
             <p>
-              <strong className="text-foreground">Responsable:</strong>{" "}
+              <strong className="text-foreground">{tx("responsable")}</strong>{" "}
               {coachName ? `${coachName} (tu entrenador/a)` : "Tu entrenador/a"}
               , con TenPlanner como encargado del tratamiento (art. 28 RGPD).
             </p>
             <p>
-              <strong className="text-foreground">Datos que recogemos:</strong>{" "}
+              <strong className="text-foreground">{tx("datosQueRecogemos")}</strong>{" "}
               fecha de nacimiento, género, altura, peso, mano dominante y años
               de experiencia, junto con el nombre que ya te registró tu
               entrenador.
             </p>
             <p>
-              <strong className="text-foreground">Finalidad:</strong>{" "}
+              <strong className="text-foreground">{tx("finalidad")}</strong>{" "}
               personalizar tu entrenamiento de deportes de raqueta.
             </p>
             <p>
-              <strong className="text-foreground">Base jurídica:</strong> tu
+              <strong className="text-foreground">{tx("baseJuridica")}</strong> tu
               consentimiento (art. 6.1.a y 9.2.a RGPD).
             </p>
             <p>
-              <strong className="text-foreground">Conservación:</strong>{" "}
+              <strong className="text-foreground">{tx("conservacion")}</strong>{" "}
               mientras tu entrenador mantenga tu ficha activa. Puedes pedir la
               supresión en cualquier momento.
             </p>
             <p>
-              <strong className="text-foreground">Destinatarios:</strong>{" "}
+              <strong className="text-foreground">{tx("destinatarios")}</strong>{" "}
               Supabase (base de datos, UE/US con SCC), Vercel (hosting, US con
               SCC), Anthropic (asistente IA, US con SCC — solo si tu entrenador
               lo usa sobre tu ficha).
             </p>
             <p>
-              <strong className="text-foreground">Tus derechos:</strong> acceso,
+              <strong className="text-foreground">{tx("tusDerechos")}</strong> acceso,
               rectificación, supresión, portabilidad, oposición, limitación y
               reclamación ante la AEPD (
               <a
@@ -255,18 +253,18 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
                 rel="noopener noreferrer"
                 className="underline hover:text-foreground"
               >
-                aepd.es
+                {tx("aepdEs")}
               </a>
               ).
             </p>
             <p className="pt-1">
-              Más detalle en la{" "}
+              {tx("masDetalleEnLa")}{" "}
               <Link
                 href="/privacidad"
                 target="_blank"
                 className="underline hover:text-foreground"
               >
-                política de privacidad
+                {tx("politicaDePrivacidad")}
               </Link>
               .
             </p>
@@ -298,17 +296,17 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-        Guardar mis datos
+        {tx("guardarMisDatos")}
       </button>
 
       <p className="text-center text-[11px] leading-5 text-muted-foreground">
-        Al enviar aceptas la{" "}
+        {tx("alEnviarAceptasLa")}{" "}
         <Link href="/privacidad" target="_blank" className="underline">
-          política de privacidad
+          {tx("politicaDePrivacidad")}
         </Link>{" "}
-        y los{" "}
+        {tx("yLos")}{" "}
         <Link href="/terminos" target="_blank" className="underline">
-          términos
+          {tx("terminos")}
         </Link>
         .
       </p>

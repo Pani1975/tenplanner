@@ -18,6 +18,7 @@ import {
   toLocalDateTimeInput,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
 
 interface GroupOption {
   id: string;
@@ -35,6 +36,7 @@ interface GroupOption {
  * el wizard con todo precargado; con varias, se crean directamente.
  */
 export function AddClassMenuButton({ classId }: { classId: string }) {
+  const tx = useTranslations("ui.s_app_addclassmenubutton");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"menu" | "groups" | "schedule">("menu");
@@ -118,14 +120,14 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        setError(data.error ?? "No se pudieron crear las sesiones.");
+        setError(data.error ?? tx("noSePudieronCrear"));
         setBusy(false);
         return;
       }
       router.push(`/groups/${pickedGroup.id}`);
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
       setBusy(false);
     }
   }
@@ -142,8 +144,8 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
         className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3 py-1.5 text-xs font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10"
       >
         <Plus className="size-3.5" />
-        <span className="hidden sm:inline">Añadir a un grupo o a una sesión</span>
-        <span className="sm:hidden">Añadir a grupo o sesión</span>
+        <span className="hidden sm:inline">{tx("anadirAUnGrupo")}</span>
+        <span className="sm:hidden">{tx("anadirAGrupoO")}</span>
       </button>
 
       {open && (
@@ -162,7 +164,7 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                       setError(null);
                       setView(view === "schedule" ? "groups" : "menu");
                     }}
-                    aria-label="Volver"
+                    aria-label={tx("volver")}
                     className="flex size-7 shrink-0 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
                   >
                     <ArrowLeft className="size-4" />
@@ -170,16 +172,16 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                 )}
                 <h2 className="truncate text-lg font-black text-foreground">
                   {view === "menu"
-                    ? "Añadir esta clase a..."
+                    ? tx("anadirEstaClaseA")
                     : view === "groups"
-                      ? "Elige un grupo"
+                      ? tx("eligeUnGrupo")
                       : "¿Qué día?"}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Cerrar"
+                aria-label={tx("cerrar")}
                 className="flex size-8 items-center justify-center rounded-xl text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
               >
                 <X className="size-4" />
@@ -199,10 +201,10 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-foreground">
-                      Sesión
+                      {tx("sesion")}
                     </span>
                     <span className="block text-xs text-foreground/45">
-                      Crea una sesión suelta a partir de esta clase.
+                      {tx("creaUnaSesionSuelta")}
                     </span>
                   </span>
                   {navigatingTo === "new-session" ? (
@@ -222,10 +224,10 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-foreground">
-                      Grupo
+                      {tx("grupo")}
                     </span>
                     <span className="block text-xs text-foreground/45">
-                      Asigna esta clase a uno de tus grupos.
+                      {tx("asignaEstaClaseA")}
                     </span>
                   </span>
                   <ChevronRight className="size-4 shrink-0 text-foreground/30" />
@@ -247,7 +249,7 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                       autoFocus
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Buscar grupo..."
+                      placeholder={tx("buscarGrupo")}
                       className="min-w-0 flex-1 bg-transparent text-sm placeholder:text-foreground/30 focus:outline-none"
                     />
                   </div>
@@ -261,8 +263,8 @@ export function AddClassMenuButton({ classId }: { classId: string }) {
                   ) : filteredGroups.length === 0 ? (
                     <p className="py-6 text-center text-sm text-foreground/60">
                       {groups.length === 0
-                        ? "Aún no tienes grupos creados."
-                        : "No se han encontrado grupos."}
+                        ? tx("aunNoTienesGrupos")
+                        : tx("noSeHanEncontrado")}
                     </p>
                   ) : (
                     filteredGroups.map((g) => (

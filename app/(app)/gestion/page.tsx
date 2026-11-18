@@ -36,8 +36,13 @@ import { buildMetricViews } from "@/lib/club-report/views";
 import { ReportDialog } from "@/components/app/gestion/report-dialog";
 import { ReportView } from "@/components/app/gestion/report-view";
 import { cn } from "@/lib/utils";
+import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Gestión" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Gestión") };
+}
 export const dynamic = "force-dynamic";
 
 const PERIOD_LABELS: Record<number, string> = {
@@ -83,6 +88,7 @@ export default async function ManagementPage({
     plantilla?: string;
   }>;
 }) {
+  const tx = await getTranslations("ui.s_gestion_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -145,25 +151,23 @@ export default async function ManagementPage({
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <BarChart3 className="size-3.5" />
-            Modo gestión · Informes
+            {tx("modoGestionInformes")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Espacio gestión {club?.name}
+            {tx("espacioGestionV1", { v1: club?.name })}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Actividad de los monitores y seguimiento de los alumnos del club.
-            Solo lo ves tú; cuenta lo creado en el modo del club, no el trabajo
-            particular de cada monitor.
+            {tx("actividadDeLosMonitores")}
           </p>
         </header>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <nav
-            aria-label="Periodo"
+            aria-label={tx("periodo")}
             className="flex flex-wrap items-center gap-2 text-sm"
           >
             <span className="text-xs font-black uppercase text-foreground/55">
-              Periodo
+              {tx("periodo")}
             </span>
             {REPORT_PERIODS.map((p) => (
               <Link
@@ -188,7 +192,7 @@ export default async function ManagementPage({
                   : "border-border text-muted-foreground hover:bg-muted"
               )}
             >
-              Personalizado
+              {tx("personalizado")}
             </Link>
           </nav>
           <ReportDialog
@@ -225,7 +229,7 @@ export default async function ManagementPage({
               <input type="hidden" name="plantilla" value={template.id} />
             )}
             <label className="flex flex-col gap-1 text-xs font-black uppercase text-foreground/55">
-              Desde
+              {tx("desde")}
               <input
                 type="date"
                 name="desde"
@@ -236,7 +240,7 @@ export default async function ManagementPage({
               />
             </label>
             <label className="flex flex-col gap-1 text-xs font-black uppercase text-foreground/55">
-              Hasta
+              {tx("hasta")}
               <input
                 type="date"
                 name="hasta"
@@ -250,14 +254,14 @@ export default async function ManagementPage({
               type="submit"
               className="h-10 rounded-full bg-foreground px-5 text-sm font-black text-background"
             >
-              Aplicar
+              {tx("aplicar")}
             </button>
           </form>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Monitores"
+            label={tx("monitores")}
             icon={UserRound}
             value={report.coaches}
             hint={[
@@ -270,37 +274,37 @@ export default async function ManagementPage({
               .join(" ")}
           />
           <MetricCard
-            label="Alumnos"
+            label={tx("alumnos")}
             icon={Users}
             value={report.players}
             hint={`${report.newPlayers} alta(s) en ${range.phrase}.`}
           />
           <MetricCard
-            label="Sesiones impartidas"
+            label={tx("sesionesImpartidas")}
             icon={CalendarCheck}
             value={report.sessions}
             hint={`En ${range.phrase}${report.cancelled > 0 ? ` · ${report.cancelled} cancelada(s)` : ""}.`}
           />
           <MetricCard
-            label="Horas de clase"
+            label={tx("horasDeClase")}
             icon={Clock}
             value={formatHours(report.minutes)}
             hint="Suma de la duración de las sesiones impartidas."
           />
           <MetricCard
-            label="Asistencia"
+            label={tx("asistencia")}
             icon={UserCheck}
             value={formatPct(report.attendance)}
             hint="Alumnos presentes sobre los que tienen la asistencia anotada."
           />
           <MetricCard
-            label="Objetivos conseguidos"
+            label={tx("objetivosConseguidos")}
             icon={Target}
             value={report.objectives}
             hint={`Objetivos marcados como conseguidos en ${range.phrase}.`}
           />
           <MetricCard
-            label="Próximas sesiones"
+            label={tx("proximasSesiones")}
             icon={CalendarClock}
             value={report.upcoming}
             hint="Programadas para los próximos 30 días."
@@ -311,17 +315,17 @@ export default async function ManagementPage({
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-4 py-3 text-sm">
             <LayoutTemplate className="size-4 text-brand" />
             <span>
-              Plantilla <span className="font-black">{template.name}</span>:{" "}
-              {template.metrics.length} datos.
+              {tx("plantilla")}{" "}<span className="font-black">{template.name}</span>:{" "}
+              {template.metrics.length}{" "}{tx("datos")}
             </span>
             <Link href={allHref} className="ml-auto font-semibold text-brand">
-              Ver todos los datos
+              {tx("verTodosLosDatos")}
             </Link>
           </div>
         )}
         {query.plantilla && !template && (
           <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-            No se encontró la plantilla; se muestran todos los datos.
+            {tx("noSeEncontroLa")}
           </p>
         )}
 

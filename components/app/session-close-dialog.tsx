@@ -7,6 +7,7 @@ import {
   PLAN_CHANGE_REASONS,
   type PlanChangeReason,
 } from "@/lib/sessions/plan-change";
+import { useTranslations } from "next-intl";
 
 export type SessionCloseRating = {
   planFollowed: boolean;
@@ -54,6 +55,7 @@ export function SessionCloseDialog({
   summary?: string;
   initialNote?: string;
 }) {
+  const tx = useTranslations("ui.s_app_sessionclosedialog");
   const [step, setStep] = useState<Step>(initialStep);
   const [reason, setReason] = useState<PlanChangeReason | null>(null);
   const [planFollowed, setPlanFollowed] = useState<boolean | null>(null);
@@ -77,7 +79,7 @@ export function SessionCloseDialog({
     const ok = await action().catch(() => false);
     if (!ok) {
       setSaving(false);
-      setError("No se pudo guardar. Revisa la conexión e inténtalo de nuevo.");
+      setError(tx("noSePudoGuardar"));
     }
     // Si va bien, quien usa el diálogo navega o lo cierra.
     else setSaving(false);
@@ -105,7 +107,7 @@ export function SessionCloseDialog({
                 id="session-close-title"
                 className="mb-1 text-xl font-black leading-tight"
               >
-                ¿Se ha completado la sesión tal y como estaba planificada?
+                {tx("seHaCompletadoLa")}
               </h2>
               {summary && (
                 <p className="text-sm text-muted-foreground">{summary}</p>
@@ -120,7 +122,7 @@ export function SessionCloseDialog({
                 }}
                 className="rounded-full border border-border px-4 py-3 text-sm font-black transition-colors hover:bg-muted"
               >
-                No, cambió
+                {tx("noCambio")}
               </button>
               <button
                 type="button"
@@ -130,7 +132,7 @@ export function SessionCloseDialog({
                 }}
                 className="rounded-full bg-brand px-4 py-3 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95"
               >
-                Sí, tal cual
+                {tx("siTalCual")}
               </button>
             </div>
             <button
@@ -138,7 +140,7 @@ export function SessionCloseDialog({
               onClick={close}
               className="mt-4 w-full text-center text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              Volver a la sesión
+              {tx("volverALaSesion")}
             </button>
           </>
         )}
@@ -149,11 +151,10 @@ export function SessionCloseDialog({
               id="session-close-title"
               className="mb-1 text-xl font-black leading-tight"
             >
-              ¿Por qué cambió?
+              {tx("porQueCambio")}
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              Opcional. Después podrás editar la sesión para que quede lo que se
-              hizo de verdad.
+              {tx("opcionalDespuesPodrasEditar")}
             </p>
             <div className="mb-5 flex flex-wrap gap-2">
               {PLAN_CHANGE_REASONS.map((r) => (
@@ -180,7 +181,7 @@ export function SessionCloseDialog({
                 maxLength={300}
                 value={reasonNote}
                 onChange={(e) => setReasonNote(e.target.value)}
-                placeholder="Cuenta brevemente qué pasó…"
+                placeholder={tx("cuentaBrevementeQuePaso")}
                 className="-mt-2 mb-5 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
               />
             )}
@@ -196,7 +197,7 @@ export function SessionCloseDialog({
                 disabled={saving}
                 className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted"
               >
-                Atrás
+                {tx("atras")}
               </button>
               <button
                 type="button"
@@ -204,7 +205,7 @@ export function SessionCloseDialog({
                 onClick={() => setStep("rating")}
                 className="inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-60"
               >
-                Siguiente
+                {tx("siguiente")}
               </button>
             </div>
           </>
@@ -216,15 +217,15 @@ export function SessionCloseDialog({
               id="session-close-title"
               className="mb-1 text-xl font-black leading-tight"
             >
-              Valoración de la sesión
+              {tx("valoracionDeLaSesion")}
             </h2>
             <p className="mb-4 text-sm text-muted-foreground">
-              ¿Cómo ha ido la clase?
+              {tx("comoHaIdoLa")}
             </p>
             <div
               className="mb-4 flex justify-center gap-2"
               role="radiogroup"
-              aria-label="Valoración de 1 a 5"
+              aria-label={tx("valoracionDe1A")}
             >
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
@@ -248,7 +249,7 @@ export function SessionCloseDialog({
               maxLength={2000}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Comentario (opcional): buen ritmo, costó el saque…"
+              placeholder={tx("comentarioOpcionalBuenRitmo")}
               className="mb-4 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
             />
             {error && (
@@ -298,12 +299,12 @@ export function SessionCloseDialog({
                 className="inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 active:scale-95 disabled:opacity-50"
               >
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Guardar
+                {tx("guardar")}
               </button>
             </div>
             {rating === 0 && (
               <p className="mt-2 text-center text-[11px] text-muted-foreground">
-                Marca de 1 a 5 estrellas para guardar.
+                {tx("marcaDe1A")}
               </p>
             )}
           </>

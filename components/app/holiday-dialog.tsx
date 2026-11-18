@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { CalendarHolidayData } from "@/lib/calendar/holidays";
+import { useTranslations } from "next-intl";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -43,6 +44,7 @@ export function HolidayDialog({
   groups: { id: string; name: string }[];
   onSaved: (holiday: CalendarHolidayData) => void;
 }) {
+  const tx = useTranslations("ui.s_app_holidaydialog");
   const base = defaultDate ?? new Date();
   const [title, setTitle] = useState(holiday?.title ?? "");
   const [description, setDescription] = useState(holiday?.description ?? "");
@@ -80,14 +82,14 @@ export function HolidayDialog({
         }
       );
       if (!res.ok) {
-        setError("No se pudo guardar el festivo. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const json = (await res.json()) as { data: CalendarHolidayData };
       onOpenChange(false);
       onSaved({ ...json.data, canEdit: true });
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -101,22 +103,21 @@ export function HolidayDialog({
             {holiday ? "Editar festivo" : "Nuevo festivo"}
           </DialogTitle>
           <DialogDescription>
-            Las sesiones que caigan en un festivo se marcan como «no se
-            imparte», sin borrarlas.
+            {tx("lasSesionesQueCaigan")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="holiday-title" className={fieldLabel}>
-              Nombre
+              {tx("nombre")}
             </label>
             <input
               id="holiday-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={255}
-              placeholder="Ej: Vacaciones de Navidad"
+              placeholder={tx("ejVacacionesDeNavidad")}
               className={fieldInput}
             />
           </div>
@@ -124,7 +125,7 @@ export function HolidayDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label htmlFor="holiday-start" className={fieldLabel}>
-                Desde
+                {tx("desde")}
               </label>
               <input
                 id="holiday-start"
@@ -141,7 +142,7 @@ export function HolidayDialog({
             </div>
             <div className="space-y-1.5">
               <label htmlFor="holiday-end" className={fieldLabel}>
-                Hasta (inclusive)
+                {tx("hastaInclusive")}
               </label>
               <input
                 id="holiday-end"
@@ -156,13 +157,13 @@ export function HolidayDialog({
 
           {rangeInvalid && (
             <p className="text-xs text-destructive">
-              La fecha final no puede ser anterior a la inicial.
+              {tx("laFechaFinalNo")}
             </p>
           )}
 
           <div className="space-y-1.5">
             <label htmlFor="holiday-group" className={fieldLabel}>
-              Afecta a
+              {tx("afectaA")}
             </label>
             <select
               id="holiday-group"
@@ -170,10 +171,10 @@ export function HolidayDialog({
               onChange={(e) => setGroupId(e.target.value)}
               className={fieldInput}
             >
-              <option value="">Todo (club o calendario completo)</option>
+              <option value="">{tx("todoClubOCalendario")}</option>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
-                  Solo el grupo {g.name}
+                  {tx("soloElGrupoV1", { v1: g.name })}
                 </option>
               ))}
             </select>
@@ -181,7 +182,7 @@ export function HolidayDialog({
 
           <div className="space-y-1.5">
             <label htmlFor="holiday-description" className={fieldLabel}>
-              Descripción
+              {tx("descripcion")}
             </label>
             <textarea
               id="holiday-description"
@@ -189,7 +190,7 @@ export function HolidayDialog({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               maxLength={4000}
-              placeholder="Detalles (opcional)"
+              placeholder={tx("detallesOpcional")}
               className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-[#e11d48] focus:outline-none"
             />
           </div>
@@ -204,7 +205,7 @@ export function HolidayDialog({
               onClick={() => onOpenChange(false)}
               className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"

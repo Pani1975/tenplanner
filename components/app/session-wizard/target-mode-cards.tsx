@@ -8,6 +8,7 @@ import {
   targetToParams,
   type SessionTarget,
 } from "@/lib/session-target";
+import { useTranslations } from "next-intl";
 
 const CARD =
   "group rounded-lg border border-[#050505]/10 bg-white p-5 text-left shadow-[0_12px_36px_rgba(5,5,5,0.04)] transition-colors hover:border-[#D6FF38]/70 hover:bg-[#D6FF38]/10 dark:border-white/10 dark:bg-white/[0.045]";
@@ -24,6 +25,7 @@ interface TargetModeCardsProps {
  * destino, así que el nombre sale solo.
  */
 export function TargetModeCards({ target, label }: TargetModeCardsProps) {
+  const tx = useTranslations("ui.s_sessionwizard_targetmodecards");
   const router = useRouter();
   const withLabel: SessionTarget = { ...target, label };
 
@@ -39,7 +41,7 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#D6FF38]/60 bg-[#D6FF38]/15 px-4 py-3">
         <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60">
-            Sesión para
+            {tx("sesionPara")}
           </p>
           <p className="text-sm font-semibold text-foreground">{label}</p>
         </div>
@@ -48,12 +50,12 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
           onClick={() => router.push("/sessions/new")}
           className="rounded-full border border-foreground/20 bg-background px-4 py-2 text-xs font-bold text-foreground hover:bg-muted"
         >
-          Cambiar
+          {tx("cambiar")}
         </button>
       </section>
 
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        ¿Cómo la montas?
+        {tx("comoLaMontas")}
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <button
@@ -68,7 +70,7 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
             {MONTAR.title}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Te propone la clase con su nivel y su historial.
+            {tx("teProponeLaClase")}
           </p>
         </button>
 
@@ -77,11 +79,10 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
             <BookOpen className="size-4 text-brand" />
           </div>
           <p className="font-heading text-base text-foreground group-hover:text-brand">
-            Elegir del catálogo
+            {tx("elegirDelCatalogo")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Todas las clases, las de la biblioteca pública o las de tu club, y
-            las añades a esta sesión.
+            {tx("todasLasClasesLas")}
           </p>
         </button>
 
@@ -94,10 +95,10 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
             <History className="size-4 text-brand" />
           </div>
           <p className="font-heading text-base text-foreground group-hover:text-brand">
-            Reutilizar una sesión pasada
+            {tx("reutilizarUnaSesionPasada")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Copia el plan de una sesión que ya impartiste.
+            {tx("copiaElPlanDe")}
           </p>
         </button>
 
@@ -110,10 +111,10 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
             <Pencil className="size-4 text-brand" />
           </div>
           <p className="font-heading text-base text-foreground group-hover:text-brand">
-            Crear desde cero
+            {tx("crearDesdeCero")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Bloque a bloque, con el grupo y el día ya puestos.
+            {tx("bloqueABloqueCon")}
           </p>
         </button>
       </div>

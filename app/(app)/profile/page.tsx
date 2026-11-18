@@ -23,8 +23,10 @@ import {
   sharedWithClubCondition,
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import { getTranslations } from "next-intl/server";
 
 export default async function ProfilePage() {
+  const tx = await getTranslations("ui.s_profile_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -143,14 +145,13 @@ export default async function ProfilePage() {
       <div className="tp-page-pad space-y-6">
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-            Cuenta
+            {tx("cuenta")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Perfil
+            {tx("perfil")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Ajusta tus datos, apariencia, exportación y actividad desde un solo
-            panel de trabajo.
+            {tx("ajustaTusDatosApariencia")}
           </p>
         </header>
 
@@ -184,12 +185,12 @@ export default async function ProfilePage() {
             <Building2 className="size-5 shrink-0 text-brand" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black uppercase text-foreground">
-                Ficha del club · {activeClub.name}
+                {tx("fichaDelClubV1", { v1: activeClub.name })}
               </span>
               <span className="mt-1 block text-xs text-foreground/55">
                 {activeClubIsOwner
-                  ? "Datos, fotos, vídeos e instalaciones del club: edítalos en Mi club."
-                  : "Datos, fotos, vídeos e instalaciones del club, en Mi club."}
+                  ? tx("datosFotosVideosE")
+                  : tx("datosFotosVideosE2")}
               </span>
             </span>
             <ChevronRight className="size-4 shrink-0 text-foreground/40" />

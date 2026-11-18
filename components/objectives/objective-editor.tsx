@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "next-intl";
 
 /** Estado del editor: crear un objetivo nuevo o editar uno existente. */
 export type EditorState =
@@ -50,6 +51,7 @@ export function ObjectiveEditor({
   onClose: () => void;
   onSubmit: (values: EditorValues) => Promise<boolean>;
 }) {
+  const tx = useTranslations("ui.s_objectives_objectiveeditor");
   const editing = state?.mode === "edit" ? state.item : null;
   const [values, setValues] = useState<EditorValues>({
     ball: editing?.ball ?? defaultBall,
@@ -90,7 +92,7 @@ export function ObjectiveEditor({
       if (!ok) throw new Error("failed");
       onClose();
     } catch {
-      setError("No se pudo guardar. Inténtalo de nuevo.");
+      setError(tx("noSePudoGuardar"));
     } finally {
       setSaving(false);
     }
@@ -114,7 +116,7 @@ export function ObjectiveEditor({
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="obj-ball">Bola / etapa</Label>
+                  <Label htmlFor="obj-ball">{tx("bolaEtapa")}</Label>
                   <select
                     id="obj-ball"
                     className={selectClass}
@@ -134,7 +136,7 @@ export function ObjectiveEditor({
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="obj-aspect">Aspecto</Label>
+                  <Label htmlFor="obj-aspect">{tx("aspecto")}</Label>
                   <select
                     id="obj-aspect"
                     className={selectClass}
@@ -155,12 +157,12 @@ export function ObjectiveEditor({
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="obj-block">Golpe o bloque</Label>
+                <Label htmlFor="obj-block">{tx("golpeOBloque")}</Label>
                 <Input
                   id="obj-block"
                   list="obj-blocks"
                   maxLength={80}
-                  placeholder="Derecha, Servicio, Dobles…"
+                  placeholder={tx("derechaServicioDobles")}
                   value={values.block}
                   onChange={(e) =>
                     setValues((v) => ({ ...v, block: e.target.value }))
@@ -176,7 +178,7 @@ export function ObjectiveEditor({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="obj-title">Objetivo</Label>
+            <Label htmlFor="obj-title">{tx("objetivo")}</Label>
             <Textarea
               id="obj-title"
               rows={2}
@@ -188,11 +190,11 @@ export function ObjectiveEditor({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="obj-criterion">Criterio de logro (opcional)</Label>
+            <Label htmlFor="obj-criterion">{tx("criterioDeLogroOpcional")}</Label>
             <Input
               id="obj-criterion"
               maxLength={300}
-              placeholder="Ej.: 7 de 10 golpes dentro de la pista"
+              placeholder={tx("ej7De10")}
               value={values.criterion}
               onChange={(e) =>
                 setValues((v) => ({ ...v, criterion: e.target.value }))
@@ -211,7 +213,7 @@ export function ObjectiveEditor({
             onClick={onClose}
             className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
           <button
             type="button"
@@ -220,7 +222,7 @@ export function ObjectiveEditor({
             className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-50"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
-            Guardar
+            {tx("guardar")}
           </button>
         </div>
       </DialogContent>

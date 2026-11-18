@@ -35,6 +35,7 @@ import {
   type HowFound,
   type LeftReason,
 } from "@/lib/students/membership";
+import { useTranslations } from "next-intl";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -190,6 +191,7 @@ export function StudentForm({
   videos,
   studentName,
 }: StudentFormProps) {
+  const tx = useTranslations("ui.s_app_studentform");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -296,7 +298,7 @@ export function StudentForm({
       setServerError(
         data.details?.map((d: { message: string }) => d.message).join(". ") ??
           data.error ??
-          "Ha ocurrido un error."
+          tx("haOcurridoUnError")
       );
       return;
     }
@@ -316,7 +318,7 @@ export function StudentForm({
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader
           icon={User}
-          title="Datos personales"
+          title={tx("datosPersonales")}
           subtitle="Información básica del alumno"
         />
         <div className="space-y-5">
@@ -326,12 +328,12 @@ export function StudentForm({
                 htmlFor="firstName"
                 className="block text-sm font-semibold text-foreground"
               >
-                Nombre
+                {tx("nombre")}
               </label>
               <input
                 id="firstName"
                 type="text"
-                placeholder="Ej: Carmen"
+                placeholder={tx("ejCarmen")}
                 autoComplete="off"
                 aria-invalid={!!errors.firstName}
                 {...register("firstName")}
@@ -348,12 +350,12 @@ export function StudentForm({
                 htmlFor="lastName"
                 className="block text-sm font-semibold text-foreground"
               >
-                Apellidos
+                {tx("apellidos")}
               </label>
               <input
                 id="lastName"
                 type="text"
-                placeholder="Ej: García López"
+                placeholder={tx("ejGarciaLopez")}
                 autoComplete="off"
                 {...register("lastName")}
                 className="h-11 w-full rounded-lg border border-foreground/15 bg-background/70 px-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
@@ -368,16 +370,16 @@ export function StudentForm({
                 className="block text-sm font-semibold text-foreground"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <Mail className="size-3.5" /> Email
+                  <Mail className="size-3.5" />{" "}{tx("email")}
                 </span>
                 <span className="font-normal text-muted-foreground ml-1">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
                 id="email"
                 type="email"
-                placeholder="alumno@email.com"
+                placeholder={tx("alumnoEmailCom")}
                 {...register("email")}
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               />
@@ -394,10 +396,10 @@ export function StudentForm({
                 className="block text-sm font-semibold text-foreground"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <Phone className="size-3.5" /> Teléfono
+                  <Phone className="size-3.5" />{" "}{tx("telefono")}
                 </span>
                 <span className="font-normal text-muted-foreground ml-1">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
@@ -419,9 +421,9 @@ export function StudentForm({
                 htmlFor="birthDate"
                 className="block text-sm font-semibold text-foreground"
               >
-                Fecha de nacimiento{" "}
+                {tx("fechaDeNacimiento")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
@@ -440,9 +442,9 @@ export function StudentForm({
 
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Género{" "}
+              {tx("genero")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <Controller
@@ -478,7 +480,7 @@ export function StudentForm({
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader
           icon={Ruler}
-          title="Datos físicos"
+          title={tx("datosFisicos")}
           subtitle="Altura, peso y mano dominante"
         />
         <div className="space-y-5">
@@ -488,8 +490,8 @@ export function StudentForm({
                 htmlFor="heightCm"
                 className="block text-sm font-semibold text-foreground"
               >
-                Altura{" "}
-                <span className="font-normal text-muted-foreground">(cm)</span>
+                {tx("altura")}{" "}
+                <span className="font-normal text-muted-foreground">{tx("cm")}</span>
               </label>
               <input
                 id="heightCm"
@@ -511,8 +513,8 @@ export function StudentForm({
                 htmlFor="weightKg"
                 className="block text-sm font-semibold text-foreground"
               >
-                Peso{" "}
-                <span className="font-normal text-muted-foreground">(kg)</span>
+                {tx("peso")}{" "}
+                <span className="font-normal text-muted-foreground">{tx("kg")}</span>
               </label>
               <input
                 id="weightKg"
@@ -533,9 +535,9 @@ export function StudentForm({
 
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Mano dominante{" "}
+              {tx("manoDominante")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <Controller
@@ -571,15 +573,15 @@ export function StudentForm({
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader
           icon={Trophy}
-          title="Nivel de juego"
+          title={tx("nivelDeJuego")}
           subtitle="Experiencia y nivel del jugador"
         />
         <div className="space-y-5">
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Nivel{" "}
+              {tx("nivel")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <Controller
@@ -626,7 +628,7 @@ export function StudentForm({
                     </div>
                     {isLegacy && (
                       <p className="text-[11px] text-muted-foreground">
-                        Nivel actual:{" "}
+                        {tx("nivelActual")}{" "}
                         <span className="font-medium">
                           {LEGACY_LEVEL_LABELS[field.value as string]}
                         </span>
@@ -645,9 +647,9 @@ export function StudentForm({
                 htmlFor="yearsExperience"
                 className="block text-sm font-semibold text-foreground"
               >
-                Años de experiencia{" "}
+                {tx("anosDeExperiencia")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
@@ -673,7 +675,7 @@ export function StudentForm({
               >
                 Año de inicio en deportes de raqueta{" "}
                 <span className="font-normal text-muted-foreground">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
@@ -699,17 +701,17 @@ export function StudentForm({
               className="block text-sm font-semibold text-foreground"
             >
               <span className="inline-flex items-center gap-1.5">
-                <Clock className="size-3.5" /> Horario preferente
+                <Clock className="size-3.5" />{" "}{tx("horarioPreferente")}
               </span>
               <span className="font-normal text-muted-foreground ml-1">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <input
               id="preferredSchedule"
               type="text"
               maxLength={500}
-              placeholder="Ej: Martes y jueves por la tarde"
+              placeholder={tx("ejMartesYJueves")}
               {...register("preferredSchedule")}
               className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
             />
@@ -726,17 +728,17 @@ export function StudentForm({
               className="block text-sm font-semibold text-foreground"
             >
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-3.5" /> Localidad
+                <MapPin className="size-3.5" />{" "}{tx("localidad")}
               </span>
               <span className="font-normal text-muted-foreground ml-1">
-                (opcional · para el mapa de procedencia del club)
+                {tx("opcionalParaElMapa")}
               </span>
             </label>
             <input
               id="locality"
               type="text"
               maxLength={120}
-              placeholder="Ej: Santa Cruz de Tenerife"
+              placeholder={tx("ejSantaCruzDe")}
               {...register("locality")}
               className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
             />
@@ -752,7 +754,7 @@ export function StudentForm({
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader
           icon={UserPlus}
-          title="Alta y baja"
+          title={tx("altaYBaja")}
           subtitle="Cómo nos conoció y, si deja la escuela, cuándo y por qué"
         />
         <div className="space-y-5">
@@ -761,9 +763,9 @@ export function StudentForm({
               htmlFor="joinedAt"
               className="block text-sm font-semibold text-foreground"
             >
-              Fecha de alta
+              {tx("fechaDeAlta")}
               <span className="font-normal text-muted-foreground ml-1">
-                {mode === "create" ? "(si la dejas vacía, hoy)" : ""}
+                {mode === "create" ? tx("siLaDejasVacia") : ""}
               </span>
             </label>
             <input
@@ -780,9 +782,9 @@ export function StudentForm({
                 htmlFor="howFound"
                 className="block text-sm font-semibold text-foreground"
               >
-                Cómo nos conoció
+                {tx("comoNosConocio")}
                 <span className="font-normal text-muted-foreground ml-1">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <select
@@ -790,7 +792,7 @@ export function StudentForm({
                 {...register("howFound")}
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               >
-                <option value="">Sin indicar</option>
+                <option value="">{tx("sinIndicar")}</option>
                 {HOW_FOUND_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.label}
@@ -803,16 +805,16 @@ export function StudentForm({
                 htmlFor="howFoundDetail"
                 className="block text-sm font-semibold text-foreground"
               >
-                Detalle
+                {tx("detalle")}
                 <span className="font-normal text-muted-foreground ml-1">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
                 id="howFoundDetail"
                 type="text"
                 maxLength={255}
-                placeholder="Ej: nos lo recomendó la familia de Pablo"
+                placeholder={tx("ejNosLoRecomendo")}
                 {...register("howFoundDetail")}
                 className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
               />
@@ -821,9 +823,9 @@ export function StudentForm({
 
           <div className="rounded-lg border border-foreground/10 bg-background/40 p-4">
             <p className="mb-3 text-sm font-semibold text-foreground">
-              Baja
+              {tx("baja")}
               <span className="font-normal text-muted-foreground ml-1">
-                (déjala vacía si el alumno sigue activo)
+                {tx("dejalaVaciaSiEl")}
               </span>
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -832,7 +834,7 @@ export function StudentForm({
                   htmlFor="leftAt"
                   className="block text-xs font-semibold text-foreground"
                 >
-                  Fecha de baja
+                  {tx("fechaDeBaja")}
                 </label>
                 <input
                   id="leftAt"
@@ -846,14 +848,14 @@ export function StudentForm({
                   htmlFor="leftReason"
                   className="block text-xs font-semibold text-foreground"
                 >
-                  Motivo
+                  {tx("motivo")}
                 </label>
                 <select
                   id="leftReason"
                   {...register("leftReason")}
                   className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
                 >
-                  <option value="">Sin indicar</option>
+                  <option value="">{tx("sinIndicar")}</option>
                   {LEFT_REASON_OPTIONS.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.label}
@@ -867,9 +869,9 @@ export function StudentForm({
                 htmlFor="leftReasonDetail"
                 className="block text-xs font-semibold text-foreground"
               >
-                Detalle del motivo
+                {tx("detalleDelMotivo")}
                 <span className="font-normal text-muted-foreground ml-1">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <input
@@ -888,7 +890,7 @@ export function StudentForm({
         <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
           <SectionHeader
             icon={Video}
-            title="Vídeos"
+            title={tx("videos")}
             subtitle="Fichas con el enlace al vídeo (YouTube, Google Drive…). Se guardan al momento"
           />
           <StudentVideosPanel
@@ -908,7 +910,7 @@ export function StudentForm({
       <section className="rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
         <SectionHeader
           icon={FileText}
-          title="Notas y foto"
+          title={tx("notasYFoto")}
           subtitle="Información adicional"
         />
         <div className="space-y-5">
@@ -918,16 +920,16 @@ export function StudentForm({
               className="block text-sm font-semibold text-foreground"
             >
               <span className="inline-flex items-center gap-1.5">
-                <ImageIcon className="size-3.5" /> URL de foto
+                <ImageIcon className="size-3.5" />{" "}{tx("urlDeFoto")}
               </span>
               <span className="font-normal text-muted-foreground ml-1">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <input
               id="imageUrl"
               type="url"
-              placeholder="https://..."
+              placeholder={"https://..."}
               {...register("imageUrl")}
               className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
             />
@@ -938,16 +940,16 @@ export function StudentForm({
               htmlFor="notes"
               className="block text-sm font-semibold text-foreground"
             >
-              Notas{" "}
+              {tx("notas")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <textarea
               id="notes"
               rows={4}
               maxLength={2000}
-              placeholder="Objetivos, lesiones, disponibilidad, fortalezas, áreas a mejorar…"
+              placeholder={tx("objetivosLesionesDisponibilidadFortalezas")}
               {...register("notes")}
               className="w-full resize-none rounded-lg border border-foreground/15 bg-background/70 px-3 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20"
             />
@@ -974,7 +976,7 @@ export function StudentForm({
           href={mode === "create" ? "/students" : `/students/${studentId}`}
           className="rounded-full px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          Cancelar
+          {tx("cancelar")}
         </Link>
       </div>
     </form>

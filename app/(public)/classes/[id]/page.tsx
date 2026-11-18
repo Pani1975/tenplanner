@@ -49,6 +49,9 @@ import { canSeeClassDraft } from "@/lib/classes/visibility";
 import { hasClassAnimation } from "@/lib/classes/animation";
 import { LevelBalls } from "@/components/app/level-balls";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -99,6 +102,7 @@ function ExerciseCard({
   phase: string;
   classId: string;
 }) {
+  const tx = useTranslations("ui.s_id_page");
   return (
     <Link
       href={`/exercises/${ex.id}?fromClass=${classId}`}
@@ -125,12 +129,11 @@ function ExerciseCard({
           </span>
           {durationMinutes ? (
             <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums">
-              {durationMinutes} min
-            </span>
+              {tx("v1Min", { v1: durationMinutes })}</span>
           ) : null}
           {ex.videoUrl && (
             <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
-              Vídeo
+              {tx("video")}
             </span>
           )}
         </span>
@@ -161,6 +164,8 @@ export default async function ClassDetailPage({
   params,
   searchParams,
 }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_id_page");
   const { id } = await params;
   const navParams = await searchParams;
   const supabase = await createClient();
@@ -461,14 +466,14 @@ export default async function ClassDetailPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/classes"
-            title="Volver a todas las clases"
+            title={tx("volverATodasLas")}
             className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <ArrowLeft className="size-4" /> Volver a clases
+            <ArrowLeft className="size-4" />{" "}{tx("volverAClases")}
           </Link>
           <BackToSearchLink
             href={backToSearchHref}
-            label={listNavIds ? "Volver a las listas" : undefined}
+            label={listNavIds ? tx("volverALasListas") : undefined}
           />
         </div>
         <PrevNextNav
@@ -491,12 +496,12 @@ export default async function ClassDetailPage({
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {cls.status === "draft" && (
                   <span className="rounded-full border border-amber-300/60 bg-amber-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                    Borrador
+                    {tx("borrador")}
                   </span>
                 )}
                 {cls.isLibrary && (
                   <span className="rounded-full bg-[#D6FF38] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#050505]">
-                    Biblioteca
+                    {tx("biblioteca")}
                   </span>
                 )}
                 {cls.autoria && cls.autoria !== "libre" && (
@@ -526,7 +531,7 @@ export default async function ClassDetailPage({
               </h1>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/68">
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="size-3.5" /> {cls.duracionMinutes} min
+                  <Clock className="size-3.5" /> {cls.duracionMinutes}{" "}{tx("min")}
                 </span>
                 {cls.alumnosTipo && (
                   <span className="inline-flex items-center gap-1.5 capitalize">
@@ -552,7 +557,7 @@ export default async function ClassDetailPage({
                   href={`/classes/${cls.id}/edit`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/16 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-[#D6FF38] hover:text-[#D6FF38]"
                 >
-                  {cls.status === "draft" ? "Terminar y publicar" : "Editar"}
+                  {cls.status === "draft" ? tx("terminarYPublicar") : "Editar"}
                 </Link>
               )}
               <CopyToSpaceButton
@@ -586,7 +591,7 @@ export default async function ClassDetailPage({
             <div className="flex items-center gap-2">
               <BarChart3 className="size-4 text-brand" />
               <h2 className="font-heading text-base text-foreground">
-                Uso en tus sesiones
+                {tx("usoEnTusSesiones")}
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -597,8 +602,7 @@ export default async function ClassDetailPage({
 
           {classUsageSessions.length === 0 ? (
             <p className="text-sm text-foreground/55">
-              Aún no has dado esta clase en ninguna sesión. Créala desde el
-              botón de arriba para empezar a ver aquí cómo te va con ella.
+              {tx("aunNoHasDado")}
             </p>
           ) : (
             <>
@@ -607,7 +611,7 @@ export default async function ClassDetailPage({
                   <strong className="text-foreground">
                     {classUsageSessions.length}
                   </strong>{" "}
-                  sesión{classUsageSessions.length !== 1 ? "es" : ""}
+                  {tx("sesion")}{classUsageSessions.length !== 1 ? "es" : ""}
                   {completedCount > 0 &&
                     ` · ${completedCount} completada${completedCount !== 1 ? "s" : ""}`}
                 </span>
@@ -617,8 +621,8 @@ export default async function ClassDetailPage({
                     <strong className="text-foreground">
                       {avgRating.toFixed(1)}
                     </strong>
-                    /5 · {ratingCount} valoración
-                    {ratingCount !== 1 ? "es" : ""} de alumnos
+                    /5 · {ratingCount}{" "}{tx("valoracion")}
+                    {ratingCount !== 1 ? "es" : ""}{" "}{tx("deAlumnos")}
                   </span>
                 )}
               </div>
@@ -637,10 +641,9 @@ export default async function ClassDetailPage({
                         {g.name}
                       </Link>
                       <span className="text-foreground/50 text-xs">
-                        {g.count} vez{g.count !== 1 ? "es" : ""} · última el{" "}
-                        {new Intl.DateTimeFormat("es-ES", {
+                        {tx("v1VezV2Ultima", { v1: g.count, v2: g.count !== 1 ? "es" : "", v3: new Intl.DateTimeFormat(intlLocale, {
                           dateStyle: "medium",
-                        }).format(g.lastAt)}
+                        }).format(g.lastAt) })}
                       </span>
                     </li>
                   ))}
@@ -673,7 +676,7 @@ export default async function ClassDetailPage({
             <div className="flex items-center gap-2 mb-3">
               <Target className="size-4 text-brand" />
               <h2 className="font-heading text-base text-foreground">
-                Objetivos
+                {tx("objetivos")}
               </h2>
             </div>
             <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
@@ -686,7 +689,7 @@ export default async function ClassDetailPage({
             <div className="flex items-center gap-2 mb-3">
               <Package className="size-4 text-brand" />
               <h2 className="font-heading text-base text-foreground">
-                Material
+                {tx("material")}
               </h2>
             </div>
             <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
@@ -700,7 +703,7 @@ export default async function ClassDetailPage({
       {blocks.length > 0 && (
         <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
           <h2 className="font-heading text-xl text-foreground mb-4">
-            Índice de actividades
+            {tx("indiceDeActividades")}
           </h2>
           <ol className="space-y-4">
             {blocks.map((block, idx) => {
@@ -719,7 +722,7 @@ export default async function ClassDetailPage({
                   {cls.courts === 2 && block.rotates && (
                     <p className="text-xs text-muted-foreground">
                       <span className="font-semibold text-foreground">
-                        Los grupos rotan:
+                        {tx("losGruposRotan")}
                       </span>{" "}
                       dos grupos, cada uno hace las dos pistas (los minutos son
                       por grupo).
@@ -728,7 +731,7 @@ export default async function ClassDetailPage({
                   <ul className="space-y-1.5">
                     {blockItems.length === 0 ? (
                       <li className="text-sm text-muted-foreground italic">
-                        (sin ejercicios)
+                        {tx("sinEjercicios")}
                       </li>
                     ) : (
                       blockItems.map((item, i) => {
@@ -744,16 +747,13 @@ export default async function ClassDetailPage({
                             <span className="flex-1">
                               {itemKind === "warmup" ? (
                                 <span className="font-medium text-foreground">
-                                  Descanso
+                                  {tx("descanso")}
                                 </span>
                               ) : itemKind === "stations" ? (
                                 <>
                                   <span className="font-medium text-foreground">
-                                    Estaciones (
-                                    {(item.stations as StationItemJson[])
-                                      ?.length ?? 0}
-                                    )
-                                  </span>
+                                    {tx("estacionesV1", { v1: (item.stations as StationItemJson[])
+                                      ?.length ?? 0 })}</span>
                                   {item.freeText && (
                                     <span className="mt-1 block text-xs leading-5 text-muted-foreground">
                                       {item.freeText}
@@ -805,7 +805,7 @@ export default async function ClassDetailPage({
                               {cls.courts === 2 && (
                                 <span className="ml-2 inline-flex items-center gap-1 align-middle">
                                   <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
-                                    Pista {item.court === 2 ? 2 : 1}
+                                    {tx("pistaV1", { v1: item.court === 2 ? 2 : 1 })}
                                   </span>
                                   {(item.ledBy === "coach" ||
                                     item.ledBy === "auto") && (
@@ -819,8 +819,7 @@ export default async function ClassDetailPage({
                               )}
                               {item.durationMinutes && (
                                 <span className="text-muted-foreground ml-2 text-xs">
-                                  · {item.durationMinutes} min
-                                  {itemKind === "stations" ? " en total" : ""}
+                                  {tx("v1MinV2", { v1: item.durationMinutes, v2: itemKind === "stations" ? tx("inTotalSuffix2") : "" })}
                                 </span>
                               )}
                               {itemKind === "exercise" &&
@@ -838,7 +837,7 @@ export default async function ClassDetailPage({
                                 )}
                               {item.notes && (
                                 <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                                  <span className="font-semibold">Notas:</span>{" "}
+                                  <span className="font-semibold">{tx("notas")}</span>{" "}
                                   {item.notes}
                                 </span>
                               )}
@@ -864,7 +863,7 @@ export default async function ClassDetailPage({
         <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <Dumbbell className="size-4 text-brand" />
-            <h2 className="font-heading text-xl text-foreground">Ejercicios</h2>
+            <h2 className="font-heading text-xl text-foreground">{tx("ejercicios")}</h2>
             <span className="text-xs text-muted-foreground">
               {classExerciseCount}
             </span>
@@ -891,13 +890,12 @@ export default async function ClassDetailPage({
                       {idx + 1}
                     </span>
                     <span className="text-sm font-semibold text-foreground">
-                      Ejercicio estaciones
+                      {tx("ejercicioEstaciones")}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {entry.stations.length} estaciones
-                      {entry.durationMinutes
-                        ? ` · ${entry.durationMinutes} min en total`
-                        : ""}
+                      {tx("v1EstacionesV2", { v1: entry.stations.length, v2: entry.durationMinutes
+                        ? tx("minTotalSuffix", { n: entry.durationMinutes })
+                        : "" })}
                     </span>
                   </div>
                   <ol className="grid gap-2 sm:grid-cols-2">
@@ -914,7 +912,7 @@ export default async function ClassDetailPage({
                         ) : (
                           <div className="flex h-full gap-3 rounded-lg border border-border/80 bg-background px-4 py-3">
                             <span className="shrink-0 pt-0.5 font-mono text-[10px] uppercase text-muted-foreground/60">
-                              Estación {si + 1}
+                              {tx("estacionV1", { v1: si + 1 })}
                             </span>
                             <span className="text-xs leading-relaxed text-foreground/80">
                               {st.text}
@@ -934,7 +932,7 @@ export default async function ClassDetailPage({
       {cls.aspectosImportantes && (
         <div className="rounded-lg border border-[#050505]/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
           <h2 className="font-heading text-base text-foreground mb-3">
-            Aspectos importantes
+            {tx("aspectosImportantes")}
           </h2>
           <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
             {cls.aspectosImportantes}
@@ -953,7 +951,7 @@ export default async function ClassDetailPage({
               href="/register"
               className="text-brand font-semibold hover:underline"
             >
-              Crea una cuenta gratis
+              {tx("creaUnaCuentaGratis")}
             </Link>{" "}
             para añadir esta clase a tus sesiones y a tus favoritos.
           </p>

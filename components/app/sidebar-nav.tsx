@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "./language-switcher";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -228,16 +230,20 @@ const managementNavItems: NavItem[] = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
 ];
 
+// Las etiquetas del menú se definen en español; se traducen al pintarlas.
+const NAV_LABEL_KEYS: Record<string, string> = {"Inicio":"home","Ejercicios":"exercises","Ver todos":"viewAllM","Biblioteca":"library","Mis ejercicios":"myExercises","Favoritos":"favorites","Borradores":"drafts","Nuevo ejercicio":"newExercise","Clases":"classes","Ver todas":"viewAllF","Mis clases":"myClasses","Mis listas":"myLists","Nueva clase":"newClass","Sesiones":"sessions","Mis sesiones":"mySessions","Listas":"lists","Canceladas":"cancelled","Nueva sesión":"newSession","Calendario":"calendar","Alumnos":"students","Lista de alumnos":"studentList","Grupos":"groups","Objetivos":"goals","Mensajes":"messages","Lugares":"places","Reservas de pistas":"courtBookings","Mis recursos":"myResources","Mi club":"myClub","Perfil":"profile","Ayuda":"help","Informes":"reports","Panel":"panel","Monitores":"coaches","Jugador":"player","Clases club":"clubClasses","Ejercicios club":"clubExercises","Favoritos club":"clubFavorites","Listas club":"clubLists","Recursos club":"clubResources","Sesiones club":"clubSessions"};
+
 /** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
 function PlatformBadge() {
+  const t = useTranslations("nav");
   return (
     <div className="flex items-center gap-2 rounded-lg border border-brand/50 bg-brand/10 px-3 py-2 text-[12px] font-bold text-foreground">
       <Globe2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} />
       <span className="min-w-0 flex-1 truncate">
         <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
-          Modo
+          {t("mode")}
         </span>
-        Administrador · público
+        {t("adminPublic")}
       </span>
     </div>
   );
@@ -444,6 +450,9 @@ function NavContent({
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const tNav = useTranslations("nav");
+  const tr = (label: string) =>
+    NAV_LABEL_KEYS[label] ? tNav(NAV_LABEL_KEYS[label]) : label;
 
   const [submenuOpen, setSubmenuOpen] = useState<Record<string, boolean>>(
     () => {
@@ -559,7 +568,7 @@ function NavContent({
                     >
                       <Icon className="size-4" strokeWidth={1.6} />
                       <span className="flex-1 truncate text-[13px] font-semibold">
-                        {label}
+                        {tr(label)}
                       </span>
                       <Lock
                         className="size-3 text-sidebar-foreground/34"
@@ -576,7 +585,7 @@ function NavContent({
                     <span className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sidebar-foreground/38">
                       <Icon className="size-4" strokeWidth={1.6} />
                       <span className="flex-1 truncate text-[13px] font-semibold">
-                        {label}
+                        {tr(label)}
                       </span>
                       <Lock
                         className="size-3 text-sidebar-foreground/32"
@@ -613,7 +622,7 @@ function NavContent({
                           isActive && "text-sidebar-foreground"
                         )}
                       >
-                        {label}
+                        {tr(label)}
                       </span>
                       <ChevronRight
                         className={cn(
@@ -637,7 +646,7 @@ function NavContent({
                                 : "text-sidebar-foreground/58 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                             )}
                           >
-                            {allLabel ?? "Ver todas"}
+                            {tr(allLabel ?? "Ver todas")}
                           </Link>
                         </li>
                         {submenu.map(
@@ -660,7 +669,7 @@ function NavContent({
                               return (
                                 <li key={subHref}>
                                   <span className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[12px] text-sidebar-foreground/38">
-                                    <span>{subLabel}</span>
+                                    <span>{tr(subLabel)}</span>
                                     <Lock className="size-3 text-sidebar-foreground/32" />
                                   </span>
                                 </li>
@@ -687,7 +696,7 @@ function NavContent({
                                       strokeWidth={1.7}
                                     />
                                   )}
-                                  <span className="truncate">{subLabel}</span>
+                                  <span className="truncate">{tr(subLabel)}</span>
                                 </Link>
                               </li>
                             );
@@ -726,12 +735,12 @@ function NavContent({
                         isActive && "font-black text-brand-foreground"
                       )}
                     >
-                      {label}
+                      {tr(label)}
                     </span>
                     {href === "/mensajes" && unreadMessages > 0 && (
                       <span
                         className="grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1.5 text-[11px] font-black tabular-nums leading-none text-white"
-                        aria-label={`${unreadMessages} mensajes nuevos`}
+                        aria-label={tNav("newMessages", { n: unreadMessages })}
                       >
                         {formatUnread(unreadMessages)}
                       </span>
@@ -758,7 +767,7 @@ function NavContent({
               )}
             >
               <ShieldCheck className="size-3.5 shrink-0" strokeWidth={1.8} />
-              Panel de administración
+              {tNav("admin")}
             </Link>
           </div>
         )}
@@ -766,7 +775,7 @@ function NavContent({
           <>
             <div className="px-4 pt-4 pb-3">
               <p className="mb-2.5 px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/40">
-                Cuenta
+                {tNav("account")}
               </p>
               <Link
                 href="/profile"
@@ -805,9 +814,12 @@ function NavContent({
                 className="group flex items-center gap-2 rounded-lg py-2 text-left text-[12px] font-semibold text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground"
               >
                 <LogOut className="size-3.5" strokeWidth={1.6} />
-                Cerrar sesión
+                {tNav("logout")}
               </button>
-              <ThemeToggle compact />
+              <div className="flex items-center gap-1.5">
+                <LanguageSwitcher compact />
+                <ThemeToggle compact />
+              </div>
             </div>
           </>
         ) : (
@@ -818,9 +830,12 @@ function NavContent({
               className="flex min-h-9 items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/70 px-3 text-[12px] font-bold text-sidebar-foreground transition-colors hover:border-sidebar-ring hover:bg-brand hover:text-brand-foreground"
             >
               <Lock className="size-3.5" strokeWidth={1.8} />
-              Iniciar sesión
+              {tNav("login")}
             </Link>
-            <ThemeToggle compact />
+            <div className="flex items-center gap-1.5">
+              <LanguageSwitcher compact />
+              <ThemeToggle compact />
+            </div>
           </div>
         )}
       </div>
@@ -872,7 +887,10 @@ function SidebarNavInner({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const prevOpenRef = useRef(false);
 
-  const activeLabel =
+  const tNav = useTranslations("nav");
+  const trLabel = (label: string) =>
+    NAV_LABEL_KEYS[label] ? tNav(NAV_LABEL_KEYS[label]) : label;
+  const activeLabelEs =
     navItems.find(
       (item) => pathname === item.href || pathname.startsWith(item.href + "/")
     )?.label ?? "TenPlanner";
@@ -983,7 +1001,7 @@ function SidebarNavInner({
               /
             </span>
             <span className="truncate text-xs font-bold uppercase tracking-[0.14em] text-sidebar-foreground/54">
-              {activeLabel}
+              {trLabel(activeLabelEs)}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
@@ -993,7 +1011,7 @@ function SidebarNavInner({
               type="button"
               onClick={() => setMobileOpen(true)}
               className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              aria-label="Abrir menú"
+              aria-label={tNav("openMenu")}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav-drawer"
             >
@@ -1042,14 +1060,14 @@ function SidebarNavInner({
           id="mobile-nav-drawer"
           role="dialog"
           aria-modal="true"
-          aria-label="Menú de navegación"
+          aria-label={tNav("navMenu")}
           className="fixed inset-0 z-50 flex md:hidden"
         >
           <button
             type="button"
             className="absolute inset-0 cursor-default bg-[#050505]/68 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
-            aria-label="Cerrar menú de navegación"
+            aria-label={tNav("closeNavMenu")}
             tabIndex={-1}
           />
           <aside className="relative flex h-full w-[min(20rem,calc(100vw-2rem))] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[24px_0_80px_rgba(0,0,0,0.32)]">
@@ -1059,7 +1077,7 @@ function SidebarNavInner({
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/68 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                aria-label="Cerrar menú"
+                aria-label={tNav("closeMenu")}
               >
                 <X className="size-4" strokeWidth={1.8} />
               </button>

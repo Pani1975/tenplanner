@@ -42,6 +42,8 @@ import type {
   WizardSessionBlock,
   WizardState,
 } from "./types";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 const STEP_LABELS = ["Configuración", "Ejercicios"];
 const TOTAL_STEPS = STEP_LABELS.length;
@@ -410,6 +412,8 @@ export function SessionWizard({
   edit,
   engine,
 }: SessionWizardProps) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_sessionwizard_sessionwizard");
   const isEdit = !!edit;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -639,7 +643,7 @@ export function SessionWizard({
     try {
       await upsertSessionDraft({
         id: nextDraftId,
-        title: draftPayload.title.trim() || "Sesión sin título",
+        title: draftPayload.title.trim() || tx("sesionSinTitulo"),
         updatedAt: new Date().toISOString(),
         payload: draftPayload,
       });
@@ -842,7 +846,7 @@ export function SessionWizard({
           setServerError(
             data.details?.map((d) => d.message).join(". ") ??
               data.error ??
-              "No se pudieron guardar los cambios."
+              tx("noSePudieronGuardar")
           );
           return;
         }
@@ -899,7 +903,7 @@ export function SessionWizard({
 
       // Use the last response for downstream handling so failures bubble up.
       if (!res) {
-        setServerError("No se pudo crear la sesión.");
+        setServerError(tx("noSePudoCrear"));
         return;
       }
 
@@ -923,7 +927,7 @@ export function SessionWizard({
           }));
           setShowErrors(true);
           setServerError(
-            "Se quitaron ejercicios que ya no existen o a los que no tienes acceso. Revisa el plan y vuelve a intentarlo."
+            tx("seQuitaronEjerciciosQue")
           );
           return;
         }
@@ -933,7 +937,7 @@ export function SessionWizard({
             ?.map((detail: { message: string }) => detail.message)
             .join(". ") ??
           data.error ??
-          "Ha ocurrido un error.";
+          tx("haOcurridoUnError");
         setServerError(
           createdCount > 0
             ? `Se crearon ${createdCount} de ${sessionDates.length} sesiones; el resto falló: ${msg}`
@@ -962,7 +966,7 @@ export function SessionWizard({
       router.push(state.groupId ? `/groups/${state.groupId}` : "/sessions");
       router.refresh();
     } catch {
-      setServerError("Error de red. Inténtalo de nuevo.");
+      setServerError(tx("errorDeRedIntentalo"));
     } finally {
       setSubmitting(false);
       setProgress(null);
@@ -989,21 +993,20 @@ export function SessionWizard({
               id="conflict-title"
               className="text-lg font-black leading-tight"
             >
-              Ya hay otra sesión en {conflictWarning.placeName} a esa hora
-            </h2>
+              {tx("yaHayOtraSesion", { v1: conflictWarning.placeName })}</h2>
             <ul className="my-4 space-y-2">
               {conflictWarning.conflicts.slice(0, 6).map((c) => {
                 const start = new Date(c.scheduledAt);
                 const end = new Date(
                   start.getTime() + c.durationMinutes * 60_000
                 );
-                const day = start.toLocaleDateString("es-ES", {
+                const day = start.toLocaleDateString(intlLocale, {
                   weekday: "short",
                   day: "numeric",
                   month: "short",
                 });
                 const hm = (d: Date) =>
-                  d.toLocaleTimeString("es-ES", {
+                  d.toLocaleTimeString(intlLocale, {
                     hour: "2-digit",
                     minute: "2-digit",
                   });
@@ -1021,8 +1024,7 @@ export function SessionWizard({
               })}
               {conflictWarning.conflicts.length > 6 && (
                 <li className="text-xs text-muted-foreground">
-                  y {conflictWarning.conflicts.length - 6} más
-                </li>
+                  {tx("yV1Mas", { v1: conflictWarning.conflicts.length - 6 })}</li>
               )}
             </ul>
             <div className="flex gap-3">
@@ -1031,7 +1033,7 @@ export function SessionWizard({
                 onClick={() => setConflictWarning(null)}
                 className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-black text-muted-foreground transition-colors hover:bg-muted"
               >
-                Cambiar
+                {tx("cambiar")}
               </button>
               <button
                 type="button"
@@ -1040,7 +1042,7 @@ export function SessionWizard({
                 className="inline-flex flex-[1.4] items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-black text-brand-foreground transition-all hover:bg-brand/90 disabled:opacity-60"
               >
                 {submitting && <Loader2 className="size-4 animate-spin" />}
-                Guardar igualmente
+                {tx("guardarIgualmente")}
               </button>
             </div>
           </div>
@@ -1049,11 +1051,10 @@ export function SessionWizard({
       {closingAfterChange && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
           <p className="font-semibold">
-            Ajusta la sesión a lo que se hizo de verdad
+            {tx("ajustaLaSesionA")}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Cambia, quita o añade ejercicios y tiempos, y pulsa Guardar. Después
-            te pediremos la valoración final.
+            {tx("cambiaQuitaOAnade")}
           </p>
         </div>
       )}
@@ -1078,7 +1079,7 @@ export function SessionWizard({
             {saveStatus === "saving" ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : null}
-            Borrador
+            {tx("borrador")}
           </button>
           <DraftStatusPill
             status={saveStatus}
@@ -1090,7 +1091,7 @@ export function SessionWizard({
 
       <div className="rounded-lg border border-foreground/10 bg-[#F4F4F1] px-4 py-3 dark:bg-[#050505]/70">
         <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45">
-          Paso {step} de {TOTAL_STEPS}
+          {tx("pasoV1DeV2", { v1: step, v2: TOTAL_STEPS })}
         </p>
         <h2 className="font-heading text-2xl font-semibold text-foreground">
           {step === 1 ? "Configuración" : "Ejercicios"}
@@ -1168,7 +1169,7 @@ export function SessionWizard({
             }
             className="px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Cancelar
+            {tx("cancelar")}
           </Link>
         ) : (
           <button
@@ -1177,7 +1178,7 @@ export function SessionWizard({
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronLeft className="size-4" />
-            Atrás
+            {tx("atras")}
           </button>
         )}
 
@@ -1196,8 +1197,8 @@ export function SessionWizard({
                 {submitting ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : null}
-                <span className="sm:hidden">Guardar</span>
-                <span className="hidden sm:inline">Guardar cambios</span>
+                <span className="sm:hidden">{tx("guardar")}</span>
+                <span className="hidden sm:inline">{tx("guardarCambios")}</span>
               </button>
             )}
             <button
@@ -1211,7 +1212,7 @@ export function SessionWizard({
                   : "opacity-55 cursor-not-allowed"
               )}
             >
-              Siguiente
+              {tx("siguiente")}
               <ChevronRight className="size-4" />
             </button>
           </div>
@@ -1219,15 +1220,10 @@ export function SessionWizard({
           <div className="flex items-center gap-3">
             {state.exercises.length > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums hidden sm:block">
-                {state.exercises.length} elemento
-                {state.exercises.length !== 1 ? "s" : ""}
-                {" · "}
-                {state.exercises.reduce(
+                {tx("v1ElementoV2V3", { v1: state.exercises.length, v2: state.exercises.length !== 1 ? "s" : "", v3: state.exercises.reduce(
                   (sum, e) => sum + (e.overrideDuration ?? e.durationMinutes),
                   0
-                )}{" "}
-                min
-              </span>
+                ) })}</span>
             )}
             <button
               type="button"

@@ -6,11 +6,15 @@ import { db } from "@/db";
 import { clubCoachProfiles, clubs } from "@/db/schema";
 import { COACH_PROFILE_LINK_EXPIRY_DAYS } from "@/lib/coach-profile";
 import { FichaForm } from "./ficha-form";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = {
-  title: "Ficha de monitor",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata() {
+  const t = await getTranslations("meta");
+  return {
+    title: t("coachProfileTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -19,6 +23,7 @@ interface PageProps {
 // Página pública (sin sesión): el monitor rellena su ficha con un enlace
 // personal de un solo uso que le envía el gestor del club.
 export default async function CoachProfileLinkPage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_token_page");
   const { token } = await params;
 
   const [row] = await db
@@ -55,11 +60,11 @@ export default async function CoachProfileLinkPage({ params }: PageProps) {
               <NotebookPen className="size-5" strokeWidth={2.3} />
             </div>
             <span className="text-sm font-black">
-              ten<span className="text-brand">planner</span>
+              {tx("ten")}<span className="text-brand">{tx("planner")}</span>
             </span>
           </div>
           <span className="rounded-full border border-[#050505]/10 px-3 py-1 text-[11px] font-black uppercase text-foreground/55 dark:border-white/10">
-            Enlace personal
+            {tx("enlacePersonal")}
           </span>
         </div>
 
@@ -70,25 +75,21 @@ export default async function CoachProfileLinkPage({ params }: PageProps) {
                 <ShieldCheck className="size-5" />
               </div>
               <p className="text-xl font-black text-foreground">
-                Enlace caducado
+                {tx("enlaceCaducado")}
               </p>
               <p className="mx-auto max-w-sm text-sm leading-6 text-foreground/60">
-                Este enlace ya no es válido. Pide al club que te envíe uno
-                nuevo.
+                {tx("esteEnlaceYaNo")}
               </p>
             </div>
           ) : (
             <>
               <div className="mb-6 space-y-2">
-                <p className="tp-kicker">Ficha de monitor</p>
+                <p className="tp-kicker">{tx("fichaDeMonitor")}</p>
                 <h1 className="text-3xl font-black leading-tight text-foreground">
-                  Hola, {profile.fullName.split(" ")[0]}
+                  {tx("holaV1", { v1: profile.fullName.split(" ")[0] })}
                 </h1>
                 <p className="text-sm leading-6 text-foreground/62">
-                  {clubName} te pide que rellenes tu ficha de monitor. Los datos
-                  obligatorios son el nombre y apellidos, el email y el
-                  teléfono; el resto es opcional.
-                </p>
+                  {tx("v1TePideQue", { v1: clubName })}</p>
               </div>
               <FichaForm
                 token={token}
@@ -116,7 +117,7 @@ export default async function CoachProfileLinkPage({ params }: PageProps) {
             target="_blank"
             className="font-semibold underline underline-offset-4 hover:text-foreground"
           >
-            política de privacidad
+            {tx("politicaDePrivacidad")}
           </Link>
           .
         </p>

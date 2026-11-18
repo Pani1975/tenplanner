@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AppScreensPhone } from "./app-screens-phone";
 import { LANDING_SCREENS } from "@/lib/landing-screens";
 import {
@@ -38,133 +39,42 @@ import {
 } from "./library-tabs";
 
 const painCards = [
-  {
-    icon: ClipboardList,
-    quote: '"Llego a clase sin tener claro qué voy a dar hoy."',
-    text: "Improvisar no está mal, pero repetir siempre lo mismo sí. Tus alumnos lo notan.",
-  },
-  {
-    icon: Repeat2,
-    quote: '"Siempre acabo usando los mismos 10 ejercicios."',
-    text: "No es falta de ideas, es falta de tiempo para buscarlas. Ten Planner lo hace por ti.",
-  },
-  {
-    icon: Clock3,
-    quote: '"Pierdo más tiempo planificando que dando clase."',
-    text: "Una sesión bien planificada no debería llevarte más de 2 minutos. En serio.",
-  },
+  { icon: ClipboardList, id: "p1" },
+  { icon: Repeat2, id: "p2" },
+  { icon: Clock3, id: "p3" },
 ];
 
-const steps = [
-  {
-    title: "Piensa la clase",
-    text: "Tú tienes el criterio. Decide si explorar la biblioteca, construir tu clase desde cero o recuperar una sesión anterior que ya funcionó.",
-  },
-  {
-    title: "Construye o ajusta",
-    text: "Elige ejercicios, ordénalos, mezcla con tus favoritos o ajusta la propuesta. Siempre tienes el control total de la sesión.",
-  },
-  {
-    title: "Da la clase y evalúa",
-    text: "Pasa lista, da la sesión y registra cómo fue. Todo queda guardado en tu historial.",
-  },
-];
+const steps = ["s1", "s2", "s3"];
 
 const preparationCards = [
-  {
-    icon: Search,
-    title: "Explorar y elegir",
-    text: "Navega el explorador: ejercicios sueltos o clases completas ya preparadas, todo etiquetado por nivel, duración, objetivo y categoría.",
-    chips: ["Ejercicios sueltos", "Clases completas", "Todo etiquetado"],
-    color: "bg-[#efffba] text-[#5f7000]",
-  },
-  {
-    icon: Pencil,
-    title: "Crear desde cero",
-    text: "Diseña la clase ejercicio a ejercicio usando la biblioteca de Ten Planner, tus propios ejercicios creados por ti o una mezcla de ambos.",
-    chips: ["Biblioteca Ten Planner", "Mis ejercicios"],
-    color: "bg-[#ecece6] text-[#050505]",
-  },
-  {
-    icon: Repeat2,
-    title: "Reutilizar una clase anterior",
-    text: "Recupérala del historial o de tus favoritos, ajusta lo que necesites y vuelve a impartirla. Lo que ya funciona no hay que reinventarlo.",
-    chips: ["Mis clases", "Mis favoritos"],
-    color: "bg-[#e8e8e1] text-[#5f7000]",
-  },
+  { icon: Search, id: "c1", chips: 3, color: "bg-[#efffba] text-[#5f7000]" },
+  { icon: Pencil, id: "c2", chips: 2, color: "bg-[#ecece6] text-[#050505]" },
+  { icon: Repeat2, id: "c3", chips: 2, color: "bg-[#e8e8e1] text-[#5f7000]" },
 ];
 
 const featureCards = [
-  {
-    icon: Search,
-    title: "Explorador de contenido",
-    text: "Ejercicios sueltos y clases completas etiquetados por nivel, objetivo, duración y categoría.",
-  },
-  {
-    icon: Layers3,
-    title: "Biblioteca validada",
-    text: "Ejercicios creados por entrenadores expertos, listos para usar o personalizar.",
-  },
-  {
-    icon: Star,
-    title: "Favoritos organizados",
-    text: "Guarda ejercicios y clases en listas con nombre. Encuentra rápido lo que mejor te funciona.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Tu calendario de clases",
-    text: "Visualiza todas tus sesiones: impartidas, programadas y canceladas. Tu historial siempre disponible.",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Asistencia",
-    text: "Registra la asistencia en segundos. Historial completo de cada alumno por clase.",
-  },
-  {
-    icon: Folder,
-    title: "Mi espacio",
-    text: "Tu calendario, tus grupos, tus espacios, tus ejercicios y tus clases creadas. Todo organizado en un solo lugar.",
-  },
+  { icon: Search, id: "f1" },
+  { icon: Layers3, id: "f2" },
+  { icon: Star, id: "f3" },
+  { icon: CalendarDays, id: "f4" },
+  { icon: ClipboardCheck, id: "f5" },
+  { icon: Folder, id: "f6" },
 ];
 
 const academyFeatureCards = [
-  {
-    icon: FileText,
-    title: "Informes de sus clientes",
-    text: "Informes de progreso de cada alumno, listos para entregar a sus familias.",
-  },
-  {
-    icon: Users,
-    title: "Seguimiento de sus monitores",
-    text: "Consulta las clases impartidas y la asistencia de cada monitor de un vistazo.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Comunicación con las familias",
-    text: "Avisos por grupo y mensajes directos, para que las familias estén siempre al día.",
-  },
-  {
-    icon: BarChart3,
-    title: "Estadísticas para toma de decisiones",
-    text: "Datos de clases, asistencia y progreso para decidir con criterio.",
-  },
-  {
-    icon: Building2,
-    title: "Espacio para el club",
-    text: "Monitores, alumnos, grupos y biblioteca compartida en un solo espacio.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Calendario para organizar",
-    text: "Organiza clases, turnos y eventos de la academia en un calendario común.",
-  },
+  { icon: FileText, id: "a1" },
+  { icon: Users, id: "a2" },
+  { icon: MessageSquare, id: "a3" },
+  { icon: BarChart3, id: "a4" },
+  { icon: Building2, id: "a5" },
+  { icon: CalendarDays, id: "a6" },
 ];
 
-const phoneActions: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: Search, label: "Explorar biblioteca" },
-  { icon: Pencil, label: "Crear desde cero" },
-  { icon: Repeat2, label: "Reutilizar clase" },
-  { icon: Star, label: "Mis favoritos" },
+const phoneActions: Array<{ icon: LucideIcon; key: string }> = [
+  { icon: Search, key: "explore" },
+  { icon: Pencil, key: "create" },
+  { icon: Repeat2, key: "reuse" },
+  { icon: Star, key: "favorites" },
 ];
 
 function SectionTitle({
@@ -220,6 +130,7 @@ function PrimaryButton({
 }
 
 function PhoneMock() {
+  const t = useTranslations("landing.phone");
   return (
     <div className="relative mx-auto h-[560px] w-[282px] overflow-hidden rounded-[38px] bg-[#050505] p-4 text-white shadow-[0_45px_100px_rgba(5,5,5,0.22)] ring-1 ring-black/10">
       <div className="flex items-center justify-between px-4 pt-3 text-xs font-bold text-white/85">
@@ -231,19 +142,19 @@ function PhoneMock() {
         </span>
       </div>
       <div className="mt-7 border-b border-white/8 px-4 pb-5">
-        <p className="text-[11px] font-semibold text-white/45">Buenos días,</p>
+        <p className="text-[11px] font-semibold text-white/45">{t("greeting")}</p>
         <p className="mt-1 font-heading text-xl font-bold">Carlos Martínez</p>
       </div>
       <div className="mx-3 mt-4 rounded-2xl border border-[#d6ff38]/30 bg-[#2b3613] p-4">
         <p className="text-[10px] font-bold uppercase text-white/45">
-          Próxima clase
+          {t("nextClass")}
         </p>
-        <p className="mt-3 text-sm font-bold">Grupo Iniciación · 10:00h</p>
+        <p className="mt-3 text-sm font-bold">{t("group")}</p>
         <div className="mt-4 grid grid-cols-3 gap-2">
           {[
-            ["6", "ejercicios"],
-            ["60", "min"],
-            ["8", "alumnos"],
+            ["6", t("exercises")],
+            ["60", t("min")],
+            ["8", t("students")],
           ].map(([value, label]) => (
             <div
               key={label}
@@ -256,25 +167,25 @@ function PhoneMock() {
         </div>
       </div>
       <div className="mx-3 mt-4 grid grid-cols-2 gap-2">
-        {phoneActions.map(({ icon: Icon, label }) => (
+        {phoneActions.map(({ icon: Icon, key }) => (
           <div
-            key={label}
+            key={key}
             className="min-h-[86px] rounded-xl border border-white/8 bg-white/[0.045] p-3"
           >
             <Icon className="size-5 text-[#d6ff38]" />
             <p className="mt-3 text-[10px] font-bold leading-3 text-white/70">
-              {label}
+              {t(key)}
             </p>
           </div>
         ))}
       </div>
       <div className="mx-3 mt-4">
         <p className="text-[10px] font-bold uppercase text-white/35">
-          Sesión de hoy
+          {t("todaySession")}
         </p>
         {[
-          ["Calentamiento dinámico", "10'"],
-          ["Drive cruzado en paralelo", "15'"],
+          [t("warmup"), "10'"],
+          [t("crossDrive"), "15'"],
         ].map(([title, time], index) => (
           <div
             key={title}
@@ -298,6 +209,7 @@ function PhoneMock() {
 }
 
 function HeroSection({ content }: { content: LandingContent }) {
+  const t = useTranslations("landing.hero");
   const hero = splitTitle(content.home_hero_title);
   return (
     <section className="relative min-h-[780px] overflow-hidden border-b border-[#050505]/10 bg-[#f4f4f1] px-5 py-20 lg:py-28">
@@ -352,10 +264,10 @@ function HeroSection({ content }: { content: LandingContent }) {
 
         <div className="relative min-h-[560px]">
           <div className="absolute left-[4%] top-[76%] hidden rounded-2xl bg-[#050505] px-5 py-3 text-sm font-bold text-white shadow-[0_24px_55px_rgba(5,5,5,0.18)] lg:block">
-            ✓ Sesión guardada ✓
+            {t("sessionSaved")}
           </div>
           <div className="absolute right-[2%] top-[20%] hidden rounded-2xl bg-white px-5 py-3 text-sm font-medium text-[#050505] shadow-[0_20px_55px_rgba(5,5,5,0.12)] lg:block">
-            ⚡ Clase lista en 90 seg
+            {t("ready")}
           </div>
           {LANDING_SCREENS.length > 0 ? (
             <AppScreensPhone screens={LANDING_SCREENS} />
@@ -369,6 +281,7 @@ function HeroSection({ content }: { content: LandingContent }) {
 }
 
 function ProblemSection({ content }: { content: LandingContent }) {
+  const t = useTranslations("landing");
   const title = splitTitle(content.home_problem_title);
   return (
     <section className="relative overflow-hidden bg-[#050505] px-5 py-24 text-white lg:py-32">
@@ -378,7 +291,7 @@ function ProblemSection({ content }: { content: LandingContent }) {
       />
       <div className="relative mx-auto max-w-[900px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.28em] text-[#d6ff38]">
-          El problema
+          {t("problemEyebrow")}
         </p>
         <h2 className="mt-7 font-heading text-[clamp(2.5rem,4.3vw,4.1rem)] font-light leading-[0.96]">
           {title.main}
@@ -388,16 +301,16 @@ function ProblemSection({ content }: { content: LandingContent }) {
         </h2>
         <RevealStagger className="mt-14 grid gap-5 md:grid-cols-3">
           {painCards.map((card) => (
-            <RevealItem key={card.quote}>
+            <RevealItem key={card.id}>
               <article className="min-h-[265px] rounded-2xl border border-white/10 bg-white/[0.045] p-7 transition hover:border-white/18">
                 <span className="grid size-12 place-items-center rounded-xl bg-white/8 text-[#d6ff38]">
                   <card.icon className="size-6" />
                 </span>
                 <h3 className="mt-8 font-heading text-xl font-bold italic leading-6">
-                  {card.quote}
+                  {t(`pain.${card.id}.quote`)}
                 </h3>
                 <p className="mt-5 text-sm leading-6 text-white/48">
-                  {card.text}
+                  {t(`pain.${card.id}.text`)}
                 </p>
               </article>
             </RevealItem>
@@ -409,23 +322,24 @@ function ProblemSection({ content }: { content: LandingContent }) {
 }
 
 function HowSection({ content }: { content: LandingContent }) {
+  const t = useTranslations("landing");
   return (
     <section id="como-funciona" className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
-      <SectionTitle eyebrow="Cómo funciona" title={content.home_how_title} />
+      <SectionTitle eyebrow={t("how.eyebrow")} title={content.home_how_title} />
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
-        Cualquier visitante puede explorar gratis la{" "}
+        {t("how.introBefore")}{" "}
         <Link href="/exercises" className="font-semibold text-[#5f7000]">
-          biblioteca de ejercicios
+          {t("how.exercisesLink")}
         </Link>{" "}
-        y la{" "}
+        {t("how.and")}{" "}
         <Link href="/classes" className="font-semibold text-[#5f7000]">
-          biblioteca de clases
+          {t("how.classesLink")}
         </Link>
-        , sin crear cuenta. Regístrate para planificar tus sesiones.
+        {t("how.introAfter")}
       </p>
       <RevealStagger className="mx-auto mt-16 grid max-w-[1100px] gap-10 md:grid-cols-3">
         {steps.map((step, index) => (
-          <RevealItem key={step.title}>
+          <RevealItem key={step}>
             <article className="relative text-center">
               {index < steps.length - 1 && (
                 <div className="absolute left-1/2 top-9 hidden h-px w-full bg-[#d8d8cf] md:block" />
@@ -434,10 +348,10 @@ function HowSection({ content }: { content: LandingContent }) {
                 {index + 1}
               </div>
               <h3 className="mt-8 font-heading text-2xl font-bold text-black">
-                {step.title}
+                {t(`steps.${step}.title`)}
               </h3>
               <p className="mx-auto mt-4 max-w-[320px] text-[15px] leading-7 text-[#66665d]">
-                {step.text}
+                {t(`steps.${step}.text`)}
               </p>
             </article>
           </RevealItem>
@@ -446,20 +360,20 @@ function HowSection({ content }: { content: LandingContent }) {
 
       <Reveal className="mx-auto mt-16 flex max-w-[1100px] flex-col items-center gap-4 text-center">
         <p className="text-sm font-semibold text-[#66665d]">
-          ¿Prefieres leerlo paso a paso?
+          {t("how.stepByStep")}
         </p>
         <div className="flex flex-col gap-3 min-[440px]:flex-row">
           <Link
             href="/ayuda?nivel=rapida"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-[#050505] px-6 text-sm font-bold text-[#050505] transition hover:bg-[#050505] hover:text-white"
           >
-            Ver guía rápida
+            {t("how.quickGuide")}
           </Link>
           <Link
             href="/ayuda?nivel=completa"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-[#050505] px-6 text-sm font-bold text-[#050505] transition hover:bg-[#050505] hover:text-white"
           >
-            Ver guía completa
+            {t("how.fullGuide")}
           </Link>
         </div>
       </Reveal>
@@ -468,10 +382,11 @@ function HowSection({ content }: { content: LandingContent }) {
 }
 
 function PreparationSection({ content }: { content: LandingContent }) {
+  const t = useTranslations("landing");
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
       <SectionTitle
-        eyebrow="El monitor decide"
+        eyebrow={t("prepEyebrow")}
         title={content.home_prep_title}
       />
       <p className="mx-auto mt-7 max-w-[660px] text-center text-lg leading-8 text-[#66665d]">
@@ -480,7 +395,7 @@ function PreparationSection({ content }: { content: LandingContent }) {
       <RevealStagger className="mx-auto mt-16 grid max-w-[1240px] gap-4 md:grid-cols-2 lg:grid-cols-3">
         {preparationCards.map((card, index) => (
           <RevealItem
-            key={card.title}
+            key={card.id}
             className={cn("h-full", index === 2 && "md:col-span-2 lg:col-span-1")}
           >
             <article className="h-full rounded-2xl border border-[#d8d8cf] bg-white p-9 shadow-[0_12px_30px_rgba(5,5,5,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(5,5,5,0.07)] lg:p-8">
@@ -495,18 +410,18 @@ function PreparationSection({ content }: { content: LandingContent }) {
                 </span>
                 <div>
                   <h3 className="font-heading text-2xl font-bold text-black">
-                    {card.title}
+                    {t(`prep.${card.id}.title`)}
                   </h3>
                   <p className="mt-4 text-sm leading-6 text-[#66665d]">
-                    {card.text}
+                    {t(`prep.${card.id}.text`)}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
-                    {card.chips.map((chip) => (
+                    {Array.from({ length: card.chips }, (_, i) => i + 1).map((n) => (
                       <span
-                        key={chip}
+                        key={n}
                         className="rounded-full bg-[#efffba] px-3 py-1 text-xs font-semibold text-[#5f7000]"
                       >
-                        {chip}
+                        {t(`prep.${card.id}.chip${n}`)}
                       </span>
                     ))}
                   </div>
@@ -523,13 +438,16 @@ function PreparationSection({ content }: { content: LandingContent }) {
 function FeaturesSection({
   title,
   cards,
+  group,
 }: {
   title: string;
   cards: typeof featureCards;
+  group: "features" | "academy";
 }) {
+  const t = useTranslations("landing");
   return (
     <section className="bg-[#f4f4f1] px-5 py-20 lg:py-28">
-      <SectionTitle eyebrow="Funcionalidades" title={title} />
+      <SectionTitle eyebrow={t("featuresEyebrow")} title={title} />
       <RevealStagger
         stagger={0.06}
         className="mx-auto mt-16 grid max-w-[1110px] gap-4 md:grid-cols-2 lg:grid-cols-3"
@@ -537,16 +455,16 @@ function FeaturesSection({
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <RevealItem key={card.title}>
+            <RevealItem key={card.id}>
               <article className="min-h-[218px] rounded-2xl border border-[#d8d8cf] bg-white p-7 shadow-[0_12px_30px_rgba(5,5,5,0.04)] transition hover:-translate-y-0.5 hover:border-[#5f7000]/25 hover:shadow-[0_18px_40px_rgba(5,5,5,0.07)]">
                 <span className="grid size-12 place-items-center rounded-xl bg-[#efffba] text-[#5f7000]">
                   <Icon className="size-5" />
                 </span>
                 <h3 className="mt-6 text-lg font-bold text-[#050505]">
-                  {card.title}
+                  {t(`${group}.${card.id}.title`)}
                 </h3>
                 <p className="mt-4 text-sm leading-6 text-[#66665d]">
-                  {card.text}
+                  {t(`${group}.${card.id}.text`)}
                 </p>
               </article>
             </RevealItem>
@@ -592,6 +510,7 @@ function FinalCtaSection({ content }: { content: LandingContent }) {
 }
 
 function Footer({ content }: { content: LandingContent }) {
+  const t = useTranslations("landing.footer");
   const year = new Date().getFullYear();
 
   return (
@@ -612,29 +531,29 @@ function Footer({ content }: { content: LandingContent }) {
 
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
-            <p className="text-sm font-black uppercase text-white">Producto</p>
+            <p className="text-sm font-black uppercase text-white">{t("product")}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/58">
-              <Link href="#como-funciona">Cómo funciona</Link>
-              <Link href="/exercises">Biblioteca de ejercicios</Link>
-              <Link href="/classes">Biblioteca de clases</Link>
+              <Link href="#como-funciona">{t("howItWorks")}</Link>
+              <Link href="/exercises">{t("exerciseLibrary")}</Link>
+              <Link href="/classes">{t("classLibrary")}</Link>
             </div>
           </div>
           <div>
-            <p className="text-sm font-black uppercase text-white">Cuenta</p>
+            <p className="text-sm font-black uppercase text-white">{t("account")}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/58">
-              <Link href="/login">Inicia sesión o regístrate</Link>
+              <Link href="/login">{t("login")}</Link>
             </div>
           </div>
           <div>
-            <p className="text-sm font-black uppercase text-white">Soporte</p>
+            <p className="text-sm font-black uppercase text-white">{t("support")}</p>
             <div className="mt-3 grid gap-2 text-sm text-white/58">
-              <Link href="mailto:hola@tenplanner.app">Contacto</Link>
-              <Link href="#como-funciona">Preguntas frecuentes</Link>
+              <Link href="mailto:hola@tenplanner.app">{t("contact")}</Link>
+              <Link href="#como-funciona">{t("faq")}</Link>
               <a
                 href="https://www.instagram.com/tenplanner/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram de TenPlanner (se abre en una pestaña nueva)"
+                aria-label={t("instagramLabel")}
                 className="inline-flex items-center gap-2 hover:text-white"
               >
                 <svg
@@ -658,15 +577,15 @@ function Footer({ content }: { content: LandingContent }) {
         </div>
       </div>
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs font-semibold text-white/42 sm:flex-row sm:items-center sm:justify-between">
-        <p>Copyright {year} TenPlanner. Todos los derechos reservados.</p>
+        <p>{t("copyright", { year })}</p>
         <nav
-          aria-label="Legal"
+          aria-label={t("legalNav")}
           className="flex flex-wrap gap-x-4 gap-y-1 [&>a]:py-2 [&>a:hover]:text-white"
         >
-          <Link href="/aviso-legal">Aviso legal</Link>
-          <Link href="/terminos">Términos</Link>
-          <Link href="/privacidad">Privacidad</Link>
-          <Link href="/cookies">Cookies</Link>
+          <Link href="/aviso-legal">{t("legalNotice")}</Link>
+          <Link href="/terminos">{t("terms")}</Link>
+          <Link href="/privacidad">{t("privacy")}</Link>
+          <Link href="/cookies">{t("cookies")}</Link>
         </nav>
       </div>
     </footer>
@@ -686,6 +605,7 @@ export function TenPlannerLanding({
   content: LandingContent;
   stats: LandingStats;
 }) {
+  const academyTitle = useTranslations("landing.academy")("title");
   return (
     <div
       className={cn(
@@ -703,10 +623,12 @@ export function TenPlannerLanding({
         <FeaturesSection
           title={content.home_features_title}
           cards={featureCards}
+          group="features"
         />
         <FeaturesSection
-          title={"Todo lo que necesita\nuna academia"}
+          title={academyTitle}
           cards={academyFeatureCards}
+          group="academy"
         />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
         <FinalCtaSection content={content} />

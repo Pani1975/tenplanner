@@ -23,6 +23,7 @@ import {
   AddExercisesToListDialog,
   type ListableExercise,
 } from "@/components/app/add-exercises-to-list-dialog";
+import { useTranslations } from "next-intl";
 
 interface ListedExercise {
   id: string;
@@ -120,6 +121,7 @@ function CollectionCard({
   removingKey: string | null;
   sport?: string | null;
 }) {
+  const tx = useTranslations("ui.s_app_exerciselistssection");
   const [expanded, setExpanded] = useState(autoOpen);
   const articleRef = useRef<HTMLElement>(null);
 
@@ -284,7 +286,7 @@ function CollectionCard({
                   </h3>
                   {list.isDefault && (
                     <span className="font-sans text-[8px] uppercase tracking-[0.18em] text-brand/60 border border-brand/25 rounded px-1.5 py-0.5">
-                      principal
+                      {tx("principal")}
                     </span>
                   )}
                 </div>
@@ -297,11 +299,11 @@ function CollectionCard({
                     accent.text
                   )}
                 >
-                  {list.itemsCount} ejercicio{list.itemsCount !== 1 ? "s" : ""}
+                  {tx("v1EjercicioV2", { v1: list.itemsCount, v2: list.itemsCount !== 1 ? "s" : "" })}
                 </span>
                 {!renaming && (
                   <span className="font-sans text-[10px] text-foreground/30">
-                    {expanded ? "— colapsar" : "— ver colección"}
+                    {expanded ? "— colapsar" : tx("verColeccion")}
                   </span>
                 )}
               </div>
@@ -316,7 +318,7 @@ function CollectionCard({
         >
           <button
             type="button"
-            title="Añadir ejercicios a la colección"
+            title={tx("anadirEjerciciosALa")}
             onClick={() => setAddExercisesOpen(true)}
             className={cn(
               "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors hover:opacity-80",
@@ -326,12 +328,12 @@ function CollectionCard({
             )}
           >
             <Plus className="size-3" />
-            <span className="hidden sm:inline">Ejercicios</span>
+            <span className="hidden sm:inline">{tx("ejercicios")}</span>
           </button>
 
           <Link
             href={sessionHref}
-            title="Crear sesión"
+            title={tx("crearSesion")}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "hidden sm:inline-flex h-8 items-center gap-1.5 rounded-xl px-3 text-[11px] font-semibold transition-colors",
@@ -346,11 +348,11 @@ function CollectionCard({
                 : "border border-foreground/10 text-foreground/25 cursor-default pointer-events-none"
             )}
           >
-            <ClipboardList className="size-3" /> Sesión
+            <ClipboardList className="size-3" />{" "}{tx("sesion")}
           </Link>
 
           <button
-            title="Renombrar"
+            title={tx("renombrar")}
             onClick={() => {
               setRenaming(true);
               setRenameVal(list.name);
@@ -362,7 +364,7 @@ function CollectionCard({
 
           {!list.isDefault && (
             <button
-              title="Eliminar colección"
+              title={tx("eliminarColeccion")}
               onClick={() => onDelete(list.id)}
               disabled={deletingId === list.id}
               className="p-2 rounded-xl text-foreground/25 hover:text-red-400 hover:bg-red-400/8 transition-colors disabled:opacity-40"
@@ -383,7 +385,7 @@ function CollectionCard({
           {list.items.length === 0 ? (
             <div className="px-6 py-8 text-center">
               <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground/30">
-                Colección vacía
+                {tx("coleccionVacia")}
               </p>
               <p className="mt-1 text-[13px] text-foreground/40">
                 Añade ejercicios aquí mismo o guárdalos desde su ficha pulsando{" "}
@@ -399,7 +401,7 @@ function CollectionCard({
                   accent.bg
                 )}
               >
-                <Plus className="size-3.5" /> Añadir ejercicios
+                <Plus className="size-3.5" />{" "}{tx("anadirEjercicios")}
               </button>
             </div>
           ) : (
@@ -461,7 +463,7 @@ function CollectionCard({
                       <button
                         onClick={() => onRemoveItem(list.id, item.id)}
                         disabled={removingKey === removeKey}
-                        title="Quitar de la colección"
+                        title={tx("quitarDeLaColeccion")}
                         className="absolute top-1.5 right-1.5 z-[2] size-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-red-500/80 sm:opacity-0 sm:group-hover/item:opacity-100 transition-all duration-200 disabled:opacity-50"
                       >
                         {removingKey === removeKey ? (
@@ -506,7 +508,7 @@ function CollectionCard({
                               onClick={() => setQuickView(item)}
                               className="text-foreground/50 hover:text-foreground"
                             >
-                              Vista rápida
+                              {tx("vistaRapida")}
                             </button>
                             <Link
                               href={`/exercises/${item.id}?desdeLista=${list.id}`}
@@ -516,7 +518,7 @@ function CollectionCard({
                                 "hover:opacity-70"
                               )}
                             >
-                              Ficha <ArrowRight className="size-3" />
+                              {tx("ficha")}{" "}<ArrowRight className="size-3" />
                             </Link>
                           </div>
                           <div className="flex items-center gap-2">
@@ -531,7 +533,7 @@ function CollectionCard({
                               }
                               className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
                             >
-                              <Plus className="size-3" /> Sesión
+                              <Plus className="size-3" />{" "}{tx("sesion")}
                             </button>
                             <button
                               type="button"
@@ -544,7 +546,7 @@ function CollectionCard({
                               }
                               className="inline-flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[10px] font-semibold transition-colors bg-brand/10 text-brand hover:bg-brand/20"
                             >
-                              <Plus className="size-3" /> Clase
+                              <Plus className="size-3" />{" "}{tx("clase")}
                             </button>
                           </div>
                         </div>
@@ -557,9 +559,7 @@ function CollectionCard({
               {/* Collection footer */}
               <div className="flex items-center justify-between px-5 py-3 border-t border-foreground/8 bg-foreground/[0.01]">
                 <span className="font-sans text-[10px] text-foreground/35">
-                  {list.itemsCount} ejercicio{list.itemsCount !== 1 ? "s" : ""}{" "}
-                  en esta colección
-                </span>
+                  {tx("v1EjercicioV2En", { v1: list.itemsCount, v2: list.itemsCount !== 1 ? "s" : "" })}</span>
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -570,7 +570,7 @@ function CollectionCard({
                       "hover:opacity-70"
                     )}
                   >
-                    Añadir ejercicios <Plus className="size-3" />
+                    {tx("anadirEjercicios")}{" "}<Plus className="size-3" />
                   </button>
                   {list.items.length > 0 && (
                     <button
@@ -582,7 +582,7 @@ function CollectionCard({
                         "hover:opacity-70"
                       )}
                     >
-                      Añadir a sesión <Plus className="size-3" />
+                      {tx("anadirASesion")}{" "}<Plus className="size-3" />
                     </button>
                   )}
                   <Link
@@ -594,7 +594,7 @@ function CollectionCard({
                         : "text-foreground/25 pointer-events-none"
                     )}
                   >
-                    Crear sesión <ArrowRight className="size-3" />
+                    {tx("crearSesion")}{" "}<ArrowRight className="size-3" />
                   </Link>
                 </div>
               </div>
@@ -684,6 +684,7 @@ export function ExerciseListsSection({
   /** Deporte activo (para los niveles del filtro al añadir ejercicios). */
   sport?: string | null;
 } = {}) {
+  const tx = useTranslations("ui.s_app_exerciselistssection");
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -874,19 +875,19 @@ export function ExerciseListsSection({
             </div>
 
             <h3 className="font-heading italic text-2xl text-foreground/70">
-              Tu cuaderno está vacío.
+              {tx("tuCuadernoEstaVacio")}
             </h3>
             <p className="mt-2 text-[14px] text-foreground/40 max-w-xs mx-auto leading-relaxed">
               Crea tu primera colección y guarda ejercicios pulsando{" "}
               <Heart className="inline size-3 fill-current text-red-400/50" />{" "}
-              en cualquier ejercicio.
+              {tx("enCualquierEjercicio")}
             </p>
 
             <button
               onClick={() => setShowCreate(true)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-5 py-2.5 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
             >
-              <Plus className="size-4" /> Nueva colección
+              <Plus className="size-4" />{" "}{tx("nuevaColeccion")}
             </button>
           </div>
         </div>
@@ -901,12 +902,12 @@ export function ExerciseListsSection({
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[0.28em] text-foreground/35 mb-1">
             {inClub
-              ? "Favoritos club · comunes a todo el club"
-              : "Método · Colecciones"}
+              ? tx("favoritosClubComunesA")
+              : tx("metodoColecciones")}
           </p>
           <h2 className="font-heading italic text-[22px] leading-tight text-foreground">
             {lists.length === 1
-              ? "Una colección guardada"
+              ? tx("unaColeccionGuardada")
               : `${lists.length} colecciones · ${totalSaved} ejercicios`}
           </h2>
         </div>
@@ -926,7 +927,7 @@ export function ExerciseListsSection({
               showCreate && "rotate-45"
             )}
           />
-          Nueva colección
+          {tx("nuevaColeccion")}
         </button>
       </div>
 
@@ -934,7 +935,7 @@ export function ExerciseListsSection({
       {showCreate && (
         <div className="rounded-lg border border-[#D6FF38]/30 bg-[#D6FF38]/10 p-4">
           <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand/60 mb-2.5">
-            Nombre de la colección
+            {tx("nombreDeLaColeccion")}
           </p>
           <div className="flex gap-2">
             <input
@@ -949,7 +950,7 @@ export function ExerciseListsSection({
                   setNewListName("");
                 }
               }}
-              placeholder="Ej: Técnica de volea, Calentamiento tipo A…"
+              placeholder={tx("ejTecnicaDeVolea")}
               maxLength={100}
               className="h-10 flex-1 rounded-lg border border-foreground/15 bg-background/70 px-3.5 text-sm text-foreground transition-colors placeholder:text-foreground/30 focus:border-[#D6FF38]/70 focus:outline-none"
             />
@@ -993,9 +994,9 @@ export function ExerciseListsSection({
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title="¿Eliminar esta colección?"
-        description="Se eliminará la colección y todos sus ejercicios guardados. Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
+        title={tx("eliminarEstaColeccion")}
+        description={tx("seEliminaraLaColeccion")}
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (deleteTarget) void deleteList(deleteTarget);

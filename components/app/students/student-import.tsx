@@ -25,6 +25,7 @@ import {
   type ImportRow,
 } from "@/lib/students/import";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Step = "file" | "map" | "preview" | "done";
 
@@ -105,6 +106,7 @@ async function readFile(file: File): Promise<CellValue[][]> {
 }
 
 export function StudentImport() {
+  const tx = useTranslations("ui.s_students_studentimport");
   const [step, setStep] = useState<Step>("file");
   const [fileName, setFileName] = useState("");
   const [sheet, setSheet] = useState<CellValue[][]>([]);
@@ -141,7 +143,7 @@ export function StudentImport() {
       setError(
         err instanceof Error && err.message
           ? err.message
-          : "No se pudo leer el archivo. Guárdalo como .xlsx o .csv y vuelve a probar."
+          : tx("noSePudoLeer")
       );
     } finally {
       setBusy(null);
@@ -173,7 +175,7 @@ export function StudentImport() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok)
-          throw new Error(data.error ?? "No se pudo comprobar el archivo");
+          throw new Error(data.error ?? tx("noSePudoComprobar"));
         duplicates = new Set(
           (data.data.duplicates as number[]).map((i) => valid[i].line)
         );
@@ -206,7 +208,7 @@ export function StudentImport() {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "No se pudo importar");
+      if (!res.ok) throw new Error(data.error ?? tx("noSePudoImportar"));
       setResult(data.data);
       setStep("done");
     } catch (err) {
@@ -259,10 +261,7 @@ export function StudentImport() {
       {step === "file" && (
         <section className="tp-panel space-y-4 p-5 sm:p-6">
           <p className="text-sm text-foreground/80">
-            Sube el listado de alumnos en Excel (.xlsx) o CSV. La primera fila
-            debe tener los nombres de las columnas. Puedes usar tu propio
-            archivo: las columnas se reconocen por su nombre y podrás ajustarlas
-            antes de importar. Nada se guarda hasta que confirmes.
+            {tx("subeElListadoDe")}
           </p>
           <div className="flex flex-wrap gap-3">
             <label
@@ -276,7 +275,7 @@ export function StudentImport() {
               ) : (
                 <Upload className="size-4" />
               )}
-              Elegir archivo
+              {tx("elegirArchivo")}
               <input
                 type="file"
                 accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
@@ -293,14 +292,11 @@ export function StudentImport() {
               className="inline-flex h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-semibold text-foreground hover:bg-muted"
             >
               <Download className="size-4" />
-              Descargar plantilla Excel
+              {tx("descargarPlantillaExcel")}
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Solo se lee la primera hoja del Excel. Máximo {IMPORT_MAX_ROWS}{" "}
-            alumnos por archivo. Los alumnos quedan en el club, como si los
-            hubieras creado tú.
-          </p>
+            {tx("soloSeLeeLa", { v1: IMPORT_MAX_ROWS })}</p>
         </section>
       )}
 
@@ -310,20 +306,18 @@ export function StudentImport() {
             <FileSpreadsheet className="size-4 text-brand" />
             <span className="font-semibold">{fileName}</span>
             <span className="text-muted-foreground">
-              · {sheet.length - 1} filas
-            </span>
+              {tx("v1Filas", { v1: sheet.length - 1 })}</span>
           </div>
           <p className="text-sm text-foreground/80">
-            Comprueba a qué dato de la ficha corresponde cada columna. Las que
-            no quieras importar, déjalas en «No importar».
+            {tx("compruebaAQueDato")}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-[11px] font-black uppercase text-foreground/55">
-                  <th className="py-2 pr-3">Columna del archivo</th>
-                  <th className="py-2 pr-3">Ejemplo</th>
-                  <th className="py-2">Dato de la ficha</th>
+                  <th className="py-2 pr-3">{tx("columnaDelArchivo")}</th>
+                  <th className="py-2 pr-3">{tx("ejemplo")}</th>
+                  <th className="py-2">{tx("datoDeLaFicha")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -349,7 +343,7 @@ export function StudentImport() {
                         }
                         className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm"
                       >
-                        <option value="">No importar</option>
+                        <option value="">{tx("noImportar")}</option>
                         {IMPORT_FIELDS.map((f) => (
                           <option key={f.key} value={f.key}>
                             {f.label}
@@ -364,8 +358,7 @@ export function StudentImport() {
           </div>
           {!nameMapped && (
             <p className="text-xs font-semibold text-red-500">
-              Indica qué columna tiene el nombre del alumno («Nombre» o «Nombre
-              y apellidos»).
+              {tx("indicaQueColumnaTiene")}
             </p>
           )}
           <div className="flex flex-wrap gap-2">
@@ -376,14 +369,14 @@ export function StudentImport() {
               className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-sm font-black text-[#050505] disabled:opacity-50"
             >
               {busy === "check" && <Loader2 className="size-4 animate-spin" />}
-              Revisar alumnos
+              {tx("revisarAlumnos")}
             </button>
             <button
               type="button"
               onClick={reset}
               className="h-11 rounded-full px-4 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Elegir otro archivo
+              {tx("elegirOtroArchivo")}
             </button>
           </div>
         </section>
@@ -418,7 +411,7 @@ export function StudentImport() {
           </dl>
           {check.newGroups.length > 0 && (
             <p className="text-sm text-foreground/80">
-              Se crearán {check.newGroups.length} grupo(s) nuevo(s):{" "}
+              {tx("seCrearan")}{" "}{check.newGroups.length}{" "}{"grupo(s) nuevo(s):"}{" "}
               <span className="font-semibold">
                 {check.newGroups.join(", ")}
               </span>
@@ -430,11 +423,11 @@ export function StudentImport() {
             <table className="w-full min-w-[720px] text-sm">
               <thead className="sticky top-0 bg-card">
                 <tr className="border-b border-border text-left text-[11px] font-black uppercase text-foreground/55">
-                  <th className="px-3 py-2">Fila</th>
-                  <th className="px-3 py-2">Alumno</th>
-                  <th className="px-3 py-2">Nacimiento</th>
-                  <th className="px-3 py-2">Grupo</th>
-                  <th className="px-3 py-2">Estado</th>
+                  <th className="px-3 py-2">{tx("fila")}</th>
+                  <th className="px-3 py-2">{tx("alumno")}</th>
+                  <th className="px-3 py-2">{tx("nacimiento")}</th>
+                  <th className="px-3 py-2">{tx("grupo")}</th>
+                  <th className="px-3 py-2">{tx("estado")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -464,10 +457,10 @@ export function StudentImport() {
                           </span>
                         ) : duplicate ? (
                           <span className="text-amber-600">
-                            Ya existe en el club
+                            {tx("yaExisteEnEl")}
                           </span>
                         ) : (
-                          <span className="text-[#6D7F00]">Se importa</span>
+                          <span className="text-[#6D7F00]">{tx("seImporta")}</span>
                         )}
                         {r.warnings.length > 0 && (
                           <span className="mt-0.5 block text-muted-foreground">
@@ -483,9 +476,7 @@ export function StudentImport() {
           </div>
           {rows.length > PREVIEW_LIMIT && (
             <p className="text-xs text-muted-foreground">
-              Se muestran las primeras {PREVIEW_LIMIT} filas de {rows.length};
-              el resumen de arriba cuenta todas.
-            </p>
+              {tx("seMuestranLasPrimeras", { v1: PREVIEW_LIMIT, v2: rows.length })}</p>
           )}
 
           <div className="flex flex-wrap gap-2">
@@ -500,7 +491,7 @@ export function StudentImport() {
               ) : (
                 <Upload className="size-4" />
               )}
-              Importar {ready.length} alumno{ready.length === 1 ? "" : "s"}
+              {tx("importar")}{" "}{ready.length}{" "}{tx("alumno2")}{ready.length === 1 ? "" : "s"}
             </button>
             <button
               type="button"
@@ -508,7 +499,7 @@ export function StudentImport() {
               disabled={!!busy}
               className="h-11 rounded-full px-4 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Volver a las columnas
+              {tx("volverALasColumnas")}
             </button>
           </div>
         </section>
@@ -518,24 +509,21 @@ export function StudentImport() {
         <section className="tp-panel space-y-3 p-5 sm:p-6">
           <p className="flex items-center gap-2 text-lg font-black text-foreground">
             <CheckCircle2 className="size-5 text-[#6D7F00]" />
-            {result.created} alumno{result.created === 1 ? "" : "s"} importado
+            {result.created}{" "}{tx("alumno2")}{result.created === 1 ? "" : "s"}{" "}{tx("importado")}
             {result.created === 1 ? "" : "s"}
           </p>
           <ul className="space-y-1 text-sm text-foreground/80">
             {result.skipped > 0 && (
               <li>
-                {result.skipped} omitido(s) porque ya existían en el club.
-              </li>
+                {tx("v1OmitidoSPorque", { v1: result.skipped })}</li>
             )}
             {result.groupsCreated > 0 && (
-              <li>{result.groupsCreated} grupo(s) nuevo(s) creado(s).</li>
+              <li>{tx("v1GrupoSNuevo", { v1: result.groupsCreated })}</li>
             )}
             {result.withLocality > result.located && (
               <li className="flex items-start gap-1.5">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                {result.withLocality - result.located} alumno(s) con localidad
-                aún sin situar en el mapa de procedencia. Se sitúan al editar su
-                ficha y volver a guardar la localidad.
+                {tx("unplacedLocalities", { n: result.withLocality - result.located })}
               </li>
             )}
           </ul>
@@ -544,14 +532,14 @@ export function StudentImport() {
               href="/students"
               className="inline-flex h-11 items-center rounded-full bg-[#D6FF38] px-5 text-sm font-black text-[#050505]"
             >
-              Ver alumnos
+              {tx("verAlumnos")}
             </Link>
             <button
               type="button"
               onClick={reset}
               className="h-11 rounded-full border border-border px-4 text-sm font-semibold text-foreground hover:bg-muted"
             >
-              Importar otro archivo
+              {tx("importarOtroArchivo")}
             </button>
           </div>
         </section>

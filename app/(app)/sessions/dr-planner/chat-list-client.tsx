@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 interface ChatItem {
   id: string;
@@ -12,7 +14,7 @@ interface ChatItem {
   updatedAt: Date;
 }
 
-function formatRelative(date: Date): string {
+function formatRelative(date: Date, loc: string = "es-ES"): string {
   const now = new Date();
   const diff = now.getTime() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
@@ -23,13 +25,15 @@ function formatRelative(date: Date): string {
   if (hours < 24) return `Hace ${hours}h`;
   if (days === 1) return "Ayer";
   if (days < 7) return `Hace ${days} días`;
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(loc, {
     day: "numeric",
     month: "short",
   }).format(new Date(date));
 }
 
 export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_drplanner_chatlistclient");
   const router = useRouter();
   const [chats, setChats] = useState(initialChats);
   const [creating, setCreating] = useState(false);
@@ -69,13 +73,13 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
                 href="/sessions"
                 className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-black uppercase text-white/70 transition-colors hover:text-white"
               >
-                ← Sesiones
+                {tx("sesiones")}
               </Link>
               <span className="text-[11px] font-black uppercase text-white/25">
                 /
               </span>
               <p className="rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-                Dr. Planner · IA
+                {tx("drPlannerIa")}
               </p>
             </div>
             <p className="rounded-full border border-white/12 px-3 py-1 text-[11px] font-black tabular-nums text-white/45">
@@ -84,7 +88,7 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
           </div>
           <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end sm:gap-6">
             <h1 className="text-4xl font-black leading-tight text-white md:text-5xl">
-              Conversaciones con Dr. Planner
+              {tx("conversacionesConDrPlanner")}
             </h1>
             {chats.length > 0 && (
               <button
@@ -97,26 +101,24 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
                 ) : (
                   <Plus className="size-3.5" strokeWidth={2} />
                 )}
-                Nueva conversación
+                {tx("nuevaConversacion")}
               </button>
             )}
           </div>
           <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Asistente de diseño de sesiones para deportes de raqueta. Explícale
-            contexto, restricciones y objetivos para preparar la planificación.
+            {tx("asistenteDeDisenoDe")}
           </p>
         </header>
 
         {/* Body */}
         {chats.length === 0 ? (
           <div className="tp-panel border-dashed px-6 py-20 text-center">
-            <p className="tp-kicker mb-4">Archivo vacío</p>
+            <p className="tp-kicker mb-4">{tx("archivoVacio")}</p>
             <h2 className="mb-3 text-3xl font-black text-foreground">
-              Aún no has hablado con Dr. Planner.
+              {tx("aunNoHasHablado")}
             </h2>
             <p className="text-[13px] text-foreground/55 max-w-md mx-auto mb-6">
-              Inicia una conversación para diseñar tu próxima sesión con la
-              ayuda de la IA.
+              {tx("iniciaUnaConversacionPara")}
             </p>
             <button
               onClick={handleNewChat}
@@ -128,7 +130,7 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
               ) : (
                 <Plus className="size-3.5" strokeWidth={2} />
               )}
-              Iniciar conversación
+              {tx("iniciarConversacion")}
             </button>
           </div>
         ) : (
@@ -138,7 +140,7 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
                 01
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Historial · ordenadas por última actividad
+                {tx("historialOrdenadasPorUltima")}
               </p>
               <p className="text-[10px] font-black tabular-nums text-foreground/40">
                 {chats.length}
@@ -163,7 +165,7 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
                           {chat.title}
                         </p>
                         <p className="text-[11px] text-foreground/45 mt-0.5 tabular-nums tracking-wide">
-                          {formatRelative(chat.updatedAt)}
+                          {formatRelative(chat.updatedAt, intlLocale)}
                         </p>
                       </div>
                       <span className="pr-10 text-[11px] font-black text-foreground/40 transition-colors group-hover:text-brand">
@@ -174,7 +176,7 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
                       onClick={(e) => handleDelete(chat.id, e)}
                       disabled={deletingId === chat.id}
                       className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center text-foreground/35 transition-colors hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
-                      aria-label="Eliminar"
+                      aria-label={tx("eliminar")}
                     >
                       {deletingId === chat.id ? (
                         <Loader2 className="size-3.5 animate-spin" />
@@ -191,9 +193,9 @@ export function ChatListClient({ chats: initialChats }: { chats: ChatItem[] }) {
 
         <footer className="grid gap-3 pt-2 text-[11px] text-foreground/45 sm:grid-cols-[1fr_auto] sm:items-end sm:gap-4">
           <p className="max-w-md text-[13px] font-semibold text-foreground/55">
-            &ldquo;La mejor sesión empieza con una buena pregunta.&rdquo;
+            {tx("laMejorSesionEmpieza")}
           </p>
-          <p className="font-black uppercase tabular-nums">/tenplanner · IA</p>
+          <p className="font-black uppercase tabular-nums">{tx("tenplannerIa")}</p>
         </footer>
       </div>
     </div>

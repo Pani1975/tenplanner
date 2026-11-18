@@ -7,6 +7,7 @@ import type {
   TrainingStats,
 } from "@/lib/stats/training-stats";
 import type { StudentHours } from "@/lib/stats/load-training-stats";
+import { useTranslations } from "next-intl";
 
 // Estadística de entrenamiento de un grupo o de un alumno.
 
@@ -137,6 +138,7 @@ export function TrainingStatsPanel({
   /** Solo en el grupo: horas de cada alumno en sus sesiones. */
   studentHours?: StudentHours[];
 }) {
+  const tx = useTranslations("ui.s_app_trainingstatspanel");
   const top = stats.topExercises[0];
   const topType = stats.types[0];
   const topStroke = stats.strokes[0];
@@ -148,7 +150,7 @@ export function TrainingStatsPanel({
         <h2 className="text-lg font-black text-foreground">{title}</h2>
         <p className="text-sm text-muted-foreground">
           {stats.sessionCount === 0
-            ? "Aún no hay sesiones pasadas con las que calcularla."
+            ? tx("aunNoHaySesiones")
             : `A partir de ${stats.sessionCount} sesión${stats.sessionCount !== 1 ? "es" : ""} ya pasada${stats.sessionCount !== 1 ? "s" : ""} (sin las canceladas).`}
         </p>
       </div>
@@ -158,13 +160,13 @@ export function TrainingStatsPanel({
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Tile
               icon={Clock}
-              label="Tiempo jugado"
+              label={tx("tiempoJugado")}
               value={formatHours(stats.totalMinutes)}
               hint={`${stats.sessionCount} sesiones`}
             />
             <Tile
               icon={Trophy}
-              label="Ejercicio más hecho"
+              label={tx("ejercicioMasHecho")}
               value={top?.name ?? "—"}
               hint={
                 top
@@ -174,13 +176,13 @@ export function TrainingStatsPanel({
             />
             <Tile
               icon={Layers}
-              label="Tipo más empleado"
+              label={tx("tipoMasEmpleado")}
               value={topType ? typeLabel(topType.key) : "—"}
               hint={topType ? pct(topType.pct) : undefined}
             />
             <Tile
               icon={Target}
-              label="Golpe más trabajado"
+              label={tx("golpeMasTrabajado")}
               value={
                 topStroke ? (STROKE_LABEL[topStroke.key] ?? topStroke.key) : "—"
               }
@@ -190,7 +192,7 @@ export function TrainingStatsPanel({
 
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="mb-3 text-sm font-bold text-foreground">
-              Tiempo en cada fase
+              {tx("tiempoEnCadaFase")}
             </h3>
             <div className="flex h-3 overflow-hidden rounded-full bg-muted">
               {stats.phases.map((p) =>
@@ -223,19 +225,19 @@ export function TrainingStatsPanel({
 
           <div className="grid gap-3 lg:grid-cols-3">
             <Bars
-              title="Aspectos del juego"
+              title={tx("aspectosDelJuego")}
               rows={stats.aspects}
               label={(k) => ASPECT_LABEL[k as StatAspect] ?? k}
               empty="Los ejercicios no tienen aspectos del juego etiquetados."
             />
             <Bars
-              title="Golpes trabajados"
+              title={tx("golpesTrabajados")}
               rows={stats.strokes}
               label={(k) => STROKE_LABEL[k] ?? k}
               empty="Los ejercicios no tienen golpes etiquetados (los juegos de puntos no cuentan)."
             />
             <Bars
-              title="Tipos de ejercicio"
+              title={tx("tiposDeEjercicio")}
               rows={stats.types}
               label={typeLabel}
               empty="Los ejercicios no tienen tipo etiquetado."
@@ -246,7 +248,7 @@ export function TrainingStatsPanel({
             <div className="rounded-lg border border-border bg-card p-4">
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-foreground">
                 <Dumbbell className="size-4" />
-                Ejercicios más hechos
+                {tx("ejerciciosMasHechos")}
               </h3>
               <ol className="space-y-1.5 text-sm">
                 {stats.topExercises.map((e, i) => (
@@ -271,7 +273,7 @@ export function TrainingStatsPanel({
             <div className="rounded-lg border border-border bg-card p-4">
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-foreground">
                 <Users className="size-4" />
-                Tiempo jugado por alumno
+                {tx("tiempoJugadoPorAlumno")}
               </h3>
               <ul className="space-y-1.5 text-sm">
                 {studentHours.map((s) => (
@@ -287,8 +289,7 @@ export function TrainingStatsPanel({
                 ))}
               </ul>
               <p className="mt-2 text-xs text-muted-foreground">
-                No cuentan las sesiones en las que se pasó lista y el alumno
-                faltó.
+                {tx("noCuentanLasSesiones")}
               </p>
             </div>
           )}

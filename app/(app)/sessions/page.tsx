@@ -46,6 +46,9 @@ import {
   SESSION_SORTS,
   type SessionSort,
 } from "@/lib/nav/session-nav";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 type Filter = "upcoming" | "past" | "all" | "drafts" | "cancelled";
 const PAGE_SIZE = 20;
 
@@ -68,20 +71,20 @@ interface PageProps {
   }>;
 }
 
-function formatDayMonth(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
+function formatDayMonth(date: Date, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, { day: "2-digit", month: "short" })
     .format(date)
     .replace(".", "")
     .toUpperCase();
 }
-function formatWeekday(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", { weekday: "short" })
+function formatWeekday(date: Date, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, { weekday: "short" })
     .format(date)
     .replace(".", "")
     .toUpperCase();
 }
-function formatTime(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatTime(date: Date, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
@@ -99,6 +102,9 @@ function humanDate(date: Date) {
 }
 
 export default async function SessionsPage({ searchParams }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const term = await getTerm();
+  const tx = await getTranslations("ui.s_sessions_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -331,11 +337,11 @@ export default async function SessionsPage({ searchParams }: PageProps) {
   }
 
   const FILTERS: { key: Filter; label: string; n: number }[] = [
-    { key: "all", label: "Todas", n: totalSessions },
-    { key: "upcoming", label: "Próximas", n: upcomingCount },
-    { key: "past", label: "Pasadas", n: pastCount },
-    { key: "cancelled", label: "Canceladas", n: cancelledCount },
-    { key: "drafts", label: "Borradores", n: draftCount },
+    { key: "all", label: tx("todas"), n: totalSessions },
+    { key: "upcoming", label: tx("proximas"), n: upcomingCount },
+    { key: "past", label: tx("pasadas"), n: pastCount },
+    { key: "cancelled", label: tx("canceladas"), n: cancelledCount },
+    { key: "drafts", label: tx("borradores"), n: draftCount },
   ];
   return (
     <div className="relative min-h-full w-full bg-[#F4F4F1] dark:bg-[#050505]">
@@ -350,19 +356,19 @@ export default async function SessionsPage({ searchParams }: PageProps) {
             <div>
               <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/60 dark:bg-[#050505]/70">
                 <CalendarClock className="size-3.5 text-brand" />
-                Plan operativo
+                {tx("planOperativo")}
               </p>
               <h1 className="break-words font-heading text-3xl font-semibold text-foreground md:text-4xl">
                 {mineOnly
                   ? "Mis sesiones"
                   : user
-                    ? personalTitle("Sesiones", await getWorkMode(user.id))
+                    ? personalTitle("Sesiones", await getWorkMode(user.id), await getLocale())
                     : "Sesiones"}
               </h1>
               <p className="mt-1.5 max-w-2xl text-[14px] text-foreground/60">
                 {mineOnly
-                  ? "Las sesiones del club que impartiste, impartes o impartirás."
-                  : "Entrenamientos agendados con fecha, hora, lugar y alumnos."}
+                  ? tx("lasSesionesDelClub")
+                  : tx("entrenamientosAgendadosConFecha")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -372,12 +378,12 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8ef2f]"
                 >
                   <Plus className="size-4" />
-                  Nueva sesión
+                  {tx("nuevaSesion")}
                 </Link>
               ) : (
                 <span className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-muted/30 px-4 text-[13px] text-foreground/45">
                   <Lock className="size-4" />
-                  Bloqueado
+                  {tx("bloqueado")}
                 </span>
               )}
             </div>
@@ -388,7 +394,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
           {lastCreated.length > 0 && (
             <section className="rounded-lg border border-[#050505]/10 bg-white p-3 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
               <h2 className="px-1 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/45">
-                Últimas creadas
+                {tx("ultimasCreadas")}
               </h2>
               <ul className="divide-y divide-foreground/10">
                 {lastCreated.map((s) => (
@@ -401,10 +407,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                         {s.title}
                       </span>
                       <span className="text-foreground/55 tabular-nums">
-                        Clase: {formatDayMonth(new Date(s.scheduledAt))} ·
-                        creada {formatDayMonth(new Date(s.createdAt))}{" "}
-                        {formatTime(new Date(s.createdAt))}
-                        {s.authorName ? ` · ${s.authorName}` : ""}
+                        {tx("claseV1CreadaV2", { v1: formatDayMonth(new Date(s.scheduledAt), intlLocale), v2: formatDayMonth(new Date(s.createdAt), intlLocale), v3: formatTime(new Date(s.createdAt), intlLocale), v4: s.authorName ? ` · ${s.authorName}` : "" })}
                       </span>
                     </Link>
                   </li>
@@ -446,7 +449,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
           {clubMembers.length > 0 && !mineOnly && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
               <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-                Monitor
+                {tx("monitor")}
               </span>
               <Link
                 href={sessionsHref({ monitor: null, page: 1 })}
@@ -457,7 +460,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                     : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                 )}
               >
-                Todos
+                {tx("todos")}
               </Link>
               {clubMembers.map((m) => (
                 <Link
@@ -494,10 +497,9 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                 {searchTerm ? (
                   <div className="flex flex-wrap items-center gap-2 text-[12px] text-foreground/55">
                     <span>
-                      Resultados para{" "}
+                      {tx("resultadosPara")}{" "}
                       <span className="font-medium text-foreground">
-                        &quot;{searchTerm}&quot;
-                      </span>
+                        {tx("v1", { v1: searchTerm })}</span>
                     </span>
                     <Link
                       href={sessionsHref({
@@ -507,7 +509,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                       })}
                       className="rounded-full border border-[#D6FF38]/40 bg-[#D6FF38]/15 px-2.5 py-1 font-semibold text-foreground transition-colors hover:bg-[#D6FF38]/25"
                     >
-                      Limpiar
+                      {tx("limpiar")}
                     </Link>
                   </div>
                 ) : null}
@@ -515,7 +517,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
 
               <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[#050505]/10 bg-white px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.045]">
                 <span className="shrink-0 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/40">
-                  Ordenar por:
+                  {tx("ordenarPor")}
                 </span>
                 {SESSION_SORTS.map((s) => {
                   const isActive = activeSort === s;
@@ -530,7 +532,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                           : "border-foreground/15 text-foreground/55 hover:border-foreground/30 hover:text-foreground"
                       )}
                     >
-                      {SORT_LABELS[s]}
+                      {term(SORT_LABELS[s])}
                     </Link>
                   );
                 })}
@@ -549,17 +551,17 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                     {searchTerm
                       ? "Sin coincidencias"
                       : activeFilter === "upcoming"
-                        ? "No tienes sesiones próximas"
+                        ? tx("noTienesSesionesProximas")
                         : activeFilter === "past"
-                          ? "No tienes sesiones pasadas"
+                          ? tx("noTienesSesionesPasadas")
                           : activeFilter === "cancelled"
-                            ? "No tienes sesiones canceladas"
-                            : "Sin sesiones todavía"}
+                            ? tx("noTienesSesionesCanceladas")
+                            : tx("sinSesionesTodavia")}
                   </p>
                   <p className="text-[13px] text-foreground/55 max-w-sm mx-auto mb-5">
                     {searchTerm
                       ? `No hay sesiones para "${searchTerm}".`
-                      : "Crea una nueva sesión para empezar."}
+                      : tx("creaUnaNuevaSesion")}
                   </p>
                   <Link
                     href={
@@ -575,11 +577,11 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                   >
                     {searchTerm ? (
                       <>
-                        <Search className="size-3.5" /> Limpiar búsqueda
+                        <Search className="size-3.5" />{" "}{tx("limpiarBusqueda")}
                       </>
                     ) : (
                       <>
-                        <Plus className="size-3.5" /> Crear sesión
+                        <Plus className="size-3.5" />{" "}{tx("crearSesion")}
                       </>
                     )}
                   </Link>
@@ -593,16 +595,16 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                       id: session.id,
                       title: session.title,
                       status: session.status,
-                      dayMonth: formatDayMonth(date),
-                      weekdayTime: `${formatWeekday(date)} · ${formatTime(date)}`,
+                      dayMonth: formatDayMonth(date, intlLocale),
+                      weekdayTime: `${formatWeekday(date, intlLocale)} · ${formatTime(date, intlLocale)}`,
                       statusLabel:
                         session.status === "completed"
-                          ? "Completada"
+                          ? term("Completada")
                           : session.status === "cancelled"
-                            ? "Cancelada"
+                            ? term("Cancelada")
                             : isPast
-                              ? "Sin completar"
-                              : "Programada",
+                              ? term("Sin completar")
+                              : term("Programada"),
                       statusColor:
                         session.status === "completed"
                           ? "bg-brand/10 text-brand border-brand/20"
@@ -638,8 +640,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
               {totalFiltered > 0 && totalPages > 1 && (
                 <footer className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#050505]/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.045]">
                   <p className="text-[12px] text-foreground/50 tabular-nums">
-                    {offset + 1}–{offset + sessionRows.length} de{" "}
-                    {totalFiltered}
+                    {tx("v1V2DeV3", { v1: offset + 1, v2: offset + sessionRows.length, v3: totalFiltered })}
                   </p>
                   <div className="flex items-center gap-3">
                     {safePage > 1 ? (
@@ -647,11 +648,11 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                         href={sessionsHref({ page: safePage - 1 })}
                         className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[13px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground"
                       >
-                        <ArrowLeft className="size-3.5" /> Anterior
+                        <ArrowLeft className="size-3.5" />{" "}{tx("anterior")}
                       </Link>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-[13px] text-foreground/25">
-                        <ArrowLeft className="size-3.5" /> Anterior
+                        <ArrowLeft className="size-3.5" />{" "}{tx("anterior")}
                       </span>
                     )}
                     <span className="text-[12px] text-foreground/50 tabular-nums">
@@ -662,11 +663,11 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                         href={sessionsHref({ page: safePage + 1 })}
                         className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[13px] font-semibold text-foreground/70 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground"
                       >
-                        Siguiente <ArrowUpRight className="size-3.5" />
+                        {tx("siguiente")}{" "}<ArrowUpRight className="size-3.5" />
                       </Link>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-[13px] text-foreground/25">
-                        Siguiente <ArrowUpRight className="size-3.5" />
+                        {tx("siguiente")}{" "}<ArrowUpRight className="size-3.5" />
                       </span>
                     )}
                   </div>

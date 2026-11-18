@@ -12,6 +12,7 @@ import {
   workModeRequestBody,
   type WorkModeKind,
 } from "@/lib/work-mode-options";
+import { useTranslations } from "next-intl";
 
 const MODE_ICONS: Record<WorkModeKind, React.ElementType> = {
   admin: Globe2,
@@ -35,6 +36,7 @@ export function WorkModeSwitcher({
   clubAccountClubId?: string | null;
   managementActive?: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_workmodeswitcher");
   const router = useRouter();
   const options = workModeOptions({
     clubs,
@@ -67,7 +69,7 @@ export function WorkModeSwitcher({
       setActiveKey(key);
       goAfterModeChange(router, previous, key);
     } else {
-      setError("No se pudo cambiar el modo de trabajo. Inténtalo de nuevo.");
+      setError(tx("noSePudoCambiar"));
     }
     setSaving(null);
   }
@@ -78,12 +80,12 @@ export function WorkModeSwitcher({
     <div className="tp-panel space-y-3 p-5 sm:p-6">
       <div>
         <h2 className="text-sm font-black uppercase text-foreground">
-          Modo de trabajo
+          {tx("modoDeTrabajo")}
         </h2>
         <p className="mt-1 text-xs text-foreground/55 leading-relaxed">
           {clubAccountClubId
-            ? "En el modo del club trabajas con tus monitores: lo que crees lo ven todos. El Modo gestión es solo tuyo: informes, estadísticas y monitores del club."
-            : "Decide si lo que crees a partir de ahora (sesiones, alumnos, clases, grupos, eventos) es tuyo en particular o del club — se comparte con el resto de monitores del club mientras estés en ese modo. Puedes cambiarlo cuando quieras; lo ya creado no cambia de dueño."}
+            ? tx("enElModoDel")
+            : tx("decideSiLoQue")}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -107,7 +109,7 @@ export function WorkModeSwitcher({
               ) : (
                 <Icon className="size-4" />
               )}
-              Modo {option.name}
+              {tx("modo")}{" "}{option.name}
             </button>
           );
         })}
@@ -115,20 +117,20 @@ export function WorkModeSwitcher({
       {error && <p className="text-xs text-destructive">{error}</p>}
       {active?.kind === "admin" && (
         <p className="text-xs text-foreground/50">
-          Estás en <strong>Modo administrador</strong>: los ejercicios y clases
+          {tx("estasEn")}{" "}<strong>{tx("modoAdministrador")}</strong>: los ejercicios y clases
           que crees van a la Biblioteca pública, y los cambios en Objetivos
           cambian el catálogo que ven todos los clubes y monitores.
         </p>
       )}
       {active?.kind === "management" && (
         <p className="text-xs text-foreground/50">
-          Estás en <strong>Modo gestión</strong>: solo consulta. Para crear
+          {tx("estasEn")}{" "}<strong>{tx("modoGestion")}</strong>: solo consulta. Para crear
           ejercicios, clases o sesiones del club, cambia al modo del club.
         </p>
       )}
       {active?.kind === "club" && (
         <p className="text-xs text-foreground/50">
-          Ahora mismo trabajas en <strong>Modo {active.name}</strong>: lo que
+          {tx("ahoraMismoTrabajasEn")}{" "}<strong>{tx("modoV1", { v1: active.name })}</strong>: lo que
           crees es visible para el resto de monitores de ese club.
         </p>
       )}

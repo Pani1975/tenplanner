@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function AcceptFamilyInvite({
   token,
@@ -13,6 +14,7 @@ export function AcceptFamilyInvite({
   token: string;
   clubName: string;
 }) {
+  const tx = useTranslations("ui.s_token_acceptfamilyinvite");
   const router = useRouter();
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +22,7 @@ export function AcceptFamilyInvite({
 
   async function accept() {
     if (!consent) {
-      setError("Marca la casilla para continuar.");
+      setError(tx("marcaLaCasillaPara"));
       return;
     }
     setSubmitting(true);
@@ -33,7 +35,7 @@ export function AcceptFamilyInvite({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "No se pudo activar el acceso.");
+        setError(body?.error ?? tx("noSePudoActivar"));
         return;
       }
       router.push("/mensajes");
@@ -53,11 +55,11 @@ export function AcceptFamilyInvite({
           className="mt-1 size-4 shrink-0 accent-[var(--brand)]"
         />
         <span>
-          Acepto que {clubName} me envíe mensajes a través de Ten Planner y que
+          {tx("aceptoQue")}{" "}{clubName} me envíe mensajes a través de Ten Planner y que
           mis datos de contacto se usen para ello. Puedo pedir la baja al club
           en cualquier momento. Más información en la{" "}
           <Link href="/privacidad" className="font-semibold underline">
-            política de privacidad
+            {tx("politicaDePrivacidad")}
           </Link>
           .
         </span>
@@ -69,7 +71,7 @@ export function AcceptFamilyInvite({
         className="h-11 w-full rounded-full font-black"
       >
         {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-        Activar mi acceso
+        {tx("activarMiAcceso")}
       </Button>
       {error && (
         <p role="alert" className="text-xs text-destructive">

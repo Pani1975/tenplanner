@@ -6,6 +6,7 @@ import { Copy, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { spaceLabels } from "@/lib/space-labels";
+import { useTranslations } from "next-intl";
 
 export type CopyTarget = "active" | "particular";
 
@@ -42,6 +43,7 @@ export function CopyToSpaceButton({
   inClub?: boolean;
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_copytospacebutton");
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -63,12 +65,12 @@ export function CopyToSpaceButton({
         error?: string;
       };
       if (!res.ok || !json.data?.id) {
-        toast.error(json.error ?? "No se pudo copiar. Inténtalo de nuevo.");
+        toast.error(json.error ?? tx("noSePudoCopiar"));
         return;
       }
       const what = kind === "exercise" ? "Ejercicio copiado" : "Clase copiada";
       const where =
-        target === "particular" ? "a tu espacio particular" : `a ${activeDest}`;
+        target === "particular" ? tx("aTuEspacioParticular") : `a ${activeDest}`;
       toast.success(`${what} ${where}`);
       if (target === "active") {
         router.push(
@@ -96,7 +98,7 @@ export function CopyToSpaceButton({
         error?: string;
       };
       if (!res.ok || !json.data?.id) {
-        toast.error(json.error ?? "No se pudo enviar. Inténtalo de nuevo.");
+        toast.error(json.error ?? tx("noSePudoEnviar"));
         return;
       }
       toast.success(
@@ -132,7 +134,7 @@ export function CopyToSpaceButton({
             <Copy className="size-3.5" />
           )}
           {target === "particular"
-            ? "Copiar a mi espacio particular"
+            ? tx("copiarAMiEspacio")
             : `Copiar a ${activeDest}`}
         </button>
       ))}
@@ -142,7 +144,7 @@ export function CopyToSpaceButton({
           type="button"
           onClick={() => sendToClub(club)}
           disabled={busy !== null}
-          title="Se envía una copia al club; el original sigue en tu espacio"
+          title={tx("seEnviaUnaCopia")}
           className={cn(
             "inline-flex items-center justify-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
             base,
@@ -154,7 +156,7 @@ export function CopyToSpaceButton({
           ) : (
             <Send className="size-3.5" />
           )}
-          Enviar a {club.name}
+          {tx("enviarA")}{" "}{club.name}
         </button>
       ))}
     </>

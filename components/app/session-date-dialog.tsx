@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { retitleForDate, titleForCopy } from "@/lib/sessions/retitle";
+import { useTranslations } from "next-intl";
 
 export interface DialogSession {
   id: string;
@@ -53,6 +54,7 @@ export function SessionDateDialog({
   onOpenChange: (open: boolean) => void;
   onDone: (result: DialogResult) => void;
 }) {
+  const tx = useTranslations("ui.s_app_sessiondatedialog");
   const original = new Date(session.scheduledAt);
   const initial = new Date(original);
   if (mode === "duplicate") initial.setDate(initial.getDate() + 7);
@@ -105,7 +107,7 @@ export function SessionDateDialog({
               }),
             });
       if (!res.ok) {
-        setError("No se pudo guardar. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const json = (await res.json()) as { data: { id: string } };
@@ -119,7 +121,7 @@ export function SessionDateDialog({
         scheduledAt,
       });
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -144,8 +146,8 @@ export function SessionDateDialog({
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
               {mode === "move"
-                ? "Nueva fecha y hora"
-                : "Fecha y hora de la copia"}
+                ? tx("nuevaFechaYHora")
+                : tx("fechaYHoraDe")}
             </label>
             <input
               id="session-date-input"
@@ -162,7 +164,7 @@ export function SessionDateDialog({
                 htmlFor="session-copy-title"
                 className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Nombre de la copia
+                {tx("nombreDeLaCopia")}
               </label>
               <input
                 id="session-copy-title"
@@ -175,15 +177,14 @@ export function SessionDateDialog({
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm focus:border-[#D6FF38] focus:outline-none"
               />
               <p className="text-xs text-muted-foreground">
-                Se copia el plan completo y los alumnos. No se copian las notas
-                ni la asistencia de la sesión original.
+                {tx("seCopiaElPlan")}
               </p>
             </div>
           )}
 
           {movedTitle && (
             <p className="text-xs text-muted-foreground">
-              El nombre pasará a <strong>{movedTitle}</strong>.
+              {tx("elNombrePasaraA")}{" "}<strong>{movedTitle}</strong>.
             </p>
           )}
 
@@ -198,7 +199,7 @@ export function SessionDateDialog({
                 href={`/sessions/new?from=${session.id}`}
                 className="font-semibold text-foreground underline underline-offset-2"
               >
-                Editar antes de guardar
+                {tx("editarAntesDeGuardar")}
               </Link>
             </p>
           )}
@@ -209,7 +210,7 @@ export function SessionDateDialog({
               onClick={() => onOpenChange(false)}
               className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"

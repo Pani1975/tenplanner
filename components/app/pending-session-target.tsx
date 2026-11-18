@@ -12,6 +12,7 @@ import {
   targetToParams,
   type SessionTarget,
 } from "@/lib/session-target";
+import { useTranslations } from "next-intl";
 
 /** Destino pendiente de la sesión que se está preparando (o null). */
 function subscribe(onChange: () => void) {
@@ -29,6 +30,7 @@ function usePendingTarget(): SessionTarget | null {
  * o las sesiones pasadas cuando ya se eligió para quién y cuándo.
  */
 export function PendingTargetBanner({ className }: { className?: string }) {
+  const tx = useTranslations("ui.s_app_pendingsessiontarget");
   const target = usePendingTarget();
   if (!target) return null;
   return (
@@ -40,10 +42,10 @@ export function PendingTargetBanner({ className }: { className?: string }) {
     >
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60">
-          Preparando una sesión
+          {tx("preparandoUnaSesion")}
         </p>
         <p className="text-sm font-semibold text-foreground">
-          {target.label ?? "Sesión sin destino"}
+          {target.label ?? tx("sesionSinDestino")}
         </p>
       </div>
       <button
@@ -52,7 +54,7 @@ export function PendingTargetBanner({ className }: { className?: string }) {
         className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-background px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted"
       >
         <X className="size-3.5" />
-        Cancelar
+        {tx("cancelar")}
       </button>
     </div>
   );
@@ -79,6 +81,7 @@ export function AddToPendingSessionButton({
   className,
   compact = false,
 }: AddToPendingSessionButtonProps) {
+  const tx = useTranslations("ui.s_app_pendingsessiontarget");
   const router = useRouter();
   const target = usePendingTarget();
   if (!target) return null;
@@ -92,7 +95,7 @@ export function AddToPendingSessionButton({
     router.push(`/sessions/new?${qs.toString()}`);
   }
 
-  const label = classId ? "Añadir la clase a la sesión" : "Reutilizar en la sesión";
+  const label = classId ? tx("anadirLaClaseA") : tx("reutilizarEnLaSesion");
   return (
     <button
       type="button"
@@ -104,7 +107,7 @@ export function AddToPendingSessionButton({
       )}
     >
       <PlusCircle className="size-4" />
-      {compact ? "Añadir a la sesión" : label}
+      {compact ? tx("anadirALaSesion") : label}
     </button>
   );
 }

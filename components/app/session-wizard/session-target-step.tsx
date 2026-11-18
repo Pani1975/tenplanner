@@ -17,6 +17,7 @@ import {
 import { defaultScheduledAt } from "./defaults";
 import { StepStudents } from "./step-students";
 import type { WizardState } from "./types";
+import { useTranslations } from "next-intl";
 
 type Who = Pick<
   WizardState,
@@ -35,6 +36,7 @@ interface SessionTargetStepProps {
  * elige cómo montarla, y el nombre sale solo (AAMMDD_Grupo o AAMMDD_SG).
  */
 export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
+  const tx = useTranslations("ui.s_sessionwizard_sessiontargetstep");
   const router = useRouter();
   const [who, setWho] = useState<Who>({
     studentIds: initial?.studentIds ?? [],
@@ -83,10 +85,9 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 pt-6">
       <section className={card}>
-        <h2 className={cn(label, "mb-1")}>1. ¿Para quién es la sesión?</h2>
+        <h2 className={cn(label, "mb-1")}>{tx("1ParaQuienEs")}</h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Un grupo, o una clase suelta para uno o varios alumnos. Si todavía no
-          está dado de alta, usa «Nuevo alumno».
+          {tx("unGrupoOUna")}
         </p>
         <StepStudents
           state={who as WizardState}
@@ -96,7 +97,7 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
       </section>
 
       <section className={card}>
-        <h2 className={cn(label, "mb-3")}>2. ¿Cuándo?</h2>
+        <h2 className={cn(label, "mb-3")}>{tx("2Cuando")}</h2>
         <DateTimePicker
           value={at}
           onChange={(v) => {
@@ -107,12 +108,12 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
       </section>
 
       <section className={card}>
-        <h2 className={cn(label, "mb-3")}>3. ¿Una pista o dos?</h2>
+        <h2 className={cn(label, "mb-3")}>{tx("3UnaPistaO")}</h2>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
-              { value: 1, title: "Una pista", Icon: Square },
-              { value: 2, title: "Dos pistas", Icon: Columns2 },
+              { value: 1, title: tx("unaPista"), Icon: Square },
+              { value: 2, title: tx("dosPistas"), Icon: Columns2 },
             ] as const
           ).map(({ value, title, Icon }) => (
             <button
@@ -140,13 +141,13 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
             )}
           >
             <label className="flex flex-col gap-1 text-xs font-semibold text-foreground/70">
-              {courts === 2 ? "Lugar de la pista 1" : "Lugar"} (opcional)
+              {courts === 2 ? tx("courtPlace1") : tx("place")}{" "}{tx("opcional")}
               <select
                 value={placeId}
                 onChange={(e) => setPlaceId(e.target.value)}
                 className={select}
               >
-                <option value="">Sin lugar asignado</option>
+                <option value="">{tx("sinLugarAsignado")}</option>
                 {places.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -156,13 +157,13 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
             </label>
             {courts === 2 && (
               <label className="flex flex-col gap-1 text-xs font-semibold text-foreground/70">
-                Lugar de la pista 2 (opcional)
+                {tx("courtPlace2Optional")}
                 <select
                   value={placeId2}
                   onChange={(e) => setPlaceId2(e.target.value)}
                   className={select}
                 >
-                  <option value="">Sin lugar asignado</option>
+                  <option value="">{tx("sinLugarAsignado")}</option>
                   {places.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -180,7 +181,7 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
         onClick={next}
         className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full bg-[#D6FF38] px-6 text-sm font-bold text-[#050505] hover:bg-[#c8ef2f]"
       >
-        Continuar
+        {tx("continuar")}
         <ArrowRight className="size-4" />
       </button>
     </div>

@@ -20,6 +20,7 @@ import {
   type CoachProfileData,
   type ExperienceEntry,
 } from "@/lib/coach-profile";
+import { useTranslations } from "next-intl";
 
 type ExperienceRow = {
   startYear: string;
@@ -59,9 +60,12 @@ function emptyRow(): ExperienceRow {
   return { startYear: "", endYear: "", current: false, company: "", role: "" };
 }
 
-const OPTIONAL = (
-  <span className="font-normal text-foreground/50"> (opcional)</span>
-);
+function Optional() {
+  const tx = useTranslations("ui.s_app_coachprofileform");
+  return (
+    <span className="font-normal text-foreground/50"> {tx("optionalLower")}</span>
+  );
+}
 
 /**
  * Formulario de la ficha de monitor. Lo usa el gestor (crear y editar) y el
@@ -88,6 +92,7 @@ export function CoachProfileForm({
   ) => Promise<CoachProfileSubmitResult>;
   onCancel?: () => void;
 }) {
+  const tx = useTranslations("ui.s_app_coachprofileform");
   const [fullName, setFullName] = useState(initial?.fullName ?? "");
   const [email, setEmail] = useState(initial?.email ?? "");
   const [phone, setPhone] = useState(initial?.phone ?? "");
@@ -135,7 +140,7 @@ export function CoachProfileForm({
     });
     if (Object.keys(rowErrors).length > 0) {
       setFieldErrors(rowErrors);
-      setError("Revisa la experiencia como monitor.");
+      setError(tx("revisaLaExperienciaComo"));
       return;
     }
 
@@ -162,12 +167,12 @@ export function CoachProfileForm({
             .map((issue) => [issue.path.join("."), issue.message])
         )
       );
-      setError("Revisa los campos marcados.");
+      setError(tx("revisaLosCamposMarcados"));
       return;
     }
     if (consentLabel && !consent) {
       setFieldErrors({ consent: "Debes aceptar para enviar la ficha." });
-      setError("Falta aceptar el tratamiento de tus datos.");
+      setError(tx("faltaAceptarElTratamiento"));
       return;
     }
 
@@ -189,7 +194,7 @@ export function CoachProfileForm({
       {/* Datos de contacto (obligatorios) */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="cp-name">Nombre y apellidos</Label>
+          <Label htmlFor="cp-name">{tx("nombreYApellidos")}</Label>
           <Input
             id="cp-name"
             value={fullName}
@@ -200,7 +205,7 @@ export function CoachProfileForm({
           {err("fullName")}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cp-email">Email</Label>
+          <Label htmlFor="cp-email">{tx("email")}</Label>
           <Input
             id="cp-email"
             type="email"
@@ -213,14 +218,13 @@ export function CoachProfileForm({
           />
           {lockEmail && (
             <p className="text-xs text-foreground/50">
-              Es el correo al que se envió el enlace. Si no es correcto, avisa
-              al club.
+              {tx("esElCorreoAl")}
             </p>
           )}
           {err("email")}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cp-phone">Teléfono</Label>
+          <Label htmlFor="cp-phone">{tx("telefono")}</Label>
           <Input
             id="cp-phone"
             type="tel"
@@ -236,24 +240,24 @@ export function CoachProfileForm({
       {/* Formación */}
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label htmlFor="cp-academic">Formación académica{OPTIONAL}</Label>
+          <Label htmlFor="cp-academic">{tx.rich("formacionAcademicaV1", { opt: () => <Optional /> })}</Label>
           <Textarea
             id="cp-academic"
             value={academic}
             onChange={(e) => setAcademic(e.target.value)}
-            placeholder="Estudios, titulaciones..."
+            placeholder={tx("estudiosTitulaciones")}
             rows={3}
             aria-invalid={!!fieldErrors.academicTraining}
           />
           {err("academicTraining")}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cp-tennis">Formación en tenis{OPTIONAL}</Label>
+          <Label htmlFor="cp-tennis">{tx.rich("formacionEnTenisV1", { opt: () => <Optional /> })}</Label>
           <Textarea
             id="cp-tennis"
             value={tennis}
             onChange={(e) => setTennis(e.target.value)}
-            placeholder="Cursos de monitor, titulaciones federativas..."
+            placeholder={tx("cursosDeMonitorTitulaciones")}
             rows={3}
             aria-invalid={!!fieldErrors.tennisTraining}
           />
@@ -265,7 +269,7 @@ export function CoachProfileForm({
       <fieldset className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <legend className="text-sm font-medium text-foreground">
-            Disponibilidad horaria{OPTIONAL}
+            {tx.rich("disponibilidadHorariaV1", { opt: () => <Optional /> })}
           </legend>
           <button
             type="button"
@@ -308,7 +312,7 @@ export function CoachProfileForm({
       <div className="space-y-4">
         <div className="max-w-xs space-y-2">
           <Label htmlFor="cp-started">
-            Año en el que empezaste a dar clases{OPTIONAL}
+            {tx.rich("anoEnElQue", { opt: () => <Optional /> })}
           </Label>
           <Input
             id="cp-started"
@@ -323,7 +327,7 @@ export function CoachProfileForm({
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-foreground">
-            Experiencia como monitor{OPTIONAL}
+            {tx.rich("experienciaComoMonitorV1", { opt: () => <Optional /> })}
           </p>
           {experience.map((row, i) => (
             <div
@@ -332,7 +336,7 @@ export function CoachProfileForm({
             >
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor={`cp-exp-${i}-start`}>Año de comienzo</Label>
+                  <Label htmlFor={`cp-exp-${i}-start`}>{tx("anoDeComienzo")}</Label>
                   <Input
                     id={`cp-exp-${i}-start`}
                     inputMode="numeric"
@@ -346,7 +350,7 @@ export function CoachProfileForm({
                   {err(`experience.${i}.startYear`)}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor={`cp-exp-${i}-end`}>Año de finalización</Label>
+                  <Label htmlFor={`cp-exp-${i}-end`}>{tx("anoDeFinalizacion")}</Label>
                   <Input
                     id={`cp-exp-${i}-end`}
                     inputMode="numeric"
@@ -368,13 +372,13 @@ export function CoachProfileForm({
                       }
                       className="size-4 accent-[#1a6db5]"
                     />
-                    Hasta la actualidad
+                    {tx("hastaLaActualidad")}
                   </label>
                   {err(`experience.${i}.endYear`)}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor={`cp-exp-${i}-company`}>
-                    Empresa{OPTIONAL}
+                    {tx.rich("empresaV1", { opt: () => <Optional /> })}
                   </Label>
                   <Input
                     id={`cp-exp-${i}-company`}
@@ -383,7 +387,7 @@ export function CoachProfileForm({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor={`cp-exp-${i}-role`}>Rol{OPTIONAL}</Label>
+                  <Label htmlFor={`cp-exp-${i}-role`}>{tx.rich("rolV1", { opt: () => <Optional /> })}</Label>
                   <Input
                     id={`cp-exp-${i}-role`}
                     value={row.role}
@@ -399,7 +403,7 @@ export function CoachProfileForm({
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/60 transition-colors hover:text-destructive"
               >
                 <Trash2 className="size-3.5" />
-                Quitar esta experiencia
+                {tx("quitarEstaExperiencia")}
               </button>
             </div>
           ))}
@@ -410,7 +414,7 @@ export function CoachProfileForm({
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted"
             >
               <Plus className="size-4" />
-              Añadir experiencia
+              {tx("anadirExperiencia")}
             </button>
           )}
         </div>
@@ -453,7 +457,7 @@ export function CoachProfileForm({
             disabled={saving}
             className="h-11 rounded-full border border-border px-5 text-sm font-bold text-foreground hover:bg-muted"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         )}
       </div>

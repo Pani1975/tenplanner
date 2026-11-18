@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
 import { spaceLabels } from "@/lib/space-labels";
+import { useTranslations } from "next-intl";
 
 interface PublicList {
   id: string;
@@ -35,6 +36,7 @@ export function PublicClassListsSection({
   /** Trabajando como un club: la copia va a "Listas club". */
   inClub?: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_publicclasslistssection");
   const listsLabel = spaceLabels(inClub).lists;
   const [lists, setLists] = useState<PublicList[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -62,12 +64,12 @@ export function PublicClassListsSection({
         method: "POST",
       });
       if (!res.ok) {
-        toast.error("No se pudo copiar la lista. Inténtalo de nuevo.");
+        toast.error(tx("noSePudoCopiar"));
         return;
       }
       toast.success(`"${list.name}" copiada a ${listsLabel}`, {
         action: {
-          label: "Ver",
+          label: tx("ver"),
           onClick: () => {
             window.location.href = "/classes?tab=favorites";
           },
@@ -83,7 +85,7 @@ export function PublicClassListsSection({
   return (
     <section className="space-y-2">
       <p className="flex items-center gap-1.5 font-sans text-[10px] uppercase tracking-[0.24em] text-foreground/45">
-        <ListChecks className="size-3.5" /> Listas de la biblioteca
+        <ListChecks className="size-3.5" />{" "}{tx("listasDeLaBiblioteca")}
       </p>
       <div className="grid gap-2 sm:grid-cols-2">
         {lists.map((list) => {
@@ -107,8 +109,7 @@ export function PublicClassListsSection({
                       {list.name}
                     </span>
                     <span className="text-[11px] tabular-nums text-foreground/50">
-                      {list.items.length} clase
-                      {list.items.length !== 1 ? "s" : ""}
+                      {tx("v1ClaseV2", { v1: list.items.length, v2: list.items.length !== 1 ? "s" : "" })}
                     </span>
                   </span>
                   <ChevronDown
@@ -131,7 +132,7 @@ export function PublicClassListsSection({
                     ) : (
                       <Copy className="size-3.5" />
                     )}
-                    Copiar
+                    {tx("copiar")}
                   </button>
                 )}
               </div>

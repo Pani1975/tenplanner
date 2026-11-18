@@ -31,7 +31,8 @@ import {
 } from "lucide-react";
 import { TimeGreeting } from "@/components/app/dashboard/time-greeting";
 import { Skeleton } from "@/components/ui/skeleton";
-import { greetingForHour } from "@/lib/time-greeting";
+import { greetingKeyForHour } from "@/lib/time-greeting";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
@@ -39,26 +40,26 @@ import { isFamilyOnlyUser } from "@/lib/family";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { HoyTocaCard } from "@/components/app/dashboard/hoy-toca-card";
 
-function formatDayMonth(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", { day: "2-digit", month: "short" })
+function formatDayMonth(date: Date, loc: string) {
+  return new Intl.DateTimeFormat(loc, { day: "2-digit", month: "short" })
     .format(date)
     .replace(".", "")
     .toUpperCase();
 }
 
-function formatTime(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatTime(date: Date, loc: string) {
+  return new Intl.DateTimeFormat(loc, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
 }
 
-function formatWeekday(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(date);
+function formatWeekday(date: Date, loc: string) {
+  return new Intl.DateTimeFormat(loc, { weekday: "long" }).format(date);
 }
 
-function formatLongDate(date: Date) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatLongDate(date: Date, loc: string) {
+  return new Intl.DateTimeFormat(loc, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -147,6 +148,10 @@ async function DashboardBody({
   userId: string;
   sessionCreationEnabled: boolean;
 }) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_dashboard_page");
+  const t = await getTranslations("dashboard");
+  const tNav = await getTranslations("nav");
   const now = new Date();
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - now.getDay());
@@ -269,23 +274,23 @@ async function DashboardBody({
   // Insight: 3 KPIs personalizados (PMV)
   const insightStats = [
     {
-      label: "Ejercicio más usado",
+      label: t("topExercise"),
       value: topExercise?.name ?? "—",
-      unit: topExercise ? `${topExercise.uses}×` : "sin datos",
+      unit: topExercise ? `${topExercise.uses}×` : t("noData"),
       icon: Sparkles,
       isText: true,
     },
     {
-      label: "Tiempo en pista",
+      label: t("courtTime"),
       value: lastWeekMin,
-      unit: "min · semana pasada",
+      unit: t("minLastWeek"),
       icon: Clock,
       isText: false,
     },
     {
-      label: "Mis alumnos",
+      label: t("myStudents"),
       value: studentTotal,
-      unit: studentTotal === 1 ? "alumno" : "alumnos",
+      unit: studentTotal === 1 ? t("student") : t("students"),
       icon: Users,
       isText: false,
     },
@@ -293,27 +298,27 @@ async function DashboardBody({
 
   const stats = [
     {
-      label: "Esta semana",
+      label: t("thisWeek"),
       value: thisWeekCount,
-      unit: "sesiones",
+      unit: t("sessionsUnit"),
       icon: CalendarClock,
     },
     {
-      label: "Biblioteca",
+      label: tNav("library"),
       value: exerciseCount[0]?.count ?? 0,
-      unit: "ejercicios",
+      unit: t("exercisesUnit"),
       icon: BookOpen,
     },
     {
-      label: "Tiempo en pista",
+      label: t("courtTime"),
       value: totalHours,
-      unit: "horas",
+      unit: t("hours"),
       icon: Clock,
     },
     {
-      label: "Total sesiones",
+      label: t("totalSessions"),
       value: totalSessions,
-      unit: "registradas",
+      unit: t("registered"),
       icon: History,
     },
   ];
@@ -323,8 +328,8 @@ async function DashboardBody({
       ? [
           {
             href: "/sessions/new",
-            label: "Nueva sesión",
-            desc: "Agendar entrenamiento",
+            label: tNav("newSession"),
+            desc: t("scheduleTraining"),
             icon: Plus,
             accent: true,
           },
@@ -332,26 +337,26 @@ async function DashboardBody({
       : []),
     {
       href: "/exercises/new",
-      label: "Nuevo ejercicio",
-      desc: "Añadir a tu biblioteca",
+      label: tNav("newExercise"),
+      desc: t("addToLibrary"),
       icon: Dumbbell,
     },
     {
       href: "/exercises?tab=favorites",
-      label: activeClubId ? "Favoritos club" : "Ejercicios favoritos",
-      desc: activeClubId ? "Ejercicios marcados" : "Tus marcados",
+      label: activeClubId ? tNav("clubFavorites") : t("favExercises"),
+      desc: activeClubId ? t("markedExercises") : t("yourMarked"),
       icon: Heart,
     },
     {
       href: "/classes?tab=favorites",
-      label: activeClubId ? "Listas club" : "Clases favoritas",
-      desc: "Plantillas listas",
+      label: activeClubId ? tNav("clubLists") : t("favClasses"),
+      desc: t("readyTemplates"),
       icon: GraduationCap,
     },
     {
       href: "/calendar",
-      label: "Calendario",
-      desc: "Ver agenda",
+      label: tNav("calendar"),
+      desc: t("viewAgenda"),
       icon: CalendarClock,
     },
   ];
@@ -363,7 +368,7 @@ async function DashboardBody({
         aria-labelledby="insight-heading"
         className="flex flex-col gap-4"
       >
-        <SectionTitle id="insight-heading" title="Resumen" />
+        <SectionTitle id="insight-heading" title={t("summary")} />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {insightStats.map(({ label, value, unit, icon: Icon, isText }) => (
             <div
@@ -400,7 +405,7 @@ async function DashboardBody({
 
       {/* Estadísticas */}
       <section aria-labelledby="stats-heading" className="flex flex-col gap-4">
-        <SectionTitle id="stats-heading" title="Estadísticas" />
+        <SectionTitle id="stats-heading" title={t("statistics")} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {stats.map(({ label, value, unit, icon: Icon }) => (
             <div
@@ -427,12 +432,12 @@ async function DashboardBody({
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)]">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <SectionTitle title="Próximas sesiones" />
+            <SectionTitle title={t("upcomingSessions")} />
             <Link
               href="/sessions?filter=upcoming"
               className="inline-flex items-center gap-1 rounded-full border border-foreground/10 bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground/65 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground"
             >
-              Ver todas
+              {tNav("viewAllF")}
               <ArrowUpRight className="size-3" />
             </Link>
           </div>
@@ -448,10 +453,10 @@ async function DashboardBody({
                 </span>
                 <div>
                   <p className="text-[15px] font-medium text-foreground">
-                    No tienes sesiones próximas
+                    {t("noUpcoming")}
                   </p>
                   <p className="mx-auto mt-1 max-w-sm text-[13px] text-foreground/55">
-                    Crea una sesión para empezar a planificar.
+                    {t("noUpcomingHint")}
                   </p>
                 </div>
                 <Link
@@ -459,7 +464,7 @@ async function DashboardBody({
                   className="mt-1 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-4 py-2 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8ef2f]"
                 >
                   <Plus className="size-3.5" />
-                  Crear sesión
+                  {t("createSession")}
                 </Link>
               </div>
             ) : (
@@ -474,10 +479,11 @@ async function DashboardBody({
                       >
                         <div className="w-16 shrink-0 border-r border-border pr-3">
                           <p className="font-heading text-xl leading-none text-foreground tabular-nums">
-                            {formatDayMonth(date)}
+                            {formatDayMonth(date, intlLocale)}
                           </p>
                           <p className="mt-1 text-[11px] uppercase text-foreground/50 tabular-nums">
-                            {formatWeekday(date).slice(0, 3)} {formatTime(date)}
+                            {formatWeekday(date, intlLocale).slice(0, 3)}{" "}
+                            {formatTime(date, intlLocale)}
                           </p>
                         </div>
                         <div className="min-w-0 flex-1">
@@ -487,7 +493,7 @@ async function DashboardBody({
                           <p className="mt-1 flex items-center gap-3 text-[12px] text-foreground/55">
                             <span className="inline-flex items-center gap-1">
                               <Clock className="size-3" />
-                              {session.durationMinutes} min
+                              {session.durationMinutes}{" "}{tx("min")}
                             </span>
                             {session.location && (
                               <span className="inline-flex items-center gap-1 truncate">
@@ -508,7 +514,7 @@ async function DashboardBody({
         </div>
 
         <aside className="flex flex-col gap-4">
-          <SectionTitle title="Accesos rápidos" />
+          <SectionTitle title={t("quickAccess")} />
           <div className="divide-y divide-border overflow-hidden rounded-lg border border-[#050505]/10 bg-white shadow-[0_18px_50px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
             {actions.map(({ href, label, desc, icon: Icon, accent }) => (
               <Link
@@ -550,6 +556,7 @@ async function DashboardBody({
 }
 
 export default async function DashboardPage() {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const supabase = await createClient();
   const {
     data: { session },
@@ -572,6 +579,7 @@ export default async function DashboardPage() {
   if (workMode.kind === "club" && workMode.management)
     redirect("/gestion/panel");
 
+  const t = await getTranslations("dashboard");
   const displayName =
     user.user_metadata?.full_name?.split(" ")[0] ||
     user.email?.split("@")[0] ||
@@ -593,17 +601,17 @@ export default async function DashboardPage() {
           <div className="relative flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="mb-2 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[12px] font-semibold text-[#050505]">
-                {formatLongDate(now)}
+                {formatLongDate(now, intlLocale)}
               </p>
               {workMode.kind === "club" ? (
                 <h1 className="font-heading text-3xl font-semibold text-white sm:text-4xl">
-                  Espacio de{" "}
+                  {t("spaceOf")}{" "}
                   <span className="text-[#D6FF38]">{workMode.clubName}</span>
                 </h1>
               ) : (
                 <TimeGreeting
                   name={displayName}
-                  initialGreeting={greetingForHour(now.getHours())}
+                  initialGreeting={t(`greeting.${greetingKeyForHour(now.getHours())}`)}
                 />
               )}
             </div>
@@ -613,12 +621,12 @@ export default async function DashboardPage() {
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8ef2f]"
               >
                 <Plus className="size-4" />
-                Nueva sesión
+                {t("newSession")}
               </Link>
             ) : (
               <span className="inline-flex h-10 items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 text-[13px] text-white/55">
                 <Lock className="size-4" />
-                Sesiones bloqueadas
+                {t("sessionsLocked")}
               </span>
             )}
           </div>

@@ -9,9 +9,11 @@ import {
   removeSessionDraft,
   type SessionDraft,
 } from "@/lib/drafts";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
-function formatUpdatedAt(value: string) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatUpdatedAt(value: string, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
@@ -22,6 +24,8 @@ interface Props {
 }
 
 export function SessionDraftsPanel({ showEmptyState = false }: Props) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_sessiondraftspanel");
   const [drafts, setDrafts] = useState<SessionDraft[]>([]);
   const [loaded, setLoaded] = useState(false);
   const refreshRef = useRef<() => void>(null!);
@@ -67,17 +71,17 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
         </div>
         <div>
           <p className="text-base font-semibold text-foreground/40">
-            Sin borradores
+            {tx("sinBorradores")}
           </p>
           <p className="text-sm text-foreground/30 mt-1">
-            Las sesiones que guardes como borrador aparecerán aquí.
+            {tx("lasSesionesQueGuardes")}
           </p>
         </div>
         <Link
           href="/sessions/new"
           className="inline-flex items-center gap-2 rounded-lg bg-brand text-brand-foreground px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors mt-1"
         >
-          Crear sesión
+          {tx("crearSesion")}
         </Link>
       </div>
     );
@@ -87,7 +91,7 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/40">
-          Borradores · {drafts.length.toString().padStart(2, "0")}
+          {tx("borradoresV1", { v1: drafts.length.toString().padStart(2, "0") })}
         </p>
       </div>
       <div className="space-y-2">
@@ -101,11 +105,11 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
             </span>
             <div className="flex-1 min-w-0 space-y-0.5">
               <p className="text-[14px] font-heading text-foreground truncate">
-                {draft.title || "Sesión sin título"}
+                {draft.title || tx("sesionSinTitulo")}
               </p>
               <p className="flex items-center gap-1.5 text-[11px] text-foreground/45">
                 <Clock3 className="size-3" />
-                {formatUpdatedAt(draft.updatedAt)}
+                {formatUpdatedAt(draft.updatedAt, intlLocale)}
               </p>
               <SessionInfoSummary
                 compact
@@ -124,7 +128,7 @@ export function SessionDraftsPanel({ showEmptyState = false }: Props) {
                 className="inline-flex items-center gap-1 rounded-lg bg-brand text-brand-foreground px-2.5 py-1.5 text-[12px] font-medium hover:bg-brand/90 transition-colors"
               >
                 <FilePenLine className="size-3" />
-                Continuar
+                {tx("continuar")}
               </Link>
               <button
                 type="button"

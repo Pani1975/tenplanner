@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function AcceptInviteButton({
   token,
@@ -12,6 +13,7 @@ export function AcceptInviteButton({
   token: string;
   clubName: string;
 }) {
+  const tx = useTranslations("ui.s_token_acceptinvitebutton");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function AcceptInviteButton({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "No se pudo aceptar la invitación.");
+        setError(body?.error ?? tx("noSePudoAceptar"));
         return;
       }
       router.push("/club");
@@ -46,7 +48,7 @@ export function AcceptInviteButton({
         className="h-11 w-full rounded-full font-black"
       >
         {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-        Aceptar invitación de {clubName}
+        {tx("aceptarInvitacionDe")}{" "}{clubName}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

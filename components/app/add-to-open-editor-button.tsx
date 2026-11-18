@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requestExercisePick, usePickParams } from "@/lib/exercise-pick-bridge";
+import { useTranslations } from "next-intl";
 
 /**
  * Se muestra solo cuando la ficha se abrió desde una sesión o clase que se
@@ -11,6 +12,7 @@ import { requestExercisePick, usePickParams } from "@/lib/exercise-pick-bridge";
  * directamente a ese editor, sin salir de la ficha.
  */
 export function AddToOpenEditorButton({ exerciseId }: { exerciseId: string }) {
+  const tx = useTranslations("ui.s_app_addtoopeneditorbutton");
   const pick = usePickParams();
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
     "idle"
@@ -55,8 +57,8 @@ export function AddToOpenEditorButton({ exerciseId }: { exerciseId: string }) {
       >
         <ArrowLeft className="size-4" />
         {kind === "clase"
-          ? "Seguir editando la clase"
-          : "Seguir editando la sesión"}
+          ? tx("seguirEditandoLaClase")
+          : tx("seguirEditandoLaSesion")}
       </button>
       <button
         type="button"

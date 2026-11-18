@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { AlertTriangle, Sparkles, BarChart3, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type InsightItem = {
   tipo: "alerta" | "sugerencia" | "stat";
@@ -40,11 +41,12 @@ export function InsightsPanel({
   part: { state: string; output?: unknown };
   onSend: (text: string) => void;
 }) {
+  const tx = useTranslations("ui.s_drplanner_insightspanel");
   if (part.state !== "output-available") {
     return (
       <div className="border-l-2 border-brand/30 bg-foreground/[0.02] px-4 py-6 space-y-2">
         <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55">
-          Analizando tu academia…
+          {tx("analizandoTuAcademia")}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {[0, 1, 2, 3].map((i) => (

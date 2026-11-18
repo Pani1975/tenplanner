@@ -32,6 +32,8 @@ import { ballFromLevels } from "@/lib/objectives-taxonomy";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { OtherDatePicker } from "./other-date-picker";
 import { BeforeProposalForm } from "./before-proposal-form";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 interface PageProps {
   searchParams: Promise<{
@@ -51,7 +53,7 @@ const CARD =
 const ROW =
   "flex min-h-11 w-full items-center gap-3 rounded-lg border border-[#050505]/10 bg-white px-4 py-3 text-left transition-colors hover:border-[#D6FF38]/70 hover:bg-[#D6FF38]/10 dark:border-white/10 dark:bg-white/[0.045]";
 
-const WHEN = new Intl.DateTimeFormat("es-ES", {
+const WHEN = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -119,6 +121,8 @@ function freeOccurrences(
  * la acepta, sustituye los ejercicios de esa sesión o crea una nueva.
  */
 export default async function MontarSessionPage({ searchParams }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_montar_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -129,8 +133,8 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
   if (!(await getBooleanSetting("feature.session_creation_enabled"))) {
     return (
       <FeatureLocked
-        title="Crear sesiones está bloqueado"
-        description="Un administrador ha desactivado temporalmente la creación manual de sesiones."
+        title={tx("crearSesionesEstaBloqueado")}
+        description={tx("unAdministradorHaDesactivado")}
         href="/sessions"
         cta="Volver a sesiones"
       />
@@ -185,7 +189,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
     if (adHocRows.length === 0) {
       body = (
         <p className="text-sm text-muted-foreground">
-          No se encontraron esos alumnos.
+          {tx("noSeEncontraronEsos")}
         </p>
       );
     } else {
@@ -207,16 +211,13 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
             <h2 className="mt-1 font-heading text-xl text-foreground">
               {adHocRows.map((r) => r.name).join(", ")}{" "}
               <span className="text-muted-foreground">
-                · {WHEN.format(adHocAt)}
+                · {WHEN(intlLocale).format(adHocAt)}
               </span>
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {ANTES.level(ctx.levelLabel)} · Clase suelta, sin histórico de
-              grupo
-            </p>
+              {tx("v1ClaseSueltaSin", { v1: ANTES.level(ctx.levelLabel) })}</p>
             <p className="mt-2 text-sm text-foreground">
-              Para proponerte la clase, Ten Planner necesita que indiques los
-              objetivos de la sesión.
+              {tx("paraProponerteLaClase")}
             </p>
             <div className="mt-5">
               <BeforeProposalForm
@@ -326,7 +327,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
             <h2 className="mt-1 font-heading text-xl text-foreground">
               {selected.name}{" "}
               <span className="text-muted-foreground">
-                · {WHEN.format(target.at)}
+                · {WHEN(intlLocale).format(target.at)}
               </span>
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -426,7 +427,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                   <CalendarCheck className="size-4 shrink-0 text-brand" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-foreground first-letter:uppercase">
-                      {WHEN.format(s.scheduledAt)}
+                      {WHEN(intlLocale).format(s.scheduledAt)}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
                       {s.title} · {MONTAR.itemCount(counts.get(s.id) ?? 0)}
@@ -453,7 +454,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
               >
                 <CalendarClock className="size-4 shrink-0 text-brand" />
                 <span className="min-w-0 flex-1 text-sm font-bold text-foreground first-letter:uppercase">
-                  {WHEN.format(d)}
+                  {WHEN(intlLocale).format(d)}
                 </span>
                 <ChevronRight className="size-4 shrink-0 text-foreground/30" />
               </Link>
@@ -523,7 +524,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground first-letter:uppercase">
                   <CalendarClock className="size-3.5" />
-                  {at ? WHEN.format(at) : MONTAR.noSchedule}
+                  {at ? WHEN(intlLocale).format(at) : MONTAR.noSchedule}
                 </p>
               </Link>
             );
@@ -544,7 +545,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
           <div className="relative flex items-center gap-4">
             <Link
               href="/sessions/new"
-              aria-label="Volver a nueva sesión"
+              aria-label={tx("volverANuevaSesion")}
               className="flex size-10 shrink-0 items-center justify-center rounded-full border border-foreground/15 bg-[#F4F4F1] text-foreground/60 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
             >
               <ArrowLeft className="size-4" />
@@ -552,7 +553,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
             <div className="min-w-0">
               <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/60 dark:bg-[#050505]/70">
                 <Sparkles className="size-3.5 text-brand" />
-                Nueva sesión
+                {tx("nuevaSesion")}
               </p>
               <h1 className="font-heading text-2xl leading-tight tracking-tight text-foreground md:text-3xl">
                 {MONTAR.title}

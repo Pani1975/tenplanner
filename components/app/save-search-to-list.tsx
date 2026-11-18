@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type SearchListKind = "exercise" | "class";
 
@@ -109,6 +110,7 @@ export function SaveSearchToListDialog({
   /** Resultados que se verán (solo informativo). */
   total: number;
 }) {
+  const tx = useTranslations("ui.s_app_savesearchtolist");
   const router = useRouter();
   const copy = COPY[kind];
   const [lists, setLists] = useState<ListOption[]>([]);
@@ -191,7 +193,7 @@ export function SaveSearchToListDialog({
       setBusyId(null);
       await saveTo(json.data.id);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
       setBusyId(null);
     }
   }
@@ -200,12 +202,9 @@ export function SaveSearchToListDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Guardar búsqueda en {copy.containerThe}</DialogTitle>
+          <DialogTitle>{tx("guardarBusquedaEnV1", { v1: copy.containerThe })}</DialogTitle>
           <DialogDescription>
-            Se añadirán los {total} {total === 1 ? copy.noun : copy.nouns} que
-            salen ahora con estos filtros. Es una copia de este momento: lo que
-            crees después no entra solo.
-          </DialogDescription>
+            {tx("seAnadiranLosV1", { v1: total, v2: total === 1 ? copy.noun : copy.nouns })}</DialogDescription>
         </DialogHeader>
 
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
@@ -280,7 +279,7 @@ export function SaveSearchToListDialog({
                 {busyId === "new" ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : null}
-                Crear y guardar
+                {tx("crearYGuardar")}
               </button>
             </div>
           ) : (
@@ -290,7 +289,7 @@ export function SaveSearchToListDialog({
               className="flex w-full items-center gap-2 rounded-xl border border-dashed border-foreground/20 px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
             >
               <Plus className="size-4" />
-              Nueva {copy.container}
+              {tx("nueva")}{" "}{copy.container}
             </button>
           )}
         </div>
@@ -311,6 +310,7 @@ export function SaveSearchToListButton({
   total: number;
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_savesearchtolist");
   const [open, setOpen] = useState(false);
   const copy = COPY[kind];
   if (total <= 0) return null;
@@ -326,7 +326,7 @@ export function SaveSearchToListButton({
         )}
       >
         <BookmarkPlus className="size-3.5" strokeWidth={1.8} />
-        Guardar en {copy.container}
+        {tx("guardarEn")}{" "}{copy.container}
       </button>
       <SaveSearchToListDialog
         open={open}

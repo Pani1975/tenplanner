@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from "next-intl";
 
 export interface CalendarEventData {
   id: string;
@@ -51,6 +52,7 @@ export function EventDialog({
   defaultDate?: Date;
   onSaved: (event: CalendarEventData) => void;
 }) {
+  const tx = useTranslations("ui.s_app_eventdialog");
   const base = defaultDate ?? new Date();
   const initialStart = event ? new Date(event.startAt) : base;
   const initialEnd = event
@@ -92,14 +94,14 @@ export function EventDialog({
         }
       );
       if (!res.ok) {
-        setError("No se pudo guardar el evento. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const json = (await res.json()) as { data: CalendarEventData };
       onOpenChange(false);
       onSaved(json.data);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -111,7 +113,7 @@ export function EventDialog({
         <DialogHeader>
           <DialogTitle>{event ? "Editar evento" : "Nuevo evento"}</DialogTitle>
           <DialogDescription>
-            Los eventos se muestran en azul, diferenciados de las sesiones.
+            {tx("losEventosSeMuestran")}
           </DialogDescription>
         </DialogHeader>
 
@@ -121,14 +123,14 @@ export function EventDialog({
               htmlFor="event-title"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Título
+              {tx("titulo")}
             </label>
             <input
               id="event-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={255}
-              placeholder="Ej: Reunión con familias"
+              placeholder={tx("ejReunionConFamilias")}
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm focus:border-[#2563eb] focus:outline-none"
             />
           </div>
@@ -139,7 +141,7 @@ export function EventDialog({
                 htmlFor="event-start"
                 className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Fecha de inicio
+                {tx("fechaDeInicio")}
               </label>
               <input
                 id="event-start"
@@ -154,7 +156,7 @@ export function EventDialog({
                 htmlFor="event-end"
                 className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Fecha de finalización
+                {tx("fechaDeFinalizacion")}
               </label>
               <input
                 id="event-end"
@@ -168,7 +170,7 @@ export function EventDialog({
 
           {end < start && !isNaN(end.getTime()) && !isNaN(start.getTime()) && (
             <p className="text-xs text-destructive">
-              La fecha de finalización debe ser posterior a la de inicio.
+              {tx("laFechaDeFinalizacion")}
             </p>
           )}
 
@@ -177,7 +179,7 @@ export function EventDialog({
               htmlFor="event-description"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Descripción
+              {tx("descripcion")}
             </label>
             <textarea
               id="event-description"
@@ -185,7 +187,7 @@ export function EventDialog({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               maxLength={4000}
-              placeholder="Detalles del evento (opcional)"
+              placeholder={tx("detallesDelEventoOpcional")}
               className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-[#2563eb] focus:outline-none"
             />
           </div>
@@ -200,7 +202,7 @@ export function EventDialog({
               onClick={() => onOpenChange(false)}
               className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"

@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { minutesLabel } from "@/lib/bookings/availability";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 export type BookingPlace = {
   id: string;
@@ -33,13 +35,13 @@ export type UpcomingBooking = {
 };
 
 const HALF_HOURS = Array.from({ length: 49 }, (_, i) => i * 30);
-const DATE_FMT = new Intl.DateTimeFormat("es-ES", {
+const DATE_FMT = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   day: "numeric",
   month: "short",
   timeZone: "Atlantic/Canary",
 });
-const TIME_FMT = new Intl.DateTimeFormat("es-ES", {
+const TIME_FMT = (loc: string) => new Intl.DateTimeFormat(loc, {
   hour: "2-digit",
   minute: "2-digit",
   timeZone: "Atlantic/Canary",
@@ -61,6 +63,8 @@ export function BookingsPanel({
   /** Dirección de la web (p. ej. https://www.tenplanner.com). */
   origin: string;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_places_bookingspanel");
   const router = useRouter();
   const [places, setPlaces] = useState(initialPlaces);
   const [path, setPath] = useState(initialPath);
@@ -83,7 +87,7 @@ export function BookingsPanel({
     }).catch(() => null);
     if (!res?.ok) {
       setPlaces(prev);
-      setError("No se pudo guardar. Revisa el horario (mínimo una hora).");
+      setError(tx("noSePudoGuardar"));
     }
     setSaving(null);
   }
@@ -94,7 +98,7 @@ export function BookingsPanel({
       method: "POST",
     }).catch(() => null);
     if (!res?.ok) {
-      setError("No se pudo crear el enlace.");
+      setError(tx("noSePudoCrear"));
       return;
     }
     const json = (await res.json()) as { data: { path: string } };
@@ -119,7 +123,7 @@ export function BookingsPanel({
     }).catch(() => null);
     setCancelling(null);
     if (res?.ok) router.refresh();
-    else setError("No se pudo cancelar la reserva.");
+    else setError(tx("noSePudoCancelar"));
   }
 
   const anyEnabled = places.some((p) => p.bookingEnabled);
@@ -132,11 +136,10 @@ export function BookingsPanel({
         </div>
         <div>
           <h2 className="font-semibold text-foreground">
-            Reserva pública de pistas
+            {tx("reservaPublicaDePistas")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            Cualquiera con el enlace puede reservar una pista libre poniendo su
-            nombre y apellidos. Las horas con sesiones salen como ocupadas.
+            {tx("cualquieraConElEnlace")}
           </p>
         </div>
       </div>
@@ -168,7 +171,7 @@ export function BookingsPanel({
               className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
             >
               <ExternalLink className="size-3.5" />
-              Abrir
+              {tx("abrir")}
             </a>
           </div>
         ) : (
@@ -178,12 +181,12 @@ export function BookingsPanel({
             className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-xs font-black text-brand-foreground"
           >
             <Link2 className="size-3.5" />
-            Crear enlace para reservar
+            {tx("crearEnlaceParaReservar")}
           </button>
         )}
         {path && !anyEnabled && (
           <p className="mt-2 text-[11px] text-amber-600">
-            Activa al menos una pista para que se pueda reservar.
+            {tx("activaAlMenosUna")}
           </p>
         )}
       </div>
@@ -191,7 +194,7 @@ export function BookingsPanel({
       {/* Pistas */}
       {places.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          Da de alta tus pistas abajo para poder abrirlas a reservas.
+          {tx("daDeAltaTus")}
         </p>
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border">
@@ -269,18 +272,18 @@ export function BookingsPanel({
       <div>
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-            Próximas reservas
+            {tx("proximasReservas")}
           </h3>
           <a
             href="/reservas-pistas"
             className="text-xs font-semibold text-foreground underline-offset-2 hover:underline"
           >
-            Ver ocupación por día
+            {tx("verOcupacionPorDia")}
           </a>
         </div>
         {bookings.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Todavía no hay reservas.
+            {tx("todaviaNoHayReservas")}
           </p>
         ) : (
           <ul className="space-y-1.5">
@@ -298,14 +301,14 @@ export function BookingsPanel({
                     <p className="truncate font-semibold text-foreground">
                       {b.kind === "club" ? (
                         <span className="mr-1.5 rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-violet-700 dark:text-violet-300">
-                          Club
+                          {tx("club")}
                         </span>
                       ) : null}
                       {b.fullName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {b.placeName} · {DATE_FMT.format(start)} ·{" "}
-                      {TIME_FMT.format(start)}–{TIME_FMT.format(end)}
+                      {b.placeName} · {DATE_FMT(intlLocale).format(start)} ·{" "}
+                      {TIME_FMT(intlLocale).format(start)}–{TIME_FMT(intlLocale).format(end)}
                     </p>
                   </div>
                   <button
@@ -319,7 +322,7 @@ export function BookingsPanel({
                     ) : (
                       <X className="size-3" />
                     )}
-                    Cancelar
+                    {tx("cancelar")}
                   </button>
                 </li>
               );

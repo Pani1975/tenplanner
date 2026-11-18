@@ -31,6 +31,8 @@ import {
   PlayerSwitcher,
 } from "@/components/family/family-header";
 import { LocalDateTime } from "@/components/family/local-time";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 const DAY = 24 * 60 * 60 * 1000;
 const PAST_DAYS = 90;
@@ -61,23 +63,24 @@ function Field({ label, value }: { label: string; value: string | null }) {
 }
 
 function AttendanceBadge({ attended }: { attended: boolean | null }) {
+  const tx = useTranslations("ui.s_jugador_page");
   if (attended === true)
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-black text-emerald-700 dark:text-emerald-300">
         <CircleCheck className="size-3.5" />
-        Asistió
+        {tx("asistio")}
       </span>
     );
   if (attended === false)
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-[#e11d48]/15 px-2.5 py-1 text-[11px] font-black text-[#be123c] dark:text-[#fda4af]">
         <CircleX className="size-3.5" />
-        No asistió
+        {tx("noAsistio")}
       </span>
     );
   return (
     <span className="rounded-full bg-foreground/[0.06] px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
-      Sin anotar
+      {tx("sinAnotar")}
     </span>
   );
 }
@@ -87,6 +90,7 @@ export default async function FamilyPlayerPage({
 }: {
   searchParams: Promise<{ alumno?: string }>;
 }) {
+  const tx = await getTranslations("ui.s_jugador_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -154,7 +158,7 @@ export default async function FamilyPlayerPage({
           icon={UserRound}
           kicker="Panel de familias"
           title={player?.name ?? "Jugador"}
-          description="Datos del jugador, asistencia y las clases a las que ha ido y a las que irá, con el objetivo de cada una."
+          description={tx("datosDelJugadorAsistencia")}
         />
         {!player || !calendar ? (
           <NoPlayers />
@@ -168,21 +172,21 @@ export default async function FamilyPlayerPage({
 
             <section className="tp-panel space-y-4 p-5">
               <h2 className="text-lg font-black text-foreground">
-                Datos personales
+                {tx("datosPersonales")}
               </h2>
               <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <Field label="Nombre" value={player.name} />
+                <Field label={tx("nombre")} value={player.name} />
                 <Field
-                  label="Fecha de nacimiento"
+                  label={tx("fechaDeNacimiento")}
                   value={
                     player.birthDate
                       ? `${formatBirthDate(player.birthDate)}${age !== null ? ` (${age} años)` : ""}`
                       : null
                   }
                 />
-                <Field label="Nivel" value={player.playerLevel} />
+                <Field label={tx("nivel")} value={player.playerLevel} />
                 <Field
-                  label="Mano dominante"
+                  label={tx("manoDominante")}
                   value={
                     player.dominantHand === "left"
                       ? "Zurda"
@@ -191,9 +195,9 @@ export default async function FamilyPlayerPage({
                         : null
                   }
                 />
-                <Field label="Club" value={player.clubName} />
+                <Field label={tx("club")} value={player.clubName} />
                 <Field
-                  label="Grupo"
+                  label={tx("grupo")}
                   value={
                     player.groups.length > 0
                       ? player.groups.map((g) => g.name).join(", ")
@@ -202,7 +206,7 @@ export default async function FamilyPlayerPage({
                 />
               </dl>
               <p className="text-xs leading-5 text-muted-foreground">
-                Si algún dato no es correcto, díselo al club o a su monitor.
+                {tx("siAlgunDatoNo")}
               </p>
             </section>
 
@@ -210,7 +214,7 @@ export default async function FamilyPlayerPage({
               <section className="tp-panel p-5">
                 <h2 className="flex items-center gap-2 text-lg font-black text-foreground">
                   <Video className="size-5 text-brand" />
-                  Vídeos
+                  {tx("videos")}
                 </h2>
                 <StudentVideosPanel
                   studentId={player.studentId}
@@ -229,11 +233,11 @@ export default async function FamilyPlayerPage({
             <section className="tp-panel space-y-4 p-5">
               <h2 className="flex items-center gap-2 text-lg font-black text-foreground">
                 <CalendarCheck className="size-5 text-brand" />
-                Asistencia · últimos {PAST_DAYS} días
+                {tx("asistenciaUltimos")}{" "}{PAST_DAYS}{" "}{tx("dias")}
               </h2>
               {summary.rate === null ? (
                 <p className="text-sm text-muted-foreground">
-                  Todavía no hay asistencia anotada en este periodo.
+                  {tx("todaviaNoHayAsistencia")}
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -242,7 +246,7 @@ export default async function FamilyPlayerPage({
                       {summary.rate}%
                     </p>
                     <p className="text-xs font-bold text-muted-foreground">
-                      Asistencia
+                      {tx("asistencia")}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-foreground/[0.04] p-4">
@@ -250,7 +254,7 @@ export default async function FamilyPlayerPage({
                       {summary.present}
                     </p>
                     <p className="text-xs font-bold text-muted-foreground">
-                      Clases a las que fue
+                      {tx("clasesALasQue")}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-foreground/[0.04] p-4">
@@ -258,7 +262,7 @@ export default async function FamilyPlayerPage({
                       {summary.absent}
                     </p>
                     <p className="text-xs font-bold text-muted-foreground">
-                      Faltas
+                      {tx("faltas")}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-foreground/[0.04] p-4">
@@ -266,7 +270,7 @@ export default async function FamilyPlayerPage({
                       {summary.unrecorded}
                     </p>
                     <p className="text-xs font-bold text-muted-foreground">
-                      Sin anotar
+                      {tx("sinAnotar")}
                     </p>
                   </div>
                 </div>
@@ -275,11 +279,11 @@ export default async function FamilyPlayerPage({
 
             <section className="space-y-3">
               <h2 className="text-lg font-black text-foreground">
-                Próximas clases
+                {tx("proximasClases")}
               </h2>
               {upcoming.length === 0 ? (
                 <div className="tp-panel border-dashed p-6 text-center text-sm text-muted-foreground">
-                  No hay clases programadas próximamente.
+                  {tx("noHayClasesProgramadas")}
                 </div>
               ) : (
                 upcoming.slice(0, LIST_LIMIT).map((s) => (
@@ -297,14 +301,14 @@ export default async function FamilyPlayerPage({
                       </p>
                       {s.groupId && groupNames.get(s.groupId) && (
                         <span className="text-xs text-muted-foreground">
-                          Grupo {groupNames.get(s.groupId)}
+                          {tx("grupoV1", { v1: groupNames.get(s.groupId) ?? "" })}
                         </span>
                       )}
                     </div>
                     {s.objective && (
                       <p className="text-sm leading-6 text-foreground/75">
                         <span className="font-black text-foreground">
-                          Objetivo:{" "}
+                          {tx("objetivo", {  })}
                         </span>
                         {s.objective}
                       </p>
@@ -316,11 +320,11 @@ export default async function FamilyPlayerPage({
 
             <section className="space-y-3">
               <h2 className="text-lg font-black text-foreground">
-                Clases anteriores
+                {tx("clasesAnteriores")}
               </h2>
               {past.length === 0 ? (
                 <div className="tp-panel border-dashed p-6 text-center text-sm text-muted-foreground">
-                  Todavía no hay clases anteriores en este periodo.
+                  {tx("todaviaNoHayClases")}
                 </div>
               ) : (
                 [...past]
@@ -345,7 +349,7 @@ export default async function FamilyPlayerPage({
                       {s.objective && (
                         <p className="text-sm leading-6 text-foreground/75">
                           <span className="font-black text-foreground">
-                            Objetivo:{" "}
+                            {tx("objetivo", {  })}
                           </span>
                           {s.objective}
                         </p>

@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Calendar, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Props {
   templateId: string;
 }
 
 export function AdoptTemplateButton({ templateId }: Props) {
+  const tx = useTranslations("ui.s_sessiontemplates_adopttemplatebutton");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -29,12 +31,12 @@ export function AdoptTemplateButton({ templateId }: Props) {
         error?: string;
       };
       if (!res.ok) {
-        setError(json.error ?? "Error al adoptar la plantilla");
+        setError(json.error ?? tx("errorAlAdoptarLa"));
         return;
       }
       router.push(`/sessions/${json.data!.sessionId}`);
     } catch {
-      setError("Error de conexión");
+      setError(tx("errorDeConexion"));
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ export function AdoptTemplateButton({ templateId }: Props) {
         onClick={() => setOpen(true)}
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-[13px] font-semibold text-brand-foreground transition-colors hover:bg-brand/90 sm:w-auto"
       >
-        <Download className="size-4" /> Adoptar plantilla
+        <Download className="size-4" />{" "}{tx("adoptarPlantilla")}
       </button>
 
       {open && (
@@ -61,19 +63,19 @@ export function AdoptTemplateButton({ templateId }: Props) {
 
             <div className="space-y-1">
               <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/40">
-                Adoptar plantilla
+                {tx("adoptarPlantilla")}
               </p>
               <h2 className="font-heading text-xl text-foreground">
-                ¿Cuándo la usas?
+                {tx("cuandoLaUsas")}
               </h2>
               <p className="text-[13px] text-foreground/55">
-                Elige una fecha para la sesión. Podrás modificarla después.
+                {tx("eligeUnaFechaPara")}
               </p>
             </div>
 
             <div className="space-y-2">
               <label className="font-sans text-[10px] uppercase tracking-[0.18em] text-foreground/50 flex items-center gap-1.5">
-                <Calendar className="size-3" /> Fecha y hora (opcional)
+                <Calendar className="size-3" />{" "}{tx("fechaYHoraOpcional")}
               </label>
               <input
                 type="datetime-local"
@@ -90,7 +92,7 @@ export function AdoptTemplateButton({ templateId }: Props) {
                 onClick={() => setOpen(false)}
                 className="flex-1 rounded-lg border border-foreground/15 px-4 py-2 text-[13px] font-medium text-foreground/70 hover:border-foreground/30 transition-colors"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleAdopt}
@@ -102,7 +104,7 @@ export function AdoptTemplateButton({ templateId }: Props) {
                 ) : (
                   <Download className="size-4" />
                 )}
-                Adoptar
+                {tx("adoptar")}
               </button>
             </div>
           </div>

@@ -14,6 +14,8 @@ import { db } from "@/db";
 import { exercises } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { canAccessExercise } from "@/lib/exercise-access";
+import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   searchParams: Promise<{ mode?: string; duplicar?: string }>;
@@ -25,6 +27,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const COPY_SUFFIX = " (copia)";
 
 export default async function NewExercisePage({ searchParams }: PageProps) {
+  const tx = await getTranslations("ui.s_new_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -40,8 +43,8 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
   if (!exerciseCreationEnabled) {
     return (
       <FeatureLocked
-        title="Creación de ejercicios desactivada"
-        description="El administrador ha pausado temporalmente la creación manual de ejercicios."
+        title={tx("creacionDeEjerciciosDesactivada")}
+        description={tx("elAdministradorHaPausado")}
         href="/exercises"
         cta="Volver a ejercicios"
       />
@@ -120,13 +123,13 @@ export default async function NewExercisePage({ searchParams }: PageProps) {
         <Link
           href="/exercises"
           className="flex size-9 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-muted-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38] hover:text-[#050505]"
-          aria-label="Volver a ejercicios"
+          aria-label={tx("volverAEjercicios")}
         >
           <ArrowLeft className="size-4" />
         </Link>
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            {spaceTitle("Ejercicios", workMode)}
+            {spaceTitle("Ejercicios", workMode, await getLocale())}
           </p>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {duplicateData ? "Duplicar ejercicio" : "Nuevo ejercicio"}

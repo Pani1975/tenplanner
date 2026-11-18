@@ -8,6 +8,7 @@ import type { WizardState } from "./types";
 import { sessionCode } from "./recurrence";
 import { fetchSgNumbers } from "./sg-number";
 import { hasPlanContent } from "./timeline";
+import { useTranslations } from "next-intl";
 
 interface StepBasicsProps {
   state: WizardState;
@@ -24,6 +25,7 @@ export function StepBasics({
   allowCodeTitle = true,
   sessionId = null,
 }: StepBasicsProps & { allowCodeTitle?: boolean }) {
+  const tx = useTranslations("ui.s_sessionwizard_stepbasics");
   // El nombre automático se recalcula solo al cambiar el grupo o el día:
   // AAMMDD_Grupo, o AAMMDD_SG (SG2, SG3… si ese día ya hay clases sueltas).
   const day = state.scheduledAt.slice(0, 10);
@@ -65,9 +67,9 @@ export function StepBasics({
       {/* Fecha y hora: va antes del nombre, que sale de ella y del grupo */}
       <div className="space-y-2">
         <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Fecha y hora{" "}
+          {tx("fechaYHora")}{" "}
           <span className="text-[10px] text-destructive normal-case tracking-normal">
-            Oblig.
+            {tx("oblig")}
           </span>
         </label>
         <DateTimePicker
@@ -89,16 +91,16 @@ export function StepBasics({
             htmlFor="title"
             className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
           >
-            Nombre de la sesión
+            {tx("nombreDeLaSesion")}
           </label>
           <span className="text-[10px] text-destructive font-semibold">
-            Obligatorio
+            {tx("obligatorio")}
           </span>
         </div>
         <input
           id="title"
           type="text"
-          placeholder="Ej: Entrenamiento de técnica ofensiva"
+          placeholder={tx("ejEntrenamientoDeTecnica")}
           autoComplete="off"
           value={state.title}
           onChange={(e) =>
@@ -128,13 +130,10 @@ export function StepBasics({
               />
               <span className="text-sm">
                 <span className="font-semibold text-foreground">
-                  Nombre automático: día + grupo
+                  {tx("nombreAutomaticoDiaGrupo")}
                 </span>
                 <span className="block text-xs text-muted-foreground">
-                  Año, mes y día, y el grupo: 260930_Galácticas. Sin grupo
-                  (clase suelta): 260930_SG, y SG2, SG3… si ese día hay más. Si
-                  repites la sesión, cada una lleva su fecha. Puedes cambiar el
-                  nombre cuando quieras.
+                  {tx("anoMesYDia")}
                 </span>
               </span>
             </label>
@@ -143,7 +142,7 @@ export function StepBasics({
                 type="text"
                 value={state.groupName ?? ""}
                 onChange={(e) => update({ groupName: e.target.value })}
-                placeholder="Grupo (vacío = sin grupo, SG)"
+                placeholder={tx("grupoVacioSinGrupo")}
                 maxLength={60}
                 className="mt-2.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
               />
@@ -155,9 +154,9 @@ export function StepBasics({
       {/* Duración */}
       <div className="space-y-2">
         <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Duración{" "}
+          {tx("duracion")}{" "}
           <span className="text-[10px] normal-case tracking-normal text-muted-foreground font-normal">
-            min
+            {tx("min")}
           </span>
         </label>
         <div className="flex max-w-sm items-center gap-2">
@@ -165,7 +164,7 @@ export function StepBasics({
             type="button"
             onClick={() => bumpDuration(-5)}
             className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Disminuir duración"
+            aria-label={tx("disminuirDuracion")}
           >
             <Minus className="size-4" />
           </button>
@@ -185,7 +184,7 @@ export function StepBasics({
             type="button"
             onClick={() => bumpDuration(5)}
             className="size-11 shrink-0 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Aumentar duración"
+            aria-label={tx("aumentarDuracion")}
           >
             <Plus className="size-4" />
           </button>
@@ -197,7 +196,7 @@ export function StepBasics({
         )}
         {hasPlanContent(state) && (
           <p className="text-[11px] text-muted-foreground">
-            Se recalcula sola a partir de los ejercicios y textos del plan.
+            {tx("seRecalculaSolaA")}
           </p>
         )}
       </div>

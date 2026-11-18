@@ -40,6 +40,9 @@ import {
 } from "@/lib/clubs";
 import { AssignedCoachesPanel } from "@/components/app/assigned-coaches-panel";
 import { getAssignableCoaches, listGroupCoaches } from "@/lib/club-coaches";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { useLocale } from "next-intl";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -55,7 +58,7 @@ type GroupSessionRow = {
   className: string | null;
 };
 
-const sessionDateFormat = new Intl.DateTimeFormat("es-ES", {
+const sessionDateFormat = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   day: "numeric",
   month: "short",
@@ -76,6 +79,8 @@ function GroupSessionsList({
   rows: GroupSessionRow[];
   pastList?: boolean;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_page");
   return (
     <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
@@ -102,17 +107,17 @@ function GroupSessionsList({
                     {row.title}
                   </span>
                   <span className="block text-xs capitalize text-muted-foreground">
-                    {sessionDateFormat.format(row.scheduledAt)}
+                    {sessionDateFormat(intlLocale).format(row.scheduledAt)}
                   </span>
                 </span>
                 {pastList && row.status !== "completed" && (
                   <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                    Sin cerrar
+                    {tx("sinCerrar")}
                   </span>
                 )}
                 <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="size-3" />
-                  {row.durationMinutes} min
+                  {row.durationMinutes}{" "}{tx("min")}
                 </span>
               </Link>
               {row.className && row.sourceClassId && (
@@ -133,6 +138,7 @@ function GroupSessionsList({
 }
 
 export default async function GroupDetailPage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_id_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -143,8 +149,8 @@ export default async function GroupDetailPage({ params }: PageProps) {
   if (!groupsEnabled) {
     return (
       <FeatureLocked
-        title="Grupos desactivados"
-        description="El administrador ha pausado temporalmente la organización por grupos."
+        title={tx("gruposDesactivados")}
+        description={tx("elAdministradorHaPausado2")}
         href="/students"
         cta="Volver a alumnos"
       />
@@ -271,7 +277,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
             >
               <ArrowLeft className="size-4" />
             </Link>
-            <p className="text-xs font-black uppercase text-white/45">Grupos</p>
+            <p className="text-xs font-black uppercase text-white/45">{tx("grupos")}</p>
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -294,7 +300,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
                   {memberRows.length}
                 </span>{" "}
                 {memberRows.length === 1 ? "alumno" : "alumnos"}
-                {!isOwner && authorName && <> · Grupo de {authorName}</>}
+                {!isOwner && authorName && <> {tx("grupoDeV1", { v1: authorName })}</>}
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -347,11 +353,11 @@ export default async function GroupDetailPage({ params }: PageProps) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-black text-foreground">
-                Planificación de {group.name}
+                {tx("planificacionDeV1", { v1: group.name })}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {groupSessions.length === 0
-                  ? "Aún no hay sesiones programadas para este grupo."
+                  ? tx("aunNoHaySesiones")
                   : `${groupSessions.length} sesión${groupSessions.length !== 1 ? "es" : ""} en total · ${pastSessions.length} impartida${pastSessions.length !== 1 ? "s" : ""} · ${upcomingSessions.length} próxima${upcomingSessions.length !== 1 ? "s" : ""}`}
               </p>
             </div>
@@ -365,7 +371,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
               >
                 <Plus className="size-4" />
-                Nueva sesión
+                {tx("nuevaSesion")}
               </Link>
             </div>
           </div>
@@ -387,14 +393,14 @@ export default async function GroupDetailPage({ params }: PageProps) {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <GroupSessionsList
-              title="Sesiones impartidas"
-              emptyText="Todavía no hay sesiones impartidas con este grupo."
+              title={tx("sesionesImpartidas")}
+              emptyText={tx("todaviaNoHaySesiones")}
               rows={pastSessions}
               pastList
             />
             <GroupSessionsList
-              title="Próximas sesiones"
-              emptyText="No hay sesiones programadas para este grupo."
+              title={tx("proximasSesiones")}
+              emptyText={tx("noHaySesionesProgramadas")}
               rows={upcomingSessions}
             />
           </div>

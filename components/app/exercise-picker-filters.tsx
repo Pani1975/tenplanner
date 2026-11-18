@@ -12,6 +12,7 @@ import {
   resolveFases,
 } from "@/lib/exercise-taxonomy";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /** Campos de clasificación que usa el buscador de ejercicios. */
 export interface PickerTaggedExercise {
@@ -118,6 +119,7 @@ export function ExercisePickerFilters({
   /** Deporte activo: limita los niveles ofrecidos en modo `showAllOptions`. */
   sport?: string | null;
 }) {
+  const tx = useTranslations("ui.s_app_exercisepickerfilters");
   const niveles = showAllOptions
     ? nivelesForSport(sport).map((n) => n.id as string)
     : presentValues(
@@ -148,12 +150,12 @@ export function ExercisePickerFilters({
     <div className={cn("space-y-1.5", className)}>
       <div className="grid grid-cols-2 gap-1.5">
         <select
-          aria-label="Filtrar por nivel"
+          aria-label={tx("filtrarPorNivel")}
           value={value.nivel}
           onChange={(e) => set({ nivel: e.target.value })}
           className={SELECT_CLASS}
         >
-          <option value="">Nivel: todos</option>
+          <option value="">{tx("nivelTodos")}</option>
           {niveles.map((id) => (
             <option key={id} value={id}>
               {nivelOptionLabel(id)}
@@ -161,12 +163,12 @@ export function ExercisePickerFilters({
           ))}
         </select>
         <select
-          aria-label="Filtrar por fase de la sesión"
+          aria-label={tx("filtrarPorFaseDe")}
           value={value.fase}
           onChange={(e) => set({ fase: e.target.value })}
           className={SELECT_CLASS}
         >
-          <option value="">Fase: todas</option>
+          <option value="">{tx("faseTodas")}</option>
           {fases.map((f) => (
             <option key={f.id} value={f.id}>
               {f.label}
@@ -174,12 +176,12 @@ export function ExercisePickerFilters({
           ))}
         </select>
         <select
-          aria-label="Filtrar por aspecto del juego"
+          aria-label={tx("filtrarPorAspectoDel")}
           value={value.aspecto}
           onChange={(e) => set({ aspecto: e.target.value })}
           className={SELECT_CLASS}
         >
-          <option value="">Aspecto: todos</option>
+          <option value="">{tx("aspectoTodos")}</option>
           {aspectos.map((id) => (
             <option key={id} value={id}>
               {ASPECTO_JUEGO_LABELS[id as keyof typeof ASPECTO_JUEGO_LABELS] ??
@@ -188,12 +190,12 @@ export function ExercisePickerFilters({
           ))}
         </select>
         <select
-          aria-label="Filtrar por golpe"
+          aria-label={tx("filtrarPorGolpe")}
           value={value.golpe}
           onChange={(e) => set({ golpe: e.target.value })}
           className={SELECT_CLASS}
         >
-          <option value="">Golpe: todos</option>
+          <option value="">{tx("golpeTodos")}</option>
           {golpes.map((id) => (
             <option key={id} value={id}>
               {GOLPE_LABELS[id] ?? id}
@@ -208,7 +210,7 @@ export function ExercisePickerFilters({
           className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
         >
           <X className="size-3" />
-          Quitar filtros
+          {tx("quitarFiltros")}
         </button>
       )}
     </div>

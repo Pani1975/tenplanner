@@ -10,13 +10,19 @@ import { getActiveSport } from "@/lib/sports";
 import { ClubOwnerPanel } from "../../club/club-owner-panel";
 import { listClubCoachProfiles } from "@/lib/club-coach-profiles";
 import { CoachProfilesPanel } from "./coach-profiles-panel";
+import { getTranslations } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Monitores" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Monitores") };
+}
 export const dynamic = "force-dynamic";
 
 // Modo gestión: invitar monitores al club, ver quién está dentro, darles de
 // baja y llevar la ficha de cada uno. Solo la cuenta del club.
 export default async function ManagementCoachesPage() {
+  const tx = await getTranslations("ui.s_monitores_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -40,15 +46,13 @@ export default async function ManagementCoachesPage() {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <Users2 className="size-3.5" />
-            Modo gestión
+            {tx("modoGestion")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Monitores {club.name}
+            {tx("monitoresV1", { v1: club.name })}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Invita monitores por email. Cuando acepten, tendrán el Modo{" "}
-            {club.name} para trabajar con el club, además de su Modo monitor.
-          </p>
+            {tx("invitaMonitoresPorEmail", { v1: club.name })}</p>
         </header>
         <ClubOwnerPanel
           club={club}

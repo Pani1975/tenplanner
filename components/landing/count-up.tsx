@@ -2,6 +2,7 @@
 
 import { animate, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 
 /**
  * Número que sube desde 0 al entrar en pantalla. El HTML del servidor ya
@@ -14,6 +15,7 @@ export function CountUp({
   value: number;
   className?: string;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduced = useReducedMotion();
@@ -31,7 +33,7 @@ export function CountUp({
 
   return (
     <span ref={ref} className={className}>
-      {shown.toLocaleString("es-ES")}
+      {shown.toLocaleString(intlLocale)}
     </span>
   );
 }

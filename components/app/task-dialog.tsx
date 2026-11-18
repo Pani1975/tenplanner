@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ManagementTaskData } from "@/lib/management-tasks";
+import { useTranslations } from "next-intl";
 
 type Kind = ManagementTaskData["responsibleKind"];
 
@@ -40,6 +41,7 @@ export function TaskDialog({
   onSaved: (task: ManagementTaskData) => void;
   onDeleted?: (id: string) => void;
 }) {
+  const tx = useTranslations("ui.s_app_taskdialog");
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDate ?? "");
@@ -89,14 +91,14 @@ export function TaskDialog({
     try {
       const res = await request(task ? "PATCH" : "POST");
       if (!res.ok) {
-        setError("No se pudo guardar la tarea. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const json = (await res.json()) as { data: ManagementTaskData };
       onOpenChange(false);
       onSaved(json.data);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -109,13 +111,13 @@ export function TaskDialog({
     try {
       const res = await request("DELETE");
       if (!res.ok) {
-        setError("No se pudo eliminar la tarea. Inténtalo de nuevo.");
+        setError(tx("noSePudoEliminar"));
         return;
       }
       onOpenChange(false);
       onDeleted?.(task.id);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -127,28 +129,28 @@ export function TaskDialog({
         <DialogHeader>
           <DialogTitle>{task ? "Editar tarea" : "Nueva tarea"}</DialogTitle>
           <DialogDescription>
-            Las tareas son solo del Modo gestión: los monitores no las ven.
+            {tx("lasTareasSonSolo")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="task-title" className={LABEL}>
-              Tarea
+              {tx("tarea")}
             </label>
             <input
               id="task-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={255}
-              placeholder="Ej: Renovar el seguro de la escuela"
+              placeholder={tx("ejRenovarElSeguro")}
               className={FIELD}
             />
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="task-description" className={LABEL}>
-              Descripción
+              {tx("descripcion")}
             </label>
             <textarea
               id="task-description"
@@ -156,14 +158,14 @@ export function TaskDialog({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               maxLength={4000}
-              placeholder="Detalles (opcional)"
+              placeholder={tx("detallesOpcional")}
               className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-[#b45309] focus:outline-none"
             />
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="task-due" className={LABEL}>
-              Fecha de finalización (opcional)
+              {tx("fechaDeFinalizacionOpcional")}
             </label>
             <input
               id="task-due"
@@ -184,14 +186,14 @@ export function TaskDialog({
                 className="size-4"
               />
               <span className={dueDate ? "" : "text-muted-foreground"}>
-                Avisarme por correo el día de la fecha
+                {tx("avisarmePorCorreoEl")}
               </span>
             </label>
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="task-responsible" className={LABEL}>
-              Responsable
+              {tx("responsable")}
             </label>
             <select
               id="task-responsible"
@@ -199,13 +201,13 @@ export function TaskDialog({
               onChange={(e) => setKind(e.target.value as Kind)}
               className={FIELD}
             >
-              <option value="club">El club</option>
-              {coaches.length > 0 && <option value="coach">Un monitor</option>}
-              <option value="other">Otra persona</option>
+              <option value="club">{tx("elClub")}</option>
+              {coaches.length > 0 && <option value="coach">{tx("unMonitor")}</option>}
+              <option value="other">{tx("otraPersona")}</option>
             </select>
             {kind === "coach" && (
               <select
-                aria-label="Monitor responsable"
+                aria-label={tx("monitorResponsable")}
                 value={coachId}
                 onChange={(e) => setCoachId(e.target.value)}
                 className={FIELD}
@@ -219,11 +221,11 @@ export function TaskDialog({
             )}
             {kind === "other" && (
               <input
-                aria-label="Nombre del responsable"
+                aria-label={tx("nombreDelResponsable")}
                 value={otherText}
                 onChange={(e) => setOtherText(e.target.value)}
                 maxLength={255}
-                placeholder="Nombre o empresa (p. ej. la gestoría)"
+                placeholder={tx("nombreOEmpresaP")}
                 className={FIELD}
               />
             )}
@@ -242,7 +244,7 @@ export function TaskDialog({
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 <Trash2 className="size-4" />
-                Eliminar
+                {tx("eliminar")}
               </button>
             ) : (
               <span />
@@ -253,7 +255,7 @@ export function TaskDialog({
                 onClick={() => onOpenChange(false)}
                 className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 type="button"

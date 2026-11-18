@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SPORT_LABELS, type Sport } from "@/lib/sport-constants";
+import { useTranslations } from "next-intl";
 
 export interface PendingClubInvite {
   id: string;
@@ -23,6 +24,7 @@ export function PendingClubInvites({
 }: {
   invites: PendingClubInvite[];
 }) {
+  const tx = useTranslations("ui.s_app_pendingclubinvites");
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [done, setDone] = useState<Record<string, "accepted" | "declined">>({});
@@ -49,7 +51,7 @@ export function PendingClubInvites({
         setError(
           typeof body?.error === "string"
             ? body.error
-            : "No se pudo responder a la invitación."
+            : tx("noSePudoResponder")
         );
         return;
       }
@@ -77,14 +79,10 @@ export function PendingClubInvites({
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-foreground">
-                {invite.clubName} te invita a unirte como monitor de{" "}
-                {SPORT_LABELS[invite.sport]}
+                {tx("v1TeInvitaA", { v1: invite.clubName, v2: SPORT_LABELS[invite.sport] })}
               </p>
               <p className="mt-1 text-xs leading-5 text-foreground/65">
-                Si aceptas, podrás trabajar en modo particular o en el espacio
-                de {invite.clubName}, cambiando desde el selector de modo. El
-                club tendrá acceso compartido a lo que crees en su espacio.
-              </p>
+                {tx("siAceptasPodrasTrabajar", { v1: invite.clubName })}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   type="button"
@@ -97,7 +95,7 @@ export function PendingClubInvites({
                   ) : (
                     <Check className="size-3.5" />
                   )}
-                  Aceptar
+                  {tx("aceptar")}
                 </Button>
                 <Button
                   type="button"
@@ -111,7 +109,7 @@ export function PendingClubInvites({
                   ) : (
                     <X className="size-3.5" />
                   )}
-                  Rechazar
+                  {tx("rechazar")}
                 </Button>
               </div>
             </div>
@@ -124,9 +122,7 @@ export function PendingClubInvites({
           role="status"
           className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-foreground"
         >
-          Ya formas parte de {invite.clubName}. Elige &quot;{invite.clubName}
-          &quot; en el selector de modo para trabajar en su espacio.
-        </p>
+          {tx("yaFormasParteDe", { v1: invite.clubName, v2: invite.clubName })}</p>
       ))}
       {error && (
         <p role="alert" className="text-sm font-semibold text-destructive">

@@ -34,6 +34,8 @@ import {
   PLAN_CHANGE_REASONS,
   type PlanChangeReason,
 } from "@/lib/sessions/plan-change";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "border-blue-500/40 bg-blue-500/5",
@@ -186,8 +188,8 @@ function formatTime(seconds: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function formatDate(isoString: string) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatDate(isoString: string, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -203,6 +205,8 @@ export function ExecuteSessionClient({
   students = [],
   diagrams,
 }: Props) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_execute_executeclient");
   const router = useRouter();
   // El plan se puede cambiar durante la clase (sustituir o quitar).
   const [exercises, setExercises] = useState(initialExercises);
@@ -404,7 +408,7 @@ export function ExecuteSessionClient({
     } catch {
       setSavingAttendance(false);
       setAttendanceError(
-        "No se pudo guardar la lista. Revisa la conexión e inténtalo de nuevo."
+        tx("noSePudoGuardar")
       );
       return;
     }
@@ -535,7 +539,7 @@ export function ExecuteSessionClient({
       };
       if (requestId === planSearchSeq.current) setPlanResults(json.data);
     } catch {
-      setPlanError("No se pudo buscar. Revisa la conexión.");
+      setPlanError(tx("noSePudoBuscar"));
     }
   }
 
@@ -574,7 +578,7 @@ export function ExecuteSessionClient({
     }).catch(() => null);
     setPlanBusy(false);
     if (!res?.ok) {
-      setPlanError("No se pudo sustituir. Inténtalo de nuevo.");
+      setPlanError(tx("noSePudoSustituir"));
       return;
     }
     const key = current.key;
@@ -616,7 +620,7 @@ export function ExecuteSessionClient({
     }).catch(() => null);
     setPlanBusy(false);
     if (!res?.ok) {
-      setPlanError("No se pudo quitar. Inténtalo de nuevo.");
+      setPlanError(tx("noSePudoQuitar"));
       return;
     }
     const key = current.key;
@@ -647,7 +651,7 @@ export function ExecuteSessionClient({
 
   async function handleFinish({ markAll = false }: { markAll?: boolean } = {}) {
     if (sessionRating < 1) {
-      setFinishError("Valora la clase de 1 a 5 estrellas para terminar.");
+      setFinishError(tx("valoraLaClaseDe"));
       return;
     }
     setFinishing(true);
@@ -695,7 +699,7 @@ export function ExecuteSessionClient({
     } catch {
       setFinishing(false);
       setFinishError(
-        "No se pudo guardar la valoración. Revisa la conexión e inténtalo de nuevo."
+        tx("noSePudoGuardar2")
       );
       return;
     }
@@ -743,7 +747,7 @@ export function ExecuteSessionClient({
     if (!res.ok) {
       setFinishing(false);
       setFinishError(
-        "No se pudo guardar. Revisa la conexión e inténtalo de nuevo."
+        tx("noSePudoGuardar3")
       );
       return;
     }
@@ -758,9 +762,9 @@ export function ExecuteSessionClient({
       {!attendanceTaken && students.length > 0 && (
         <div className="rounded-2xl border border-[#050505]/10 p-3 dark:border-white/10">
           <p className="text-xs font-black text-foreground">
-            Asistencia{" "}
+            {tx("asistencia")}{" "}
             <span className="font-semibold text-muted-foreground">
-              (no se pasó lista al empezar)
+              {tx("noSePasoLista")}
             </span>
           </p>
           <ul className="mt-2 space-y-1.5">
@@ -800,7 +804,7 @@ export function ExecuteSessionClient({
       )}
       <div className="text-center">
         <p className="text-sm font-black text-foreground">
-          ¿Qué tal ha ido la clase?{" "}
+          {tx("howWasClass")}{" "}
           <span className="text-destructive" aria-hidden>
             *
           </span>
@@ -809,18 +813,18 @@ export function ExecuteSessionClient({
           <StarRating
             value={sessionRating}
             onChange={setSessionRating}
-            label="Valoración de la clase de 1 a 5 estrellas"
+            label={tx("valoracionDeLaClase")}
           />
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Obligatoria: de 1 a 5 estrellas
+          {tx("obligatoriaDe1A")}
         </p>
       </div>
       <label className="block">
         <span className="text-xs font-black text-foreground">
-          Comentario{" "}
+          {tx("comentario")}{" "}
           <span className="font-semibold text-muted-foreground">
-            (opcional)
+            {tx("opcional")}
           </span>
         </span>
         <textarea
@@ -828,16 +832,16 @@ export function ExecuteSessionClient({
           onChange={(e) => setSessionComment(e.target.value)}
           rows={3}
           maxLength={2000}
-          placeholder="Qué ha funcionado, qué cambiarías, incidencias…"
+          placeholder={tx("queHaFuncionadoQue")}
           className="mt-1 w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
         />
       </label>
       {reviewStudents.length > 0 && (
         <details className="rounded-2xl border border-[#050505]/10 dark:border-white/10">
           <summary className="cursor-pointer px-3 py-2.5 text-xs font-black text-foreground">
-            Valorar alumnos{" "}
+            {tx("valorarAlumnos")}{" "}
             <span className="font-semibold text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </summary>
           <ul className="divide-y divide-[#050505]/10 border-t border-[#050505]/10 dark:divide-white/10 dark:border-white/10">
@@ -894,7 +898,7 @@ export function ExecuteSessionClient({
       return (
         <>
           <p className="mb-4 text-center text-base font-black leading-snug text-foreground">
-            ¿Se ha completado la sesión tal y como estaba planificada?
+            {tx("seHaCompletadoLa")}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -905,7 +909,7 @@ export function ExecuteSessionClient({
               }}
               className={secondary}
             >
-              No, cambió
+              {tx("noCambio")}
             </button>
             <button
               type="button"
@@ -915,7 +919,7 @@ export function ExecuteSessionClient({
               }}
               className={primary}
             >
-              Sí, tal cual
+              {tx("siTalCual")}
             </button>
           </div>
           <button
@@ -933,11 +937,10 @@ export function ExecuteSessionClient({
       return (
         <>
           <p className="text-base font-black text-foreground">
-            ¿Por qué cambió?
+            {tx("porQueCambio")}
           </p>
           <p className="mb-3 text-xs text-muted-foreground">
-            Opcional. Si quieres que el plan refleje lo que se hizo, usa después
-            «Editar» en la sesión.
+            {tx("opcionalSiQuieresQue")}
           </p>
           <div className="mb-5 flex flex-wrap gap-2">
             {PLAN_CHANGE_REASONS.map((r) => (
@@ -964,7 +967,7 @@ export function ExecuteSessionClient({
               maxLength={300}
               value={planNote}
               onChange={(e) => setPlanNote(e.target.value)}
-              placeholder="Cuenta brevemente qué pasó…"
+              placeholder={tx("cuentaBrevementeQuePaso")}
               className="-mt-2 mb-5 w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
             />
           )}
@@ -975,14 +978,14 @@ export function ExecuteSessionClient({
               disabled={finishing}
               className={secondary}
             >
-              Atrás
+              {tx("atras")}
             </button>
             <button
               type="button"
               onClick={() => setCloseStep("review")}
               className={primary}
             >
-              Siguiente
+              {tx("siguiente")}
             </button>
           </div>
         </>
@@ -1001,7 +1004,7 @@ export function ExecuteSessionClient({
             disabled={finishing}
             className={secondary}
           >
-            Atrás
+            {tx("atras")}
           </button>
           <button
             type="button"
@@ -1029,15 +1032,12 @@ export function ExecuteSessionClient({
             <CheckCircle2 className="size-7" />
           </div>
           <h2 className="mb-1 text-2xl font-black text-foreground">
-            ¿Sesión completada?
+            {tx("sesionCompletada")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Se marcará la sesión como completada
-            {exerciseItemsCount > 0
-              ? ` y los ${exerciseItemsCount} ejercicio${exerciseItemsCount !== 1 ? "s" : ""} como realizados`
-              : ""}
-            , sin ir uno por uno.
-          </p>
+            {tx("seMarcaraLaSesion", { v1: exerciseItemsCount > 0
+              ? tx("asDoneSuffix", { n: exerciseItemsCount })
+              : "" })}</p>
           {finishError && (
             <p className="mt-3 text-sm font-semibold text-destructive">
               {finishError}
@@ -1061,13 +1061,13 @@ export function ExecuteSessionClient({
           <Dumbbell className="size-7 text-foreground/45" />
         </div>
         <p className="mb-2 text-2xl font-black text-foreground/70">
-          Esta sesión no tiene contenido.
+          {tx("estaSesionNoTiene")}
         </p>
         <Link
           href={`/sessions/${session.id}`}
           className="mt-2 inline-flex h-10 items-center rounded-full border border-brand/30 px-4 text-sm font-black text-brand"
         >
-          Volver a la sesión
+          {tx("volverALaSesion")}
         </Link>
       </div>
     );
@@ -1082,7 +1082,7 @@ export function ExecuteSessionClient({
           <button
             type="button"
             onClick={() => !savingAttendance && setAttendanceStage(false)}
-            aria-label="Volver a la preparación"
+            aria-label={tx("volverALaPreparacion")}
             className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
           >
             <ChevronLeft className="size-4" />
@@ -1095,15 +1095,12 @@ export function ExecuteSessionClient({
 
         <main className="mx-auto w-full max-w-xl flex-1 space-y-5 px-4 py-8">
           <div className="space-y-2 text-center">
-            <p className="tp-kicker">Pasar lista</p>
+            <p className="tp-kicker">{tx("pasarLista")}</p>
             <h1 className="text-3xl font-black leading-tight text-foreground">
-              ¿Quién ha venido?
+              {tx("quienHaVenido")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {presentCount} de {students.length} presente
-              {presentCount !== 1 ? "s" : ""}. Toca a quien falte para marcarlo
-              como ausente.
-            </p>
+              {tx("v1DeV2Presente", { v1: presentCount, v2: students.length, v3: presentCount !== 1 ? "s" : "" })}</p>
           </div>
 
           <ul className="space-y-2">
@@ -1170,7 +1167,7 @@ export function ExecuteSessionClient({
             ) : (
               <Play className="size-5 translate-x-0.5" />
             )}
-            Empezar la clase
+            {tx("empezarLaClase")}
           </button>
         </footer>
       </div>
@@ -1197,22 +1194,22 @@ export function ExecuteSessionClient({
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-8">
           {/* Session overview */}
           <div className="text-center space-y-2">
-            <p className="tp-kicker">Preparación</p>
+            <p className="tp-kicker">{tx("preparacion")}</p>
             <h1 className="text-3xl font-black leading-tight text-foreground">
               {session.title}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {formatDate(session.scheduledAt)}
+              {formatDate(session.scheduledAt, intlLocale)}
             </p>
             <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Clock className="size-3.5 text-brand" />
-                {session.durationMinutes} min
+                {session.durationMinutes}{" "}{tx("min")}
               </span>
               <span className="h-3 w-px bg-border" />
               <span className="flex items-center gap-1.5">
                 <Dumbbell className="size-3.5 text-brand" />
-                {totalExercises} elemento{totalExercises !== 1 ? "s" : ""}
+                {totalExercises}{" "}{tx("elemento")}{totalExercises !== 1 ? "s" : ""}
               </span>
             </div>
           </div>
@@ -1223,7 +1220,7 @@ export function ExecuteSessionClient({
               <div className="flex items-center gap-2 border-b border-[#050505]/10 px-5 py-4 dark:border-white/10">
                 <Package className="size-4 text-brand" />
                 <h2 className="text-sm font-black text-foreground">
-                  Material necesario
+                  {tx("materialNecesario")}
                 </h2>
                 <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-black text-muted-foreground">
                   {allMaterials.length}
@@ -1247,7 +1244,7 @@ export function ExecuteSessionClient({
           <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
             <div className="border-b border-[#050505]/10 px-5 py-3.5 dark:border-white/10">
               <h2 className="text-sm font-black text-foreground">
-                Plan de la sesión
+                {tx("planDeLaSesion")}
               </h2>
             </div>
             <div className="divide-y divide-[#050505]/10 dark:divide-white/10">
@@ -1297,8 +1294,7 @@ export function ExecuteSessionClient({
                   </div>
                   {ex.durationMinutes > 0 && (
                     <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
-                      {ex.durationMinutes} min
-                    </span>
+                      {tx("v1Min", { v1: ex.durationMinutes })}</span>
                   )}
                 </div>
               ))}
@@ -1312,14 +1308,14 @@ export function ExecuteSessionClient({
             className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-brand text-base font-black text-brand-foreground shadow-sm transition-all hover:bg-brand/90 active:scale-[0.98]"
           >
             <Play className="size-5 translate-x-0.5" />
-            Comenzar sesión
+            {tx("comenzarSesion")}
           </button>
           <button
             onClick={() => openClose("quick")}
             className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#050505]/15 text-sm font-black text-foreground transition-colors hover:bg-muted dark:border-white/15"
           >
             <CheckCircle2 className="size-4" />
-            Sesión completada
+            {tx("sesionCompletada2")}
           </button>
         </footer>
         {quickCompleteModal}
@@ -1336,10 +1332,9 @@ export function ExecuteSessionClient({
     return (
       <div className="overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]">
         <div className="border-b border-[#050505]/10 px-5 py-3.5 dark:border-white/10">
-          <h2 className="text-sm font-black text-foreground">Hoja de ruta</h2>
+          <h2 className="text-sm font-black text-foreground">{tx("hojaDeRuta")}</h2>
           <p className="text-[11px] text-muted-foreground">
-            {done.size} de {totalExercises} hechos
-            {remainingMinutes > 0 && ` · quedan ${remainingMinutes} min`}
+            {tx("v1DeV2Hechos", { v1: done.size, v2: totalExercises, v3: remainingMinutes > 0 ? tx("remainingSuffix", { min: remainingMinutes }) : "" })}
           </p>
         </div>
         <ol className="divide-y divide-[#050505]/10 dark:divide-white/10">
@@ -1439,7 +1434,7 @@ export function ExecuteSessionClient({
         <button
           type="button"
           onClick={() => setShowRoadmap(true)}
-          aria-label="Ver hoja de ruta"
+          aria-label={tx("verHojaDeRuta")}
           className="ml-2 flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden dark:border-white/10"
         >
           <ListOrdered className="size-4" />
@@ -1461,8 +1456,8 @@ export function ExecuteSessionClient({
               setNotesSaved("idle");
               setNotesOpen(true);
             }}
-            aria-label="Bloc de notas"
-            title="Bloc de notas"
+            aria-label={tx("blocDeNotas")}
+            title={tx("blocDeNotas")}
             className={cn(
               "flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10",
               sessionComment.trim() &&
@@ -1474,8 +1469,8 @@ export function ExecuteSessionClient({
           <button
             type="button"
             onClick={() => setStopwatchOpen(true)}
-            aria-label="Cronómetro"
-            title="Cronómetro"
+            aria-label={tx("cronometro")}
+            title={tx("cronometro")}
             className={cn(
               "flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10",
               swElapsedMs > 0 || swStartedAt !== null
@@ -1496,8 +1491,8 @@ export function ExecuteSessionClient({
               setBoardMessage(null);
               setBoardOpen(true);
             }}
-            aria-label="Pizarra"
-            title="Pizarra"
+            aria-label={tx("pizarra")}
+            title={tx("pizarra")}
             className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
           >
             <PenTool className="size-4" />
@@ -1507,8 +1502,8 @@ export function ExecuteSessionClient({
             className="inline-flex items-center gap-1 text-xs font-semibold text-brand border border-brand/30 bg-brand/5 px-3 py-1.5 rounded-full hover:bg-brand/15 transition-colors"
           >
             <Flag className="size-3" />
-            <span className="hidden sm:inline">Sesión completada</span>
-            <span className="sm:hidden">Terminar</span>
+            <span className="hidden sm:inline">{tx("sesionCompletada2")}</span>
+            <span className="sm:hidden">{tx("terminar")}</span>
           </button>
         </div>
       </header>
@@ -1578,13 +1573,13 @@ export function ExecuteSessionClient({
               {current.durationMinutes > 0 && (
                 <span className="flex items-center gap-1">
                   <Clock className="size-3" />
-                  {current.durationMinutes} min sugeridos
+                  {current.durationMinutes}{" "}{tx("minSugeridos")}
                 </span>
               )}
               {done.has(current.key) && (
                 <span className="flex items-center gap-1 text-brand font-semibold">
                   <CheckCircle2 className="size-3" />
-                  Completado
+                  {tx("completado")}
                 </span>
               )}
             </div>
@@ -1596,12 +1591,12 @@ export function ExecuteSessionClient({
               {currentIdx < totalExercises - 1 ? (
                 <>
                   <SkipForward className="size-4" />
-                  Siguiente
+                  {tx("siguiente")}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="size-4" />
-                  Completar sesión
+                  {tx("completarSesion")}
                 </>
               )}
             </button>
@@ -1609,8 +1604,7 @@ export function ExecuteSessionClient({
             {planEdit?.mode === "remove" ? (
               <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm">
                 <span className="font-semibold text-foreground">
-                  ¿Quitar «{current.name}» de la sesión?
-                </span>
+                  {tx("quitarV1DeLa", { v1: current.name })}</span>
                 <span className="ml-auto flex gap-2">
                   <button
                     type="button"
@@ -1618,7 +1612,7 @@ export function ExecuteSessionClient({
                     disabled={planBusy}
                     className="rounded-full border border-[#050505]/10 px-3 py-1.5 text-xs font-black text-muted-foreground dark:border-white/10"
                   >
-                    No
+                    {tx("no")}
                   </button>
                   <button
                     type="button"
@@ -1627,7 +1621,7 @@ export function ExecuteSessionClient({
                     className="inline-flex items-center gap-1 rounded-full bg-destructive px-3 py-1.5 text-xs font-black text-white disabled:opacity-60"
                   >
                     {planBusy && <Loader2 className="size-3 animate-spin" />}
-                    Sí, quitar
+                    {tx("siQuitar")}
                   </button>
                 </span>
               </div>
@@ -1639,7 +1633,7 @@ export function ExecuteSessionClient({
                   className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/15 text-xs font-black text-foreground transition-colors hover:bg-muted dark:border-white/15"
                 >
                   <RefreshCw className="size-3.5" />
-                  Sustituir
+                  {tx("sustituir")}
                 </button>
                 <button
                   type="button"
@@ -1650,13 +1644,13 @@ export function ExecuteSessionClient({
                   disabled={totalExercises <= 1}
                   title={
                     totalExercises <= 1
-                      ? "La sesión necesita al menos un elemento"
+                      ? tx("laSesionNecesitaAl")
                       : undefined
                   }
                   className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#050505]/15 text-xs font-black text-foreground transition-colors hover:bg-muted disabled:opacity-40 dark:border-white/15"
                 >
                   <Trash2 className="size-3.5" />
-                  Quitar
+                  {tx("quitar")}
                 </button>
               </div>
             )}
@@ -1720,7 +1714,7 @@ export function ExecuteSessionClient({
                       );
                     }}
                     className="flex size-11 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
-                    aria-label="Reiniciar"
+                    aria-label={tx("reiniciar")}
                   >
                     <RotateCcw className="size-4" />
                   </button>
@@ -1728,8 +1722,8 @@ export function ExecuteSessionClient({
                     onClick={toggleCountdown}
                     title={
                       countdownMode
-                        ? "Cambiar a cronómetro"
-                        : "Cambiar a cuenta atrás"
+                        ? tx("cambiarACronometro")
+                        : tx("cambiarACuentaAtras")
                     }
                     className={cn(
                       "flex size-11 items-center justify-center rounded-full border transition-colors",
@@ -1738,7 +1732,7 @@ export function ExecuteSessionClient({
                         : "border-[#050505]/10 text-muted-foreground hover:bg-muted hover:text-foreground dark:border-white/10"
                     )}
                     aria-label={
-                      countdownMode ? "Modo cronómetro" : "Modo cuenta atrás"
+                      countdownMode ? "Modo cronómetro" : tx("modoCuentaAtras")
                     }
                   >
                     <Timer className="size-4" />
@@ -1754,10 +1748,10 @@ export function ExecuteSessionClient({
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-black uppercase text-muted-foreground">
-                    Registro de pista
+                    {tx("registroDePista")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Se guarda al completar la sesión.
+                    {tx("seGuardaAlCompletar")}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -1788,7 +1782,7 @@ export function ExecuteSessionClient({
                 }
                 rows={3}
                 maxLength={1000}
-                placeholder="Notas rápidas: ajuste aplicado, respuesta del alumno, variante usada..."
+                placeholder={tx("notasRapidasAjusteAplicado")}
                 className="tp-field w-full resize-none px-3 py-2 text-sm placeholder:text-muted-foreground"
               />
             </div>
@@ -1829,7 +1823,7 @@ export function ExecuteSessionClient({
           {current.steps.length > 0 && (
             <div className="space-y-3">
               <p className="text-[10px] font-black uppercase text-muted-foreground">
-                Pasos
+                {tx("pasos")}
               </p>
               <ol className="space-y-3">
                 {current.steps.map((step, i) => (
@@ -1857,7 +1851,7 @@ export function ExecuteSessionClient({
           {current.notes && (
             <div className="rounded-[22px] border border-amber-500/20 bg-amber-500/10 p-4">
               <p className="mb-1.5 text-[10px] font-black uppercase text-amber-500/80">
-                Notas del entrenador
+                {tx("notasDelEntrenador")}
               </p>
               <p className="text-sm text-foreground/80 leading-relaxed">
                 {current.notes}
@@ -1869,7 +1863,7 @@ export function ExecuteSessionClient({
           {current.tips && (
             <div className="rounded-[22px] border border-[#050505]/10 bg-white p-4 dark:border-white/10 dark:bg-[#10100e]">
               <p className="mb-1.5 text-[10px] font-black uppercase text-muted-foreground">
-                Tips
+                {tx("tips")}
               </p>
               <p className="text-sm text-foreground/70 leading-relaxed">
                 {current.tips}
@@ -1887,7 +1881,7 @@ export function ExecuteSessionClient({
               <button
                 type="button"
                 onClick={() => setShowRoadmap(false)}
-                aria-label="Cerrar hoja de ruta"
+                aria-label={tx("cerrarHojaDeRuta")}
                 className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground dark:border-white/10"
               >
                 <X className="size-4" />
@@ -1897,7 +1891,7 @@ export function ExecuteSessionClient({
           </div>
           <button
             type="button"
-            aria-label="Cerrar hoja de ruta"
+            aria-label={tx("cerrarHojaDeRuta")}
             onClick={() => setShowRoadmap(false)}
             className="flex-1 bg-black/40"
           />
@@ -1947,7 +1941,7 @@ export function ExecuteSessionClient({
           onClick={skipCurrent}
           className="h-12 shrink-0 rounded-full border border-[#050505]/10 px-4 text-xs font-black text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
         >
-          Saltar
+          {tx("saltar")}
         </button>
 
         <button
@@ -1957,12 +1951,12 @@ export function ExecuteSessionClient({
           {currentIdx < totalExercises - 1 ? (
             <>
               <SkipForward className="size-4" />
-              Siguiente
+              {tx("siguiente")}
             </>
           ) : (
             <>
               <CheckCircle2 className="size-4" />
-              Completar sesión
+              {tx("completarSesion")}
             </>
           )}
         </button>
@@ -1981,11 +1975,10 @@ export function ExecuteSessionClient({
                 <CheckCircle2 className="size-7" />
               </div>
               <h2 className="mb-1 text-2xl font-black text-foreground">
-                ¡Sesión completada!
+                {tx("sesionCompletada3")}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {done.size} de {totalExercises} elementos realizados
-              </p>
+                {tx("v1DeV2Elementos", { v1: done.size, v2: totalExercises })}</p>
               {finishError && (
                 <p className="mt-3 text-sm font-semibold text-destructive">
                   {finishError}
@@ -2010,13 +2003,12 @@ export function ExecuteSessionClient({
           <div className="relative flex max-h-[88dvh] w-full max-w-md flex-col overflow-hidden rounded-[28px] border border-[#050505]/10 bg-white shadow-2xl dark:border-white/10 dark:bg-[#10100e]">
             <div className="border-b border-[#050505]/10 p-4 dark:border-white/10">
               <p className="text-xs font-semibold text-muted-foreground">
-                Sustituir «{current.name}» por:
-              </p>
+                {tx("sustituirV1Por", { v1: current.name })}</p>
               <input
                 autoFocus
                 value={planSearch}
                 onChange={(e) => void searchPlanExercises(e.target.value)}
-                placeholder="Busca un ejercicio…"
+                placeholder={tx("buscaUnEjercicio")}
                 className="mt-2 h-11 w-full rounded-xl border border-[#050505]/15 bg-background px-3 text-base text-foreground outline-none focus:border-brand dark:border-white/15"
               />
               {planError && (
@@ -2032,7 +2024,7 @@ export function ExecuteSessionClient({
                 </li>
               ) : planResults.length === 0 ? (
                 <li className="p-6 text-center text-sm text-muted-foreground">
-                  No hay ejercicios con ese nombre.
+                  {tx("noHayEjerciciosCon")}
                 </li>
               ) : (
                 planResults
@@ -2056,8 +2048,7 @@ export function ExecuteSessionClient({
                           )}
                         </span>
                         <span className="shrink-0 text-xs text-muted-foreground">
-                          {ex.durationMinutes} min
-                        </span>
+                          {tx("v1Min", { v1: ex.durationMinutes })}</span>
                       </button>
                     </li>
                   ))
@@ -2086,7 +2077,7 @@ export function ExecuteSessionClient({
             <div className="mb-2 flex items-center gap-2">
               <NotebookPen className="size-4 text-brand" />
               <h2 className="text-base font-black text-foreground">
-                Bloc de notas
+                {tx("blocDeNotas")}
               </h2>
               <span className="ml-auto text-[11px] text-muted-foreground">
                 {notesSaved === "saving"
@@ -2094,13 +2085,12 @@ export function ExecuteSessionClient({
                   : notesSaved === "saved"
                     ? "Guardado"
                     : notesSaved === "error"
-                      ? "No se pudo guardar"
+                      ? tx("noSePudoGuardar4")
                       : ""}
               </span>
             </div>
             <p className="mb-3 text-xs text-muted-foreground">
-              Apunta lo que no quieras olvidar. Se guarda en los comentarios de
-              la sesión y lo verás al cerrarla y en la ficha.
+              {tx("apuntaLoQueNo")}
             </p>
             <textarea
               autoFocus
@@ -2111,7 +2101,7 @@ export function ExecuteSessionClient({
                 setSessionComment(e.target.value);
                 setNotesSaved("idle");
               }}
-              placeholder="Ej.: Julia cansada del hombro · repetir saque cruzado · cambiar el juego final…"
+              placeholder={tx("ejJuliaCansadaDel")}
               className="w-full resize-none rounded-2xl border border-[#050505]/10 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40 dark:border-white/10"
             />
             <button
@@ -2119,7 +2109,7 @@ export function ExecuteSessionClient({
               onClick={() => void closeNotes()}
               className="mt-3 h-11 w-full rounded-full bg-foreground text-sm font-black text-background"
             >
-              Guardar y volver a la clase
+              {tx("guardarYVolverA")}
             </button>
           </div>
         </div>
@@ -2134,12 +2124,11 @@ export function ExecuteSessionClient({
             <div className="mb-2 flex items-center gap-2">
               <Timer className="size-4 text-brand" />
               <h2 className="text-base font-black text-foreground">
-                Cronómetro
+                {tx("cronometro")}
               </h2>
             </div>
             <p className="mb-4 text-xs text-muted-foreground">
-              Úsalo cuando lo necesites. Sigue contando aunque cierres este
-              panel y es independiente del temporizador del ejercicio.
+              {tx("usaloCuandoLoNecesites")}
             </p>
             <p
               className="mb-4 text-center text-6xl font-black tabular-nums text-foreground"
@@ -2155,7 +2144,7 @@ export function ExecuteSessionClient({
               >
                 {swStartedAt !== null ? (
                   <>
-                    <Pause className="size-4" /> Pausar
+                    <Pause className="size-4" />{" "}{tx("pausar")}
                   </>
                 ) : (
                   <>
@@ -2168,8 +2157,8 @@ export function ExecuteSessionClient({
                 type="button"
                 onClick={resetStopwatch}
                 disabled={swElapsedMs === 0 && swStartedAt === null}
-                aria-label="Reiniciar cronómetro"
-                title="Reiniciar"
+                aria-label={tx("reiniciarCronometro")}
+                title={tx("reiniciar")}
                 className="flex size-11 items-center justify-center rounded-full border border-[#050505]/15 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40 dark:border-white/15"
               >
                 <RotateCcw className="size-4" />
@@ -2180,7 +2169,7 @@ export function ExecuteSessionClient({
               onClick={() => setStopwatchOpen(false)}
               className="mt-3 h-10 w-full rounded-full border border-[#050505]/15 text-sm font-black text-muted-foreground dark:border-white/15"
             >
-              Cerrar
+              {tx("cerrar")}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * Botón "Editar grupo" para la cabecera: cambia el nombre y la descripción.
@@ -19,6 +20,7 @@ export function GroupEditDetails({
   name: string;
   description: string | null;
 }) {
+  const tx = useTranslations("ui.s_id_groupeditdetails");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [nameValue, setNameValue] = useState(name);
@@ -49,13 +51,13 @@ export function GroupEditDetails({
         }),
       });
       if (!res.ok) {
-        setError("No se pudo guardar. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       setOpen(false);
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -69,7 +71,7 @@ export function GroupEditDetails({
         className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-black text-white/80 transition-colors hover:bg-white/12 hover:text-white"
       >
         <Pencil className="size-4" />
-        Editar grupo
+        {tx("editarGrupo")}
       </button>
     );
   }
@@ -84,7 +86,7 @@ export function GroupEditDetails({
           htmlFor="group-edit-name"
           className="text-[11px] font-black uppercase text-white/55"
         >
-          Nombre <span className="text-[#D6FF38]">*</span>
+          {tx("nombre")}{" "}<span className="text-[#D6FF38]">*</span>
         </label>
         <input
           id="group-edit-name"
@@ -101,13 +103,13 @@ export function GroupEditDetails({
           htmlFor="group-edit-description"
           className="text-[11px] font-black uppercase text-white/55"
         >
-          Descripción
+          {tx("descripcion")}
         </label>
         <input
           id="group-edit-description"
           value={descriptionValue}
           onChange={(e) => setDescriptionValue(e.target.value)}
-          placeholder="Nivel, horario, pista..."
+          placeholder={tx("nivelHorarioPista")}
           maxLength={255}
           className="h-11 w-full rounded-full border border-white/15 bg-black/30 px-4 text-sm font-medium text-white outline-none placeholder:text-white/30 focus:border-[#D6FF38]"
         />
@@ -119,7 +121,7 @@ export function GroupEditDetails({
           onClick={() => setOpen(false)}
           className="flex-1 rounded-full border border-white/15 px-4 py-2.5 text-sm font-black text-white/70 transition-colors hover:bg-white/10"
         >
-          Cancelar
+          {tx("cancelar")}
         </button>
         <button
           type="submit"
@@ -127,7 +129,7 @@ export function GroupEditDetails({
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#D6FF38] px-4 py-2.5 text-sm font-black text-[#050505] transition-colors hover:bg-[#c8ef2f] disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
-          Guardar
+          {tx("guardar")}
         </button>
       </div>
     </form>

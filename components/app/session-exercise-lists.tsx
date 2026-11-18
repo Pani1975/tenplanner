@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from "next-intl";
 
 interface ExerciseListItem {
   id: string;
@@ -52,6 +53,7 @@ export function SessionExerciseLists({
   onApplyList,
   contextLabel = "la sesión",
 }: SessionExerciseListsProps) {
+  const tx = useTranslations("ui.s_app_sessionexerciselists");
   const [lists, setLists] = useState<ExerciseListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectDialogOpen, setSelectDialogOpen] = useState(false);
@@ -138,10 +140,10 @@ export function SessionExerciseLists({
         ) : lists.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
             <p className="text-sm font-medium text-foreground">
-              No tienes listas guardadas todavía.
+              {tx("noTienesListasGuardadas")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Guarda ejercicios en una lista y podrás reutilizarlos aquí.
+              {tx("guardaEjerciciosEnUna")}
             </p>
           </div>
         ) : (
@@ -166,11 +168,9 @@ export function SessionExerciseLists({
                         </p>
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        {list.itemsCount} ejercicio
-                        {list.itemsCount !== 1 ? "s" : ""}
-                        {alreadyAdded > 0
+                        {tx("v1EjercicioV2V3", { v1: list.itemsCount, v2: list.itemsCount !== 1 ? "s" : "", v3: alreadyAdded > 0
                           ? ` · ${alreadyAdded} ya en ${contextLabel}`
-                          : ""}
+                          : "" })}
                       </p>
                     </div>
                     <button
@@ -185,7 +185,7 @@ export function SessionExerciseLists({
                       )}
                     >
                       <Plus className="size-3" />
-                      Añadir
+                      {tx("anadir")}
                     </button>
                   </div>
 
@@ -201,8 +201,7 @@ export function SessionExerciseLists({
                       ))}
                       {list.items.length > 3 ? (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                          +{list.items.length - 3} más
-                        </span>
+                          {tx("v1Mas", { v1: list.items.length - 3 })}</span>
                       ) : null}
                     </div>
                   ) : null}
@@ -217,7 +216,7 @@ export function SessionExerciseLists({
         <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="pr-6">
-              Selecciona ejercicios de {selectingList?.name}
+              {tx("seleccionaEjerciciosDeV1", { v1: selectingList?.name ?? "" })}
             </DialogTitle>
           </DialogHeader>
 
@@ -241,8 +240,7 @@ export function SessionExerciseLists({
               {allSelected ? "Quitar selección" : "Seleccionar todos"}
             </button>
             <span className="tabular-nums text-muted-foreground">
-              {selectedItems.size} de {selectableItems.length} seleccionados
-            </span>
+              {tx("v1DeV2Seleccionados", { v1: selectedItems.size, v2: selectableItems.length })}</span>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-foreground/10 bg-background">
@@ -300,7 +298,7 @@ export function SessionExerciseLists({
                         </span>
                         {item.videoUrl ? (
                           <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Video className="size-3" /> Vídeo
+                            <Video className="size-3" />{" "}{tx("video")}
                           </span>
                         ) : null}
                       </div>
@@ -315,7 +313,7 @@ export function SessionExerciseLists({
                           onClick={() => setQuickView(item)}
                           className="text-foreground/50 hover:text-foreground"
                         >
-                          Vista rápida
+                          {tx("vistaRapida")}
                         </button>
                         <a
                           href={`/exercises/${item.id}`}
@@ -323,7 +321,7 @@ export function SessionExerciseLists({
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-brand hover:opacity-70"
                         >
-                          Ficha <ArrowRight className="size-3" />
+                          {tx("ficha")}{" "}<ArrowRight className="size-3" />
                         </a>
                       </div>
                     </div>
@@ -339,7 +337,7 @@ export function SessionExerciseLists({
               onClick={() => setSelectDialogOpen(false)}
               className="flex-1 rounded-lg border border-foreground/15 px-4 py-2 text-sm font-semibold transition-colors hover:bg-foreground/5"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"
@@ -348,7 +346,7 @@ export function SessionExerciseLists({
               className="flex-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-foreground transition-colors hover:bg-brand/90 disabled:opacity-50"
             >
               <Check className="mr-1 inline size-4" />
-              Añadir ({selectedItems.size})
+              {tx("anadir2")}{selectedItems.size})
             </button>
           </div>
         </DialogContent>

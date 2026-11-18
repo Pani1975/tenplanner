@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export function GroupReportButton({
   groupId,
@@ -11,6 +12,7 @@ export function GroupReportButton({
   groupId: string;
   tone?: "light" | "hero";
 }) {
+  const tx = useTranslations("ui.s_app_groupreportbutton");
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +59,7 @@ export function GroupReportButton({
         ) : (
           <FileDown className="size-4" />
         )}
-        Informe PDF
+        {tx("informePdf")}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

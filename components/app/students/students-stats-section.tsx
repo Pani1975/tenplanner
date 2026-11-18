@@ -12,8 +12,10 @@ import {
   YAxis,
 } from "recharts";
 import { CalendarClock, MapPin, UsersRound, Users } from "lucide-react";
-import { studentsLabel, type StudentsStats } from "@/lib/students/stats";
+import { type StudentsStats } from "@/lib/students/stats";
 import { StudentsReportButton } from "./students-report-button";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const StudentsMap = dynamic(
   () => import("./students-map").then((m) => m.StudentsMap),
@@ -89,19 +91,21 @@ export function StudentsStatsSection({
   stats: StudentsStats;
   reportHref: string;
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_students_studentsstatssection");
   const hasLevels = stats.levels.some((l) => l.count > 0);
   const hasAges = stats.allAgeBands.some((b) => b.count > 0);
   const fmtAge = (n: number | null) =>
-    n === null ? "—" : `${String(n).replace(".", ",")} años`;
+    n === null ? "—" : tx("yearsFmt", { n: String(n).replace(".", ",") });
   const groupBars = stats.groupSizes.slice(0, 8);
 
   return (
-    <section className="space-y-4" aria-label="Estadísticas de alumnos">
+    <section className="space-y-4" aria-label={tx("estadisticasDeAlumnos")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black text-foreground">Estadísticas</h2>
+          <h2 className="text-lg font-black text-foreground">{tx("estadisticas")}</h2>
           <p className="text-sm text-muted-foreground">
-            Niveles, edades, grupos y procedencia de los alumnos.
+            {tx("nivelesEdadesGruposY")}
           </p>
         </div>
         <StudentsReportButton href={reportHref} />
@@ -110,32 +114,32 @@ export function StudentsStatsSection({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi
           icon={Users}
-          label="Alumnos"
+          label={tx("alumnos")}
           value={String(stats.totalStudents)}
-          hint={`${stats.groupedStudents} en algún grupo`}
+          hint={tx("inSomeGroup", { n: stats.groupedStudents })}
         />
         <Kpi
           icon={UsersRound}
-          label="Grupos"
+          label={tx("grupos")}
           value={String(stats.groupCount)}
         />
         <Kpi
           icon={CalendarClock}
-          label="Edad media"
+          label={tx("edadMedia")}
           value={fmtAge(stats.ageSummary.average)}
           hint={
             stats.ageSummary.counted > 0
-              ? `Mediana ${fmtAge(stats.ageSummary.median)} · ${stats.ageSummary.counted} de ${stats.totalStudents} con fecha`
-              : "Sin fechas de nacimiento"
+              ? tx("medianLine", { median: fmtAge(stats.ageSummary.median), counted: stats.ageSummary.counted, total: stats.totalStudents })
+              : tx("noBirthDates")
           }
         />
         <Kpi
           icon={MapPin}
-          label="Localidades"
+          label={tx("localidades")}
           value={String(stats.origins.length)}
           hint={
             stats.withoutLocality > 0
-              ? `${studentsLabel(stats.withoutLocality)} sin localidad`
+              ? tx("withoutLocality", { n: stats.withoutLocality })
               : undefined
           }
         />
@@ -144,12 +148,9 @@ export function StudentsStatsSection({
       {stats.incompleteStudents.length > 0 && (
         <details className="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
           <summary className="cursor-pointer font-semibold text-foreground">
-            {stats.completePct}% de fichas completas ·{" "}
-            {studentsLabel(stats.incompleteStudents.length)} con datos
-            pendientes
+            {tx("incompleteSummary", { pct: stats.completePct, n: stats.incompleteStudents.length })}
             <span className="block text-xs font-normal text-muted-foreground">
-              Sin fecha de nacimiento, nivel o localidad el alumno no aparece en
-              todos los gráficos.
+              {tx("sinFechaDeNacimiento")}
             </span>
           </summary>
           <ul className="mt-3 space-y-1.5">
@@ -162,7 +163,7 @@ export function StudentsStatsSection({
                   {s.name}
                 </a>
                 <span className="text-muted-foreground">
-                  Falta: {s.missing.join(", ")}
+                  {tx("faltaV1", { v1: s.missing.map((m) => term(m)).join(", ") })}
                 </span>
               </li>
             ))}
@@ -171,14 +172,14 @@ export function StudentsStatsSection({
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Alumnos por nivel" note="Según la etiqueta de nivel">
+        <Card title={tx("alumnosPorNivel")} note={tx("byLevelTag")}>
           {!hasLevels ? (
-            <Empty text="Ningún alumno tiene nivel asignado." />
+            <Empty text={tx("ningunAlumnoTieneNivel")} />
           ) : (
             <div className="h-64 text-foreground">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={stats.levels}
+                  data={stats.levels.map((d) => ({ ...d, label: term(d.label) }))}
                   margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid vertical={false} strokeOpacity={0.12} />
@@ -194,7 +195,7 @@ export function StudentsStatsSection({
                   <Tooltip
                     cursor={{ fillOpacity: 0.08 }}
                     formatter={(value) => [
-                      studentsLabel(Number(value)),
+                      tx("studentsCount", { n: Number(value) }),
                       "Alumnos",
                     ]}
                   />
@@ -210,20 +211,20 @@ export function StudentsStatsSection({
         </Card>
 
         <Card
-          title="Edades"
+          title={tx("edades")}
           note={
             stats.withoutBirthDate > 0
-              ? `${studentsLabel(stats.withoutBirthDate)} sin fecha de nacimiento no se cuenta${stats.withoutBirthDate === 1 ? "" : "n"}`
-              : "Todos los alumnos de la escuela"
+              ? tx("withoutBirthDate", { n: stats.withoutBirthDate })
+              : tx("allSchoolStudents")
           }
         >
           {!hasAges ? (
-            <Empty text="Faltan fechas de nacimiento en las fichas de los alumnos." />
+            <Empty text={tx("faltanFechasDeNacimiento")} />
           ) : (
             <div className="h-64 text-foreground">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={stats.allAgeBands}
+                  data={stats.allAgeBands.map((d) => ({ ...d, label: term(d.label) }))}
                   margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid vertical={false} strokeOpacity={0.12} />
@@ -232,7 +233,7 @@ export function StudentsStatsSection({
                   <Tooltip
                     cursor={{ fillOpacity: 0.08 }}
                     formatter={(value) => [
-                      studentsLabel(Number(value)),
+                      tx("studentsCount", { n: Number(value) }),
                       "Alumnos",
                     ]}
                   />
@@ -248,15 +249,15 @@ export function StudentsStatsSection({
         </Card>
 
         <Card
-          title="Alumnos por grupo"
+          title={tx("alumnosPorGrupo")}
           note={
             stats.groupSizes.length > groupBars.length
-              ? `Los ${groupBars.length} grupos con más alumnos de ${stats.groupCount}`
+              ? tx("topGroups", { shown: groupBars.length, total: stats.groupCount })
               : undefined
           }
         >
           {groupBars.length === 0 ? (
-            <Empty text="Todavía no hay grupos." />
+            <Empty text={tx("todaviaNoHayGrupos")} />
           ) : (
             <div
               className="text-foreground"
@@ -279,7 +280,7 @@ export function StudentsStatsSection({
                   <Tooltip
                     cursor={{ fillOpacity: 0.08 }}
                     formatter={(value) => [
-                      studentsLabel(Number(value)),
+                      tx("studentsCount", { n: Number(value) }),
                       "Alumnos",
                     ]}
                   />
@@ -295,15 +296,15 @@ export function StudentsStatsSection({
         </Card>
 
         <Card
-          title="Procedencia"
+          title={tx("procedencia")}
           note={
             stats.unlocatedStudents > 0
-              ? `${studentsLabel(stats.unlocatedStudents)} con una localidad que no se ha podido situar`
-              : "Un círculo por localidad; cuantos más alumnos, más grande"
+              ? tx("unlocated", { n: stats.unlocatedStudents })
+              : tx("circlePerLocality")
           }
         >
           {stats.origins.length === 0 ? (
-            <Empty text="Añade la localidad en la ficha de cada alumno para ver de dónde vienen." />
+            <Empty text={tx("anadeLaLocalidadEn")} />
           ) : (
             <StudentsMap origins={stats.origins} />
           )}

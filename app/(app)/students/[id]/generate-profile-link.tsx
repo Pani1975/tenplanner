@@ -3,12 +3,14 @@
 import { useState, useTransition } from "react";
 import { Link2, Copy, CheckCheck, Loader2, RefreshCw } from "lucide-react";
 import { generateProfileLink } from "./actions";
+import { useTranslations } from "next-intl";
 
 export function GenerateProfileLinkButton({
   studentId,
 }: {
   studentId: string;
 }) {
+  const tx = useTranslations("ui.s_id_generateprofilelink");
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -44,7 +46,7 @@ export function GenerateProfileLinkButton({
         ) : (
           <Link2 className="size-3.5" />
         )}
-        <span>Generar enlace</span>
+        <span>{tx("generarEnlace")}</span>
       </button>
     );
   }
@@ -75,7 +77,7 @@ export function GenerateProfileLinkButton({
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors self-start"
       >
         <RefreshCw className="size-3" />
-        Regenerar (caduca en 7 días)
+        {tx("regenerarCaducaEn7")}
       </button>
     </div>
   );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
+import { useTranslations } from "next-intl";
 
 /**
  * Indicador siempre visible (barra lateral / cabecera móvil) del deporte
@@ -19,6 +20,7 @@ export function SportBadge({
   activeSport: Sport;
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_sportbadge");
   const router = useRouter();
   const [activeSport, setActiveSportState] = useState<Sport>(
     initialActiveSport
@@ -55,7 +57,7 @@ export function SportBadge({
       setOpen(false);
       router.refresh();
     } else {
-      setError("No se pudo cambiar. Inténtalo de nuevo.");
+      setError(tx("noSePudoCambiar"));
     }
     setSaving(null);
   }
@@ -70,7 +72,7 @@ export function SportBadge({
       >
         <span className="min-w-0 flex-1 truncate">
           <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] opacity-55">
-            Deporte
+            {tx("deporte")}
           </span>
           {activeOption?.label ?? "Tenis"}
         </span>

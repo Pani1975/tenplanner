@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { students, studentVideos } from "@/db/schema";
 import { StudentForm } from "@/components/app/student-form";
 import type { HowFound, LeftReason } from "@/lib/students/membership";
+import { getTranslations } from "next-intl/server";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -31,6 +32,7 @@ interface PageProps {
 }
 
 export default async function EditStudentPage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_edit_page");
   const { id } = await params;
 
   const supabase = await createClient();
@@ -73,16 +75,16 @@ export default async function EditStudentPage({ params }: PageProps) {
         <Link
           href={`/students/${student.id}`}
           className="flex size-9 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-muted-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38] hover:text-[#050505]"
-          aria-label="Volver al alumno"
+          aria-label={tx("volverAlAlumno")}
         >
           <ArrowLeft className="size-4" />
         </Link>
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            Ficha de alumno
+            {tx("fichaDeAlumno")}
           </p>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Editar alumno
+            {tx("editarAlumno")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{student.name}</p>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface ClassList {
   id: string;
@@ -29,6 +30,7 @@ export function AddClassesToListDialog({
   classIds: string[];
   onDone?: () => void;
 }) {
+  const tx = useTranslations("ui.s_app_addclassestolistdialog");
   const router = useRouter();
   const [lists, setLists] = useState<ClassList[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,13 +86,13 @@ export function AddClassesToListDialog({
       );
       const added = results.filter(Boolean).length;
       if (added === 0) {
-        setError("No se pudo añadir ninguna clase. Inténtalo de nuevo.");
+        setError(tx("noSePudoAnadir"));
         return;
       }
       setDone({ listId, added });
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setAddingTo(null);
     }
@@ -108,7 +110,7 @@ export function AddClassesToListDialog({
         body: JSON.stringify({ name }),
       });
       if (!res.ok) {
-        setError("No se pudo crear la lista.");
+        setError(tx("noSePudoCrear"));
         return;
       }
       const { data: created } = (await res.json()) as {
@@ -140,17 +142,16 @@ export function AddClassesToListDialog({
         <div className="flex items-center justify-between border-b border-foreground/10 px-5 pb-4 pt-5">
           <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
-              Añadir a lista
+              {tx("anadirALista")}
             </p>
             <h2 className="truncate text-lg font-black text-foreground">
-              {classIds.length} clase{classIds.length !== 1 ? "s" : ""}{" "}
-              seleccionada{classIds.length !== 1 ? "s" : ""}
+              {tx("v1ClaseV2Seleccionada", { v1: classIds.length, v2: classIds.length !== 1 ? "s" : "", v3: classIds.length !== 1 ? "s" : "" })}
             </h2>
           </div>
           <button
             type="button"
             onClick={close}
-            aria-label="Cerrar"
+            aria-label={tx("cerrar")}
             className="flex size-8 items-center justify-center rounded-xl text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
           >
             <X className="size-4" />
@@ -164,13 +165,10 @@ export function AddClassesToListDialog({
                 <Check className="size-5" strokeWidth={3} />
               </span>
               <p className="text-sm font-bold text-foreground">
-                {done.added} clase{done.added !== 1 ? "s" : ""} añadida
-                {done.added !== 1 ? "s" : ""}
+                {tx("v1ClaseV2Anadida", { v1: done.added, v2: done.added !== 1 ? "s" : "", v3: done.added !== 1 ? "s" : "" })}
               </p>
               <p className="text-xs text-foreground/45">
-                Guardadas en{" "}
-                {lists.find((l) => l.id === done.listId)?.name ?? "la lista"}.
-              </p>
+                {tx("guardadasEnV1", { v1: lists.find((l) => l.id === done.listId)?.name ?? tx("theList") })}</p>
             </div>
           ) : loading ? (
             <div className="flex items-center justify-center py-10">
@@ -178,7 +176,7 @@ export function AddClassesToListDialog({
             </div>
           ) : lists.length === 0 && !showNew ? (
             <p className="py-6 text-center text-sm text-foreground/60">
-              Aún no tienes listas de clases. Crea la primera.
+              {tx("aunNoTienesListas")}
             </p>
           ) : (
             lists.map((list) => (
@@ -224,7 +222,7 @@ export function AddClassesToListDialog({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") void createListAndAdd();
                   }}
-                  placeholder="Ej: Adultos iniciación"
+                  placeholder={tx("ejAdultosIniciacion")}
                   maxLength={100}
                   className="min-w-0 flex-1 rounded-xl border border-foreground/15 bg-foreground/[0.02] px-3 py-2 text-sm placeholder:text-foreground/30 focus:border-[#D6FF38] focus:outline-none"
                 />
@@ -248,7 +246,7 @@ export function AddClassesToListDialog({
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
               >
                 <Plus className="size-4" />
-                Nueva lista
+                {tx("nuevaLista")}
               </button>
             )}
             {error && (
@@ -264,7 +262,7 @@ export function AddClassesToListDialog({
               onClick={close}
               className="w-full rounded-xl bg-[#D6FF38] py-2.5 text-sm font-bold text-[#050505]"
             >
-              Listo
+              {tx("listo")}
             </button>
           </div>
         )}

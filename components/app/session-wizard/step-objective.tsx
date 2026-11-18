@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
 import { appendObjectiveLines } from "@/lib/objectives-text";
 import type { WizardState } from "./types";
+import { useTranslations } from "next-intl";
 
 interface StepObjectiveProps {
   state: WizardState;
@@ -13,6 +14,7 @@ interface StepObjectiveProps {
 }
 
 export function StepObjective({ state, update, errors }: StepObjectiveProps) {
+  const tx = useTranslations("ui.s_sessionwizard_stepobjective");
   const [tagInput, setTagInput] = useState("");
 
   function addTag(raw: string) {
@@ -51,9 +53,9 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
             htmlFor="objective"
             className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
           >
-            Objetivos{" "}
+            {tx("objetivos")}{" "}
             <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-              opcional · uno por línea
+              {tx("opcionalUnoPorLinea")}
             </span>
           </label>
           <ObjectivesPicker
@@ -73,7 +75,7 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
           id="objective"
           value={state.objective}
           onChange={(e) => update({ objective: e.target.value })}
-          placeholder="Qué debe mejorar el alumno o grupo en esta sesión."
+          placeholder={tx("queDebeMejorarEl")}
           rows={4}
           maxLength={2000}
           className="w-full px-4 py-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground/50 resize-y leading-relaxed"
@@ -86,16 +88,16 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
             htmlFor="material"
             className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
           >
-            Material{" "}
+            {tx("material")}{" "}
             <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-              opcional
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="material"
             value={state.material}
             onChange={(e) => update({ material: e.target.value })}
-            placeholder="Conos, pelotas, marcas, cestas..."
+            placeholder={tx("conosPelotasMarcasCestas")}
             rows={4}
             maxLength={2000}
             className="w-full px-4 py-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed"
@@ -107,16 +109,16 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
             htmlFor="observations"
             className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
           >
-            Observaciones{" "}
+            {tx("observaciones")}{" "}
             <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-              opcional
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="observations"
             value={state.observations}
             onChange={(e) => update({ observations: e.target.value })}
-            placeholder="Adaptaciones, notas de seguridad o foco técnico."
+            placeholder={tx("adaptacionesNotasDeSeguridad")}
             rows={4}
             maxLength={4000}
             className="w-full px-4 py-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed"
@@ -129,9 +131,9 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
           htmlFor="tag-input"
           className="block text-xs font-bold uppercase tracking-widest text-muted-foreground"
         >
-          Etiquetas{" "}
+          {tx("etiquetas")}{" "}
           <span className="text-[10px] normal-case tracking-normal font-normal text-muted-foreground">
-            max. 10
+            {tx("max10")}
           </span>
         </label>
         <div className="flex flex-wrap gap-2 p-2.5 min-h-11 bg-background border border-border rounded-xl focus-within:ring-2 focus-within:ring-brand/40 focus-within:border-brand/50 transition-colors">
@@ -158,14 +160,13 @@ export function StepObjective({ state, update, errors }: StepObjectiveProps) {
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={onTagKeyDown}
             onBlur={() => tagInput && addTag(tagInput)}
-            placeholder={state.tags.length === 0 ? "Ej: saque, control..." : ""}
+            placeholder={state.tags.length === 0 ? tx("ejSaqueControl") : ""}
             disabled={state.tags.length >= 10}
             className="flex-1 min-w-[120px] h-7 px-1 text-sm bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground/50"
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Pulsa Enter o coma para añadir - {state.tags.length}/10
-        </p>
+          {tx("pulsaEnterOComa", { v1: state.tags.length })}</p>
         {errors.tags && (
           <p className="text-xs text-destructive font-medium">{errors.tags}</p>
         )}

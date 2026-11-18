@@ -1,20 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NotebookPen } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const tx = await getTranslations("ui.s_auth_layout");
+  const t = await getTranslations("auth.layout");
   return (
     <div className="min-h-screen bg-[#F4F4F1] text-[#050505] dark:bg-[#050505] dark:text-white">
       <div className="grid min-h-screen lg:grid-cols-[minmax(360px,0.92fr)_minmax(0,1.08fr)]">
         <aside className="relative hidden overflow-hidden border-r border-[#050505]/10 bg-[#050505] text-white dark:border-white/10 lg:block">
           <Image
             src="/landing/racket-motion.jpg"
-            alt="Entrenamiento de deportes de raqueta en pista"
+            alt={t("imageAlt")}
             fill
             priority
             sizes="42vw"
@@ -29,20 +33,19 @@ export default function AuthLayout({
                 <NotebookPen className="size-4" strokeWidth={2} />
               </span>
               <span className="text-lg font-black tracking-tight">
-                TenPlanner
+                {tx("tenplanner")}
               </span>
             </Link>
 
             <div className="max-w-xl pb-4">
               <span className="inline-flex rounded-lg bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#050505]">
-                Deportes de raqueta
+                {t("badge")}
               </span>
               <h2 className="mt-5 text-5xl font-black leading-[0.92] xl:text-6xl">
-                Planifica mejor. Entrena con método.
+                {t("headline")}
               </h2>
               <p className="mt-5 max-w-md text-sm font-semibold leading-7 text-white/66">
-                Ejercicios, clases, sesiones, alumnos y grupos organizados en un
-                sistema operativo para entrenadores.
+                {t("tagline")}
               </p>
             </div>
           </div>
@@ -55,10 +58,13 @@ export default function AuthLayout({
                 <NotebookPen className="size-4" strokeWidth={2} />
               </span>
               <span className="text-sm font-black tracking-tight">
-                TenPlanner
+                {tx("tenplanner")}
               </span>
             </Link>
-            <ThemeToggle compact />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <ThemeToggle compact />
+            </div>
           </header>
 
           <main
@@ -78,12 +84,12 @@ export default function AuthLayout({
           </main>
 
           <footer className="px-4 pb-6 text-center text-xs font-medium text-[#050505]/46 dark:text-white/40">
-            Al continuar, aceptas nuestros{" "}
+            {t("termsBefore")}{" "}
             <Link
               href="/terminos"
               className="font-bold underline decoration-[#050505]/20 underline-offset-4 transition-colors hover:text-[#050505] dark:decoration-white/20 dark:hover:text-white"
             >
-              Términos de Servicio
+              {t("termsLink")}
             </Link>
           </footer>
         </div>

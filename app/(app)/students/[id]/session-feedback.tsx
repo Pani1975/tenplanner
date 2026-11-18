@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, X, Loader2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { saveSessionFeedback } from "./actions";
+import { useTranslations } from "next-intl";
 
 type Props = {
   sessionStudentId: string;
@@ -20,6 +21,7 @@ export function SessionFeedback({
   initialRating,
   initialFeedback,
 }: Props) {
+  const tx = useTranslations("ui.s_id_sessionfeedback");
   const [attended, setAttended] = useState<boolean | null>(initialAttended);
   const [rating, setRating] = useState<number | null>(initialRating);
   const [feedback, setFeedback] = useState<string>(initialFeedback ?? "");
@@ -51,7 +53,7 @@ export function SessionFeedback({
     <div className="space-y-3 mt-3 pt-3 border-t border-border/60">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Asistencia
+          {tx("asistencia")}
         </span>
         <button
           type="button"
@@ -67,7 +69,7 @@ export function SessionFeedback({
               : "bg-background border-border text-muted-foreground hover:border-brand/30"
           )}
         >
-          <Check className="size-3" /> Asistió
+          <Check className="size-3" />{" "}{tx("asistio")}
         </button>
         <button
           type="button"
@@ -83,20 +85,20 @@ export function SessionFeedback({
               : "bg-background border-border text-muted-foreground hover:border-destructive/30"
           )}
         >
-          <X className="size-3" /> Faltó
+          <X className="size-3" />{" "}{tx("falto")}
         </button>
 
         <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           {isPending && <Loader2 className="size-3 animate-spin" />}
           {saved && !isPending && (
-            <span className="text-brand font-medium">Guardado</span>
+            <span className="text-brand font-medium">{tx("guardado")}</span>
           )}
         </span>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Valoración
+          {tx("valoracion")}
         </span>
         <div className="flex gap-0.5">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -129,7 +131,7 @@ export function SessionFeedback({
         onChange={(e) => setFeedback(e.target.value)}
         onBlur={() => save(attended, rating, feedback)}
         rows={2}
-        placeholder="Feedback breve sobre la sesión: progreso, obstáculos, siguiente foco…"
+        placeholder={tx("feedbackBreveSobreLa")}
         className="w-full text-sm bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
       />
     </div>

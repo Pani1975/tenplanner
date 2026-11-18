@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function DeleteStudentButton({
   studentId,
@@ -11,6 +12,7 @@ export function DeleteStudentButton({
   studentId: string;
   studentName: string;
 }) {
+  const tx = useTranslations("ui.s_id_deletestudentbutton");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -21,7 +23,7 @@ export function DeleteStudentButton({
     setError(null);
     const res = await fetch(`/api/students/${studentId}`, { method: "DELETE" });
     if (!res.ok) {
-      setError("No se pudo eliminar el alumno. Inténtalo de nuevo.");
+      setError(tx("noSePudoEliminar"));
       setDeleting(false);
       return;
     }
@@ -36,7 +38,7 @@ export function DeleteStudentButton({
         className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive border border-destructive/30 px-3 py-2 rounded-lg hover:bg-destructive/10 transition-colors"
       >
         <Trash2 className="size-3.5" />
-        <span className="hidden sm:inline">Eliminar</span>
+        <span className="hidden sm:inline">{tx("eliminar")}</span>
       </button>
 
       {open && (
@@ -52,14 +54,14 @@ export function DeleteStudentButton({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground">
-                  Eliminar alumno
+                  {tx("eliminarAlumno")}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  ¿Seguro que quieres eliminar a{" "}
+                  {tx("sureDeleteStudent")}{" "}
                   <span className="font-medium text-foreground">
                     {studentName}
                   </span>
-                  ? Esta acción no se puede deshacer.
+                  {tx("questionCannotUndo")}
                 </p>
               </div>
               <button
@@ -80,7 +82,7 @@ export function DeleteStudentButton({
                 disabled={deleting}
                 className="flex-1 text-sm font-medium text-muted-foreground border border-border px-4 py-2.5 rounded-xl hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleDelete}
@@ -88,7 +90,7 @@ export function DeleteStudentButton({
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-destructive text-destructive-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-destructive/90 active:scale-95 transition-all duration-150 disabled:opacity-60"
               >
                 {deleting && <Loader2 className="size-4 animate-spin" />}
-                Eliminar
+                {tx("eliminar")}
               </button>
             </div>
           </div>

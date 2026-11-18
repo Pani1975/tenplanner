@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /** Cancelar una reserva de cliente desde la ocupación de pistas. */
 export function CancelBookingButton({
@@ -12,6 +13,7 @@ export function CancelBookingButton({
   id: string;
   name: string;
 }) {
+  const tx = useTranslations("ui.s_reservaspistas_cancelbookingbutton");
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,14 +49,14 @@ export function CancelBookingButton({
         className="inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-white"
       >
         {busy && <Loader2 className="size-3 animate-spin" />}
-        Cancelar reserva
+        {tx("cancelarReserva")}
       </button>
       <button
         type="button"
         onClick={() => setConfirming(false)}
         className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-foreground/60"
       >
-        No
+        {tx("no")}
       </button>
     </span>
   );

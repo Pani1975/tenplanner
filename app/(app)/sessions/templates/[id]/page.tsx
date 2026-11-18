@@ -14,6 +14,7 @@ import { AdoptTemplateButton } from "@/components/app/session-templates/adopt-te
 import { PublishTemplateActions } from "@/components/app/session-templates/publish-template-actions";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,6 +34,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export default async function SessionTemplatePage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_id_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -46,8 +48,8 @@ export default async function SessionTemplatePage({ params }: PageProps) {
   if (!templatesEnabled) {
     return (
       <FeatureLocked
-        title="Plantillas desactivadas"
-        description="El administrador ha pausado temporalmente la biblioteca de plantillas de sesión."
+        title={tx("plantillasDesactivadas")}
+        description={tx("elAdministradorHaPausado")}
         href="/sessions"
         cta="Volver a sesiones"
       />
@@ -110,19 +112,19 @@ export default async function SessionTemplatePage({ params }: PageProps) {
           href="/sessions/templates"
           className="inline-flex h-10 w-fit items-center gap-1.5 rounded-full border border-[#050505]/10 bg-white px-4 text-[12px] font-black text-foreground/60 transition-colors hover:text-foreground dark:border-white/10 dark:bg-[#10100e]"
         >
-          <ArrowLeft className="size-3.5" /> Plantillas
+          <ArrowLeft className="size-3.5" />{" "}{tx("plantillas")}
         </Link>
 
         {/* Masthead */}
         <header className="tp-hero-panel space-y-6 p-6 text-white sm:p-8">
           <div className="flex items-center justify-between gap-3">
             <p className="inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-              Plantilla
+              {tx("plantilla")}
             </p>
             {template.adoptionsCount > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[10px] font-black text-white">
                 <Download className="size-3" />
-                {template.adoptionsCount} adopciones
+                {template.adoptionsCount}{" "}{tx("adopciones")}
               </span>
             )}
           </div>
@@ -139,11 +141,11 @@ export default async function SessionTemplatePage({ params }: PageProps) {
               )}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1 text-[12px] font-bold text-white/70">
-                  <Clock className="size-3.5" /> {template.durationMinutes} min
+                  <Clock className="size-3.5" /> {template.durationMinutes}{" "}{tx("min")}
                 </span>
                 {template.intensity != null && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-3 py-1 text-[12px] font-bold text-white/70">
-                    <Zap className="size-3.5" /> Intensidad {template.intensity}
+                    <Zap className="size-3.5" />{" "}{tx("intensidad")}{" "}{template.intensity}
                     /5
                   </span>
                 )}
@@ -154,7 +156,7 @@ export default async function SessionTemplatePage({ params }: PageProps) {
                 )}
                 {template.authorName && (
                   <span className="text-[12px] font-semibold text-white/45">
-                    por {template.authorName}
+                    {tx("porV1", { v1: template.authorName })}
                   </span>
                 )}
               </div>
@@ -186,12 +188,11 @@ export default async function SessionTemplatePage({ params }: PageProps) {
         {/* Exercise list */}
         <section className="tp-panel space-y-4 p-5 sm:p-6">
           <p className="tp-kicker">
-            {templateExercises.length.toString().padStart(2, "0")} ejercicios
-          </p>
+            {tx("v1Ejercicios", { v1: templateExercises.length.toString().padStart(2, "0") })}</p>
 
           {templateExercises.length === 0 ? (
             <p className="text-[14px] text-foreground/45">
-              Esta plantilla no tiene ejercicios.
+              {tx("estaPlantillaNoTiene")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -227,9 +228,7 @@ export default async function SessionTemplatePage({ params }: PageProps) {
                     )}
                   </div>
                   <span className="text-[11px] text-foreground/40 tabular-nums shrink-0">
-                    {te.durationMinutes ?? te.exercise?.durationMinutes ?? "—"}{" "}
-                    min
-                  </span>
+                    {tx("v1Min", { v1: te.durationMinutes ?? te.exercise?.durationMinutes ?? "—" })}</span>
                 </div>
               ))}
             </div>

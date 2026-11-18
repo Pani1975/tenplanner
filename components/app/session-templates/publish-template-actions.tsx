@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Props {
   templateId: string;
 }
 
 export function PublishTemplateActions({ templateId }: Props) {
+  const tx = useTranslations("ui.s_sessiontemplates_publishtemplateactions");
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,13 +28,13 @@ export function PublishTemplateActions({ templateId }: Props) {
   return (
     <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/8 border border-brand/20 px-2.5 py-1 text-[11px] font-sans text-brand">
-        Tu plantilla
+        {tx("tuPlantilla")}
       </span>
 
       {confirmDelete ? (
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <span className="text-[12px] text-foreground/60">
-            ¿Eliminar plantilla?
+            {tx("eliminarPlantilla")}
           </span>
           <button
             onClick={handleDelete}
@@ -44,7 +46,7 @@ export function PublishTemplateActions({ templateId }: Props) {
             ) : (
               <Trash2 className="size-3.5" />
             )}
-            Confirmar
+            {tx("confirmar")}
           </button>
           <button
             onClick={() => setConfirmDelete(false)}
@@ -58,7 +60,7 @@ export function PublishTemplateActions({ templateId }: Props) {
           onClick={() => setConfirmDelete(true)}
           className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/15 px-3 py-1.5 text-[12px] font-medium text-foreground/60 hover:border-red-500/30 hover:text-red-500 transition-colors"
         >
-          <Trash2 className="size-3.5" /> Despublicar
+          <Trash2 className="size-3.5" />{" "}{tx("despublicar")}
         </button>
       )}
     </div>

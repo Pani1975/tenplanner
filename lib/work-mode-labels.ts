@@ -28,9 +28,29 @@ export function workModeOwner(mode: WorkMode): string {
   return name ? `de ${name}` : "";
 }
 
+const SECTION_EN: Record<string, string> = {
+  Calendario: "Calendar",
+  Clases: "Classes",
+  Ejercicios: "Exercises",
+  Grupos: "Groups",
+  Objetivos: "Goals",
+  Sesiones: "Sessions",
+  Alumnos: "Students",
+};
+
 /** Título de un apartado con su dueño: "Ejercicios CT Tenerife". */
-export function spaceTitle(section: string, mode: WorkMode): string {
+export function spaceTitle(
+  section: string,
+  mode: WorkMode,
+  locale: string = "es"
+): string {
   const owner = workModeOwner(mode);
+  if (locale === "en") {
+    const name = SECTION_EN[section] ?? section;
+    // "de David" -> "David's Exercises"
+    if (owner.startsWith("de ")) return `${owner.slice(3)}'s ${name}`;
+    return owner ? `${name} ${owner}` : name;
+  }
   return owner ? `${section} ${owner}` : section;
 }
 
@@ -39,17 +59,30 @@ export function spaceTitle(section: string, mode: WorkMode): string {
  * alumnos, grupos). En Modo Ten Planner esos datos siguen siendo del monitor,
  * no de la plataforma: "Alumnos de David".
  */
-export function personalTitle(section: string, mode: WorkMode): string {
+export function personalTitle(
+  section: string,
+  mode: WorkMode,
+  locale: string = "es"
+): string {
   if (mode.kind === "tenplanner")
-    return spaceTitle(section, {
-      kind: "particular",
-      ownerName: mode.ownerName,
-    });
-  return spaceTitle(section, mode);
+    return spaceTitle(
+      section,
+      { kind: "particular", ownerName: mode.ownerName },
+      locale
+    );
+  return spaceTitle(section, mode, locale);
 }
 
 /** Etiqueta del modo: "Modo administrador", "Modo CT Tenerife" o "Modo particular". */
-export function workModeKicker(mode: WorkMode): string {
+export function workModeKicker(mode: WorkMode, locale: string = "es"): string {
+  if (locale === "en")
+    return mode.kind === "tenplanner"
+      ? "Administrator mode"
+      : mode.kind === "club"
+        ? mode.management
+          ? "Management mode"
+          : `${mode.clubName} mode`
+        : "Individual mode";
   return mode.kind === "tenplanner"
     ? "Modo administrador"
     : mode.kind === "club"
@@ -67,12 +100,16 @@ export function workModeKicker(mode: WorkMode): string {
 export function libraryHeading(
   section: string,
   mode: WorkMode | null,
-  publicTab: boolean
+  publicTab: boolean,
+  locale: string = "es"
 ): { kicker: string; title: string } {
   if (!mode || publicTab)
     return {
-      kicker: "Biblioteca pública",
-      title: `${section} ${TEN_PLANNER_NAME}`,
+      kicker: locale === "en" ? "Public library" : "Biblioteca pública",
+      title: `${locale === "en" ? (SECTION_EN[section] ?? section) : section} ${TEN_PLANNER_NAME}`,
     };
-  return { kicker: workModeKicker(mode), title: spaceTitle(section, mode) };
+  return {
+    kicker: workModeKicker(mode, locale),
+    title: spaceTitle(section, mode, locale),
+  };
 }

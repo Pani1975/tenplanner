@@ -23,6 +23,7 @@ import {
   Users2,
   Wrench,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Step {
   title: string;
@@ -437,6 +438,7 @@ export function HelpGuide({
   defaultTab: string;
   defaultLevel?: "quick" | "full";
 }) {
+  const tx = useTranslations("ui.s_help_helpguide");
   // La pestaña de administradores ya no se muestra en el centro de ayuda.
   const [tab, setTab] = useState(defaultTab === "admin" ? "coach" : defaultTab);
   const [level, setLevel] = useState<"quick" | "full">(defaultLevel);
@@ -465,7 +467,7 @@ export function HelpGuide({
               : "text-foreground/60 hover:text-foreground"
           )}
         >
-          Guía rápida
+          {tx("guiaRapida")}
         </button>
         <button
           type="button"
@@ -477,14 +479,14 @@ export function HelpGuide({
               : "text-foreground/60 hover:text-foreground"
           )}
         >
-          Guía completa
+          {tx("guiaCompleta")}
         </button>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="items-start">
         <TabsList className="rounded-lg border border-foreground/12 bg-card/90">
-          <TabsTrigger value="coach">Monitores</TabsTrigger>
-          <TabsTrigger value="club">Clubes</TabsTrigger>
+          <TabsTrigger value="coach">{tx("monitores")}</TabsTrigger>
+          <TabsTrigger value="club">{tx("clubes")}</TabsTrigger>
         </TabsList>
 
         {(["coach", "club"] as const).map((key) => (

@@ -24,6 +24,7 @@ import { SessionWizard } from "@/components/app/session-wizard/session-wizard";
 import { planItemsToWizard } from "@/components/app/session-wizard/timeline";
 import { canEditSession } from "@/lib/sessions/permissions";
 import { getClubMembersDirectory } from "@/lib/clubs";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -43,6 +44,7 @@ export default async function EditSessionPage({
   params,
   searchParams,
 }: PageProps) {
+  const tx = await getTranslations("ui.s_edit_page");
   const supabase = await createClient();
   const {
     data: { session: authSession },
@@ -160,7 +162,7 @@ export default async function EditSessionPage({
           <div className="relative flex items-center gap-4">
             <Link
               href={`/sessions/${id}`}
-              aria-label="Volver a la sesión"
+              aria-label={tx("volverALaSesion")}
               className="flex size-10 shrink-0 items-center justify-center rounded-full border border-foreground/15 bg-[#F4F4F1] text-foreground/60 transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
             >
               <ArrowLeft className="size-4" />
@@ -168,12 +170,11 @@ export default async function EditSessionPage({
             <div className="min-w-0">
               <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/60 dark:bg-[#050505]/70">
                 <Pencil className="size-3.5 text-brand" />
-                Editar sesión
+                {tx("editarSesion")}
               </p>
               <h1 className="font-heading text-2xl leading-tight tracking-tight text-foreground md:text-3xl">
                 <em className="italic text-brand">
-                  &ldquo;{sessionRow.title}&rdquo;
-                </em>
+                  {tx("v1", { v1: sessionRow.title })}</em>
               </h1>
             </div>
           </div>

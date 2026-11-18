@@ -43,6 +43,8 @@ import {
   deleteStudentVideo,
   updateStudentVideo,
 } from "./video-actions";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 type Gender = "male" | "female" | "other";
 type DominantHand = "left" | "right";
@@ -95,8 +97,8 @@ function ageFromBirthDate(birthDate: string) {
   if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
   return age;
 }
-function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("es-ES", {
+function fmtDate(d: Date, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -113,6 +115,8 @@ const PAST_RENDER_LIMIT = 120;
 const UPCOMING_RENDER_LIMIT = 120;
 
 export default async function StudentDetailPage({ params }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_id_page");
   const { id } = await params;
 
   const supabase = await createClient();
@@ -217,15 +221,15 @@ export default async function StudentDetailPage({ params }: PageProps) {
   const objectiveScopes: ScopeOption[] = [
     {
       id: "student",
-      label: "Solo este alumno",
+      label: tx("soloEsteAlumno"),
       hint: `Los cambios solo afectan a ${student.name}.`,
     },
   ];
   if (!student.clubId && isOwner) {
     objectiveScopes.push({
       id: "coach",
-      label: "Todos mis alumnos",
-      hint: "Los cambios afectan a todos tus alumnos particulares.",
+      label: tx("todosMisAlumnos"),
+      hint: tx("losCambiosAfectanA"),
     });
   }
   const [statsRows, past, upcoming] = await Promise.all([
@@ -325,13 +329,13 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 href="/students"
                 className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-black uppercase text-white/70 transition-colors hover:text-white"
               >
-                ← Alumnos
+                {tx("alumnos")}
               </Link>
               <span className="text-[11px] font-black uppercase text-white/25">
                 /
               </span>
               <p className="rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-                Ficha individual
+                {tx("fichaIndividual")}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -346,7 +350,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                     className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 px-3 text-[11px] font-black uppercase text-white/70 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
                   >
                     <Pencil className="size-3" strokeWidth={1.6} />
-                    Editar
+                    {tx("editar")}
                   </Link>
                   <DeleteStudentButton
                     studentId={student.id}
@@ -379,7 +383,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-3 text-[12px] tabular-nums">
                 {student.leftAt && (
                   <span className="rounded-full bg-red-500/20 px-3 py-1 text-[10px] font-black uppercase text-red-200">
-                    De baja desde {formatDay(student.leftAt)}
+                    {tx("deBajaDesdeV1", { v1: formatDay(student.leftAt, intlLocale) })}
                   </span>
                 )}
                 {level && (
@@ -389,12 +393,11 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 )}
                 {age != null && (
                   <span className="rounded-full bg-white/8 px-3 py-1 text-[10px] font-black uppercase text-white/58">
-                    {age} años
-                  </span>
+                    {tx("v1Anos", { v1: age })}</span>
                 )}
                 {isReliable && (
                   <span className="rounded-full bg-[#D6FF38]/15 px-3 py-1 text-[10px] font-black uppercase text-[#D6FF38]">
-                    ◆ Fiable
+                    {tx("fiable")}
                   </span>
                 )}
                 {student.email && (
@@ -404,7 +407,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 )}
                 {!isOwner && authorName && (
                   <span className="rounded-full bg-white/8 px-3 py-1 text-[10px] font-black uppercase text-white/58">
-                    Alumno de {authorName}
+                    {tx("alumnoDeV1", { v1: authorName })}
                   </span>
                 )}
               </div>
@@ -425,18 +428,18 @@ export default async function StudentDetailPage({ params }: PageProps) {
 
         {/* Stats strip */}
         <section className="tp-panel grid grid-cols-2 overflow-hidden p-0 md:grid-cols-4">
-          <StatCell label="Sesiones totales" value={totalSessions.toString()} />
-          <StatCell label="Entrenadas" value={playedCount.toString()} />
-          <StatCell label="Próximas" value={upcomingCount.toString()} accent />
+          <StatCell label={tx("sesionesTotales")} value={totalSessions.toString()} />
+          <StatCell label={tx("entrenadas")} value={playedCount.toString()} />
+          <StatCell label={tx("proximas")} value={upcomingCount.toString()} accent />
           <StatCell
-            label="Horas entrenadas"
+            label={tx("horasEntrenadas")}
             value={formatHours(playedMinutes)}
           />
         </section>
 
         <TrainingStatsPanel
           stats={await trainingStatsPromise}
-          title="Estadística de entrenamiento"
+          title={tx("estadisticaDeEntrenamiento")}
         />
 
         {/* Perfil + enlace */}
@@ -447,21 +450,21 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 01
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Ficha física
+                {tx("fichaFisica")}
               </p>
             </div>
             <dl className="grid grid-cols-2 divide-x divide-y divide-[#050505]/10 border-b border-[#050505]/10 dark:divide-white/10 dark:border-white/10 md:grid-cols-3">
               <InfoRow
-                label="Género"
+                label={tx("genero")}
                 value={
                   student.gender ? GENDER_LABEL[student.gender as Gender] : "—"
                 }
               />
               <InfoRow
-                label="Nacimiento"
+                label={tx("nacimiento")}
                 value={
                   student.birthDate
-                    ? new Intl.DateTimeFormat("es-ES", {
+                    ? new Intl.DateTimeFormat(intlLocale, {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
@@ -470,7 +473,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 }
               />
               <InfoRow
-                label="Mano"
+                label={tx("mano")}
                 value={
                   student.dominantHand
                     ? HAND_LABEL[student.dominantHand as DominantHand]
@@ -478,15 +481,15 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 }
               />
               <InfoRow
-                label="Altura"
+                label={tx("altura")}
                 value={student.heightCm ? `${student.heightCm} cm` : "—"}
               />
               <InfoRow
-                label="Peso"
+                label={tx("peso")}
                 value={student.weightKg ? `${student.weightKg} kg` : "—"}
               />
               <InfoRow
-                label="Experiencia"
+                label={tx("experiencia")}
                 value={
                   student.yearsExperience != null
                     ? `${student.yearsExperience} año${student.yearsExperience !== 1 ? "s" : ""}`
@@ -496,15 +499,15 @@ export default async function StudentDetailPage({ params }: PageProps) {
             </dl>
 
             <p className="mt-6 mb-2 text-[10px] font-black uppercase text-foreground/50">
-              Alta y baja
+              {tx("altaYBaja")}
             </p>
             <dl className="grid grid-cols-2 divide-x divide-y divide-[#050505]/10 border-y border-[#050505]/10 dark:divide-white/10 dark:border-white/10 md:grid-cols-3">
               <InfoRow
-                label="Fecha de alta"
-                value={formatDay(student.joinedAt)}
+                label={tx("fechaDeAlta")}
+                value={formatDay(student.joinedAt, intlLocale)}
               />
               <InfoRow
-                label="Cómo nos conoció"
+                label={tx("comoNosConocio")}
                 value={
                   [howFoundLabel(student.howFound), student.howFoundDetail]
                     .filter(Boolean)
@@ -512,17 +515,17 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 }
               />
               <InfoRow
-                label="Estado"
+                label={tx("estado")}
                 value={student.leftAt ? "De baja" : "Activo"}
               />
               {student.leftAt && (
                 <>
                   <InfoRow
-                    label="Fecha de baja"
-                    value={formatDay(student.leftAt)}
+                    label={tx("fechaDeBaja")}
+                    value={formatDay(student.leftAt, intlLocale)}
                   />
                   <InfoRow
-                    label="Motivo de la baja"
+                    label={tx("motivoDeLaBaja")}
                     value={
                       [
                         leftReasonLabel(student.leftReason),
@@ -538,7 +541,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
             {student.notes && (
               <div className="mt-6">
                 <p className="mb-2 text-[10px] font-black uppercase text-foreground/50">
-                  Notas del entrenador
+                  {tx("notasDelEntrenador")}
                 </p>
                 <p className="whitespace-pre-wrap rounded-[20px] border border-brand/20 bg-brand/10 p-4 text-[15px] font-semibold leading-relaxed text-foreground/80">
                   {student.notes}
@@ -553,19 +556,17 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 02
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Enlace de perfil
+                {tx("enlaceDePerfil")}
               </p>
             </div>
             <p className="text-[13px] text-foreground/60 leading-relaxed mt-4 mb-4">
-              Genera un enlace temporal para que el alumno rellene sus datos
-              físicos sin necesidad de cuenta. Caduca en 7 días.
+              {tx("generaUnEnlaceTemporal")}
             </p>
             {isOwner ? (
               <GenerateProfileLinkButton studentId={student.id} />
             ) : (
               <p className="text-[12px] italic text-foreground/40">
-                Solo {authorName ?? "el entrenador"} puede generar este enlace.
-              </p>
+                {tx("soloV1PuedeGenerar", { v1: authorName ?? tx("theCoach") })}</p>
             )}
           </aside>
         </section>
@@ -575,7 +576,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
             <div className="mb-4 grid grid-cols-[auto_1fr] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
               <Mail className="size-3 text-brand" />
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Contactos para mensajes
+                {tx("contactosParaMensajes")}
               </p>
             </div>
             <GuardiansPanel
@@ -596,19 +597,18 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 03
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Fiabilidad · asistencia
+                {tx("fiabilidadAsistencia")}
               </p>
             </div>
             {pastWithAttendanceCount === 0 ? (
               <p className="text-[13px] text-foreground/55 mt-4">
-                Registra la asistencia en sesiones pasadas para ver esta
-                métrica.
+                {tx("registraLaAsistenciaEn")}
               </p>
             ) : (
               <div className="mt-5 space-y-3">
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] font-black uppercase text-foreground/55">
-                    Asistencia
+                    {tx("asistencia")}
                   </span>
                   <span className="text-3xl font-black tabular-nums text-foreground">
                     {Math.round((attendanceRate ?? 0) * 100)}%
@@ -630,8 +630,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                   />
                 </div>
                 <p className="text-[11px] text-foreground/50 tabular-nums">
-                  {attendedCount} de {pastWithAttendanceCount} sesiones con
-                  registro ·{" "}
+                  {attendedCount}{" "}{tx("de")}{" "}{pastWithAttendanceCount}{" "}{tx("sesionesConRegistro")}{" "}
                   {isReliable
                     ? "Cliente fiable"
                     : pastWithAttendanceCount < 3
@@ -648,13 +647,13 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 04
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Proyección · ritmo
+                {tx("proyeccionRitmo")}
               </p>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-5">
               <div>
                 <p className="mb-1 text-[9px] font-black uppercase text-foreground/45">
-                  Próxima
+                  {tx("proxima")}
                 </p>
                 {nextSession ? (
                   <Link
@@ -665,33 +664,33 @@ export default async function StudentDetailPage({ params }: PageProps) {
                       {nextSession.title}
                     </p>
                     <p className="text-[11px] text-foreground/50 mt-0.5 tabular-nums">
-                      {fmtDate(new Date(nextSession.scheduledAt))}
+                      {fmtDate(new Date(nextSession.scheduledAt), intlLocale)}
                     </p>
                   </Link>
                 ) : (
-                  <p className="text-[13px] text-foreground/50">Ninguna</p>
+                  <p className="text-[13px] text-foreground/50">{tx("ninguna")}</p>
                 )}
               </div>
               <div>
                 <p className="mb-1 text-[9px] font-black uppercase text-foreground/45">
-                  Ritmo
+                  {tx("ritmo")}
                 </p>
                 <p className="text-3xl font-black tabular-nums leading-none text-foreground">
                   {sessionsPerWeek}
                 </p>
                 <p className="text-[11px] text-foreground/50 mt-1">
-                  ses/semana · 30d
+                  {tx("sesSemana30d")}
                 </p>
               </div>
               <div>
                 <p className="mb-1 text-[9px] font-black uppercase text-foreground/45">
-                  Acumuladas
+                  {tx("acumuladas")}
                 </p>
                 <p className="text-3xl font-black tabular-nums leading-none text-foreground">
                   {formatHours(playedMinutes)}
                 </p>
                 <p className="text-[11px] text-foreground/50 mt-1">
-                  entrenadas
+                  {tx("entrenadas2")}
                 </p>
               </div>
             </div>
@@ -707,7 +706,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
               </p>
               <Video className="size-3 self-center text-brand" />
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Vídeos
+                {tx("videos")}
               </p>
               <p className="text-[10px] font-black tabular-nums text-foreground/40">
                 {videos.length}
@@ -735,7 +734,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 06
               </p>
               <p className="text-[10px] font-black uppercase text-foreground/50">
-                Objetivos por etapa
+                {tx("objetivosPorEtapa")}
               </p>
               <p className="text-[10px] font-black tabular-nums text-foreground/40">
                 {objectives.filter((o) => !o.hidden && o.achieved).length}/
@@ -759,7 +758,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
             <p className="text-[10px] font-black tabular-nums text-brand">07</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
-              Próximas sesiones
+              {tx("proximasSesiones")}
             </p>
             <p className="text-[10px] font-black tabular-nums text-foreground/40">
               {upcomingCount}
@@ -783,7 +782,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
             <p className="text-[10px] font-black tabular-nums text-brand">08</p>
             <p className="text-[10px] font-black uppercase text-foreground/50">
-              Historial y feedback
+              {tx("historialYFeedback")}
             </p>
             <p className="text-[10px] font-black tabular-nums text-foreground/40">
               {pastCount}
@@ -791,7 +790,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
           </div>
           {past.length === 0 ? (
             <p className="text-[13px] text-foreground/55 mt-6">
-              Todavía no hay sesiones completadas.
+              {tx("todaviaNoHaySesiones2")}
             </p>
           ) : (
             <ul className="divide-y divide-[#050505]/10 dark:divide-white/10">
@@ -819,7 +818,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                       {s.title}
                     </Link>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1 text-[11px] text-foreground/55 tabular-nums">
-                      <span>{fmtDate(new Date(s.scheduledAt))}</span>
+                      <span>{fmtDate(new Date(s.scheduledAt), intlLocale)}</span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="size-3" strokeWidth={1.6} />{" "}
                         {s.durationMinutes}′
@@ -849,7 +848,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                     ) : (
                       <p className="text-[12px] italic text-foreground/40">
                         {s.attended == null
-                          ? "Sin registro de asistencia."
+                          ? tx("sinRegistroDeAsistencia")
                           : s.attended
                             ? "Asistió."
                             : "No asistió."}
@@ -865,10 +864,10 @@ export default async function StudentDetailPage({ params }: PageProps) {
 
         <footer className="grid gap-3 pt-2 text-[11px] text-foreground/45 sm:grid-cols-[1fr_auto] sm:items-end sm:gap-4">
           <p className="max-w-md text-[13px] font-semibold text-foreground/55">
-            &ldquo;Entrenar es acompañar — cada ficha, una conversación.&rdquo;
+            {tx("entrenarEsAcompanarCada")}
           </p>
           <p className="font-black uppercase tabular-nums">
-            /tenplanner · 04·{student.id.slice(0, 4)}
+            {tx("tenplanner04V1", { v1: student.id.slice(0, 4) })}
           </p>
         </footer>
       </div>
@@ -903,9 +902,9 @@ function StatCell({
 }
 
 /** "05 nov 2026" a partir de una fecha YYYY-MM-DD (sin desfase horario). */
-function formatDay(isoDate: string | null) {
+function formatDay(isoDate: string | null, loc: string = "es-ES") {
   if (!isoDate) return "—";
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(loc, {
     day: "2-digit",
     month: "short",
     year: "numeric",

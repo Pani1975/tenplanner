@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SessionListPicker } from "./session-list-picker";
+import { useTranslations } from "next-intl";
 
 /** Corazón para guardar una sesión en una lista de favoritas. */
 export function SessionFavoriteToggle({
@@ -20,6 +21,7 @@ export function SessionFavoriteToggle({
   variant?: "icon" | "pill";
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_sessionfavoritetoggle");
   const [favorited, setFavorited] = useState(initialFavorited);
   const [open, setOpen] = useState(false);
 
@@ -32,8 +34,8 @@ export function SessionFavoriteToggle({
           e.stopPropagation();
           setOpen(true);
         }}
-        aria-label={favorited ? "Gestionar listas" : "Añadir a favoritas"}
-        title={favorited ? "En favoritas" : "Añadir a favoritas"}
+        aria-label={favorited ? "Gestionar listas" : tx("anadirAFavoritas")}
+        title={favorited ? "En favoritas" : tx("anadirAFavoritas")}
         className={cn(
           variant === "icon"
             ? "flex size-8 items-center justify-center rounded-full transition-colors"
@@ -55,7 +57,7 @@ export function SessionFavoriteToggle({
           )}
         />
         {variant === "pill" && (
-          <span className="hidden sm:inline">Favorita</span>
+          <span className="hidden sm:inline">{tx("favorita")}</span>
         )}
       </button>
       {open && (

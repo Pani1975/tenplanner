@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export interface LaneExercise {
   key: string;
@@ -40,6 +41,7 @@ export function TwoCourtsLive({
   /** Pasa al primer ejercicio del siguiente bloque (-1 si no hay). */
   onNextBlock: (nextIdx: number) => void;
 }) {
+  const tx = useTranslations("ui.s_execute_twocourtslive");
   const block = exercises[currentIdx]?.blockOrder ?? 1;
 
   // Cronómetro con la hora real, para no perder tiempo en segundo plano.
@@ -104,14 +106,13 @@ export function TwoCourtsLive({
 
   return (
     <section
-      aria-label="Las dos pistas"
+      aria-label={tx("lasDosPistas")}
       className="rounded-[28px] border border-[#050505]/10 bg-white p-4 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:border-white/10 dark:bg-[#10100e]"
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-black uppercase text-muted-foreground">
-            Cronómetro del bloque
-            {rotates ? ` · ronda ${round} de 2` : ""}
+            {tx("cronometroDelBloqueV1", { v1: rotates ? tx("roundSuffix", { round }) : "" })}
           </p>
           <p
             className={cn(
@@ -141,7 +142,7 @@ export function TwoCourtsLive({
           type="button"
           onClick={reset}
           className="flex size-12 items-center justify-center rounded-full border border-[#050505]/10 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10"
-          aria-label="Reiniciar"
+          aria-label={tx("reiniciar")}
         >
           <RotateCcw className="size-4" />
         </button>
@@ -163,20 +164,18 @@ export function TwoCourtsLive({
             >
               <div className="flex items-center justify-between text-[11px] font-black uppercase">
                 <span>
-                  Pista {lane.court}
-                  {group ? ` · grupo ${group}` : ""}
+                  {tx("pistaV1V2", { v1: lane.court, v2: group ? tx("groupSuffix", { group }) : "" })}
                 </span>
                 <span className="tabular-nums text-muted-foreground">
-                  {lane.total} min
-                </span>
+                  {tx("v1Min", { v1: lane.total })}</span>
               </div>
               {lane.items.length === 0 ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Nada en esta pista.
+                  {tx("nadaEnEstaPista")}
                 </p>
               ) : finished ? (
                 <p className="mt-2 text-sm font-bold text-foreground">
-                  {rotates && round === 1 ? "Esperando el cambio" : "Terminada"}
+                  {rotates && round === 1 ? tx("esperandoElCambio") : "Terminada"}
                 </p>
               ) : (
                 <button
@@ -194,16 +193,15 @@ export function TwoCourtsLive({
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className="font-mono text-sm font-bold tabular-nums text-foreground">
-                      quedan {mmss(active.end * 60 - t)}
+                      {tx("quedanV1", { v1: mmss(active.end * 60 - t) })}
                     </span>
-                    {active.e.ledBy === "coach" && <span>Con monitor</span>}
-                    {active.e.ledBy === "auto" && <span>Autónomo</span>}
+                    {active.e.ledBy === "coach" && <span>{tx("conMonitor")}</span>}
+                    {active.e.ledBy === "auto" && <span>{tx("autonomo")}</span>}
                     {(active.e.turnMinutes ?? 0) > 0 && (
                       <span>
-                        Turnos de {active.e.turnMinutes} min
-                        {(active.e.turnSize ?? 1) > 1
-                          ? ` (de ${active.e.turnSize} en ${active.e.turnSize})`
-                          : ""}
+                        {tx("turnosDeV1Min", { v1: active.e.turnMinutes ?? 0, v2: (active.e.turnSize ?? 1) > 1
+                          ? tx("turnSizeSuffix", { n: active.e.turnSize ?? 1 })
+                          : "" })}
                       </span>
                     )}
                   </span>
@@ -223,8 +221,7 @@ export function TwoCourtsLive({
                     >
                       <span className="truncate">{it.e.name}</span>
                       <span className="shrink-0 tabular-nums">
-                        {it.e.durationMinutes} min
-                      </span>
+                        {tx("v1Min", { v1: it.e.durationMinutes })}</span>
                     </li>
                   ))}
                 </ol>
@@ -246,7 +243,7 @@ export function TwoCourtsLive({
           )}
         >
           <SkipForward className="size-4" />
-          Siguiente bloque
+          {tx("siguienteBloque")}
         </button>
       )}
     </section>

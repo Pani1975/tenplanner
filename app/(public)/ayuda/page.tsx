@@ -5,13 +5,16 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { HelpGuide } from "@/components/app/help/help-guide";
 import { LifeBuoy } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Ayuda — TenPlanner",
-  description:
-    "Guía rápida y guía completa de TenPlanner: cómo planificar sesiones, gestionar tu biblioteca, alumnos, clubs y mucho más.",
-  alternates: { canonical: "/ayuda" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  return {
+    title: t("helpTitle"),
+    description: t("helpDescription"),
+    alternates: { canonical: "/ayuda" },
+  };
+}
 
 interface PageProps {
   searchParams: Promise<{
@@ -21,6 +24,7 @@ interface PageProps {
 }
 
 export default async function AyudaPage({ searchParams }: PageProps) {
+  const tx = await getTranslations("ui.s_ayuda_page");
   const params = await searchParams;
 
   const supabase = await createClient();
@@ -54,14 +58,13 @@ export default async function AyudaPage({ searchParams }: PageProps) {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <LifeBuoy className="size-3.5" />
-            Ayuda
+            {tx("ayuda")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Centro de ayuda
+            {tx("centroDeAyuda")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Elige entre la guía rápida, para empezar en pocos minutos, o la guía
-            completa, con el detalle de cada función según tu perfil.
+            {tx("eligeEntreLaGuia")}
           </p>
         </header>
 

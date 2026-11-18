@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 
@@ -85,6 +86,7 @@ export function StudentAnalyticsCard({
   part: { state: string; output?: unknown };
   onSend: (text: string) => void;
 }) {
+  const tx = useTranslations("ui.s_drplanner_studentanalyticscard");
   if (part.state !== "output-available") {
     return (
       <div className="border border-foreground/15 bg-foreground/[0.02] p-5 animate-pulse space-y-3">
@@ -111,7 +113,7 @@ export function StudentAnalyticsCard({
   if (!data?.ok || !data.analytics) {
     return (
       <div className="border-l-2 border-destructive/50 bg-destructive/[0.05] px-4 py-3 text-[13px] text-destructive">
-        {data?.error ?? "No se pudo analizar al alumno."}
+        {data?.error ?? tx("noSePudoAnalizar")}
       </div>
     );
   }
@@ -148,14 +150,14 @@ export function StudentAnalyticsCard({
         </motion.div>
         <div className="flex-1 min-w-0">
           <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-foreground/50">
-            Análisis 60 días
+            {tx("analisis60Dias")}
           </p>
           <h3 className="font-heading text-xl leading-tight truncate">
             {a.student.name}
           </h3>
           <p className="text-[12px] text-foreground/55 mt-0.5">
             {a.student.playerLevel ?? "Sin nivel"} ·{" "}
-            {a.student.dominantHand ?? "mano no indicada"}
+            {a.student.dominantHand ?? tx("manoNoIndicada")}
           </p>
         </div>
         <UserIcon className="size-4 text-foreground/30" strokeWidth={1.6} />
@@ -165,7 +167,7 @@ export function StudentAnalyticsCard({
       <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-foreground/10">
         <KPI
           icon={CalendarClock}
-          label="Última sesión"
+          label={tx("ultimaSesion")}
           value={
             a.daysSinceLast === null
               ? "Nunca"
@@ -177,17 +179,17 @@ export function StudentAnalyticsCard({
         />
         <KPI
           icon={Activity}
-          label="Sesiones 60d"
+          label={tx("sesiones60d")}
           value={String(a.sessionsLast60d)}
         />
         <KPI
           icon={Flame}
-          label="Intensidad med."
+          label={tx("intensidadMed")}
           value={a.avgIntensity !== null ? a.avgIntensity.toFixed(1) : "—"}
         />
         <KPI
           icon={Target}
-          label="Asistencia"
+          label={tx("asistencia")}
           value={a.attendanceRate !== null ? `${a.attendanceRate}%` : "—"}
         />
       </div>
@@ -196,7 +198,7 @@ export function StudentAnalyticsCard({
       {data.insight && (
         <div className="px-5 py-3 border-b border-foreground/10 bg-brand/[0.04]">
           <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-brand mb-1">
-            Lectura de IA
+            {tx("lecturaDeIa")}
           </p>
           <p className="text-[13px] leading-relaxed text-foreground">
             {data.insight}
@@ -208,11 +210,11 @@ export function StudentAnalyticsCard({
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-0 border-b border-foreground/10">
         <div className="p-5 md:border-r border-foreground/10">
           <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-2">
-            Categorías trabajadas
+            {tx("categoriasTrabajadas")}
           </p>
           {donutData.length === 0 ? (
             <p className="text-[12px] text-foreground/50 italic">
-              Sin volumen registrado en los últimos 60 días.
+              {tx("sinVolumenRegistradoEn")}
             </p>
           ) : (
             <div className="flex items-center gap-4">
@@ -254,7 +256,7 @@ export function StudentAnalyticsCard({
           {data.progress && data.progress.some((p) => p.sessions > 0) && (
             <div className="mt-4">
               <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">
-                Progresión (6 meses)
+                {tx("progresion6Meses")}
               </p>
               <div className="h-16">
                 <ResponsiveContainer width="100%" height="100%">
@@ -284,11 +286,11 @@ export function StudentAnalyticsCard({
 
         <div className="p-5">
           <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-2">
-            Huecos detectados
+            {tx("huecosDetectados")}
           </p>
           {!data.gaps || data.gaps.length === 0 ? (
             <p className="text-[12px] text-foreground/50 italic">
-              Sin huecos relevantes — cobertura equilibrada.
+              {tx("sinHuecosRelevantesCobertura")}
             </p>
           ) : (
             <ul className="space-y-1.5">
@@ -314,7 +316,7 @@ export function StudentAnalyticsCard({
           {a.topTags.length > 0 && (
             <div className="mt-4">
               <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-2">
-                Objetivos recurrentes
+                {tx("objetivosRecurrentes")}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {a.topTags.map((t, i) => (
@@ -344,7 +346,7 @@ export function StudentAnalyticsCard({
           className="inline-flex items-center gap-2 border border-brand bg-brand text-brand-foreground text-[11px] font-semibold tracking-[0.18em] uppercase px-3 py-2 hover:bg-brand/90 transition-colors"
         >
           <TrendingUp className="size-3" strokeWidth={2} />
-          Recomendar sesión
+          {tx("recomendarSesion")}
           <ArrowRight className="size-3" strokeWidth={2} />
         </button>
         <button
@@ -354,7 +356,7 @@ export function StudentAnalyticsCard({
           }
           className="inline-flex items-center gap-2 border border-foreground/20 text-[11px] font-semibold tracking-[0.18em] uppercase px-3 py-2 hover:border-foreground/40 transition-colors"
         >
-          Ver progreso
+          {tx("verProgreso")}
         </button>
       </div>
     </motion.div>

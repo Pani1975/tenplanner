@@ -19,6 +19,7 @@ import {
   workModeRequestBody,
   type WorkModeKind,
 } from "@/lib/work-mode-options";
+import { useTranslations } from "next-intl";
 
 const MODE_ICONS: Record<WorkModeKind, React.ElementType> = {
   admin: Globe2,
@@ -56,6 +57,7 @@ export function WorkModeBadge({
   managementActive?: boolean;
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_workmodebadge");
   const router = useRouter();
   const options = workModeOptions({
     clubs,
@@ -88,7 +90,7 @@ export function WorkModeBadge({
       setActiveKey(key);
       goAfterModeChange(router, previous, key);
     } else {
-      setError("No se pudo cambiar. Inténtalo de nuevo.");
+      setError(tx("noSePudoCambiar"));
     }
     setSaving(null);
   }
@@ -96,9 +98,9 @@ export function WorkModeBadge({
   return (
     <div className={cn("space-y-1.5", className)}>
       <p className="px-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-sidebar-foreground/55">
-        Modo de trabajo
+        {tx("modoDeTrabajo")}
       </p>
-      <div role="group" aria-label="Modo de trabajo" className="grid gap-1">
+      <div role="group" aria-label={tx("modoDeTrabajo")} className="grid gap-1">
         {options.map((option) => {
           const Icon = MODE_ICONS[option.kind];
           const active = option.key === activeKey;

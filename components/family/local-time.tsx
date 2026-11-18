@@ -1,4 +1,5 @@
-"use client";
+
+import { useLocale } from "next-intl";"use client";
 
 /**
  * Fecha/hora en la zona horaria del navegador (como el calendario del
@@ -12,9 +13,10 @@ export function LocalDateTime({
   iso: string;
   options: Intl.DateTimeFormatOptions;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   return (
     <time dateTime={iso} suppressHydrationWarning>
-      {new Intl.DateTimeFormat("es-ES", options).format(new Date(iso))}
+      {new Intl.DateTimeFormat(intlLocale, options).format(new Date(iso))}
     </time>
   );
 }

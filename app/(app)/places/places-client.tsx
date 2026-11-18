@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type Place = {
   id: string;
@@ -70,12 +72,12 @@ function stringOrNull(value: unknown) {
 
 function formatDate(
   value: string | null,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions, loc: string = "es-ES"
 ) {
   if (!value) return "Sin datos";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Sin datos";
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(loc, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -105,6 +107,8 @@ function usageTone(place: Place) {
 }
 
 export function PlacesClient({ initialPlaces }: PlacesClientProps) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_places_placesclient");
   const router = useRouter();
   const [places, setPlaces] = useState<Place[]>(
     initialPlaces.map((place) => normalizePlace(place))
@@ -150,7 +154,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
     const name = String(formData.get("name") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     if (!name) {
-      setError("El nombre es obligatorio.");
+      setError(tx("elNombreEsObligatorio"));
       setSaving(false);
       return;
     }
@@ -166,7 +170,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setError(data.error ?? "No se pudo crear el lugar.");
+          setError(data.error ?? tx("noSePudoCrear"));
           return;
         }
         const { data } = await res.json();
@@ -188,7 +192,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setError(data.error ?? "No se pudo actualizar el lugar.");
+          setError(data.error ?? tx("noSePudoActualizar"));
           return;
         }
         const { data } = await res.json();
@@ -222,7 +226,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
       const res = await fetch(`/api/places/${place.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "No se pudo borrar el lugar.");
+        setError(data.error ?? tx("noSePudoBorrar"));
         return;
       }
       setPlaces((prev) => prev.filter((p) => p.id !== place.id));
@@ -242,24 +246,23 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <div className="mb-5 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-              Operativa
+              {tx("operativa")}
             </div>
             <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-              Lugares
+              {tx("lugares")}
             </h1>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-              Gestiona pistas, canchas, salas y espacios de apoyo con contexto
-              suficiente para planificar sin perder tiempo.
+              {tx("gestionaPistasCanchasSalas")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[560px]">
             {[
-              { label: "Lugares", value: places.length, icon: MapPin },
-              { label: "Con notas", value: totals.withNotes, icon: Info },
-              { label: "Próximas", value: totals.upcoming, icon: CalendarDays },
+              { label: tx("lugares"), value: places.length, icon: MapPin },
+              { label: tx("conNotas"), value: totals.withNotes, icon: Info },
+              { label: tx("proximas"), value: totals.upcoming, icon: CalendarDays },
               {
-                label: "Uso total",
+                label: tx("usoTotal"),
                 value: formatHours(totals.minutes),
                 icon: Clock3,
               },
@@ -291,7 +294,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar por nombre, notas, material o acceso..."
+                placeholder={tx("buscarPorNombreNotas")}
                 className="tp-field h-11 w-full rounded-full pl-9 pr-4 text-[13px] font-medium placeholder:text-foreground/35"
               />
             </div>
@@ -305,7 +308,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                 className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-4 text-[13px] font-black text-brand-foreground transition-colors hover:bg-brand/90"
               >
                 <Plus className="size-4" />
-                Nuevo lugar
+                {tx("nuevoLugar")}
               </button>
             )}
           </div>
@@ -319,14 +322,13 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-black uppercase text-brand">
-                    {edit.mode === "create" ? "Alta de espacio" : "Edición"}
+                    {edit.mode === "create" ? tx("altaDeEspacio") : "Edición"}
                   </p>
                   <h2 className="mt-1 text-2xl font-black text-foreground">
                     {edit.mode === "create" ? "Nuevo lugar" : "Editar lugar"}
                   </h2>
                   <p className="mt-1 max-w-2xl text-sm font-medium text-foreground/58">
-                    Usa la descripción como ficha operativa: superficie,
-                    material disponible, acceso, iluminación o restricciones.
+                    {tx("usaLaDescripcionComo")}
                   </p>
                 </div>
                 <button
@@ -336,7 +338,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                     setError(null);
                   }}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-muted-foreground transition-colors hover:border-brand hover:bg-brand hover:text-brand-foreground"
-                  aria-label="Cancelar"
+                  aria-label={tx("cancelar")}
                 >
                   <X className="size-4" />
                 </button>
@@ -348,7 +350,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                     htmlFor="name"
                     className="block text-[12px] font-black uppercase text-foreground/58"
                   >
-                    Nombre visible
+                    {tx("nombreVisible")}
                   </label>
                   <input
                     id="name"
@@ -357,7 +359,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                     required
                     maxLength={120}
                     defaultValue={editing?.name ?? ""}
-                    placeholder="Ej: Pista central"
+                    placeholder={tx("ejPistaCentral")}
                     className="tp-field h-11 w-full px-4 text-sm font-medium placeholder:text-muted-foreground"
                   />
                 </div>
@@ -367,7 +369,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                     htmlFor="description"
                     className="block text-[12px] font-black uppercase text-foreground/58"
                   >
-                    Ficha operativa
+                    {tx("fichaOperativa")}
                   </label>
                   <textarea
                     id="description"
@@ -408,7 +410,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                   }}
                   className="rounded-full px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  Cancelar
+                  {tx("cancelar")}
                 </button>
               </div>
             </form>
@@ -420,11 +422,10 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                 <MapPin className="size-6" />
               </div>
               <p className="mt-5 text-lg font-black text-foreground">
-                Aún no has creado ningún lugar
+                {tx("aunNoHasCreado")}
               </p>
               <p className="mx-auto mt-2 max-w-md text-sm font-medium text-foreground/58">
-                Crea las pistas, canchas o salas que usas para que aparezcan en
-                la planificación de sesiones.
+                {tx("creaLasPistasCanchas")}
               </p>
               <button
                 type="button"
@@ -432,16 +433,16 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                 className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-brand px-5 text-sm font-black text-brand-foreground"
               >
                 <Plus className="size-4" />
-                Crear primer lugar
+                {tx("crearPrimerLugar")}
               </button>
             </div>
           ) : filteredPlaces.length === 0 ? (
             <div className="tp-panel px-6 py-12 text-center">
               <p className="text-sm font-black text-foreground">
-                No hay resultados
+                {tx("noHayResultados")}
               </p>
               <p className="mt-1 text-sm text-foreground/55">
-                Prueba con otro nombre, material o palabra de la descripción.
+                {tx("pruebaConOtroNombre")}
               </p>
             </div>
           ) : (
@@ -505,13 +506,13 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
 
                       <p className="mt-4 line-clamp-3 min-h-[4.5rem] text-sm font-medium leading-6 text-foreground/60">
                         {place.description ||
-                          "Sin ficha operativa. Añade superficie, material, acceso o notas para que el equipo lo use con criterio."}
+                          tx("sinFichaOperativaAnade")}
                       </p>
 
                       <dl className="mt-5 grid grid-cols-3 gap-2 border-t border-foreground/10 pt-4">
                         <div>
                           <dt className="text-[10px] font-black uppercase text-foreground/38">
-                            Sesiones
+                            {tx("sesiones")}
                           </dt>
                           <dd className="mt-1 text-lg font-black tabular-nums text-foreground">
                             {place.totalSessions}
@@ -519,7 +520,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                         </div>
                         <div>
                           <dt className="text-[10px] font-black uppercase text-foreground/38">
-                            Prox.
+                            {tx("prox")}
                           </dt>
                           <dd className="mt-1 text-lg font-black tabular-nums text-brand">
                             {place.upcomingSessions}
@@ -527,7 +528,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                         </div>
                         <div>
                           <dt className="text-[10px] font-black uppercase text-foreground/38">
-                            Carga
+                            {tx("carga")}
                           </dt>
                           <dd className="mt-1 truncate text-lg font-black tabular-nums text-foreground">
                             {formatHours(place.totalMinutes)}
@@ -570,7 +571,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase text-brand">
-                    Detalle del lugar
+                    {tx("detalleDelLugar")}
                   </p>
                   <h2
                     id="place-detail-title"
@@ -583,7 +584,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                   type="button"
                   onClick={() => setSelectedId(null)}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full border border-background/15 text-background/70 transition-colors hover:bg-background/10 hover:text-background"
-                  aria-label="Cerrar detalle"
+                  aria-label={tx("cerrarDetalle")}
                 >
                   <X className="size-4" />
                 </button>
@@ -594,22 +595,22 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   {
-                    label: "Sesiones",
+                    label: tx("sesiones"),
                     value: selected.totalSessions,
                     icon: ClipboardList,
                   },
                   {
-                    label: "Próximas",
+                    label: tx("proximas"),
                     value: selected.upcomingSessions,
                     icon: CalendarDays,
                   },
                   {
-                    label: "Carga",
+                    label: tx("carga"),
                     value: formatHours(selected.totalMinutes),
                     icon: Clock3,
                   },
                   {
-                    label: "Estado",
+                    label: tx("estado"),
                     value: usageLabel(selected),
                     icon: CheckCircle2,
                   },
@@ -633,30 +634,30 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
 
               <div>
                 <h3 className="text-[12px] font-black uppercase text-foreground/48">
-                  Ficha operativa
+                  {tx("fichaOperativa")}
                 </h3>
                 <p className="mt-2 whitespace-pre-line rounded-[22px] border border-foreground/10 bg-background px-4 py-3 text-sm font-medium leading-6 text-foreground/68">
                   {selected.description ||
-                    "Sin notas. Puedes usar este campo para superficie, material, acceso, iluminación, restricciones y contexto de uso."}
+                    tx("sinNotasPuedesUsar")}
                 </p>
               </div>
 
               <dl className="divide-y divide-foreground/10 rounded-[22px] border border-foreground/10 px-4">
                 {[
                   {
-                    label: "Última sesión",
-                    value: formatDate(selected.lastScheduledAt),
+                    label: tx("ultimaSesion"),
+                    value: formatDate(selected.lastScheduledAt, undefined, intlLocale),
                   },
                   {
-                    label: "Creado",
-                    value: formatDate(selected.createdAt),
+                    label: tx("creado"),
+                    value: formatDate(selected.createdAt, undefined, intlLocale),
                   },
                   {
-                    label: "Actualizado",
+                    label: tx("actualizado"),
                     value: formatDate(selected.updatedAt, {
                       hour: "2-digit",
                       minute: "2-digit",
-                    }),
+                    }, intlLocale),
                   },
                 ].map((item) => (
                   <div
@@ -685,7 +686,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-brand px-4 text-[13px] font-black text-brand-foreground"
               >
                 <Pencil className="size-3.5" />
-                Editar
+                {tx("editar")}
               </button>
               <button
                 type="button"
@@ -697,7 +698,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
                 ) : (
                   <Trash2 className="size-3.5" />
                 )}
-                Borrar
+                {tx("borrar")}
               </button>
             </div>
           </div>

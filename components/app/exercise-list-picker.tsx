@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Plus, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface ExerciseList {
   id: string;
@@ -35,6 +36,7 @@ export function ExerciseListPicker({
   onClose,
   onFavoritedChange,
 }: ExerciseListPickerProps) {
+  const tx = useTranslations("ui.s_app_exerciselistpicker");
   const [lists, setLists] = useState<ExerciseList[]>([]);
   const [inLists, setInLists] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ export function ExerciseListPicker({
         <div className="flex items-center justify-between px-5 pt-4 pb-4 border-b border-foreground/10">
           <div>
             <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/40 mb-0.5">
-              Guardar en lista
+              {tx("guardarEnLista")}
             </p>
             <h2 className="font-heading text-lg text-foreground leading-tight">
               {exerciseName ? (
@@ -207,7 +209,7 @@ export function ExerciseListPicker({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-brand text-brand-foreground px-4 py-2 text-[13px] font-semibold hover:bg-brand/90 transition-colors"
               >
                 <Plus className="size-3.5" />
-                Crear lista
+                {tx("crearLista")}
               </button>
             </div>
           ) : (
@@ -271,8 +273,7 @@ export function ExerciseListPicker({
                         {list.name}
                       </p>
                       <p className="font-sans text-[10px] text-foreground/40 mt-0.5">
-                        {list.itemsCount ?? 0} ejercicio
-                        {(list.itemsCount ?? 0) !== 1 ? "s" : ""}
+                        {tx("v1EjercicioV2", { v1: list.itemsCount ?? 0, v2: (list.itemsCount ?? 0) !== 1 ? "s" : "" })}
                       </p>
                     </div>
                   </button>
@@ -290,10 +291,10 @@ export function ExerciseListPicker({
                 </div>
                 <div className="px-3 py-2">
                   <p className="font-heading text-[13px] text-foreground/50">
-                    Nueva lista
+                    {tx("nuevaLista")}
                   </p>
                   <p className="font-sans text-[10px] text-foreground/30 mt-0.5">
-                    Crear
+                    {tx("crear")}
                   </p>
                 </div>
               </button>
@@ -305,7 +306,7 @@ export function ExerciseListPicker({
         {showNew && (
           <div className="px-4 pb-4 pt-1 border-t border-foreground/10 space-y-2">
             <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/40 pt-3">
-              Nombre de la nueva lista
+              {tx("nombreDeLaNueva")}
             </p>
             <div className="flex gap-2">
               <input
@@ -320,7 +321,7 @@ export function ExerciseListPicker({
                     setNewName("");
                   }
                 }}
-                placeholder="Ej: Técnica de volea"
+                placeholder={tx("ejTecnicaDeVolea")}
                 maxLength={100}
                 className="flex-1 rounded-xl border border-foreground/15 bg-foreground/[0.02] px-3 py-2 text-[13px] text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-brand/50"
               />
@@ -344,13 +345,13 @@ export function ExerciseListPicker({
           <p className="text-[12px] text-foreground/35">
             {inLists.size > 0
               ? `En ${inLists.size} lista${inLists.size !== 1 ? "s" : ""}`
-              : "No guardado en ninguna lista"}
+              : tx("noGuardadoEnNinguna")}
           </p>
           <button
             onClick={onClose}
             className="rounded-xl bg-foreground text-background px-5 py-2 text-[13px] font-semibold hover:bg-foreground/90 transition-colors"
           >
-            Listo
+            {tx("listo")}
           </button>
         </div>
       </div>

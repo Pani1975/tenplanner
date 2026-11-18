@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import { headers } from "next/headers";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { CookieBanner } from "@/components/app/cookie-banner";
 import { ServiceWorkerRegister } from "@/components/app/sw-register";
 import { Toaster } from "@/components/ui/sonner";
@@ -45,37 +47,31 @@ const geistMono = localFont({
 
 const isProd = process.env.NODE_ENV === "production";
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  const locale = await getLocale();
+  return {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "TenPlanner - Planificador para Deportes de Raqueta",
+    default: t("title"),
     template: "%s - TenPlanner",
   },
-  description:
-    "Planifica sesiones, gestiona alumnos y organiza biblioteca para deportes de raqueta.",
-  keywords: [
-    "deportes de raqueta",
-    "entrenamiento",
-    "planificador",
-    "entrenador",
-    "sesiones",
-    "TenPlanner",
-  ],
+  description: t("description"),
+  keywords: t("keywords").split(","),
   applicationName: "TenPlanner",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "TenPlanner",
-    title: "TenPlanner - Planificador para Deportes de Raqueta",
-    description:
-      "Diseña sesiones, gestiona alumnos y mide progreso en pista o cancha.",
+    title: t("title"),
+    description: t("ogDescription"),
     url: "/",
-    locale: "es_ES",
+    locale: locale === "en" ? "en_US" : "es_ES",
   },
   twitter: {
     card: "summary_large_image",
     title: "TenPlanner",
-    description: "Planificador de entrenamiento para deportes de raqueta.",
+    description: t("twitterDescription"),
   },
   robots: {
     index: true,
@@ -91,7 +87,8 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "TenPlanner",
   },
-};
+  };
+}
 
 export const viewport = {
   themeColor: "#050505",
@@ -104,10 +101,12 @@ export default async function RootLayout({
 }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const scriptNonce = isProd ? nonce : undefined;
+  const locale = await getLocale();
+  const t = await getTranslations("common");
 
   return (
     <html
-      lang="es"
+      lang={locale}
       className={`${plusJakartaSans.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -116,7 +115,7 @@ export default async function RootLayout({
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-brand focus:outline-none"
         >
-          Ir al contenido principal
+          {t("skipToContent")}
         </a>
         <Script
           id="theme-init"
@@ -146,9 +145,11 @@ export default async function RootLayout({
         `,
           }}
         />
-        {children}
-        <CookieBanner />
-        <Toaster />
+        <NextIntlClientProvider>
+          {children}
+          <CookieBanner />
+          <Toaster />
+        </NextIntlClientProvider>
         <ServiceWorkerRegister />
         <Analytics />
       </body>

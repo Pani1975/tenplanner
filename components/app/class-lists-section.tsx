@@ -21,6 +21,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { nivelLabel } from "@/lib/exercise-taxonomy";
 import { spaceLabels } from "@/lib/space-labels";
+import { useTranslations } from "next-intl";
 
 interface ListedClass {
   id: string;
@@ -100,6 +101,7 @@ function ListCard({
   onItemRemoved: (listId: string, classId: string) => void;
   onReload: () => void;
 }) {
+  const tx = useTranslations("ui.s_app_classlistssection");
   const [expanded, setExpanded] = useState(false);
   const [pickOpen, setPickOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -208,12 +210,12 @@ function ListCard({
               </h3>
               {list.isDefault && (
                 <span className="font-sans text-[8px] uppercase tracking-[0.18em] text-brand/60 border border-brand/25 rounded px-1.5 py-0.5">
-                  principal
+                  {tx("principal")}
                 </span>
               )}
               {list.isPublic && (
                 <span className="font-sans text-[8px] uppercase tracking-[0.18em] text-emerald-600 border border-emerald-500/30 rounded px-1.5 py-0.5 dark:text-emerald-400">
-                  pública
+                  {tx("publica")}
                 </span>
               )}
             </div>
@@ -221,7 +223,7 @@ function ListCard({
           <span
             className={cn("font-sans text-[10px] tabular-nums", accent.text)}
           >
-            {list.itemsCount} clase{list.itemsCount !== 1 ? "s" : ""}
+            {tx("v1ClaseV2", { v1: list.itemsCount, v2: list.itemsCount !== 1 ? "s" : "" })}
           </span>
         </div>
 
@@ -232,7 +234,7 @@ function ListCard({
           {list.canManage !== false && (
             <button
               type="button"
-              title="Añadir clases a la lista"
+              title={tx("anadirClasesALa")}
               onClick={() => setPickOpen(true)}
               className={cn(
                 "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors hover:opacity-80",
@@ -242,15 +244,15 @@ function ListCard({
               )}
             >
               <Plus className="size-3" />
-              <span className="hidden sm:inline">Clases</span>
+              <span className="hidden sm:inline">{tx("clases")}</span>
             </button>
           )}
           {isAdmin && list.canManage !== false && (
             <button
               title={
                 list.isPublic
-                  ? "Quitar de la Biblioteca"
-                  : "Publicar en la Biblioteca"
+                  ? tx("quitarDeLaBiblioteca")
+                  : tx("publicarEnLaBiblioteca")
               }
               onClick={() => onTogglePublic(list.id, !list.isPublic)}
               className={cn(
@@ -265,7 +267,7 @@ function ListCard({
           )}
           {list.canManage !== false && (
             <button
-              title="Renombrar"
+              title={tx("renombrar")}
               onClick={() => {
                 setRenaming(true);
                 setRenameVal(list.name);
@@ -277,7 +279,7 @@ function ListCard({
           )}
           {!list.isDefault && list.canManage !== false && (
             <button
-              title="Eliminar lista"
+              title={tx("eliminarLista")}
               onClick={() => onDelete(list.id)}
               disabled={deletingId === list.id}
               className="p-2 rounded-xl text-foreground/25 hover:text-red-400 hover:bg-red-400/8 transition-colors disabled:opacity-40"
@@ -297,11 +299,10 @@ function ListCard({
           {list.items.length === 0 ? (
             <div className="px-6 py-8 text-center">
               <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-foreground/30">
-                Lista vacía
+                {tx("listaVacia")}
               </p>
               <p className="mt-1 text-[13px] text-foreground/40">
-                Añade clases aquí mismo o guárdalas desde su ficha con el botón
-                de lista
+                {tx("anadeClasesAquiMismo")}
               </p>
               {list.canManage !== false && (
                 <button
@@ -314,7 +315,7 @@ function ListCard({
                     accent.bg
                   )}
                 >
-                  <Plus className="size-3.5" /> Añadir clases
+                  <Plus className="size-3.5" />{" "}{tx("anadirClases")}
                 </button>
               )}
             </div>
@@ -356,7 +357,7 @@ function ListCard({
                         )}
                         {item.isLibrary && (
                           <span className="font-sans text-[9px] text-brand/70 px-1.5 py-0.5 rounded border border-brand/25">
-                            Biblioteca
+                            {tx("biblioteca")}
                           </span>
                         )}
                       </div>
@@ -364,7 +365,7 @@ function ListCard({
 
                     <Link
                       href={`/sessions/new?fromClass=${item.id}`}
-                      title="Crear sesión desde esta clase"
+                      title={tx("crearSesionDesdeEsta")}
                       className={cn(
                         "hidden sm:inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-semibold transition-colors",
                         accent.border,
@@ -373,13 +374,13 @@ function ListCard({
                         "hover:opacity-80"
                       )}
                     >
-                      <ClipboardList className="size-3" /> Sesión
+                      <ClipboardList className="size-3" />{" "}{tx("sesion")}
                     </Link>
 
                     <button
                       onClick={() => onRemoveItem(list.id, item.id)}
                       disabled={removingKey === removeKey}
-                      title="Quitar de la lista"
+                      title={tx("quitarDeLaLista")}
                       className="p-2 rounded-xl text-foreground/25 hover:text-red-400 hover:bg-red-400/8 transition-colors disabled:opacity-40 shrink-0"
                     >
                       {removingKey === removeKey ? (
@@ -424,6 +425,7 @@ export function ClassListsSection({
   /** Deporte activo (para los niveles del filtro al añadir clases). */
   sport?: string | null;
 } = {}) {
+  const tx = useTranslations("ui.s_app_classlistssection");
   const [lists, setLists] = useState<ClassListWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -619,17 +621,16 @@ export function ClassListsSection({
               <GraduationCap className="size-6 text-brand/60" />
             </div>
             <h3 className="font-heading italic text-2xl text-foreground/70">
-              Aún no tienes listas de clases.
+              {tx("aunNoTienesListas")}
             </h3>
             <p className="mt-2 text-[14px] text-foreground/40 max-w-xs mx-auto leading-relaxed">
-              Crea tu primera lista y guarda clases desde su ficha con el botón
-              de lista.
+              {tx("creaTuPrimeraLista")}
             </p>
             <button
               onClick={() => setShowCreate(true)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-5 py-2.5 text-[13px] font-bold text-[#050505] transition-colors hover:bg-[#c8f52e]"
             >
-              <Plus className="size-4" /> Nueva lista
+              <Plus className="size-4" />{" "}{tx("nuevaLista")}
             </button>
           </div>
         </div>
@@ -647,7 +648,7 @@ export function ClassListsSection({
           </p>
           <h2 className="font-heading italic text-[20px] leading-tight text-foreground">
             {lists.length === 1
-              ? "Una lista guardada"
+              ? tx("unaListaGuardada")
               : `${lists.length} listas · ${totalSaved} clases`}
           </h2>
         </div>
@@ -667,14 +668,14 @@ export function ClassListsSection({
               showCreate && "rotate-45"
             )}
           />
-          Nueva lista
+          {tx("nuevaLista")}
         </button>
       </div>
 
       {showCreate && (
         <div className="rounded-lg border border-[#D6FF38]/30 bg-[#D6FF38]/10 p-4">
           <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand/60 mb-2.5">
-            Nombre de la lista
+            {tx("nombreDeLaLista")}
           </p>
           <div className="flex gap-2">
             <input
@@ -689,7 +690,7 @@ export function ClassListsSection({
                   setNewListName("");
                 }
               }}
-              placeholder="Ej: Adultos iniciación, Pistas cubiertas…"
+              placeholder={tx("ejAdultosIniciacionPistas")}
               maxLength={100}
               className="h-10 flex-1 rounded-lg border border-foreground/15 bg-background/70 px-3.5 text-sm text-foreground transition-colors placeholder:text-foreground/30 focus:border-[#D6FF38]/70 focus:outline-none"
             />
@@ -733,9 +734,9 @@ export function ClassListsSection({
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title="¿Eliminar esta lista?"
-        description="Se eliminará la lista y todas sus clases guardadas. Esta acción no se puede deshacer."
-        confirmLabel="Eliminar"
+        title={tx("eliminarEstaLista")}
+        description={tx("seEliminaraLaLista")}
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (deleteTarget) void deleteList(deleteTarget);

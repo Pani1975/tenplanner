@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Check, Loader2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface SessionCommentBoxProps {
   /** Comentario guardado (null/"" si no hay). */
@@ -35,6 +36,7 @@ export function SessionCommentBox({
   alwaysOpen = false,
   className,
 }: SessionCommentBoxProps) {
+  const tx = useTranslations("ui.s_app_sessioncommentbox");
   const [saved, setSaved] = useState(value?.trim() ?? "");
   const [draft, setDraft] = useState(value ?? "");
   const [open, setOpen] = useState(alwaysOpen || !!value?.trim());
@@ -111,13 +113,13 @@ export function SessionCommentBox({
       <div className="flex items-center justify-end gap-2 text-[11px]">
         {error && (
           <span className="text-destructive">
-            No se pudo guardar. Inténtalo de nuevo.
+            {tx("noSePudoGuardar")}
           </span>
         )}
         {justSaved && !saving && (
           <span className="inline-flex items-center gap-1 text-brand">
             <Check className="size-3" />
-            Guardado
+            {tx("guardado")}
           </span>
         )}
         <button
@@ -127,7 +129,7 @@ export function SessionCommentBox({
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
         >
           {saving && <Loader2 className="size-3 animate-spin" />}
-          Guardar
+          {tx("guardar")}
         </button>
       </div>
     </div>

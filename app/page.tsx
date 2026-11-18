@@ -6,9 +6,21 @@ import { classes, exercises } from "@/db/schema";
 import { siteUrl } from "@/lib/site";
 import { getLandingContent } from "@/lib/landing-content";
 import { getLandingStats } from "@/lib/landing-stats";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import type { LandingContent } from "@/lib/landing-content";
+
+// En inglés los textos de la portada salen de messages/en.json; en español
+// siguen siendo los editables de la base de datos.
+async function getLocalizedContent(): Promise<LandingContent> {
+  if ((await getLocale()) !== "en") return getLandingContent();
+  const messages = (await getMessages()) as {
+    landing: { content: LandingContent };
+  };
+  return messages.landing.content;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
-  const content = await getLandingContent();
+  const content = await getLocalizedContent();
   return {
     title: content.home_meta_title,
     description: content.home_meta_description,
@@ -18,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: content.home_meta_description,
       url: "/",
       type: "website",
-      locale: "es_ES",
+      locale: (await getLocale()) === "en" ? "en_US" : "es_ES",
     },
     twitter: {
       card: "summary_large_image",
@@ -28,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const structuredData = {
+const buildStructuredData = (lang: string, description: string) => ({
   "@context": "https://schema.org",
   "@graph": [
     {
@@ -44,7 +56,7 @@ const structuredData = {
       "@id": `${siteUrl}/#website`,
       name: "TenPlanner",
       url: siteUrl,
-      inLanguage: "es-ES",
+      inLanguage: lang,
       publisher: { "@id": `${siteUrl}/#organization` },
     },
     {
@@ -53,19 +65,20 @@ const structuredData = {
       url: siteUrl,
       applicationCategory: "SportsApplication",
       operatingSystem: "Web",
-      inLanguage: "es-ES",
-      description:
-        "Planificador de clases para monitores de tenis: biblioteca de ejercicios y clases, calendario, grupos y pase de lista.",
+      inLanguage: lang,
+      description,
       publisher: { "@id": `${siteUrl}/#organization` },
     },
   ],
-};
+});
 
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
+  const locale = await getLocale();
+  const softwareDescription = (await getTranslations("meta"))("softwareDescription");
   const [content, stats, exerciseCards, classCards] = await Promise.all([
-    getLandingContent(),
+    getLocalizedContent(),
     getLandingStats(),
     db
       .select({
@@ -103,7 +116,12 @@ export default async function LandingPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(
+            buildStructuredData(
+              locale === "en" ? "en" : "es-ES",
+              softwareDescription
+            )
+          ) }}
       />
       <TenPlannerLanding
         exerciseCards={exerciseCards}

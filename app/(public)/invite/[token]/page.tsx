@@ -5,6 +5,7 @@ import { clubInvites, clubs } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { AcceptInviteButton } from "./accept-invite-button";
 import { SPORT_LABELS } from "@/lib/sport-constants";
+import { getTranslations } from "next-intl/server";
 
 function isInviteExpired(invite: { status: string; expiresAt: Date }) {
   return invite.status === "expired" || invite.expiresAt.getTime() < Date.now();
@@ -15,6 +16,7 @@ export default async function InvitePage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const tx = await getTranslations("ui.s_token_page");
   const { token } = await params;
 
   const [row] = await db
@@ -39,11 +41,10 @@ export default async function InvitePage({
     return card(
       <>
         <h1 className="text-2xl font-black text-foreground">
-          Invitación no encontrada
+          {tx("invitacionNoEncontrada")}
         </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/62">
-          Este enlace de invitación no es válido. Pide al club que te envíe uno
-          nuevo.
+          {tx("esteEnlaceDeInvitacion")}
         </p>
       </>
     );
@@ -57,16 +58,16 @@ export default async function InvitePage({
     return card(
       <>
         <h1 className="text-2xl font-black text-foreground">
-          Ya formas parte de {club.name}
+          {tx("yaFormasParteDe", { v1: club.name })}
         </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/62">
-          Esta invitación ya fue aceptada.
+          {tx("estaInvitacionYaFue")}
         </p>
         <Link
           href="/dashboard"
           className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-brand px-6 text-sm font-black text-brand-foreground"
         >
-          Ir al panel
+          {tx("irAlPanel")}
         </Link>
       </>
     );
@@ -76,10 +77,10 @@ export default async function InvitePage({
     return card(
       <>
         <h1 className="text-2xl font-black text-foreground">
-          Invitación no disponible
+          {tx("invitacionNoDisponible")}
         </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/62">
-          Esta invitación de <strong>{club.name}</strong> ha caducado o fue
+          {tx("estaInvitacionDe")}{" "}<strong>{club.name}</strong> ha caducado o fue
           anulada. Pide al club que te envíe una nueva.
         </p>
       </>
@@ -94,16 +95,15 @@ export default async function InvitePage({
       <p className="tp-kicker">
         {invite.inviteeName
           ? `Hola, ${invite.inviteeName}`
-          : "Invitación de club"}
+          : tx("invitacionDeClub")}
       </p>
       <h1 className="mt-3 text-2xl font-black leading-tight text-foreground">
-        {club.name} quiere vincularte como monitor de{" "}
-        {SPORT_LABELS[invite.sport]}
+        {tx("v1QuiereVincularteComo", { v1: club.name, v2: SPORT_LABELS[invite.sport] })}
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/62">
-        Invitación enviada a{" "}
+        {tx("invitacionEnviadaA")}{" "}
         <span className="font-semibold text-foreground">{invite.email}</span>{" "}
-        para <strong>{SPORT_LABELS[invite.sport]}</strong>. Al aceptar, el club
+        {tx("para")}{" "}<strong>{SPORT_LABELS[invite.sport]}</strong>. Al aceptar, el club
         tendrá acceso compartido a tus sesiones, alumnos, grupos y calendario de
         ese deporte. Tu cuenta sigue siendo tuya.
       </p>
@@ -111,21 +111,19 @@ export default async function InvitePage({
       {!user && (
         <div className="mt-6 space-y-2">
           <p className="text-xs font-bold uppercase text-foreground/50">
-            Entra o crea tu cuenta con {invite.email} y vuelve a abrir este
-            mismo enlace para aceptar.
-          </p>
+            {tx("entraOCreaTu2", { v1: invite.email })}</p>
           <div className="flex gap-2">
             <Link
               href={`/login?next=${encodeURIComponent(`/invite/${token}`)}`}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-foreground/10 text-sm font-black text-foreground"
             >
-              Iniciar sesión
+              {tx("iniciarSesion")}
             </Link>
             <Link
               href={`/register?type=monitor&next=${encodeURIComponent(`/invite/${token}`)}`}
               className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-brand text-sm font-black text-brand-foreground"
             >
-              Crear cuenta
+              {tx("crearCuenta")}
             </Link>
           </div>
         </div>
@@ -133,9 +131,7 @@ export default async function InvitePage({
 
       {user && accountEmail !== inviteEmail && (
         <p className="mt-6 rounded-[22px] border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Has iniciado sesión como {user.email}, pero la invitación es para{" "}
-          {invite.email}. Cierra sesión y entra con esa cuenta para aceptar.
-        </p>
+          {tx("hasIniciadoSesionComo2", { v1: user.email ?? "", v2: invite.email ?? "" })}</p>
       )}
 
       {user && accountEmail === inviteEmail && (

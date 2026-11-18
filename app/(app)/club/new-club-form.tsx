@@ -7,8 +7,10 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export function NewClubForm() {
+  const tx = useTranslations("ui.s_club_newclubform");
   const router = useRouter();
   const [name, setName] = useState("");
   const [seats, setSeats] = useState("");
@@ -18,7 +20,7 @@ export function NewClubForm() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Escribe el nombre del club");
+      setError(tx("escribeElNombreDel"));
       return;
     }
     setSubmitting(true);
@@ -37,7 +39,7 @@ export function NewClubForm() {
         setError(
           typeof body?.error === "string"
             ? body.error
-            : "No se pudo registrar el club."
+            : tx("noSePudoRegistrar")
         );
         return;
       }
@@ -50,7 +52,7 @@ export function NewClubForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <div className="space-y-2">
-        <Label htmlFor="club-name">Nombre del club</Label>
+        <Label htmlFor="club-name">{tx("nombreDelClub")}</Label>
         <Input
           id="club-name"
           value={name}
@@ -59,8 +61,8 @@ export function NewClubForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="club-seats">
-          Monitores previstos{" "}
-          <span className="font-normal text-foreground/50">(opcional)</span>
+          {tx("monitoresPrevistos")}{" "}
+          <span className="font-normal text-foreground/50">{tx("opcional")}</span>
         </Label>
         <Input
           id="club-seats"
@@ -77,7 +79,7 @@ export function NewClubForm() {
         className="h-11 rounded-full font-black"
       >
         {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-        Registrar club
+        {tx("registrarClub")}
       </Button>
     </form>
   );

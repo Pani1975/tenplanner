@@ -1,6 +1,7 @@
 import { buildScene, type Prim } from "@/lib/exercise-diagrams/scene";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 function renderPrim(p: Prim, i: number) {
   switch (p.k) {
@@ -98,13 +99,14 @@ export function ExerciseDiagramView({
   /** Ancho máximo en píxeles (las pistas completas son altas y estrechas). */
   maxWidth?: number;
 }) {
+  const tx = useTranslations("ui.s_app_exercisediagram");
   const scene = buildScene(diagram);
   return (
     <figure className={cn("m-0", className)}>
       <svg
         viewBox={`0 0 ${scene.width} ${scene.height}`}
         role="img"
-        aria-label={diagram.caption ?? "Esquema del ejercicio"}
+        aria-label={diagram.caption ?? tx("esquemaDelEjercicio")}
         style={{ width: "100%", maxWidth, height: "auto", display: "block" }}
       >
         {scene.prims.map(renderPrim)}
@@ -115,7 +117,7 @@ export function ExerciseDiagramView({
             {diagram.caption}
           </span>
         )}
-        <span className="block opacity-70">Esquema orientativo</span>
+        <span className="block opacity-70">{tx("esquemaOrientativo")}</span>
       </figcaption>
     </figure>
   );

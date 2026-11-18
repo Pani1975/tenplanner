@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Calendar, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 export type UpcomingItem = {
   ssId: string;
@@ -15,12 +17,14 @@ export type UpcomingItem = {
 const PAGE_SIZE = 5;
 
 export function UpcomingList({ items }: { items: UpcomingItem[] }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_upcominglist");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Sin sesiones futuras asignadas.
+        {tx("sinSesionesFuturasAsignadas")}
       </p>
     );
   }
@@ -29,7 +33,7 @@ export function UpcomingList({ items }: { items: UpcomingItem[] }) {
   const hasMore = visible < items.length;
 
   const fmtDate = (iso: string) =>
-    new Intl.DateTimeFormat("es-ES", {
+    new Intl.DateTimeFormat(intlLocale, {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -53,8 +57,7 @@ export function UpcomingList({ items }: { items: UpcomingItem[] }) {
               {s.title}
             </p>
             <p className="text-xs text-muted-foreground">
-              {fmtDate(s.scheduledAt)} · {s.durationMinutes} min
-            </p>
+              {tx("v1V2Min", { v1: fmtDate(s.scheduledAt), v2: s.durationMinutes })}</p>
           </div>
           <ChevronRight className="size-4 text-muted-foreground shrink-0" />
         </Link>
@@ -66,9 +69,7 @@ export function UpcomingList({ items }: { items: UpcomingItem[] }) {
           onClick={() => setVisible((v) => v + PAGE_SIZE)}
           className="w-full text-xs font-semibold text-muted-foreground hover:text-brand border border-border hover:border-brand/30 rounded-lg py-2 transition-colors"
         >
-          Ver {Math.min(PAGE_SIZE, items.length - visible)} más ·{" "}
-          {items.length - visible} restantes
-        </button>
+          {tx("verV1MasV2", { v1: Math.min(PAGE_SIZE, items.length - visible), v2: items.length - visible })}</button>
       )}
       {!hasMore && items.length > PAGE_SIZE && (
         <button
@@ -76,7 +77,7 @@ export function UpcomingList({ items }: { items: UpcomingItem[] }) {
           onClick={() => setVisible(PAGE_SIZE)}
           className="w-full text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
         >
-          Mostrar menos
+          {tx("mostrarMenos")}
         </button>
       )}
     </div>

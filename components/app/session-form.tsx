@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/app/date-time-picker";
+import { useTranslations } from "next-intl";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -128,6 +129,7 @@ export function SessionForm({
   onSuccess,
   onCancel,
 }: SessionFormProps) {
+  const tx = useTranslations("ui.s_app_sessionform");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -367,7 +369,7 @@ export function SessionForm({
       setServerError(
         data.details?.map((d: { message: string }) => d.message).join(". ") ??
           data.error ??
-          "Ha ocurrido un error."
+          tx("haOcurridoUnError")
       );
       return;
     }
@@ -390,12 +392,12 @@ export function SessionForm({
               htmlFor="title"
               className="block text-sm font-semibold text-foreground"
             >
-              Título de la sesión
+              {tx("tituloDeLaSesion")}
             </label>
             <input
               id="title"
               type="text"
-              placeholder="Ej: Entrenamiento de técnica ofensiva"
+              placeholder={tx("ejEntrenamientoDeTecnica")}
               autoComplete="off"
               aria-invalid={!!errors.title}
               {...register("title")}
@@ -408,7 +410,7 @@ export function SessionForm({
 
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-foreground">
-              Fecha y hora
+              {tx("fechaYHora")}
             </label>
             <Controller
               name="scheduledAt"
@@ -433,19 +435,19 @@ export function SessionForm({
               htmlFor="placeId"
               className="block text-sm font-semibold text-foreground"
             >
-              Lugar{" "}
+              {tx("lugar")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             {places.length === 0 ? (
               <div className="flex items-center justify-between gap-2 h-11 px-4 text-sm bg-background border border-dashed border-border rounded-xl text-muted-foreground">
-                <span>Aún no tienes lugares.</span>
+                <span>{tx("aunNoTienesLugares")}</span>
                 <Link
                   href="/places"
                   className="text-xs font-semibold text-brand hover:underline"
                 >
-                  Crear lugar →
+                  {tx("crearLugar")}
                 </Link>
               </div>
             ) : (
@@ -454,7 +456,7 @@ export function SessionForm({
                 {...register("placeId")}
                 className="w-full h-11 px-4 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground"
               >
-                <option value="">Sin lugar asignado</option>
+                <option value="">{tx("sinLugarAsignado")}</option>
                 {places.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -467,7 +469,7 @@ export function SessionForm({
           {monitorName && (
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-foreground">
-                Monitor
+                {tx("monitor")}
               </label>
               <div className="flex items-center h-11 px-4 text-sm bg-muted/40 border border-border rounded-xl text-foreground/80 cursor-not-allowed">
                 {monitorName}
@@ -480,14 +482,14 @@ export function SessionForm({
               htmlFor="description"
               className="block text-sm font-semibold text-foreground"
             >
-              Descripción{" "}
+              {tx("descripcion")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <textarea
               id="description"
-              placeholder="Objetivo de la sesión, notas…"
+              placeholder={tx("objetivoDeLaSesion")}
               rows={3}
               maxLength={2000}
               {...register("description")}
@@ -503,7 +505,7 @@ export function SessionForm({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <BarChart3 className="size-4 text-muted-foreground" />
-              Resumen de sesión
+              {tx("resumenDeSesion")}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-bold text-foreground">
@@ -511,8 +513,7 @@ export function SessionForm({
               </span>
               <span className="text-xs text-muted-foreground">·</span>
               <span className="text-xs text-muted-foreground">
-                {selectedExercises.length} ejercicio
-                {selectedExercises.length !== 1 ? "s" : ""}
+                {tx("v1EjercicioV2", { v1: selectedExercises.length, v2: selectedExercises.length !== 1 ? "s" : "" })}
               </span>
             </div>
           </div>
@@ -557,7 +558,7 @@ export function SessionForm({
             <div className="flex items-center gap-2">
               <CalendarDays className="size-4 text-muted-foreground" />
               <span className="text-sm font-semibold text-foreground">
-                Plan de entrenamiento
+                {tx("planDeEntrenamiento")}
               </span>
             </div>
             {totalDuration > 0 && (
@@ -596,7 +597,7 @@ export function SessionForm({
                   )}
                 />
                 <p className="text-sm font-medium text-foreground mb-1">
-                  {isDropZoneActive ? "¡Suelta aquí!" : "Sin ejercicios aún"}
+                  {isDropZoneActive ? "¡Suelta aquí!" : tx("sinEjerciciosAun")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Arrastra ejercicios desde la biblioteca o pulsa{" "}
@@ -704,18 +705,18 @@ export function SessionForm({
                                 className="w-14 h-7 text-xs text-center bg-background border border-brand/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40"
                               />
                               <span className="text-xs text-muted-foreground">
-                                min
+                                {tx("min")}
                               </span>
                             </div>
                           ) : (
                             <button
                               type="button"
                               onClick={() => startEditDuration(idx)}
-                              title="Editar duración"
+                              title={tx("editarDuracion")}
                               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 px-1.5 py-1 rounded-lg hover:bg-muted group/dur"
                             >
                               <Clock className="size-3" />
-                              <span>{effectiveDuration} min</span>
+                              <span>{tx("v1Min", { v1: effectiveDuration })}</span>
                               <ChevronDown className="size-2.5 opacity-0 group-hover/dur:opacity-100 transition-opacity" />
                             </button>
                           )}
@@ -726,7 +727,7 @@ export function SessionForm({
                             onClick={() =>
                               setExpandedNotesIdx(isExpanded ? null : idx)
                             }
-                            title="Notas"
+                            title={tx("notas")}
                             className={cn(
                               "size-6 rounded-md flex items-center justify-center transition-colors shrink-0",
                               isExpanded || ex.notes
@@ -752,7 +753,7 @@ export function SessionForm({
                             <textarea
                               value={ex.notes}
                               onChange={(e) => updateNotes(idx, e.target.value)}
-                              placeholder="Notas para este ejercicio: puntos clave, variantes, carga…"
+                              placeholder={tx("notasParaEsteEjercicio")}
                               rows={2}
                               className="w-full text-xs bg-muted/40 border border-border/50 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-none"
                             />
@@ -777,7 +778,7 @@ export function SessionForm({
                   <p className="text-xs text-muted-foreground">
                     {isDropZoneActive
                       ? "Suelta aquí"
-                      : "Arrastra más ejercicios aquí"}
+                      : tx("arrastraMasEjerciciosAqui")}
                   </p>
                 </div>
               </div>
@@ -790,12 +791,11 @@ export function SessionForm({
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30 shrink-0">
             <BookOpen className="size-4 text-muted-foreground" />
             <span className="text-sm font-semibold text-foreground">
-              Biblioteca
+              {tx("biblioteca")}
             </span>
             {filteredAvailable.length > 0 && (
               <span className="ml-auto text-xs text-muted-foreground">
-                {filteredAvailable.length} disponibles
-              </span>
+                {tx("v1Disponibles", { v1: filteredAvailable.length })}</span>
             )}
           </div>
 
@@ -807,7 +807,7 @@ export function SessionForm({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar ejercicios…"
+                placeholder={tx("buscarEjercicios")}
                 className="w-full h-8 pl-8 pr-3 text-xs bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -837,10 +837,10 @@ export function SessionForm({
                 <Filter className="size-6 text-muted-foreground mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
                   {search || libCategoryFilter !== "all"
-                    ? "Sin resultados para ese filtro"
+                    ? tx("sinResultadosParaEse")
                     : availableExercises.length === 0
-                      ? "No hay ejercicios en la biblioteca"
-                      : "Todos los ejercicios están en la sesión"}
+                      ? tx("noHayEjerciciosEn")
+                      : tx("todosLosEjerciciosEstan")}
                 </p>
               </div>
             ) : (
@@ -874,7 +874,7 @@ export function SessionForm({
                   </div>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                     <Clock className="size-3" />
-                    {ex.durationMinutes} min
+                    {ex.durationMinutes}{" "}{tx("min")}
                   </span>
                   <button
                     type="button"
@@ -911,14 +911,14 @@ export function SessionForm({
             onClick={onCancel}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         ) : (
           <Link
             href="/sessions"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5"
           >
-            Cancelar
+            {tx("cancelar")}
           </Link>
         )}
       </div>

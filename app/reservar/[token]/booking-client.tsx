@@ -12,6 +12,8 @@ import {
   minutesLabel,
   type BookablePlace,
 } from "@/lib/bookings/availability";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type ApiPlace = {
   id: string;
@@ -21,11 +23,11 @@ type ApiPlace = {
   busy: { start: string; end: string }[];
 };
 
-const WEEKDAY = new Intl.DateTimeFormat("es-ES", {
+const WEEKDAY = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   timeZone: "UTC",
 });
-const DAY_LONG = new Intl.DateTimeFormat("es-ES", {
+const DAY_LONG = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -44,6 +46,8 @@ export function BookingClient({
   token: string;
   days: string[];
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_token_bookingclient");
   const [date, setDate] = useState(days[0]);
   const [duration, setDuration] = useState<number>(90);
   const [minute, setMinute] = useState<number | null>(null);
@@ -117,7 +121,7 @@ export function BookingClient({
   async function book() {
     if (!selectedPlace || selectedMinute === null) return;
     if (!isValidFullName(fullName)) {
-      setError("Escribe tu nombre y apellidos.");
+      setError(tx("escribeTuNombreY"));
       return;
     }
     setSaving(true);
@@ -138,8 +142,8 @@ export function BookingClient({
       if (!res.ok) {
         setError(
           res.status === 429
-            ? "Demasiados intentos. Prueba de nuevo más tarde."
-            : (json.error ?? "No se pudo reservar. Inténtalo de nuevo.")
+            ? tx("demasiadosIntentosPruebaDe")
+            : (json.error ?? tx("noSePudoReservar"))
         );
         if (res.status === 409) void load(date);
         return;
@@ -151,7 +155,7 @@ export function BookingClient({
         duration,
       });
     } catch {
-      setError("Error de conexión. Inténtalo de nuevo.");
+      setError(tx("errorDeConexionIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -163,15 +167,15 @@ export function BookingClient({
         <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-[#D6FF38] text-[#050505]">
           <CheckCircle2 className="size-7" />
         </div>
-        <h2 className="text-2xl font-black">¡Pista reservada!</h2>
+        <h2 className="text-2xl font-black">{tx("pistaReservada")}</h2>
         <p className="mt-2 text-sm text-[#050505]/70 dark:text-white/70">
-          {booked.placeName} · {DAY_LONG.format(dayDate(booked.date))}
+          {booked.placeName} · {DAY_LONG(intlLocale).format(dayDate(booked.date))}
           <br />
-          de {minutesLabel(booked.minute)} a{" "}
+          {tx("de")}{" "}{minutesLabel(booked.minute)} a{" "}
           {minutesLabel(booked.minute + booked.duration)}
         </p>
         <p className="mt-3 text-xs text-[#050505]/55 dark:text-white/50">
-          Haz una captura de pantalla para tenerla a mano.
+          {tx("hazUnaCapturaDe")}
         </p>
         <button
           type="button"
@@ -184,7 +188,7 @@ export function BookingClient({
           }}
           className="mt-5 rounded-full border border-[#050505]/15 px-5 py-2.5 text-sm font-black dark:border-white/15"
         >
-          Hacer otra reserva
+          {tx("hacerOtraReserva")}
         </button>
       </div>
     );
@@ -209,7 +213,7 @@ export function BookingClient({
               className="flex flex-col items-center gap-1.5"
             >
               <span className="text-[11px] font-bold uppercase text-[#050505]/60 dark:text-white/60">
-                {WEEKDAY.format(dayDate(d)).replace(".", "")}
+                {WEEKDAY(intlLocale).format(dayDate(d)).replace(".", "")}
               </span>
               <span
                 className={cn(
@@ -241,8 +245,7 @@ export function BookingClient({
                 : "border-[#050505]/15 bg-white dark:border-white/15 dark:bg-white/5"
             )}
           >
-            {d} min
-          </button>
+            {tx("v1Min", { v1: d })}</button>
         ))}
       </div>
 
@@ -255,7 +258,7 @@ export function BookingClient({
             className="font-bold underline"
             onClick={() => void load(date)}
           >
-            Reintentar
+            {tx("reintentar")}
           </button>
         </p>
       ) : places === null ? (
@@ -263,7 +266,7 @@ export function BookingClient({
           <Loader2 className="size-6 animate-spin text-[#050505]/40" />
         </div>
       ) : grid.length === 0 ? (
-        <p className="text-sm text-[#050505]/60">No hay horas para este día.</p>
+        <p className="text-sm text-[#050505]/60">{tx("noHayHorasPara")}</p>
       ) : (
         <div className="grid grid-cols-5 gap-1.5">
           {grid.map((row) => {
@@ -302,9 +305,9 @@ export function BookingClient({
       {/* Pistas libres a esa hora */}
       {selectedMinute !== null && (
         <section className="space-y-3">
-          <h2 className="text-xl font-black">Reserva una pista</h2>
+          <h2 className="text-xl font-black">{tx("reservaUnaPista")}</h2>
           <p className="text-sm text-[#050505]/60 dark:text-white/60">
-            {DAY_LONG.format(dayDate(date))} · {minutesLabel(selectedMinute)}–
+            {DAY_LONG(intlLocale).format(dayDate(date))} · {minutesLabel(selectedMinute)}–
             {minutesLabel(selectedMinute + duration)}
           </p>
           <div className="space-y-2">
@@ -330,13 +333,13 @@ export function BookingClient({
           {selectedPlace && (
             <div className="space-y-3 rounded-2xl border border-[#050505]/10 bg-white p-4 dark:border-white/10 dark:bg-white/5">
               <label className="block">
-                <span className="text-sm font-black">Nombre y apellidos</span>
+                <span className="text-sm font-black">{tx("nombreYApellidos")}</span>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   autoComplete="name"
                   maxLength={120}
-                  placeholder="Ana López García"
+                  placeholder={tx("anaLopezGarcia")}
                   className="mt-1.5 h-12 w-full rounded-xl border border-[#050505]/15 bg-[#F4F4F1] px-4 text-base outline-none focus:border-[#050505] dark:border-white/15 dark:bg-white/5"
                 />
               </label>
@@ -361,7 +364,7 @@ export function BookingClient({
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#050505] text-base font-black text-white disabled:opacity-60 dark:bg-white dark:text-[#050505]"
               >
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Reservar {selectedPlace.name}
+                {tx("reservar")}{" "}{selectedPlace.name}
               </button>
             </div>
           )}

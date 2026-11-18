@@ -58,6 +58,7 @@ import {
   CopyToSpaceButton,
   type CopyTarget,
 } from "@/components/app/copy-to-space-button";
+import { useTranslations } from "next-intl";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -240,6 +241,7 @@ export function ExerciseDetailClient({
   /** Colección desde la que se llegó a la ficha. */
   backToListHref?: string | null;
 }) {
+  const tx = useTranslations("ui.s_id_exercisedetailclient");
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -322,7 +324,7 @@ export function ExerciseDetailClient({
       method: "DELETE",
     });
     if (!res.ok) {
-      setDeleteError("No se pudo eliminar el ejercicio. Inténtalo de nuevo.");
+      setDeleteError(tx("noSePudoEliminar"));
       setDeleting(false);
       return;
     }
@@ -342,10 +344,10 @@ export function ExerciseDetailClient({
           </button>
           <div>
             <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-              Editar ejercicio
+              {tx("editarEjercicio")}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Modifica los datos del ejercicio
+              {tx("modificaLosDatosDel")}
             </p>
           </div>
         </div>
@@ -454,19 +456,19 @@ export function ExerciseDetailClient({
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Link
             href="/exercises"
-            title="Volver a todos los ejercicios"
+            title={tx("volverATodosLos")}
             className="inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <ArrowLeft className="size-4" /> Volver a ejercicios
+            <ArrowLeft className="size-4" />{" "}{tx("volverAEjercicios")}
           </Link>
           {backToListHref ? (
             <Link
               href={backToListHref}
-              title="Volver a la colección"
+              title={tx("volverALaColeccion")}
               className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#D6FF38] bg-[#D6FF38]/20 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-[#D6FF38]/40"
             >
               <ArrowLeft className="size-3.5" />
-              <span>Volver a la colección</span>
+              <span>{tx("volverALaColeccion")}</span>
             </Link>
           ) : null}
           <BackToSearchLink href={backToSearchHref} />
@@ -485,7 +487,7 @@ export function ExerciseDetailClient({
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:w-auto"
             >
               <Copy className="size-3.5" />
-              Duplicar ejercicio
+              {tx("duplicarEjercicio")}
             </Link>
           )}
           {canEdit ? (
@@ -495,23 +497,23 @@ export function ExerciseDetailClient({
                 className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[#050505]/12 bg-white px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10 dark:bg-white/[0.04] sm:flex-none"
               >
                 <Pencil className="size-3.5" />
-                <span className="hidden sm:inline">Editar</span>
+                <span className="hidden sm:inline">{tx("editar")}</span>
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-white px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.04] sm:flex-none"
               >
                 <Trash2 className="size-3.5" />
-                <span className="hidden sm:inline">Eliminar</span>
+                <span className="hidden sm:inline">{tx("eliminar")}</span>
               </button>
             </div>
           ) : userId && exercise.isGlobal && !isAdmin ? (
             <div className="flex w-full items-center gap-1.5 rounded-full border border-[#050505]/12 bg-white/70 px-3 py-2 text-[11px] text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:w-auto sm:shrink-0">
               <ShieldAlert className="size-3.5 shrink-0" strokeWidth={1.6} />
               <span className="hidden sm:inline">
-                Solo administradores pueden modificar ejercicios globales
+                {tx("soloAdministradoresPuedenModificar")}
               </span>
-              <span className="sm:hidden">Solo admins</span>
+              <span className="sm:hidden">{tx("soloAdmins")}</span>
             </div>
           ) : null}
           {isAdmin && exercise.isGlobal && (
@@ -556,7 +558,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 text-xs text-white/66">
                   <Clock className="size-3" />
-                  {exercise.durationMinutes} min
+                  {exercise.durationMinutes}{" "}{tx("min")}
                 </span>
                 {exercise.location && (
                   <>
@@ -579,8 +581,7 @@ export function ExerciseDetailClient({
                   <>
                     <span className="text-xs text-white/35">·</span>
                     <span className="text-xs text-white/66">
-                      Intensidad {exercise.intensity}/5
-                    </span>
+                      {tx("intensidadV15", { v1: exercise.intensity ?? "" })}</span>
                   </>
                 )}
               </div>
@@ -627,7 +628,7 @@ export function ExerciseDetailClient({
               ) : (
                 <FileDown className="size-4" strokeWidth={1.6} />
               )}
-              PDF
+              {tx("pdf")}
             </button>
             {userId && (
               <>
@@ -657,7 +658,7 @@ export function ExerciseDetailClient({
                 className="inline-flex items-center gap-2 rounded-full border border-[#D6FF38]/50 bg-[#D6FF38]/15 px-4 py-2 text-sm font-semibold text-[#5E6F00] transition-colors hover:bg-[#D6FF38]/25 dark:text-[#D6FF38]"
               >
                 <Lock className="size-3.5" strokeWidth={1.8} />
-                Inicia sesión para guardar
+                {tx("iniciaSesionParaGuardar")}
               </Link>
             )}
           </div>
@@ -678,12 +679,12 @@ export function ExerciseDetailClient({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    En tus listas
+                    {tx("enTusListas")}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {savedInLists.length > 0
-                      ? "Este ejercicio ya está organizado dentro de tus colecciones."
-                      : "Todavía no está en ninguna lista. Guárdalo para recuperarlo más rápido."}
+                      ? tx("esteEjercicioYaEsta")
+                      : tx("todaviaNoEstaEn")}
                   </p>
                 </div>
                 {loadingLists ? (
@@ -713,7 +714,7 @@ export function ExerciseDetailClient({
                       href="/exercises?tab=favorites"
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5E6F00] transition-colors hover:text-[#050505] dark:text-[#D6FF38] dark:hover:text-white"
                     >
-                      Ver todas tus listas
+                      {tx("verTodasTusListas")}
                       <ExternalLink className="size-3.5" />
                     </Link>
                   </div>
@@ -732,8 +733,7 @@ export function ExerciseDetailClient({
               )}
               {exercise.numJugadores && (
                 <span className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10">
-                  {exercise.numJugadores} jugadores
-                </span>
+                  {tx("v1Jugadores", { v1: exercise.numJugadores })}</span>
               )}
               {tiposActividad.map((tipo) => (
                 <span
@@ -752,7 +752,7 @@ export function ExerciseDetailClient({
                   key={nivel}
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
-                  Nivel: {nivelLabel(nivel)}
+                  {tx("nivelV1", { v1: nivelLabel(nivel) })}
                 </span>
               ))}
               {aspectosJuego.map((aspecto) => (
@@ -770,13 +770,12 @@ export function ExerciseDetailClient({
                   key={parametro}
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
-                  Parámetro: {parametro.replace(/_/g, " ")}
+                  {tx("parametroV1", { v1: parametro.replace(/_/g, " ") })}
                 </span>
               ))}
               {exercise.duracionRango && (
                 <span className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10">
-                  {exercise.duracionRango} min
-                </span>
+                  {tx("v1Min", { v1: exercise.duracionRango })}</span>
               )}
               {exercise.tipoPelota && (
                 <span className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10">
@@ -796,7 +795,7 @@ export function ExerciseDetailClient({
                   key={`situacion-${sj}`}
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
-                  Situación: {situacionJuegoLabel(sj)}
+                  {tx("situacionV1", { v1: situacionJuegoLabel(sj) })}
                 </span>
               ))}
               {exercise.tipoCompeticion?.map((tc) => (
@@ -804,7 +803,7 @@ export function ExerciseDetailClient({
                   key={`competicion-${tc}`}
                   className="rounded-full bg-[#050505]/6 px-2.5 py-1 text-xs font-semibold text-foreground dark:bg-white/10"
                 >
-                  Competición: {tipoCompeticionLabel(tc)}
+                  {tx("competicionV1", { v1: tipoCompeticionLabel(tc) })}
                 </span>
               ))}
               {exercise.golpes &&
@@ -831,7 +830,7 @@ export function ExerciseDetailClient({
           {exercise.objectives && (
             <div className="bg-brand/5 border border-brand/20 rounded-xl px-4 py-3">
               <p className="text-xs font-bold text-brand uppercase tracking-widest mb-1">
-                Objetivos
+                {tx("objetivos")}
               </p>
               <p className="whitespace-pre-line text-sm text-foreground">
                 {exercise.objectives}
@@ -842,7 +841,7 @@ export function ExerciseDetailClient({
           {exercise.description && (
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Descripción
+                {tx("descripcion")}
               </p>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {exercise.description}
@@ -859,7 +858,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mb-3">
                 <ListOrdered className="size-4 text-muted-foreground" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Pasos de ejecución
+                  {tx("pasosDeEjecucion")}
                 </p>
               </div>
               <div className="space-y-3">
@@ -889,7 +888,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mb-2">
                 <Package className="size-4 text-muted-foreground" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Materiales
+                  {tx("materiales")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -910,7 +909,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mb-1.5">
                 <Lightbulb className="size-3.5 text-amber-400" />
                 <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                  Tips del entrenador
+                  {tx("tipsDelEntrenador")}
                 </p>
               </div>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -924,7 +923,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mb-1.5">
                 <Shuffle className="size-3.5 text-muted-foreground" />
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                  Variantes
+                  {tx("variantes")}
                 </p>
               </div>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -938,7 +937,7 @@ export function ExerciseDetailClient({
               <div className="flex items-center gap-2 mb-1.5">
                 <StickyNote className="size-3.5 text-muted-foreground" />
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                  Observaciones
+                  {tx("observaciones")}
                 </p>
               </div>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -950,7 +949,7 @@ export function ExerciseDetailClient({
           {exercise.videoUrl && (
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Vídeo de referencia
+                {tx("videoDeReferencia")}
               </p>
               {videoEmbedUrl && (
                 <div className="relative mb-2 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
@@ -972,7 +971,7 @@ export function ExerciseDetailClient({
                 className="inline-flex items-center gap-2 text-sm text-brand hover:text-brand/80 transition-colors font-medium"
               >
                 <Video className="size-4" />
-                {videoEmbedUrl ? "Ver en YouTube" : "Ver vídeo"}
+                {videoEmbedUrl ? tx("verEnYoutube") : "Ver vídeo"}
                 <ExternalLink className="size-3" />
               </a>
             </div>
@@ -994,10 +993,10 @@ export function ExerciseDetailClient({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground">
-                  Eliminar ejercicio
+                  {tx("eliminarEjercicio")}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  ¿Seguro que quieres eliminar{" "}
+                  {tx("seguroQueQuieresEliminar")}{" "}
                   <span className="font-medium text-foreground">
                     {exercise.name}
                   </span>
@@ -1022,7 +1021,7 @@ export function ExerciseDetailClient({
                 disabled={deleting}
                 className="flex-1 text-sm font-medium text-muted-foreground border border-border px-4 py-2.5 rounded-xl hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleDelete}
@@ -1030,7 +1029,7 @@ export function ExerciseDetailClient({
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-destructive text-destructive-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-destructive/90 active:scale-95 transition-all duration-150 disabled:opacity-60"
               >
                 {deleting && <Loader2 className="size-4 animate-spin" />}
-                Eliminar
+                {tx("eliminar")}
               </button>
             </div>
           </div>

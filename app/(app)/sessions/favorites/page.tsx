@@ -4,8 +4,10 @@ import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { loadFavoriteSessionLists } from "@/lib/sessions/favorites";
 import { FavoritesClient } from "./favorites-client";
+import { getTranslations } from "next-intl/server";
 
 export default async function FavoriteSessionsPage() {
+  const tx = await getTranslations("ui.s_favorites_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -21,29 +23,26 @@ export default async function FavoriteSessionsPage() {
         <div>
           <p className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
             <Heart className="size-3.5 text-red-400" />
-            Sesiones
+            {tx("sesiones")}
           </p>
           <h1 className="text-3xl font-black text-foreground sm:text-4xl">
-            Listas
+            {tx("listas")}
           </h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Tus sesiones guardadas, organizadas por listas. Pulsa el corazón en
-            cualquier sesión para añadirla a una lista.
+            {tx("tusSesionesGuardadasOrganizadas")}
           </p>
         </div>
         <Link
           href="/sessions"
           className="inline-flex items-center justify-center rounded-full border border-border bg-white/70 px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
         >
-          Ver mis sesiones
+          {tx("verMisSesiones")}
         </Link>
       </header>
 
       {lists === null ? (
         <p className="rounded-2xl border border-border bg-white/70 p-6 text-sm text-muted-foreground dark:bg-white/[0.035]">
-          Las listas de sesiones favoritas todavía no están activadas. El
-          administrador debe pulsar «Activar sesiones favoritas» en Admin →
-          Herramientas.
+          {tx("lasListasDeSesiones")}
         </p>
       ) : (
         <FavoritesClient initialLists={lists} />

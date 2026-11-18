@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function StudentsReportButton({ href }: { href: string }) {
+  const tx = useTranslations("ui.s_students_studentsreportbutton");
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +47,7 @@ export function StudentsReportButton({ href }: { href: string }) {
         ) : (
           <FileDown className="size-4" />
         )}
-        Informe PDF
+        {tx("informePdf")}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

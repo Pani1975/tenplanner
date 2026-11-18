@@ -16,12 +16,15 @@ import {
 } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { listCoachesByGroupIds } from "@/lib/club-coaches";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 interface PageProps {
   searchParams: Promise<{ monitor?: string }>;
 }
 
 export default async function GroupsPage({ searchParams }: PageProps) {
+  const tx = await getTranslations("ui.s_groups_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,8 +36,8 @@ export default async function GroupsPage({ searchParams }: PageProps) {
   if (!groupsEnabled) {
     return (
       <FeatureLocked
-        title="Grupos desactivados"
-        description="El administrador ha pausado temporalmente la organización por grupos."
+        title={tx("gruposDesactivados")}
+        description={tx("elAdministradorHaPausado")}
         href="/students"
         cta="Volver a alumnos"
       />
@@ -106,19 +109,17 @@ export default async function GroupsPage({ searchParams }: PageProps) {
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
               <Users className="size-3.5" />
-              Cohortes
+              {tx("cohortes")}
             </div>
             <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
-              {personalTitle("Grupos", await getWorkMode(user.id))}
+              {personalTitle("Grupos", await getWorkMode(user.id), await getLocale())}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
-              {rows.length} {rows.length === 1 ? "grupo" : "grupos"} para
-              organizar alumnos, niveles y sesiones colectivas.
-            </p>
+              {tx("v1V2ParaOrganizar", { v1: rows.length, v2: rows.length === 1 ? tx("groupOne") : tx("groupMany") })}</p>
           </div>
           <div className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-3">
             <p className="text-[11px] font-black uppercase text-white/45">
-              Total alumnos agrupados
+              {tx("totalAlumnosAgrupados")}
             </p>
             <p className="mt-1 text-3xl font-black text-[#D6FF38]">
               {rows.reduce((sum, group) => sum + Number(group.memberCount), 0)}
@@ -129,7 +130,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
         {clubMembers.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
             <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-              Monitor
+              {tx("monitor")}
             </span>
             <Link
               href="/groups"
@@ -140,7 +141,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
               )}
             >
-              Todos
+              {tx("todos")}
             </Link>
             {clubMembers.map((m) => (
               <Link
@@ -169,10 +170,10 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                 </div>
                 <div>
                   <p className="text-base font-black text-foreground/58">
-                    Sin grupos todavía
+                    {tx("sinGruposTodavia")}
                   </p>
                   <p className="mt-1 text-sm text-foreground/42">
-                    Crea tu primer grupo para empezar.
+                    {tx("creaTuPrimerGrupo")}
                   </p>
                 </div>
               </div>
@@ -199,7 +200,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                           {g.memberCount}
                         </span>
                         <span className="text-[10px] text-foreground/35">
-                          {Number(g.memberCount) === 1 ? "alumno" : "alumnos"}
+                          {Number(g.memberCount) === 1 ? tx("studentOne") : tx("studentMany")}
                         </span>
                       </div>
                     </div>
@@ -220,24 +221,23 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                         </p>
                       ) : (
                         <p className="mt-1.5 text-[12px] italic text-foreground/30">
-                          Sin descripción
+                          {tx("sinDescripcion")}
                         </p>
                       )}
                     </div>
 
                     {(coachesByGroup.get(g.id) ?? []).length > 0 && (
                       <p className="truncate text-[11px] font-semibold text-foreground/55">
-                        Monitores:{" "}
-                        {(coachesByGroup.get(g.id) ?? [])
+                        {tx("monitoresV1", { v1: (coachesByGroup.get(g.id) ?? [])
                           .map((c) => c.name)
-                          .join(", ")}
+                          .join(", ") })}
                       </p>
                     )}
 
                     {/* CTA arrow */}
                     <div className="flex items-center justify-between border-t border-[#050505]/10 pt-3 dark:border-white/10">
                       <span className="text-[11px] font-black uppercase text-foreground/40">
-                        Ver grupo
+                        {tx("verGrupo")}
                       </span>
                       <ChevronRight className="size-4 text-foreground/25 group-hover:text-brand group-hover:translate-x-0.5 transition-all" />
                     </div>
@@ -255,7 +255,7 @@ export default async function GroupsPage({ searchParams }: PageProps) {
                   <Plus className="size-4" />
                 </div>
                 <h2 className="text-[13px] font-black uppercase text-foreground">
-                  Nuevo grupo
+                  {tx("nuevoGrupo")}
                 </h2>
               </div>
               <div className="p-5">

@@ -51,6 +51,9 @@ import { BackToSearchLink } from "@/components/app/back-to-search-link";
 import { SessionInfoSummary } from "@/components/app/session-info-summary";
 import { ClassAnimationButton } from "@/components/app/class-animation-player";
 import { hasSessionAnimation } from "@/lib/classes/animation";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
+import { useLocale } from "next-intl";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -132,7 +135,7 @@ export interface SessionExerciseData {
   description?: string | null;
 }
 
-function formatDate(isoString: string) {
+function formatDate(isoString: string, loc: string = "es-ES") {
   const date = new Date(isoString);
   const now = new Date();
   const diff = date.getTime() - now.getTime();
@@ -142,7 +145,7 @@ function formatDate(isoString: string) {
   if (days === 1) return "Mañana";
   if (days === -1) return "Ayer";
 
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(loc, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -150,8 +153,8 @@ function formatDate(isoString: string) {
   }).format(date);
 }
 
-function formatTime(isoString: string) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatTime(isoString: string, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(isoString));
@@ -252,6 +255,7 @@ function StudentsSection({
   sessionId: string;
   isOwner?: boolean;
 }) {
+  const tx = useTranslations("ui.s_id_sessiondetailclient");
   const [attendance, setAttendance] = useState<Record<string, boolean | null>>(
     () => Object.fromEntries(students.map((s) => [s.id, s.attended]))
   );
@@ -304,17 +308,16 @@ function StudentsSection({
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
-        <h2 className="font-semibold text-sm text-foreground">Pase de lista</h2>
+        <h2 className="font-semibold text-sm text-foreground">{tx("paseDeLista")}</h2>
         {students.length > 0 && (
           <span className="text-xs text-muted-foreground tabular-nums">
-            {presentCount}/{students.length} presentes
-          </span>
+            {tx("v1V2Presentes", { v1: presentCount, v2: students.length })}</span>
         )}
       </div>
       <div className="divide-y divide-border/50">
         {students.length === 0 ? (
           <p className="px-6 py-4 text-xs text-muted-foreground">
-            Sin alumnos asignados
+            {tx("sinAlumnosAsignados")}
           </p>
         ) : (
           students.map((s) => {
@@ -374,15 +377,15 @@ function StudentsSection({
                       <Loader2 className="size-3 animate-spin" />
                     ) : attended === true ? (
                       <>
-                        <CheckCircle2 className="size-3" /> Presente
+                        <CheckCircle2 className="size-3" />{" "}{tx("presente")}
                       </>
                     ) : attended === false ? (
                       <>
-                        <XCircle className="size-3" /> Ausente
+                        <XCircle className="size-3" />{" "}{tx("ausente")}
                       </>
                     ) : (
                       <>
-                        <Circle className="size-3" /> Sin marcar
+                        <Circle className="size-3" />{" "}{tx("sinMarcar")}
                       </>
                     )}
                   </button>
@@ -426,7 +429,7 @@ function StudentsSection({
                       }
                       onBlur={() => commitFeedback(s.id)}
                       readOnly={!isOwner}
-                      placeholder="Observaciones del alumno…"
+                      placeholder={tx("observacionesDelAlumno")}
                       className="w-full px-3 py-2 text-xs bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40 text-foreground placeholder:text-muted-foreground resize-none disabled:opacity-60"
                     />
                   </div>
@@ -457,6 +460,9 @@ export function SessionDetailClient({
   authorName = null,
   sendClubs = [],
 }: Props) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const term = useTerm();
+  const tx = useTranslations("ui.s_id_sessiondetailclient");
   const router = useRouter();
   const [sendingTo, setSendingTo] = useState<string | null>(null);
 
@@ -472,7 +478,7 @@ export function SessionDetailClient({
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        toast.error(json.error ?? "No se pudo enviar. Inténtalo de nuevo.");
+        toast.error(json.error ?? tx("noSePudoEnviar"));
         return;
       }
       toast.success(`Sesión enviada a ${club.name}`);
@@ -675,7 +681,7 @@ export function SessionDetailClient({
   async function handleSaveAsClass() {
     if (
       !window.confirm(
-        "Se creará una clase en Mis clases con el plan, objetivo, material y observaciones de esta sesión. ¿Continuar?"
+        tx("seCrearaUnaClase")
       )
     )
       return;
@@ -689,7 +695,7 @@ export function SessionDetailClient({
         error?: string;
       };
       if (!res.ok || !json.data?.classId) {
-        window.alert(json.error ?? "No se pudo guardar como clase.");
+        window.alert(json.error ?? tx("noSePudoGuardar"));
         return;
       }
       router.push(`/classes/${json.data.classId}`);
@@ -705,7 +711,7 @@ export function SessionDetailClient({
       method: "DELETE",
     });
     if (!res.ok) {
-      setDeleteError("No se pudo eliminar la sesión. Inténtalo de nuevo.");
+      setDeleteError(tx("noSePudoEliminar"));
       setDeleting(false);
       return;
     }
@@ -765,14 +771,14 @@ export function SessionDetailClient({
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/sessions"
-            title="Volver a todas las sesiones"
+            title={tx("volverATodasLas")}
             className="relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[#F4F4F1] text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-[#050505]/70"
           >
             <ArrowLeft className="size-4" />
           </Link>
           <BackToSearchLink href={backToSearchHref} className="relative" />
           <p className="relative rounded-full border border-foreground/10 bg-[#F4F4F1] px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground dark:bg-[#050505]/70">
-            Sesiones de Entrenamiento
+            {tx("sesionesDeEntrenamiento")}
           </p>
           <PrevNextNav
             prevHref={prevHref}
@@ -791,7 +797,7 @@ export function SessionDetailClient({
             >
               <Play className="size-3.5" />
               <span className="hidden sm:inline">
-                {status === "completed" ? "Ver en modo clase" : "Dar clase"}
+                {status === "completed" ? tx("verEnModoClase") : "Dar clase"}
               </span>
             </Link>
           )}
@@ -803,7 +809,7 @@ export function SessionDetailClient({
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
           >
             <Copy className="size-3.5" />
-            <span className="hidden sm:inline">Duplicar</span>
+            <span className="hidden sm:inline">{tx("duplicar")}</span>
           </button>
           <SessionFavoriteToggle
             sessionId={session.id}
@@ -821,14 +827,14 @@ export function SessionDetailClient({
             ) : (
               <FileDown className="size-3.5" />
             )}
-            <span className="hidden sm:inline">PDF</span>
+            <span className="hidden sm:inline">{tx("pdf")}</span>
           </button>
           {isOwner && (
             <button
               type="button"
               onClick={handleSaveAsClass}
               disabled={savingAsClass}
-              title="Guardar esta sesión como clase en Mis clases"
+              title={tx("guardarEstaSesionComo")}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/[0.035]"
             >
               {savingAsClass ? (
@@ -836,8 +842,8 @@ export function SessionDetailClient({
               ) : (
                 <BookmarkPlus className="size-3.5" />
               )}
-              <span className="sm:hidden">Clase</span>
-              <span className="hidden sm:inline">Guardar como clase</span>
+              <span className="sm:hidden">{tx("clase")}</span>
+              <span className="hidden sm:inline">{tx("guardarComoClase")}</span>
             </button>
           )}
           {isOwner && (
@@ -846,7 +852,7 @@ export function SessionDetailClient({
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground dark:bg-white/[0.035]"
             >
               <Pencil className="size-3.5" />
-              <span className="hidden sm:inline">Editar</span>
+              <span className="hidden sm:inline">{tx("editar")}</span>
             </Link>
           )}
           {isOwner && (
@@ -855,7 +861,7 @@ export function SessionDetailClient({
               className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-white/70 px-3 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:bg-white/[0.035]"
             >
               <Trash2 className="size-3.5" />
-              <span className="hidden sm:inline">Eliminar</span>
+              <span className="hidden sm:inline">{tx("eliminar")}</span>
             </button>
           )}
           {sendClubs.map((club) => (
@@ -864,7 +870,7 @@ export function SessionDetailClient({
               type="button"
               onClick={() => void sendToClub(club)}
               disabled={sendingTo !== null}
-              title="La sesión pasa al club; la impartes tú y la sigues viendo en tu espacio"
+              title={tx("laSesionPasaAl")}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-[#D6FF38]/70 hover:text-foreground disabled:opacity-60 dark:bg-white/[0.035]"
             >
               {sendingTo === club.id ? (
@@ -872,12 +878,12 @@ export function SessionDetailClient({
               ) : (
                 <Send className="size-3.5" />
               )}
-              <span>Enviar a {club.name}</span>
+              <span>{tx("enviarAV1", { v1: club.name })}</span>
             </button>
           ))}
           {authorName && (
             <span className="inline-flex items-center rounded-full border border-foreground/15 bg-foreground/5 px-3 py-2 text-sm font-semibold text-foreground/60">
-              Imparte {authorName}
+              {tx("imparteV1", { v1: authorName })}
             </span>
           )}
         </div>
@@ -918,8 +924,8 @@ export function SessionDetailClient({
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="flex items-center gap-1 text-xs text-white/65">
                     <Calendar className="size-3" />
-                    {formatDate(session.scheduledAt)} a las{" "}
-                    {formatTime(session.scheduledAt)}
+                    {formatDate(session.scheduledAt, intlLocale)}{" "}{tx("aLas")}{" "}
+                    {formatTime(session.scheduledAt, intlLocale)}
                   </span>
                 </div>
               </div>
@@ -940,7 +946,7 @@ export function SessionDetailClient({
               ) : (
                 <CheckCircle2 className="size-3" />
               )}
-              Sesión completada
+              {tx("sesionCompletada")}
             </button>
             <button
               onClick={() => setStatusDialog({ kind: "cancel", note: "" })}
@@ -948,7 +954,7 @@ export function SessionDetailClient({
               className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive border border-destructive/30 bg-destructive/5 px-3 py-1.5 rounded-full hover:bg-destructive/15 transition-colors disabled:opacity-50"
             >
               <XCircle className="size-3" />
-              Cancelar sesión
+              {tx("cancelarSesion")}
             </button>
             <button
               onClick={() => setRepeatOpen(true)}
@@ -956,7 +962,7 @@ export function SessionDetailClient({
               className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground border border-border bg-background px-3 py-1.5 rounded-full hover:bg-muted transition-colors disabled:opacity-50"
             >
               <CalendarClock className="size-3" />
-              Repetir en otras fechas
+              {tx("repetirEnOtrasFechas")}
             </button>
           </div>
         )}
@@ -972,7 +978,7 @@ export function SessionDetailClient({
               ) : (
                 <Circle className="size-3" />
               )}
-              Reprogramar
+              {tx("reprogramar")}
             </button>
           </div>
         )}
@@ -986,7 +992,7 @@ export function SessionDetailClient({
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5" />
-              {session.durationMinutes} min
+              {session.durationMinutes}{" "}{tx("min")}
             </span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Dumbbell className="size-3.5" />
@@ -1012,7 +1018,7 @@ export function SessionDetailClient({
           {session.description && (
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                Descripción
+                {tx("descripcion")}
               </p>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {session.description}
@@ -1036,10 +1042,10 @@ export function SessionDetailClient({
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
             <h2 className="font-semibold text-sm text-foreground">
-              Bloques de la sesión
+              {tx("bloquesDeLaSesion")}
             </h2>
             <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {sessionBlocks.reduce(
+              {tx("v1Min", { v1: sessionBlocks.reduce(
                 (sum, block) =>
                   sum +
                   block.items.reduce(
@@ -1047,9 +1053,7 @@ export function SessionDetailClient({
                     0
                   ),
                 0
-              )}{" "}
-              min
-            </span>
+              ) })}</span>
           </div>
           <div
             className={cn(
@@ -1067,20 +1071,15 @@ export function SessionDetailClient({
                     {block.title ?? `Bloque ${block.orderIndex}`}
                   </p>
                   <span className="shrink-0 text-[11px] font-semibold tabular-nums text-foreground">
-                    {blockMinutes(block)} min
-                  </span>
+                    {tx("v1Min", { v1: blockMinutes(block) })}</span>
                 </div>
                 {session.courts === 2 && block.rotates && (
                   <div className="mt-2 rounded-md border border-brand/30 bg-brand/5 px-2.5 py-2 text-xs text-foreground">
-                    <p className="font-bold">Los grupos rotan</p>
+                    <p className="font-bold">{tx("losGruposRotan")}</p>
                     <p>
-                      Ronda 1 (0–{laneLongest(block)} min): grupo A en la pista
-                      1 · grupo B en la pista 2
-                    </p>
+                      {tx("ronda10V1", { v1: laneLongest(block) })}</p>
                     <p>
-                      Ronda 2 ({laneLongest(block)}–{laneLongest(block) * 2}{" "}
-                      min): rotan, grupo A en la pista 2 · grupo B en la pista 1
-                    </p>
+                      {tx("ronda2V1V2", { v1: laneLongest(block), v2: laneLongest(block) * 2 })}</p>
                   </div>
                 )}
                 {block.notes && (
@@ -1091,7 +1090,7 @@ export function SessionDetailClient({
                 <div className="mt-3 space-y-2">
                   {block.items.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      Sin items definidos.
+                      {tx("sinItemsDefinidos")}
                     </p>
                   ) : (
                     <div
@@ -1105,15 +1104,14 @@ export function SessionDetailClient({
                         <div key={lane.court} className="min-w-0 space-y-2">
                           {session.courts === 2 && (
                             <div className="flex items-center justify-between rounded-md bg-brand/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-foreground">
-                              <span>Pista {lane.court}</span>
+                              <span>{tx("pistaV1", { v1: lane.court })}</span>
                               <span className="tabular-nums">
-                                {lane.minutes} min
-                              </span>
+                                {tx("v1Min", { v1: lane.minutes })}</span>
                             </div>
                           )}
                           {session.courts === 2 && lane.items.length === 0 && (
                             <p className="text-xs text-muted-foreground">
-                              Nada en esta pista.
+                              {tx("nadaEnEstaPista")}
                             </p>
                           )}
                           {lane.items.map((item) => (
@@ -1155,7 +1153,7 @@ export function SessionDetailClient({
                                   {session.courts === 2 && (
                                     <span className="ml-2 inline-flex items-center gap-1 align-middle">
                                       <span className="rounded-full bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">
-                                        Pista {item.court === 2 ? 2 : 1}
+                                        {tx("pistaV1", { v1: item.court === 2 ? 2 : 1 })}
                                       </span>
                                       {(item.ledBy === "coach" ||
                                         item.ledBy === "auto") && (
@@ -1167,11 +1165,9 @@ export function SessionDetailClient({
                                       )}
                                       {(item.turnMinutes ?? 0) > 0 && (
                                         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                          Por turnos: {item.turnMinutes} min
-                                          cada alumno
-                                          {(item.turnSize ?? 1) > 1
-                                            ? `, de ${item.turnSize} en ${item.turnSize}`
-                                            : ""}
+                                          {tx("porTurnosV1Min", { v1: item.turnMinutes ?? 0, v2: (item.turnSize ?? 1) > 1
+                                            ? tx("turnSizeSuffixComma", { n: item.turnSize ?? 1 })
+                                            : "" })}
                                         </span>
                                       )}
                                     </span>
@@ -1179,8 +1175,8 @@ export function SessionDetailClient({
                                 </div>
                                 <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-muted-foreground">
                                   <Clock className="size-3" />
-                                  {itemMinutes(item)} min
-                                  {item.kind === "stations" ? " en total" : ""}
+                                  {itemMinutes(item)}{" "}{tx("min")}
+                                  {item.kind === "stations" ? tx("enTotal") : ""}
                                 </span>
                               </div>
                               {item.kind === "stations" && (
@@ -1246,7 +1242,7 @@ export function SessionDetailClient({
                                     onSave={(comment) =>
                                       saveItemComment(item.id, comment)
                                     }
-                                    placeholder="¿Cómo ha ido este ejercicio? Qué funcionó, qué cambiarías…"
+                                    placeholder={tx("comoHaIdoEste")}
                                   />
                                   <SessionVoiceNote
                                     url={item.coachAudioUrl}
@@ -1278,7 +1274,7 @@ export function SessionDetailClient({
           <div className="px-6 py-4 border-b border-border/50">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-semibold text-sm text-foreground">
-                Comentarios de la sesión
+                {tx("comentariosDeLaSesion")}
               </h2>
               {session.coachRating ? (
                 <div
@@ -1305,7 +1301,7 @@ export function SessionDetailClient({
                   className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-amber-500/20"
                 >
                   <Star className="size-3 fill-amber-400 text-amber-400" />
-                  Falta la valoración
+                  {tx("faltaLaValoracion")}
                 </button>
               ) : null}
             </div>
@@ -1318,7 +1314,7 @@ export function SessionDetailClient({
                   )}
                 >
                   {session.planFollowed
-                    ? "Según lo planificado"
+                    ? tx("segunLoPlanificado")
                     : `Cambió respecto al plan${
                         planChangeReasonLabel(session.planChangeReason)
                           ? ` · ${planChangeReasonLabel(session.planChangeReason)}`
@@ -1333,8 +1329,7 @@ export function SessionDetailClient({
               </p>
             )}
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Anota cómo ha ido la clase en general. Puedes escribir antes o
-              después de marcarla como completada.
+              {tx("anotaComoHaIdo")}
             </p>
           </div>
           <div className="p-4 sm:p-5">
@@ -1344,7 +1339,7 @@ export function SessionDetailClient({
               onSave={saveSessionComment}
               alwaysOpen
               addLabel="Comentarios de la sesión"
-              placeholder="Ritmo del grupo, qué ha funcionado, qué repetir o cambiar la próxima vez…"
+              placeholder={tx("ritmoDelGrupoQue")}
               maxLength={4000}
             />
             <SessionVoiceNote
@@ -1371,11 +1366,10 @@ export function SessionDetailClient({
             <div className="px-6 py-4 border-b border-border/50 flex items-center gap-2">
               <Package className="size-4 text-brand" />
               <h2 className="font-semibold text-sm text-foreground">
-                Material necesario
+                {tx("materialNecesario")}
               </h2>
               <span className="ml-auto text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                {allMaterials.length} elemento
-                {allMaterials.length !== 1 ? "s" : ""}
+                {tx("v1ElementoV2", { v1: allMaterials.length, v2: allMaterials.length !== 1 ? "s" : "" })}
               </span>
             </div>
             <div className="px-6 py-4 flex flex-wrap gap-2">
@@ -1398,11 +1392,11 @@ export function SessionDetailClient({
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
             <h2 className="font-semibold text-sm text-foreground">
-              Ejercicios
+              {tx("ejercicios")}
             </h2>
             {status === "completed" && (
               <p className="text-[10px] text-muted-foreground">
-                Valoración post-sesión
+                {tx("valoracionPostSesion")}
               </p>
             )}
           </div>
@@ -1435,7 +1429,7 @@ export function SessionDetailClient({
                               "text-muted-foreground bg-muted"
                           )}
                         >
-                          {CATEGORY_LABELS[ex.category] ?? ex.category}
+                          {term(CATEGORY_LABELS[ex.category] ?? ex.category)}
                         </span>
                         <span
                           className={cn(
@@ -1443,7 +1437,7 @@ export function SessionDetailClient({
                             diff?.color ?? "text-muted-foreground"
                           )}
                         >
-                          {diff?.label ?? ex.difficulty}
+                          {term(diff?.label ?? ex.difficulty)}
                         </span>
                       </div>
                       {ex.description && (
@@ -1485,18 +1479,18 @@ export function SessionDetailClient({
                             {ex.wasSkipped ? (
                               <span className="inline-flex items-center gap-1 font-medium text-amber-500">
                                 <XCircle className="size-3" />
-                                Saltado
+                                {tx("saltado")}
                               </span>
                             ) : ex.completedAt ? (
                               <span className="inline-flex items-center gap-1 font-medium text-brand">
                                 <CheckCircle2 className="size-3" />
-                                Ejecutado
+                                {tx("ejecutado")}
                               </span>
                             ) : null}
                             {(ex.actualDurationSeconds ?? 0) > 0 && (
                               <span className="inline-flex items-center gap-1">
                                 <Clock className="size-3" />
-                                Real:{" "}
+                                {tx("real")}{" "}
                                 {formatSeconds(ex.actualDurationSeconds ?? 0)}
                               </span>
                             )}
@@ -1512,12 +1506,12 @@ export function SessionDetailClient({
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
                         <Clock className="size-3" />
-                        {ex.durationMinutes} min
+                        {ex.durationMinutes}{" "}{tx("min")}
                       </span>
                       {status === "completed" && (
                         <div
                           className="flex items-center gap-0.5"
-                          title="Valorar ejercicio"
+                          title={tx("valorarEjercicio")}
                         >
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
@@ -1562,14 +1556,14 @@ export function SessionDetailClient({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground">
-                  Eliminar sesión
+                  {tx("eliminarSesion")}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  ¿Seguro que quieres eliminar{" "}
+                  {tx("seguroQueQuieresEliminar")}{" "}
                   <span className="font-medium text-foreground">
                     {session.title}
                   </span>
-                  ? Esta acción no se puede deshacer.
+                  {tx("questionCannotUndo")}
                 </p>
               </div>
               <button
@@ -1592,7 +1586,7 @@ export function SessionDetailClient({
                 disabled={deleting}
                 className="flex-1 text-sm font-medium text-muted-foreground border border-border px-4 py-2.5 rounded-xl hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleDelete}
@@ -1600,7 +1594,7 @@ export function SessionDetailClient({
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-destructive text-destructive-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-destructive/90 active:scale-95 transition-all duration-150 disabled:opacity-60"
               >
                 {deleting && <Loader2 className="size-4 animate-spin" />}
-                Eliminar
+                {tx("eliminar")}
               </button>
             </div>
           </div>
@@ -1652,13 +1646,13 @@ export function SessionDetailClient({
           >
             <h3 className="font-heading text-xl text-foreground">
               {statusDialog.kind === "complete"
-                ? "Marcar como completada"
+                ? tx("marcarComoCompletada")
                 : "Cancelar sesión"}
             </h3>
             <p className="text-sm text-muted-foreground">
               {statusDialog.kind === "complete"
-                ? "Anota cómo fue la sesión (opcional)."
-                : "Indica el motivo de la cancelación."}
+                ? tx("anotaComoFueLa")
+                : tx("indicaElMotivoDe")}
             </p>
             <textarea
               autoFocus
@@ -1670,8 +1664,8 @@ export function SessionDetailClient({
               }
               placeholder={
                 statusDialog.kind === "complete"
-                  ? "Buen ritmo, los alumnos respondieron bien…"
-                  : "Lluvia, lesión, ausencia del grupo…"
+                  ? tx("buenRitmoLosAlumnos")
+                  : tx("lluviaLesionAusenciaDel")
               }
               className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 text-foreground placeholder:text-muted-foreground resize-none"
             />
@@ -1681,7 +1675,7 @@ export function SessionDetailClient({
                 onClick={() => setStatusDialog(null)}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground px-4 py-2"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 type="button"
@@ -1705,7 +1699,7 @@ export function SessionDetailClient({
                 )}
               >
                 {updatingStatus && <Loader2 className="size-4 animate-spin" />}
-                Confirmar
+                {tx("confirmar")}
               </button>
             </div>
           </div>
@@ -1723,11 +1717,10 @@ export function SessionDetailClient({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-heading text-xl text-foreground">
-              Repetir sesión
+              {tx("repetirSesion")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Clona esta sesión (con sus ejercicios) en una o varias fechas. Los
-              alumnos asignados <em>no</em> se copian.
+              {tx("cloneDescription")}
             </p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {repeatDates.map((d, i) => (
@@ -1749,7 +1742,7 @@ export function SessionDetailClient({
                         setRepeatDates((prev) => prev.filter((_, j) => j !== i))
                       }
                       className="size-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      aria-label="Quitar fecha"
+                      aria-label={tx("quitarFecha")}
                     >
                       <X className="size-4" />
                     </button>
@@ -1761,7 +1754,7 @@ export function SessionDetailClient({
                 onClick={() => setRepeatDates((prev) => [...prev, ""])}
                 className="text-xs font-semibold text-brand hover:underline"
               >
-                + Añadir fecha
+                {tx("anadirFecha")}
               </button>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -1770,7 +1763,7 @@ export function SessionDetailClient({
                 onClick={() => setRepeatOpen(false)}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground px-4 py-2"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 type="button"
@@ -1800,7 +1793,7 @@ export function SessionDetailClient({
                 className="inline-flex items-center gap-2 bg-brand text-brand-foreground text-sm font-semibold px-4 py-2 rounded-xl hover:bg-brand/90 transition-colors disabled:opacity-60"
               >
                 {repeating && <Loader2 className="size-4 animate-spin" />}
-                Crear sesiones
+                {tx("crearSesiones")}
               </button>
             </div>
           </div>

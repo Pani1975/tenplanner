@@ -8,12 +8,14 @@ import { canTagWithClub } from "@/lib/clubs";
 import { createClient } from "@/lib/supabase/server";
 import { loadClubObjectives } from "@/lib/objectives";
 import { ClubObjectivesManager } from "./club-objectives-manager";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ clubId: string }>;
 }
 
 export default async function ClubObjectivesPage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_objetivos_page");
   const { clubId } = await params;
 
   const supabase = await createClient();
@@ -40,16 +42,14 @@ export default async function ClubObjectivesPage({ params }: PageProps) {
           className="inline-flex items-center gap-1 text-xs font-black uppercase text-foreground/55 hover:text-brand"
         >
           <ChevronLeft className="size-3.5" />
-          Mi club
+          {tx("miClub")}
         </Link>
-        <p className="tp-kicker mt-3">Objetivos del club</p>
+        <p className="tp-kicker mt-3">{tx("objetivosDelClub")}</p>
         <h1 className="mt-2 text-3xl font-black text-foreground">
           {club.name}
         </h1>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
-          Estos objetivos los ven todos los alumnos del club en su ficha. Puedes
-          añadir, editar o quitar cualquiera. El catálogo base de Ten Planner no
-          cambia y los originales se pueden restaurar en cualquier momento.
+          {tx("estosObjetivosLosVen")}
         </p>
       </div>
       <ClubObjectivesManager clubId={clubId} items={items} />

@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type SessionOption = {
   id: string;
@@ -18,8 +20,8 @@ type SessionOption = {
   durationMinutes: number;
 };
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("es-ES", {
+function formatTime(iso: string, loc: string = "es-ES") {
+  return new Date(iso).toLocaleTimeString(loc, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -56,6 +58,8 @@ export function DayPdfDialog({
   /** Ej. "lunes 6 de octubre" — para el título del diálogo. */
   dayLabel: string;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_daypdfdialog");
   const [selected, setSelected] = useState<Set<string>>(
     new Set(sessions.map((s) => s.id))
   );
@@ -91,7 +95,7 @@ export function DayPdfDialog({
       await downloadPdf(Array.from(selected), `sesiones-${dayLabel}.pdf`);
       onOpenChange(false);
     } catch {
-      setError("No se pudo generar el PDF. Inténtalo de nuevo.");
+      setError(tx("noSePudoGenerar"));
     } finally {
       setDownloading(false);
     }
@@ -101,10 +105,9 @@ export function DayPdfDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Generar PDF</DialogTitle>
+          <DialogTitle>{tx("generarPdf")}</DialogTitle>
           <DialogDescription>
-            Elige las sesiones de {dayLabel} que quieres incluir en el PDF.
-          </DialogDescription>
+            {tx("eligeLasSesionesDe", { v1: dayLabel })}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -148,9 +151,7 @@ export function DayPdfDialog({
                       {session.title}
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      {formatTime(session.scheduledAt)} ·{" "}
-                      {session.durationMinutes} min
-                    </span>
+                      {tx("v1V2Min", { v1: formatTime(session.scheduledAt, intlLocale), v2: session.durationMinutes })}</span>
                   </span>
                 </button>
               );
@@ -167,7 +168,7 @@ export function DayPdfDialog({
               onClick={() => onOpenChange(false)}
               className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"
@@ -180,7 +181,7 @@ export function DayPdfDialog({
               ) : (
                 <FileDown className="size-4" />
               )}
-              Descargar PDF
+              {tx("descargarPdf")}
               {selected.size > 0 ? ` (${selected.size})` : ""}
             </button>
           </div>
@@ -203,6 +204,7 @@ export function DayPdfButton({
   dayLabel: string;
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_daypdfdialog");
   const [open, setOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -239,7 +241,7 @@ export function DayPdfButton({
         ) : (
           <FileDown className="size-3.5" />
         )}
-        PDF
+        {tx("pdf")}
       </button>
       <DayPdfDialog
         open={open}

@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { defaultScheduledAt } from "./defaults";
+import { useTranslations } from "next-intl";
 
 export function QuickSessionCreator() {
+  const tx = useTranslations("ui.s_sessionwizard_quicksessioncreator");
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +27,7 @@ export function QuickSessionCreator() {
 
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError("Escribe un título para crear la sesión rápida.");
+      setError(tx("escribeUnTituloPara"));
       return;
     }
 
@@ -64,7 +66,7 @@ export function QuickSessionCreator() {
             .filter(Boolean)
             .join(". ") ||
             payload.error ||
-            "No se pudo crear la sesión rápida."
+            tx("noSePudoCrear")
         );
         return;
       }
@@ -72,7 +74,7 @@ export function QuickSessionCreator() {
       router.push(`/sessions/${payload.data.id}`);
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSubmitting(false);
     }
@@ -83,11 +85,10 @@ export function QuickSessionCreator() {
       <CardHeader className="border-b border-border/60">
         <CardTitle className="flex items-center gap-2">
           <Zap className="size-4 text-brand" />
-          Crear sesión rápida
+          {tx("crearSesionRapida")}
         </CardTitle>
         <CardDescription>
-          Solo pide un título. La fecha queda para dentro de una hora y el resto
-          lo podrás completar después desde el detalle.
+          {tx("soloPideUnTitulo")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-4">
@@ -98,7 +99,7 @@ export function QuickSessionCreator() {
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Ej: Sesión técnica de bandeja"
+            placeholder={tx("ejSesionTecnicaDe")}
             className="h-11"
             disabled={submitting}
             aria-invalid={!!error}
@@ -109,7 +110,7 @@ export function QuickSessionCreator() {
             disabled={submitting}
           >
             {submitting ? <Loader2 className="animate-spin" /> : null}
-            Crear rápida
+            {tx("crearRapida")}
             <ArrowRight data-icon="inline-end" />
           </Button>
         </form>

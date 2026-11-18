@@ -15,8 +15,14 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { loadPlatformReport, type ReportCount } from "@/lib/platform-reports";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Informes" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Informes") };
+}
 export const dynamic = "force-dynamic";
 
 function MetricCard({
@@ -55,6 +61,8 @@ function MetricCard({
 }
 
 export default async function ReportsPage() {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_informes_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -73,7 +81,7 @@ export default async function ReportsPage() {
   if (!row?.isPlatformAccount && !row?.isAdmin) notFound();
 
   const report = await loadPlatformReport();
-  const dateFmt = new Intl.DateTimeFormat("es-ES", {
+  const dateFmt = new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -85,37 +93,37 @@ export default async function ReportsPage() {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <BarChart3 className="size-3.5" />
-            Modo Ten Planner
+            {tx("modoTenPlanner")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            Informes Ten Planner
+            {tx("informesTenPlanner")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
-            Altas en la plataforma: clubes, monitores, familias y jugadores.
+            {tx("altasEnLaPlataforma")}
           </p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Clubes"
+            label={tx("clubes")}
             icon={Building2}
             value={report.clubs}
             hint="Clubes y academias creados en la aplicación."
           />
           <MetricCard
-            label="Monitores"
+            label={tx("monitores")}
             icon={UserRound}
             value={report.coaches}
             hint="Cuentas de monitor, con club o en particular."
           />
           <MetricCard
-            label="Familias"
+            label={tx("familias")}
             icon={UsersRound}
             value={report.families}
             hint="Cuentas de familia o de jugador que siguen a un alumno."
           />
           <MetricCard
-            label="Jugadores"
+            label={tx("jugadores")}
             icon={Users}
             value={report.players}
             hint="Fichas de alumno creadas por clubes y monitores."
@@ -124,24 +132,24 @@ export default async function ReportsPage() {
 
         <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-black text-foreground">
-            Contenido público
+            {tx("contenidoPublico")}
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {[
               {
-                label: "Ejercicios en la Biblioteca",
+                label: tx("ejerciciosEnLaBiblioteca"),
                 value: report.library.exercises,
                 icon: BookOpen,
                 href: "/exercises?tab=global",
               },
               {
-                label: "Clases en la Biblioteca",
+                label: tx("clasesEnLaBiblioteca"),
                 value: report.library.classes,
                 icon: GraduationCap,
                 href: "/classes?tab=library",
               },
               {
-                label: "Objetivos del catálogo",
+                label: tx("objetivosDelCatalogo"),
                 value: report.library.objectives,
                 icon: Target,
                 href: "/objetivos",
@@ -166,25 +174,24 @@ export default async function ReportsPage() {
 
         <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-black text-foreground">
-            Clubes y monitores particulares
+            {tx("clubesYMonitoresParticulares")}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Los jugadores de cada club más los de los monitores sin club suman
-            el total.
+            {tx("losJugadoresDeCada")}
           </p>
           {report.clubRows.length === 0 && report.players.total === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              Aún no hay clubes.
+              {tx("aunNoHayClubes")}
             </p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-[11px] font-black uppercase text-foreground/55">
-                    <th className="py-2 pr-3">Club</th>
-                    <th className="py-2 pr-3 text-right">Monitores</th>
-                    <th className="py-2 pr-3 text-right">Jugadores</th>
-                    <th className="py-2 text-right">Alta</th>
+                    <th className="py-2 pr-3">{tx("club")}</th>
+                    <th className="py-2 pr-3 text-right">{tx("monitores")}</th>
+                    <th className="py-2 pr-3 text-right">{tx("jugadores")}</th>
+                    <th className="py-2 text-right">{tx("alta")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,9 +216,9 @@ export default async function ReportsPage() {
                   ))}
                   <tr className="border-b border-border/60">
                     <td className="py-2.5 pr-3 font-semibold text-foreground">
-                      Sin club
+                      {tx("sinClub")}
                       <span className="ml-1 font-normal text-muted-foreground">
-                        (monitores particulares)
+                        {tx("monitoresParticulares")}
                       </span>
                     </td>
                     <td className="py-2.5 pr-3 text-right tabular-nums">
@@ -227,7 +234,7 @@ export default async function ReportsPage() {
                 </tbody>
                 <tfoot>
                   <tr className="text-[11px] font-black uppercase text-foreground/70">
-                    <td className="pt-3 pr-3">Total jugadores</td>
+                    <td className="pt-3 pr-3">{tx("totalJugadores")}</td>
                     <td />
                     <td className="pt-3 pr-3 text-right text-sm tabular-nums text-foreground">
                       {report.players.total}

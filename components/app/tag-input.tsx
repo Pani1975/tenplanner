@@ -2,6 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Etiquetas libres: se añaden con Enter o coma y se quitan con la X o con
 // Retroceso en el campo vacío. Mismo comportamiento que en las sesiones.
@@ -23,6 +24,7 @@ export function TagInput({
   placeholder = "Ej: saque, control…",
   className,
 }: TagInputProps) {
+  const tx = useTranslations("ui.s_app_taginput");
   const [input, setInput] = useState("");
 
   function add(raw: string) {
@@ -77,7 +79,7 @@ export function TagInput({
         className="h-10 w-full rounded-lg border border-foreground/15 bg-background/70 px-3 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus:border-[#D6FF38]/70 focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/20 disabled:opacity-50"
       />
       <p className="mt-1 text-xs text-muted-foreground">
-        Pulsa Enter o coma para añadir · {value.length}/{max}
+        {tx("pulsaEnterOComa", { v1: value.length, v2: max })}
       </p>
     </div>
   );

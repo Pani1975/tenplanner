@@ -22,8 +22,14 @@ import { calendarEventsVisibility } from "@/lib/calendar-events";
 import { zonedTimeToUtc } from "@/lib/groups/schedule";
 import { listVisibleMessages, type MessageListItem } from "@/lib/messages";
 import { loadForecast } from "@/lib/weather";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Panel" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Panel") };
+}
 export const dynamic = "force-dynamic";
 
 const TZ = "Europe/Madrid";
@@ -55,18 +61,18 @@ function startOfDay(y: number, m: number, d: number) {
   );
 }
 
-const timeFmt = new Intl.DateTimeFormat("es-ES", {
+const timeFmt = (loc: string) => new Intl.DateTimeFormat(loc, {
   hour: "2-digit",
   minute: "2-digit",
   timeZone: TZ,
 });
-const dayFmt = new Intl.DateTimeFormat("es-ES", {
+const dayFmt = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   day: "numeric",
   month: "short",
   timeZone: TZ,
 });
-const dueFmt = new Intl.DateTimeFormat("es-ES", {
+const dueFmt = (loc: string) => new Intl.DateTimeFormat(loc, {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -112,6 +118,8 @@ function Empty({ children }: { children: React.ReactNode }) {
 }
 
 export default async function PanelPage() {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_panel_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -234,25 +242,25 @@ export default async function PanelPage() {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <LayoutDashboard className="size-3.5" />
-            Modo gestión
+            {tx("modoGestion")}
           </div>
           <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
-            Panel
+            {tx("panel")}
           </h1>
           <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
-            {club?.name ?? "Tu club"} · {dayFmt.format(now)}
+            {club?.name ?? "Tu club"} · {dayFmt(intlLocale).format(now)}
           </p>
         </header>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card
-            title="Próximas tareas"
+            title={tx("proximasTareas")}
             icon={CheckCircle2}
             href="/calendar"
             hrefLabel="Calendario de gestión"
           >
             {nextTasks.length === 0 ? (
-              <Empty>No tienes tareas pendientes.</Empty>
+              <Empty>{tx("noTienesTareasPendientes")}</Empty>
             ) : (
               <ul className="space-y-2">
                 {nextTasks.map((t) => (
@@ -266,7 +274,7 @@ export default async function PanelPage() {
                       </p>
                       <p className="text-xs text-foreground/55">
                         {t.dueDate
-                          ? dueFmt.format(new Date(`${t.dueDate}T00:00:00Z`))
+                          ? dueFmt(intlLocale).format(new Date(`${t.dueDate}T00:00:00Z`))
                           : "Sin fecha"}
                       </p>
                     </Link>
@@ -276,9 +284,9 @@ export default async function PanelPage() {
             )}
           </Card>
 
-          <Card title="Sesiones de hoy" icon={Clock} href="/calendar">
+          <Card title={tx("sesionesDeHoy")} icon={Clock} href="/calendar">
             {todaySessions.length === 0 ? (
-              <Empty>Hoy no hay sesiones.</Empty>
+              <Empty>{tx("hoyNoHaySesiones")}</Empty>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {todaySessions.map((s) => (
@@ -288,7 +296,7 @@ export default async function PanelPage() {
                     className="inline-flex items-center gap-2 rounded-full bg-brand/20 px-3.5 py-2 text-sm font-bold text-foreground transition-colors hover:bg-brand hover:text-brand-foreground"
                   >
                     <span className="tabular-nums">
-                      {timeFmt.format(s.scheduledAt)}
+                      {timeFmt(intlLocale).format(s.scheduledAt)}
                     </span>
                     {s.title}
                   </Link>
@@ -297,7 +305,7 @@ export default async function PanelPage() {
             )}
           </Card>
 
-          <Card title="Tiempo" icon={CloudSun}>
+          <Card title={tx("tiempo")} icon={CloudSun}>
             {forecast ? (
               <div>
                 <p className="mb-2 text-xs text-foreground/55">
@@ -312,7 +320,7 @@ export default async function PanelPage() {
                       <p className="text-xs font-bold text-foreground/55">
                         {i === 0
                           ? "Hoy"
-                          : dayFmt.format(new Date(`${day.date}T12:00:00Z`))}
+                          : dayFmt(intlLocale).format(new Date(`${day.date}T12:00:00Z`))}
                       </p>
                       <p className="text-2xl" aria-hidden>
                         {day.icon}
@@ -332,23 +340,22 @@ export default async function PanelPage() {
               </div>
             ) : (
               <Empty>
-                No se pudo obtener la previsión. Revisa que la dirección del
-                club en{" "}
+                {tx("forecastError1")}{" "}
                 <Link href="/club" className="underline">
-                  Mi club
+                  {tx("miClub")}
                 </Link>{" "}
-                incluya la localidad.
+                {tx("incluyaLaLocalidad")}
               </Empty>
             )}
           </Card>
 
           <Card
-            title="Últimos mensajes"
+            title={tx("ultimosMensajes")}
             icon={MessageSquare}
             href="/mensajes"
           >
             {messages.length === 0 ? (
-              <Empty>Aún no hay mensajes.</Empty>
+              <Empty>{tx("aunNoHayMensajes")}</Empty>
             ) : (
               <ul className="space-y-2">
                 {messages.map((msg) => (
@@ -365,7 +372,7 @@ export default async function PanelPage() {
                       </p>
                       <p className="truncate text-xs text-foreground/55">
                         {msg.sentByMe ? "Enviado" : msg.authorName} ·{" "}
-                        {msg.targetLabel} · {dayFmt.format(msg.createdAt)}
+                        {msg.targetLabel} · {dayFmt(intlLocale).format(msg.createdAt)}
                       </p>
                     </Link>
                   </li>
@@ -374,24 +381,23 @@ export default async function PanelPage() {
             )}
           </Card>
 
-          <Card title="Esta semana" icon={CalendarDays} href="/calendar">
+          <Card title={tx("estaSemana")} icon={CalendarDays} href="/calendar">
             <p className="font-heading text-4xl font-black tabular-nums text-foreground">
               {weekSessions}
             </p>
             <p className="-mt-2 text-xs text-foreground/55">
-              sesión{weekSessions !== 1 ? "es" : ""} de lunes a domingo
-            </p>
+              {tx("sesionV1DeLunes", { n: weekSessions })}</p>
             <h3 className="pt-2 text-xs font-black uppercase tracking-wide text-foreground/55">
-              Eventos de la semana
+              {tx("eventosDeLaSemana")}
             </h3>
             {weekEvents.length === 0 ? (
-              <Empty>Sin eventos esta semana.</Empty>
+              <Empty>{tx("sinEventosEstaSemana")}</Empty>
             ) : (
               <ul className="space-y-1">
                 {weekEvents.map((e) => (
                   <li key={e.id} className="text-sm">
                     <span className="mr-2 tabular-nums text-foreground/55">
-                      {dayFmt.format(e.startAt)}
+                      {dayFmt(intlLocale).format(e.startAt)}
                     </span>
                     {e.title}
                   </li>
@@ -400,15 +406,15 @@ export default async function PanelPage() {
             )}
           </Card>
 
-          <Card title="Eventos del mes" icon={CalendarDays} href="/calendar">
+          <Card title={tx("eventosDelMes")} icon={CalendarDays} href="/calendar">
             {monthEvents.length === 0 ? (
-              <Empty>Sin eventos este mes.</Empty>
+              <Empty>{tx("sinEventosEsteMes")}</Empty>
             ) : (
               <ul className="space-y-1">
                 {monthEvents.map((e) => (
                   <li key={e.id} className="text-sm">
                     <span className="mr-2 tabular-nums text-foreground/55">
-                      {dayFmt.format(e.startAt)}
+                      {dayFmt(intlLocale).format(e.startAt)}
                     </span>
                     {e.title}
                   </li>

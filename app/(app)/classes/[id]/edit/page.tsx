@@ -21,12 +21,14 @@ import {
   exerciseListableCondition,
   isPlatformAdmin,
 } from "@/lib/exercise-access";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function EditClassPage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_edit_page");
   const { id } = await params;
   const supabase = await createClient();
   const {
@@ -206,17 +208,17 @@ export default async function EditClassPage({ params }: PageProps) {
         <Link
           href={`/classes/${cls.id}`}
           className="flex size-9 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-muted-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38] hover:text-[#050505]"
-          aria-label="Volver a la clase"
+          aria-label={tx("volverALaClase")}
         >
           <ArrowLeft className="size-4" />
         </Link>
 
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            Plantilla de clase
+            {tx("plantillaDeClase")}
           </p>
           <h1 className="font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl">
-            Editar clase
+            {tx("editarClase")}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{cls.name}</p>
         </div>

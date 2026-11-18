@@ -46,6 +46,7 @@ import {
   type Pt,
   type Shape,
 } from "@/lib/court-board";
+import { useTranslations } from "next-intl";
 
 const RESOURCES_BUCKET = "resources";
 const BOARD_KEY = "tenplanner-board";
@@ -302,6 +303,7 @@ export function CourtBoardDialog({
   resource?: ResourceData | null;
   onSaved: (resource: ResourceData) => void;
 }) {
+  const tx = useTranslations("ui.s_app_courtboarddialog");
   const editing = resource && isDrawingUrl(resource.imageUrl) ? resource : null;
 
   const [title, setTitle] = useState(editing?.title ?? "");
@@ -370,7 +372,7 @@ export function CourtBoardDialog({
       } catch {
         if (active)
           setMessage(
-            "Este dibujo se guardó sin trazos editables. Puedes dibujar uno nuevo y guardarlo encima."
+            tx("esteDibujoSeGuardo")
           );
       } finally {
         if (active) setLoadingDoc(false);
@@ -558,18 +560,18 @@ export function CourtBoardDialog({
       URL.revokeObjectURL(a.href);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "No se pudo descargar la imagen"
+        e instanceof Error ? e.message : tx("noSePudoDescargar")
       );
     }
   }
 
   async function handleSave() {
     if (!title.trim()) {
-      setError("Ponle un nombre al dibujo para guardarlo.");
+      setError(tx("ponleUnNombreAl"));
       return;
     }
     if (shapes.length === 0) {
-      setError("Dibuja algo antes de guardar.");
+      setError(tx("dibujaAlgoAntesDe"));
       return;
     }
     setSaving(true);
@@ -607,7 +609,7 @@ export function CourtBoardDialog({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: title.trim(),
-            description: "Dibujo de la pizarra de pista",
+            description: tx("dibujoDeLaPizarra"),
             imageUrl: publicUrl,
           }),
         }
@@ -618,7 +620,7 @@ export function CourtBoardDialog({
 
       onOpenChange(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar el dibujo");
+      setError(e instanceof Error ? e.message : tx("noSePudoGuardar"));
       setSaving(false);
     }
   }
@@ -628,11 +630,10 @@ export function CourtBoardDialog({
       <DialogContent className="max-h-[94vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {editing ? "Editar dibujo" : "Pizarra de pista"}
+            {editing ? "Editar dibujo" : tx("pizarraDePista")}
           </DialogTitle>
           <DialogDescription>
-            Dibuja el ejercicio sobre la pista. Puedes guardarlo en tus
-            recursos, descargarlo como imagen o cerrarlo sin guardar.
+            {tx("dibujaElEjercicioSobre")}
           </DialogDescription>
         </DialogHeader>
 
@@ -641,7 +642,7 @@ export function CourtBoardDialog({
             id="court-board-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Nombre del dibujo (p. ej. Cruzado de derecha)"
+            placeholder={tx("nombreDelDibujoP")}
             maxLength={120}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
@@ -650,8 +651,8 @@ export function CourtBoardDialog({
             <div className="flex gap-1 rounded-full border border-foreground/10 bg-background p-1">
               {(
                 [
-                  { id: "full" as CourtMode, label: "Pista completa" },
-                  { id: "half" as CourtMode, label: "Media pista" },
+                  { id: "full" as CourtMode, label: tx("pistaCompleta") },
+                  { id: "half" as CourtMode, label: tx("mediaPista") },
                 ] as const
               ).map(({ id, label }) => (
                 <button
@@ -676,7 +677,7 @@ export function CourtBoardDialog({
                 disabled={past.length === 0}
                 className="inline-flex h-9 items-center gap-1.5 rounded-full border border-foreground/10 px-3 text-xs font-bold disabled:opacity-40"
               >
-                <Undo2 className="size-3.5" /> Deshacer
+                <Undo2 className="size-3.5" />{" "}{tx("deshacer")}
               </button>
               <button
                 type="button"
@@ -684,7 +685,7 @@ export function CourtBoardDialog({
                 disabled={shapes.length === 0}
                 className="inline-flex h-9 items-center gap-1.5 rounded-full border border-foreground/10 px-3 text-xs font-bold disabled:opacity-40"
               >
-                <Trash2 className="size-3.5" /> Limpiar
+                <Trash2 className="size-3.5" />{" "}{tx("limpiar")}
               </button>
             </div>
           </div>
@@ -692,7 +693,7 @@ export function CourtBoardDialog({
           <div
             className="flex flex-wrap gap-1.5"
             role="toolbar"
-            aria-label="Herramientas"
+            aria-label={tx("herramientas")}
           >
             {TOOLS.map(({ id, label, icon: Icon }) => (
               <button
@@ -718,7 +719,7 @@ export function CourtBoardDialog({
               id="court-board-text"
               value={textValue}
               onChange={(e) => setTextValue(e.target.value)}
-              placeholder="Texto a colocar (toca la pista)"
+              placeholder={tx("textoAColocarToca")}
               maxLength={24}
               className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
             />
@@ -734,7 +735,7 @@ export function CourtBoardDialog({
               ref={svgRef}
               viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
               role="img"
-              aria-label="Pista de tenis para dibujar"
+              aria-label={tx("pistaDeTenisPara")}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -764,9 +765,7 @@ export function CourtBoardDialog({
           </div>
 
           <p className="text-center text-[11px] text-muted-foreground">
-            Mover: arrastra una figura (en una flecha, un extremo para girarla)
-            · Movimiento: flecha continua · Trayectoria: flecha de puntos ·
-            Borrar: toca una figura
+            {tx("moverArrastraUnaFigura")}
           </p>
 
           {message && (
@@ -782,7 +781,7 @@ export function CourtBoardDialog({
               onClick={() => onOpenChange(false)}
               className="h-10 rounded-full border border-foreground/10 px-4 text-sm font-bold"
             >
-              Cerrar sin guardar
+              {tx("cerrarSinGuardar")}
             </button>
             <button
               type="button"
@@ -790,7 +789,7 @@ export function CourtBoardDialog({
               disabled={shapes.length === 0}
               className="inline-flex h-10 items-center gap-1.5 rounded-full border border-foreground/10 px-4 text-sm font-bold disabled:opacity-40"
             >
-              <Download className="size-4" /> Descargar imagen
+              <Download className="size-4" />{" "}{tx("descargarImagen")}
             </button>
             <button
               type="button"
@@ -803,7 +802,7 @@ export function CourtBoardDialog({
               ) : (
                 <Save className="size-4" />
               )}
-              Guardar en mis recursos
+              {tx("guardarEnMisRecursos")}
             </button>
           </div>
         </div>

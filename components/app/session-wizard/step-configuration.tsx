@@ -20,6 +20,8 @@ import {
   sessionCode,
   toDateInput,
 } from "./recurrence";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 interface StepConfigurationProps {
   state: WizardState;
@@ -32,11 +34,11 @@ interface StepConfigurationProps {
   hideRecurrence?: boolean;
 }
 
-function formatScheduledAt(scheduledAt: string): string {
+function formatScheduledAt(scheduledAt: string, loc: string = "es-ES"): string {
   try {
     const d = new Date(scheduledAt);
     if (isNaN(d.getTime())) return "Sin fecha";
-    return d.toLocaleDateString("es-ES", {
+    return d.toLocaleDateString(loc, {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -49,12 +51,14 @@ function formatScheduledAt(scheduledAt: string): string {
 }
 
 function SessionPreview({ state }: { state: WizardState }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_sessionwizard_stepconfiguration");
   const hasTitle = !!state.title.trim();
 
   return (
     <div className="sticky top-6">
       <p className="mb-3 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        Vista previa
+        {tx("vistaPrevia")}
       </p>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -65,21 +69,20 @@ function SessionPreview({ state }: { state: WizardState }) {
               hasTitle ? "text-foreground" : "text-muted-foreground/30 italic"
             )}
           >
-            {hasTitle ? state.title : "Título de la sesión"}
+            {hasTitle ? state.title : tx("tituloDeLaSesion")}
           </p>
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Calendar className="size-3.5 shrink-0 text-brand" />
               <span className="text-xs text-foreground/70">
-                {formatScheduledAt(state.scheduledAt)}
+                {formatScheduledAt(state.scheduledAt, intlLocale)}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="size-3.5 shrink-0 text-brand" />
               <span className="text-xs text-foreground/70">
-                {state.durationMinutes} min
-              </span>
+                {tx("v1Min", { v1: state.durationMinutes })}</span>
             </div>
             {state.location && (
               <div className="flex items-center gap-2">
@@ -102,7 +105,7 @@ function SessionPreview({ state }: { state: WizardState }) {
           {state.objective && (
             <div>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Objetivo
+                {tx("objetivo")}
               </p>
               <p className="line-clamp-3 text-xs leading-relaxed text-foreground/65">
                 {state.objective}
@@ -113,7 +116,7 @@ function SessionPreview({ state }: { state: WizardState }) {
           {state.material && (
             <div>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Material
+                {tx("material")}
               </p>
               <p className="line-clamp-2 text-xs leading-relaxed text-foreground/65">
                 {state.material}
@@ -124,7 +127,7 @@ function SessionPreview({ state }: { state: WizardState }) {
           {state.observations && (
             <div>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Observaciones
+                {tx("observaciones")}
               </p>
               <p className="line-clamp-2 text-xs leading-relaxed text-foreground/65">
                 {state.observations}
@@ -150,8 +153,7 @@ function SessionPreview({ state }: { state: WizardState }) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Users className="size-3.5 text-brand" />
               <span>
-                {state.studentIds.length} alumno
-                {state.studentIds.length !== 1 ? "s" : ""}
+                {tx("v1AlumnoV2", { v1: state.studentIds.length, v2: state.studentIds.length !== 1 ? "s" : "" })}
               </span>
             </div>
           )}
@@ -170,6 +172,7 @@ export function StepConfiguration({
   coaches = [],
   hideRecurrence = false,
 }: StepConfigurationProps) {
+  const tx = useTranslations("ui.s_sessionwizard_stepconfiguration");
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_252px]">
       <div className="flex min-w-0 flex-col gap-6">
@@ -177,11 +180,10 @@ export function StepConfiguration({
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3">
             <p className="text-sm font-semibold text-foreground">
-              ¿Para quién es la sesión?
+              {tx("paraQuienEsLa")}
             </p>
             <p className="text-xs text-muted-foreground">
-              Elige un grupo o, si es una clase suelta, uno o dos alumnos. Con
-              eso y la fecha se pone el nombre.
+              {tx("eligeUnGrupoO")}
             </p>
           </div>
           <StepStudents state={state} update={update} />
@@ -197,13 +199,13 @@ export function StepConfiguration({
         {/* Una o dos pistas: se fija al empezar */}
         <div className="space-y-1.5">
           <p className="block text-sm font-semibold text-foreground">
-            Pistas
+            {tx("pistas")}
           </p>
           <div className="grid max-w-md grid-cols-2 gap-2">
             {(
               [
-                { value: 1, title: "Una pista" },
-                { value: 2, title: "Dos pistas" },
+                { value: 1, title: tx("unaPista") },
+                { value: 2, title: tx("dosPistas") },
               ] as const
             ).map(({ value, title }) => (
               <button
@@ -229,19 +231,19 @@ export function StepConfiguration({
             htmlFor="placeId"
             className="block text-sm font-semibold text-foreground"
           >
-            {state.courts === 2 ? "Lugar de la pista 1" : "Lugar"}{" "}
+            {state.courts === 2 ? tx("lugarDeLaPista") : "Lugar"}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           {places.length === 0 ? (
             <p className="text-xs italic text-muted-foreground">
-              Aún no tienes lugares.{" "}
+              {tx("aunNoTienesLugares")}{" "}
               <a
                 href="/places"
                 className="font-semibold text-brand hover:underline"
               >
-                Crear lugar
+                {tx("crearLugar")}
               </a>
             </p>
           ) : (
@@ -253,7 +255,7 @@ export function StepConfiguration({
               }
               className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
             >
-              <option value="">Sin lugar asignado</option>
+              <option value="">{tx("sinLugarAsignado")}</option>
               {places.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -269,9 +271,9 @@ export function StepConfiguration({
               htmlFor="secondPlaceId"
               className="block text-sm font-semibold text-foreground"
             >
-              Lugar de la pista 2{" "}
+              {tx("courtPlace2")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <select
@@ -282,7 +284,7 @@ export function StepConfiguration({
               }
               className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
             >
-              <option value="">Sin lugar asignado</option>
+              <option value="">{tx("sinLugarAsignado")}</option>
               {places.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -298,7 +300,7 @@ export function StepConfiguration({
               htmlFor="coachId"
               className="block text-sm font-semibold text-foreground"
             >
-              Monitor que la imparte
+              {tx("monitorQueLaImparte")}
             </label>
             <select
               id="coachId"
@@ -317,7 +319,7 @@ export function StepConfiguration({
           monitorName && (
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-foreground">
-                Entrenador
+                {tx("entrenador")}
               </label>
               <div className="flex h-11 cursor-not-allowed items-center rounded-xl border border-border bg-muted/40 px-4 text-sm text-foreground/80">
                 {monitorName}
@@ -340,8 +342,8 @@ export function StepConfiguration({
   );
 }
 
-function formatShort(date: Date, withWeekday = true) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatShort(date: Date, withWeekday = true, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     ...(withWeekday ? { weekday: "short" as const } : {}),
     day: "numeric",
     month: "short",
@@ -359,6 +361,8 @@ function RecurrenceBlock({
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_sessionwizard_stepconfiguration");
   const r = state.recurrence;
   const scheduled = new Date(state.scheduledAt);
   const baseWeekday = isNaN(scheduled.getTime()) ? null : scheduled.getDay();
@@ -409,12 +413,12 @@ function RecurrenceBlock({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">
-            Repetir sesión
+            {tx("repetirSesion")}
           </p>
           <p className="text-xs text-muted-foreground">
             {r.enabled
-              ? `${preview.dates.length} sesiones${mode === "until" ? ` hasta el ${formatShort(new Date(until + "T12:00:00"), false)}` : ` en ${r.weeks} semanas`}`
-              : "Crea esta sesión cada semana, por ejemplo todo el curso"}
+              ? `${preview.dates.length} sesiones${mode === "until" ? ` hasta el ${formatShort(new Date(until + "T12:00:00"), false, intlLocale)}` : ` en ${r.weeks} semanas`}`
+              : tx("creaEstaSesionCada")}
           </p>
         </div>
         <span
@@ -436,7 +440,7 @@ function RecurrenceBlock({
         <div className="space-y-4 border-t border-border px-4 py-4">
           <div>
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Días de la semana
+              {tx("diasDeLaSemana")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {WEEKDAY_LABELS.map((label, i) => {
@@ -461,20 +465,20 @@ function RecurrenceBlock({
             </div>
             {r.weekdays.length === 0 && baseWeekday !== null && (
               <p className="mt-2 text-[11px] italic text-muted-foreground">
-                Si no eliges días, se usará el mismo día que la primera sesión.
+                {tx("siNoEligesDias")}
               </p>
             )}
           </div>
 
           <div className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Hasta cuándo
+              {tx("hastaCuando")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {(
                 [
-                  { id: "until", label: "Hasta una fecha" },
-                  { id: "weeks", label: "Número de semanas" },
+                  { id: "until", label: tx("hastaUnaFecha") },
+                  { id: "weeks", label: tx("numeroDeSemanas") },
                 ] as const
               ).map((option) => (
                 <button
@@ -522,7 +526,7 @@ function RecurrenceBlock({
                   className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
                 />
                 <span className="text-xs text-muted-foreground">
-                  incluida (p. ej. fin de curso)
+                  {tx("incluidaPEjFin")}
                 </span>
               </div>
             ) : (
@@ -547,7 +551,7 @@ function RecurrenceBlock({
                   className="h-10 w-24 rounded-xl border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50"
                 />
                 <span className="ml-2 text-xs text-muted-foreground">
-                  semanas (incluida la primera)
+                  {tx("semanasIncluidaLaPrimera")}
                 </span>
               </div>
             )}
@@ -556,12 +560,11 @@ function RecurrenceBlock({
           {preview.dates.length > 0 && (
             <div className="rounded-xl border border-brand/30 bg-brand/5 px-3 py-3">
               <p className="text-sm font-semibold text-foreground">
-                Se crearán {preview.dates.length} sesiones
-              </p>
+                {tx("seCrearanV1Sesiones", { v1: preview.dates.length })}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {formatShort(preview.dates[0])}
+                {formatShort(preview.dates[0], undefined, intlLocale)}
                 {preview.dates.length > 1
-                  ? ` → ${formatShort(preview.dates[preview.dates.length - 1])}`
+                  ? ` → ${formatShort(preview.dates[preview.dates.length - 1], undefined, intlLocale)}`
                   : ""}
               </p>
               {state.useCodeTitle && (
@@ -575,17 +578,13 @@ function RecurrenceBlock({
               )}
               {preview.truncated && (
                 <p className="mt-2 text-xs font-medium text-destructive">
-                  Máximo {MAX_RECURRING_SESSIONS} sesiones de una vez: se
-                  crearán las primeras {MAX_RECURRING_SESSIONS}.
-                </p>
+                  {tx("maximoV1SesionesDe", { v1: MAX_RECURRING_SESSIONS, v2: MAX_RECURRING_SESSIONS })}</p>
               )}
             </div>
           )}
 
           <p className="text-[12px] italic text-muted-foreground">
-            Se crearán automáticamente todas las sesiones para los días
-            seleccionados. Después podrás editarlas o cancelarlas
-            individualmente.
+            {tx("seCrearanAutomaticamenteTodas")}
           </p>
         </div>
       )}

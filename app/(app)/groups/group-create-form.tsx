@@ -9,8 +9,10 @@ import {
   WeeklySchedulePicker,
   type ScheduleSlot,
 } from "@/components/app/weekly-schedule-picker";
+import { useTranslations } from "next-intl";
 
 export function GroupCreateForm() {
+  const tx = useTranslations("ui.s_groups_groupcreateform");
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -38,7 +40,7 @@ export function GroupCreateForm() {
     });
     setSaving(false);
     if (!res.ok) {
-      setError("No se pudo crear el grupo.");
+      setError(tx("noSePudoCrear"));
       return;
     }
     const { data } = await res.json();
@@ -50,12 +52,12 @@ export function GroupCreateForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
         <label className="text-[11px] font-black uppercase text-foreground/45">
-          Nombre <span className="text-brand">*</span>
+          {tx("nombre")}{" "}<span className="text-brand">*</span>
         </label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Grupo Martes tarde"
+          placeholder={tx("ejGrupoMartesTarde")}
           maxLength={255}
           required
           className="tp-field h-11 w-full px-4 text-sm font-medium placeholder:text-foreground/30"
@@ -63,26 +65,25 @@ export function GroupCreateForm() {
       </div>
       <div className="space-y-1.5">
         <label className="text-[11px] font-black uppercase text-foreground/45">
-          Descripción{" "}
+          {tx("descripcion")}{" "}
           <span className="text-foreground/25 normal-case font-normal">
-            opcional
+            {tx("opcional")}
           </span>
         </label>
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Nivel, horario, pista..."
+          placeholder={tx("nivelHorarioPista")}
           maxLength={255}
           className="tp-field h-11 w-full px-4 text-sm font-medium placeholder:text-foreground/30"
         />
       </div>
       <div className="space-y-1.5">
         <label className="text-[11px] font-black uppercase text-foreground/45">
-          Días y hora de clase <span className="text-brand">*</span>
+          {tx("classDaysTime")} <span className="text-brand">*</span>
         </label>
         <p className="text-xs text-foreground/50">
-          Marca los días de la semana en que juega este grupo, con la hora de
-          inicio y la de finalización de la clase.
+          {tx("marcaLosDiasDe")}
         </p>
         <WeeklySchedulePicker value={schedule} onChange={setSchedule} />
       </div>
@@ -101,7 +102,7 @@ export function GroupCreateForm() {
         ) : (
           <Users className="size-4" />
         )}
-        Crear grupo
+        {tx("crearGrupo")}
       </button>
     </form>
   );

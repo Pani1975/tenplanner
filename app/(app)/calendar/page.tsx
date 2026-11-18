@@ -37,6 +37,8 @@ import {
   sessionCoachColumn,
   taughtByCondition,
 } from "@/lib/sessions/permissions";
+import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 // Sessions loaded into the calendar are limited to this window to keep
 // initial payload bounded. User can navigate the UI within this range.
@@ -49,6 +51,7 @@ interface PageProps {
 }
 
 export default async function CalendarPage({ searchParams }: PageProps) {
+  const tx = await getTranslations("ui.s_calendar_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -61,8 +64,8 @@ export default async function CalendarPage({ searchParams }: PageProps) {
   if (!calendarEnabled) {
     return (
       <FeatureLocked
-        title="Calendario desactivado"
-        description="El administrador ha pausado temporalmente la vista de calendario."
+        title={tx("calendarioDesactivado")}
+        description={tx("elAdministradorHaPausado")}
         href="/sessions"
         cta="Volver a sesiones"
       />
@@ -267,21 +270,19 @@ export default async function CalendarPage({ searchParams }: PageProps) {
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
               <CalendarDays className="size-3.5" />
-              Agenda operativa
+              {tx("agendaOperativa")}
             </div>
             <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
-              {personalTitle("Calendario", await getWorkMode(user.id))}
+              {personalTitle("Calendario", await getWorkMode(user.id), await getLocale())}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
-              {total} sesión{total !== 1 ? "es" : ""} planificada
-              {total !== 1 ? "s" : ""}
+              {tx("sessionsPlanned", { n: total })}
               {totalEvents > 0 && (
                 <>
-                  {" "}
-                  y {totalEvents} evento{totalEvents !== 1 ? "s" : ""}
+                  {tx("yV1EventoV2", { v1: totalEvents, v2: totalEvents !== 1 ? "s" : "" })}
                 </>
               )}{" "}
-              dentro de la ventana activa.
+              {tx("withinWindow")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -290,21 +291,21 @@ export default async function CalendarPage({ searchParams }: PageProps) {
               className="inline-flex h-11 items-center gap-2 rounded-full border border-white/14 px-4 text-sm font-black text-white transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
             >
               <Download className="size-4" />
-              Exportar iCal
+              {tx("exportarIcal")}
             </Link>
             <Link
               href="/sessions/new"
               className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-4 text-sm font-black text-[#050505] transition-transform hover:-translate-y-0.5"
             >
               <Plus className="size-4" />
-              Nueva sesión
+              {tx("nuevaSesion")}
             </Link>
           </div>
         </header>
         {clubMembers.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
             <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-              Monitor
+              {tx("monitor")}
             </span>
             <Link
               href="/calendar"
@@ -315,7 +316,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
                   : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
               )}
             >
-              Todos
+              {tx("todos")}
             </Link>
             {clubMembers.map((m) => (
               <Link

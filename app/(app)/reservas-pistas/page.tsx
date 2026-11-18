@@ -20,8 +20,14 @@ import { sessionAtPlaces } from "@/lib/bookings/server";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { ClubBookingButton } from "./club-booking-button";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
+import { getTerm } from "@/lib/i18n-terms";
 
-export const metadata = { title: "Reservas de pistas" };
+export async function generateMetadata() {
+  const term = await getTerm();
+  return { title: term("Reservas de pistas") };
+}
 
 /** Alto de una hora en la rejilla, en píxeles. */
 const HOUR_PX = 56;
@@ -44,13 +50,13 @@ function shiftDay(dateStr: string, days: number) {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
 
-const DAY_LONG = new Intl.DateTimeFormat("es-ES", {
+const DAY_LONG = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "long",
   day: "numeric",
   month: "long",
   timeZone: "UTC",
 });
-const DAY_SHORT = new Intl.DateTimeFormat("es-ES", {
+const DAY_SHORT = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   timeZone: "UTC",
 });
@@ -64,6 +70,8 @@ export default async function CourtBookingsPage({
 }: {
   searchParams: Promise<{ dia?: string }>;
 }) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_reservaspistas_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -238,11 +246,10 @@ export default async function CourtBookingsPage({
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-black text-foreground">
               <CalendarCheck className="size-6 text-brand" />
-              Reservas de pistas
+              {tx("reservasDePistas")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ocupación de cada pista: sesiones, reservas de clientes y reservas
-              del club.
+              {tx("ocupacionDeCadaPista")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -255,16 +262,16 @@ export default async function CourtBookingsPage({
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
             >
               <Settings2 className="size-3.5" />
-              Pistas, horario y enlace
+              {tx("pistasHorarioYEnlace")}
             </Link>
           </div>
         </header>
 
         {/* Navegación por días */}
-        <nav aria-label="Día" className="flex items-center gap-2">
+        <nav aria-label={tx("dia")} className="flex items-center gap-2">
           <Link
             href={`/reservas-pistas?dia=${shiftDay(date, -1)}`}
-            aria-label="Día anterior"
+            aria-label={tx("diaAnterior")}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
           >
             <ChevronLeft className="size-4" />
@@ -284,7 +291,7 @@ export default async function CourtBookingsPage({
                 )}
               >
                 <span className="text-[10px] font-bold uppercase opacity-70">
-                  {DAY_SHORT.format(dayDate(d)).replace(".", "")}
+                  {DAY_SHORT(intlLocale).format(dayDate(d)).replace(".", "")}
                 </span>
                 <span className="text-sm font-black">
                   {dayDate(d).getUTCDate()}
@@ -294,7 +301,7 @@ export default async function CourtBookingsPage({
           </div>
           <Link
             href={`/reservas-pistas?dia=${shiftDay(date, 1)}`}
-            aria-label="Día siguiente"
+            aria-label={tx("diaSiguiente")}
             className="grid size-9 shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
           >
             <ChevronRight className="size-4" />
@@ -303,24 +310,22 @@ export default async function CourtBookingsPage({
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="font-semibold capitalize text-foreground">
-            {DAY_LONG.format(dayDate(date))}
+            {DAY_LONG(intlLocale).format(dayDate(date))}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-brand" /> Sesiones (
+            <span className="size-2.5 rounded-sm bg-brand" />{" "}{tx("sesiones")}
             {sessionCount})
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-amber-400" /> Reservas de
-            clientes (
+            <span className="size-2.5 rounded-sm bg-amber-400" />{" "}{tx("reservasDeClientes")}
             {bookingRows.filter((b) => b.bookingKind !== "club").length})
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-violet-500" /> Reservas del
-            club ({bookingRows.filter((b) => b.bookingKind === "club").length})
+            <span className="size-2.5 rounded-sm bg-violet-500" />{" "}{tx("reservasDelClub")}{bookingRows.filter((b) => b.bookingKind === "club").length})
           </span>
           {date !== today && (
             <Link href="/reservas-pistas" className="font-semibold underline">
-              Hoy
+              {tx("hoy")}
             </Link>
           )}
         </div>
@@ -329,7 +334,7 @@ export default async function CourtBookingsPage({
           <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
             Aún no tienes pistas. Dalas de alta en{" "}
             <Link href="/places" className="font-semibold underline">
-              Lugares
+              {tx("lugares")}
             </Link>
             .
           </p>
@@ -410,9 +415,9 @@ export default async function CourtBookingsPage({
                           </span>
                           <span className="block text-[10px] tabular-nums opacity-75">
                             {time}
-                            {b.span ? " · 2 pistas" : ""}
+                            {b.span ? tx("2Pistas") : ""}
                             {b.kind === "session" && b.status === "completed"
-                              ? " · completada"
+                              ? tx("completada")
                               : ""}
                           </span>
                         </>

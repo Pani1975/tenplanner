@@ -16,6 +16,7 @@ import {
   toLocalDateTimeInput,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
 
 interface ClassOption {
   id: string;
@@ -40,6 +41,7 @@ export function AssignClassToGroupButton({
   groupId: string;
   weeklySchedule?: GroupScheduleEntry[] | null;
 }) {
+  const tx = useTranslations("ui.s_app_assignclasstogroupbutton");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -110,14 +112,14 @@ export function AssignClassToGroupButton({
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        setError(data.error ?? "No se pudieron crear las sesiones.");
+        setError(data.error ?? tx("noSePudieronCrear"));
         setBusy(false);
         return;
       }
       router.push(`/groups/${groupId}`);
       router.refresh();
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
       setBusy(false);
     }
   }
@@ -138,7 +140,7 @@ export function AssignClassToGroupButton({
         className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#050505]/12 px-4 py-2 text-sm font-bold text-foreground/70 transition-colors hover:border-[#D6FF38] hover:text-foreground dark:border-white/10"
       >
         <BookOpen className="size-4" />
-        Asignar clase
+        {tx("asignarClase")}
       </button>
 
       {open && (
@@ -157,7 +159,7 @@ export function AssignClassToGroupButton({
                       setPickedClassId(null);
                       setError(null);
                     }}
-                    aria-label="Volver"
+                    aria-label={tx("volver")}
                     className="flex size-7 shrink-0 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
                   >
                     <ArrowLeft className="size-4" />
@@ -166,17 +168,17 @@ export function AssignClassToGroupButton({
                 <div className="min-w-0">
                   <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
                     <Sparkles className="size-3" />
-                    Asignar clase al grupo
+                    {tx("asignarClaseAlGrupo")}
                   </p>
                   <h2 className="truncate text-lg font-black text-foreground">
-                    {pickedClassId ? "¿Qué día?" : "Elige una clase"}
+                    {pickedClassId ? "¿Qué día?" : tx("eligeUnaClase")}
                   </h2>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Cerrar"
+                aria-label={tx("cerrar")}
                 className="flex size-8 items-center justify-center rounded-xl text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
               >
                 <X className="size-4" />
@@ -199,7 +201,7 @@ export function AssignClassToGroupButton({
                       autoFocus
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Buscar clase..."
+                      placeholder={tx("buscarClase")}
                       className="min-w-0 flex-1 bg-transparent text-sm placeholder:text-foreground/30 focus:outline-none"
                     />
                   </div>
@@ -212,7 +214,7 @@ export function AssignClassToGroupButton({
                     </div>
                   ) : classesList.length === 0 ? (
                     <p className="py-6 text-center text-sm text-foreground/60">
-                      No se han encontrado clases.
+                      {tx("noSeHanEncontrado")}
                     </p>
                   ) : (
                     classesList.map((cls) => (
@@ -230,12 +232,11 @@ export function AssignClassToGroupButton({
                             {cls.name}
                           </span>
                           <span className="block text-xs text-foreground/45">
-                            {cls.duracionMinutes} min
-                            {cls.isLibrary
+                            {tx("v1MinV2", { v1: cls.duracionMinutes, v2: cls.isLibrary
                               ? " · Biblioteca"
                               : cls.authorName
                                 ? ` · ${cls.authorName}`
-                                : ""}
+                                : "" })}
                           </span>
                         </span>
                       </button>

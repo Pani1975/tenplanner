@@ -25,6 +25,8 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 const FONT_SIZES = [
   { id: "sm", label: "A", size: "text-xs", desc: "Compacto" },
@@ -72,6 +74,8 @@ const TABS: { id: Tab; label: string; code: string }[] = [
 ];
 
 export function ProfileClient({ user, stats }: ProfileClientProps) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_profile_profileclient");
   const [tab, setTab] = useState<Tab>("profile");
 
   // Profile state
@@ -99,11 +103,13 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  // En inglés se escribe DELETE; el servidor sigue recibiendo ELIMINAR.
+  const isDeleteConfirmed = ["ELIMINAR", "DELETE"].includes(deleteConfirmText);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function handleDeleteAccount() {
-    if (deleteConfirmText !== "ELIMINAR") return;
+    if (!isDeleteConfirmed) return;
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -116,14 +122,14 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        throw new Error(data.error ?? "No se pudo eliminar la cuenta.");
+        throw new Error(data.error ?? tx("noSePudoEliminar"));
       }
       await createClient().auth.signOut();
       router.replace("/");
       router.refresh();
     } catch (e: unknown) {
       setDeleteError(
-        e instanceof Error ? e.message : "No se pudo eliminar la cuenta."
+        e instanceof Error ? e.message : tx("noSePudoEliminar")
       );
     } finally {
       setDeleting(false);
@@ -167,11 +173,11 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
 
   async function handleAvatarUpload(file: File) {
     if (!file.type.startsWith("image/")) {
-      setAvatarError("Solo se admiten imágenes");
+      setAvatarError(tx("soloSeAdmitenImagenes"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setAvatarError("Máximo 5 MB");
+      setAvatarError(tx("maximo5Mb"));
       return;
     }
     setAvatarUploading(true);
@@ -194,7 +200,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
       });
       setAvatarUrl(publicUrl);
     } catch (e: unknown) {
-      setAvatarError(e instanceof Error ? e.message : "Error al subir la foto");
+      setAvatarError(e instanceof Error ? e.message : tx("errorAlSubirLa"));
     } finally {
       setAvatarUploading(false);
     }
@@ -213,7 +219,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e: unknown) {
-      setProfileError(e instanceof Error ? e.message : "Error al guardar.");
+      setProfileError(e instanceof Error ? e.message : tx("errorAlGuardar"));
     } finally {
       setSaving(false);
     }
@@ -305,7 +311,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
               <button
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={avatarUploading}
-                title="Cambiar foto"
+                title={tx("cambiarFoto")}
                 className="absolute bottom-1 right-1 flex size-9 items-center justify-center rounded-full border border-foreground/15 bg-card text-foreground/80 transition-colors hover:border-brand hover:bg-brand hover:text-brand-foreground disabled:opacity-60"
               >
                 {avatarUploading ? (
@@ -351,17 +357,17 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
               {[
                 {
                   icon: Activity,
-                  label: "Sesiones",
+                  label: tx("sesiones"),
                   value: stats.totalSessions,
                 },
                 {
                   icon: Clock,
-                  label: "Horas",
+                  label: tx("horas"),
                   value: totalHours,
                 },
                 {
                   icon: Calendar,
-                  label: "Próx.",
+                  label: tx("prox"),
                   value: stats.upcomingSessions,
                 },
               ].map(({ icon: Icon, label, value }) => (
@@ -415,14 +421,14 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 htmlFor="name"
                 className="mb-2 block text-[12px] font-black uppercase text-foreground/75"
               >
-                Nombre para mostrar
+                {tx("nombreParaMostrar")}
               </label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Tu nombre completo"
+                placeholder={tx("tuNombreCompleto")}
                 className="tp-field h-11 w-full px-4 text-[15px] font-medium placeholder:text-muted-foreground"
               />
             </div>
@@ -432,7 +438,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                   className="inline size-3 mr-1 -mt-0.5"
                   strokeWidth={1.6}
                 />
-                Correo electrónico
+                {tx("correoElectronico")}
               </label>
               <input
                 type="email"
@@ -479,7 +485,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
         <div className="tp-panel space-y-8 p-5 sm:p-6">
           <div>
             <h3 className="border-b border-foreground/10 pb-2 text-[14px] font-black text-foreground">
-              Color de acento
+              {tx("colorDeAcento")}
             </h3>
             <div className="mt-4 flex w-fit flex-wrap gap-1 rounded-full border border-foreground/10 bg-background p-1">
               {ACCENT_COLORS.map((c) => (
@@ -505,7 +511,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
 
           <div>
             <h3 className="border-b border-foreground/10 pb-2 text-[14px] font-black text-foreground">
-              Tamaño del texto
+              {tx("tamanoDelTexto")}
             </h3>
             <div className="mt-4 flex w-fit gap-1 rounded-full border border-foreground/10 bg-background p-1">
               {FONT_SIZES.map((f) => (
@@ -530,7 +536,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
 
           <div>
             <h3 className="border-b border-foreground/10 pb-2 text-[14px] font-black text-foreground">
-              Tema
+              {tx("tema")}
             </h3>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
@@ -545,7 +551,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 )}
               >
                 <Clock className="size-3.5" strokeWidth={1.6} />
-                Auto por hora
+                {tx("autoPorHora")}
                 <span className="font-mono text-[10px]">
                   {autoTheme ? "ON" : "OFF"}
                 </span>
@@ -569,23 +575,23 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
           <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               {
-                label: "Sesiones totales",
+                label: tx("sesionesTotales"),
                 value: stats.totalSessions,
                 icon: Activity,
                 accent: true,
               },
               {
-                label: "Horas entrenadas",
+                label: tx("horasEntrenadas"),
                 value: `${totalHours}h`,
                 icon: Clock,
               },
               {
-                label: "Biblioteca",
+                label: tx("biblioteca"),
                 value: stats.totalExercises,
                 icon: Dumbbell,
               },
               {
-                label: "Próximas",
+                label: tx("proximas"),
                 value: stats.upcomingSessions,
                 icon: Calendar,
               },
@@ -631,28 +637,28 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
 
           <section>
             <h3 className="border-b border-foreground/10 pb-2 text-[14px] font-black text-foreground">
-              Detalles de la cuenta
+              {tx("detallesDeLaCuenta")}
             </h3>
             <dl className="divide-y divide-foreground/10">
               {[
-                { label: "Correo electrónico", value: user.email ?? "—" },
+                { label: tx("correoElectronico"), value: user.email ?? "—" },
                 {
-                  label: "Método de acceso",
+                  label: tx("metodoDeAcceso"),
                   value:
                     user.provider === "google"
                       ? "Google OAuth"
-                      : "Correo y contraseña",
+                      : tx("correoYContrasena"),
                 },
                 {
-                  label: "Miembro desde",
+                  label: tx("miembroDesde"),
                   value: user.created_at
-                    ? new Intl.DateTimeFormat("es-ES", {
+                    ? new Intl.DateTimeFormat(intlLocale, {
                         month: "long",
                         year: "numeric",
                       }).format(new Date(user.created_at))
                     : "—",
                 },
-                { label: "Estado", value: "Activo" },
+                { label: tx("estado"), value: "Activo" },
               ].map(({ label, value }) => (
                 <div
                   key={label}
@@ -676,10 +682,10 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
         <div className="tp-panel space-y-8 p-5 sm:p-6">
           <section>
             <h3 className="border-b border-foreground/10 pb-2 text-[14px] font-black text-foreground">
-              Exportar tus datos
+              {tx("exportarTusDatos")}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-4 mb-5 max-w-xl">
-              Descarga una copia completa de sesiones, ejercicios y metadatos.
+              {tx("descargaUnaCopiaCompleta")}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -692,7 +698,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 ) : (
                   <FileJson className="size-4 text-brand" strokeWidth={1.6} />
                 )}
-                JSON completo
+                {tx("jsonCompleto")}
               </button>
               <button
                 onClick={handleExportCsv}
@@ -707,7 +713,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                     strokeWidth={1.6}
                   />
                 )}
-                CSV sesiones
+                {tx("csvSesiones")}
               </button>
             </div>
             <ul className="mt-5 grid max-w-xl grid-cols-1 gap-x-6 gap-y-1.5 text-[13px] text-muted-foreground sm:grid-cols-2">
@@ -727,16 +733,15 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
 
           <section>
             <h3 className="border-b border-destructive/30 pb-2 text-[14px] font-black text-destructive">
-              Zona de peligro
+              {tx("zonaDePeligro")}
             </h3>
             <div className="mt-5 grid gap-4 border-l-2 border-destructive/40 py-2 pl-4 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-6">
               <div>
                 <p className="text-[15px] font-black text-foreground">
-                  Eliminar cuenta
+                  {tx("eliminarCuenta")}
                 </p>
                 <p className="text-[12px] text-muted-foreground mt-1 max-w-md">
-                  Elimina permanentemente tu cuenta y todos los datos de
-                  entrenamiento. Esta acción no se puede deshacer.
+                  {tx("eliminaPermanentementeTuCuenta")}
                 </p>
               </div>
               <button
@@ -748,7 +753,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-destructive/40 px-3 py-2 text-[11px] font-black uppercase text-destructive transition-colors hover:bg-destructive/10"
               >
                 <Trash2 className="size-3" strokeWidth={1.6} />
-                Eliminar
+                {tx("eliminar")}
               </button>
             </div>
           </section>
@@ -775,10 +780,10 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                   id="delete-account-title"
                   className="text-lg font-black text-foreground"
                 >
-                  Eliminar cuenta
+                  {tx("eliminarCuenta")}
                 </p>
                 <p className="text-[13px] text-foreground/70 mt-1 leading-relaxed">
-                  Esta acción es <strong>irreversible</strong>. Se eliminarán
+                  {tx("estaAccionEs")}{" "}<strong>{tx("irreversible")}</strong>. Se eliminarán
                   tus sesiones, alumnos, ejercicios propios, conversaciones con
                   Dr. Planner y tu cuenta de autenticación.
                 </p>
@@ -786,8 +791,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
             </div>
             <div>
               <label className="mb-2 block text-[12px] font-black text-foreground/85">
-                Escribe <span className="text-destructive">ELIMINAR</span> para
-                confirmar
+                {tx("escribe")}{" "}<span className="text-destructive">{tx("eliminar2")}</span>{" "}{tx("paraConfirmar")}
               </label>
               <input
                 type="text"
@@ -796,7 +800,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 disabled={deleting}
                 className="tp-field h-10 w-full px-3 text-[14px] font-medium focus:border-destructive focus:ring-destructive/20"
-                placeholder="ELIMINAR"
+                placeholder={tx("eliminar2")}
               />
             </div>
             {deleteError && (
@@ -808,11 +812,11 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 disabled={deleting}
                 className="rounded-full px-4 py-2 text-[12px] font-black uppercase text-foreground/70 hover:bg-muted hover:text-foreground disabled:opacity-50"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 onClick={handleDeleteAccount}
-                disabled={deleting || deleteConfirmText !== "ELIMINAR"}
+                disabled={deleting || !isDeleteConfirmed}
                 className="inline-flex items-center gap-2 rounded-full bg-destructive px-4 py-2 text-[12px] font-black uppercase text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? (

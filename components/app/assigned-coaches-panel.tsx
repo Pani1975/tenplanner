@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type CoachOption = { id: string; name: string };
 
@@ -29,6 +30,7 @@ export function AssignedCoachesPanel({
   subject: string;
   emptyHint?: string;
 }) {
+  const tx = useTranslations("ui.s_app_assignedcoachespanel");
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<string[]>(assigned.map((c) => c.id));
@@ -61,7 +63,7 @@ export function AssignedCoachesPanel({
         setError(
           typeof body?.error === "string"
             ? body.error
-            : "No se pudo guardar la asignación."
+            : tx("noSePudoGuardar")
         );
         return;
       }
@@ -77,7 +79,7 @@ export function AssignedCoachesPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground">
           <UserCog className="size-4 text-brand" />
-          Monitores asignados
+          {tx("monitoresAsignados")}
         </h2>
         {canEdit && !editing && (
           <button
@@ -115,8 +117,7 @@ export function AssignedCoachesPanel({
         <div className="mt-3 space-y-3">
           {options.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No hay monitores dados de alta en el club para esto. Invítalos
-              desde Gestión → Monitores.
+              {tx("noHayMonitoresDados")}
             </p>
           ) : (
             <ul className="grid gap-2 sm:grid-cols-2">
@@ -161,7 +162,7 @@ export function AssignedCoachesPanel({
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground disabled:opacity-60"
             >
               {saving && <Loader2 className="size-4 animate-spin" />}
-              Guardar
+              {tx("guardar")}
             </button>
             <button
               type="button"
@@ -169,7 +170,7 @@ export function AssignedCoachesPanel({
               disabled={saving}
               className="h-9 rounded-full border border-border px-4 text-sm font-bold text-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
           </div>
         </div>

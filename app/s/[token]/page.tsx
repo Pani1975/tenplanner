@@ -5,12 +5,14 @@ import { NotebookPen, ShieldCheck } from "lucide-react";
 import { db } from "@/db";
 import { students, users } from "@/db/schema";
 import { ProfileForm } from "./profile-form";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: Promise<{ token: string }>;
 }
 
 export default async function StudentProfilePage({ params }: PageProps) {
+  const tx = await getTranslations("ui.s_token_page");
   const { token } = await params;
 
   const [student] = await db
@@ -56,11 +58,11 @@ export default async function StudentProfilePage({ params }: PageProps) {
               <NotebookPen className="size-5" strokeWidth={2.3} />
             </div>
             <span className="text-sm font-black">
-              ten<span className="text-brand">planner</span>
+              {tx("ten")}<span className="text-brand">{tx("planner")}</span>
             </span>
           </div>
           <span className="rounded-full border border-[#050505]/10 px-3 py-1 text-[11px] font-black uppercase text-foreground/55 dark:border-white/10">
-            Perfil seguro
+            {tx("perfilSeguro")}
           </span>
         </div>
 
@@ -71,24 +73,21 @@ export default async function StudentProfilePage({ params }: PageProps) {
                 <ShieldCheck className="size-5" />
               </div>
               <p className="text-xl font-black text-foreground">
-                Enlace caducado
+                {tx("enlaceCaducado")}
               </p>
               <p className="mx-auto max-w-sm text-sm leading-6 text-foreground/60">
-                Este enlace ya no es válido. Pide a tu entrenador que genere uno
-                nuevo.
+                {tx("esteEnlaceYaNo2")}
               </p>
             </div>
           ) : (
             <>
               <div className="mb-6 space-y-2">
-                <p className="tp-kicker">Ficha de jugador</p>
+                <p className="tp-kicker">{tx("fichaDeJugador")}</p>
                 <h1 className="text-3xl font-black leading-tight text-foreground">
-                  Hola, {student.name}
+                  {tx("holaV1", { v1: student.name })}
                 </h1>
                 <p className="text-sm leading-6 text-foreground/62">
-                  {coach?.name ?? "Tu entrenador/a"} te ha invitado a completar
-                  tu perfil de jugador. Solo tardas un minuto.
-                </p>
+                  {tx("v1TeHaInvitado", { v1: coach?.name ?? tx("yourCoach") })}</p>
               </div>
               <ProfileForm
                 token={token}
@@ -107,7 +106,7 @@ export default async function StudentProfilePage({ params }: PageProps) {
             target="_blank"
             className="font-semibold underline underline-offset-4 hover:text-foreground"
           >
-            política de privacidad
+            {tx("politicaDePrivacidad")}
           </Link>
           .
         </p>

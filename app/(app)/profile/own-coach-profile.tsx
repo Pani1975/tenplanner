@@ -7,6 +7,7 @@ import {
   type CoachProfileInitial,
 } from "@/components/app/coach-profile-form";
 import { saveOwnCoachProfile } from "./coach-profile-actions";
+import { useTranslations } from "next-intl";
 
 /**
  * Perfil del monitor (su ficha): contacto, formación, disponibilidad y
@@ -20,6 +21,7 @@ export function OwnCoachProfile({
   initial: CoachProfileInitial;
   clubNames: string[];
 }) {
+  const tx = useTranslations("ui.s_profile_owncoachprofile");
   const [saved, setSaved] = useState(false);
   const clubs = clubNames.join(", ");
   return (
@@ -28,17 +30,15 @@ export function OwnCoachProfile({
         <IdCard className="mt-0.5 size-5 shrink-0 text-brand" />
         <div>
           <h2 className="text-sm font-black uppercase text-foreground">
-            Mi perfil de monitor
+            {tx("miPerfilDeMonitor")}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-foreground/55">
-            Tus datos de contacto, formación, disponibilidad y experiencia. Los
-            controlas tú: {clubs} los ve, pero no los puede cambiar.
-          </p>
+            {tx("tusDatosDeContacto", { v1: clubs })}</p>
         </div>
       </div>
       {saved && (
         <p className="flex items-center gap-1.5 text-xs font-semibold text-brand">
-          <CheckCircle2 className="size-3.5" /> Perfil guardado.
+          <CheckCircle2 className="size-3.5" />{" "}{tx("perfilGuardado")}
         </p>
       )}
       <CoachProfileForm

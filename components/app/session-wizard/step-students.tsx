@@ -15,6 +15,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { StudentOption, WizardState } from "./types";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 // Niveles que se ofrecen al dar de alta a un alumno (los mismos que en su ficha).
 const NEW_STUDENT_LEVELS = [
@@ -53,6 +55,8 @@ export function StepStudents({
   update,
   onGroupPicked,
 }: StepStudentsProps) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_sessionwizard_stepstudents");
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
@@ -105,7 +109,7 @@ export function StepStudents({
   async function createStudent() {
     const name = newName.trim();
     if (!name) {
-      setNewError("Escribe el nombre del alumno.");
+      setNewError(tx("escribeElNombreDel"));
       return;
     }
     setSavingNew(true);
@@ -120,7 +124,7 @@ export function StepStudents({
         data?: { id?: string; name?: string; playerLevel?: string | null };
       };
       if (!res.ok || !json.data?.id) {
-        setNewError("No se pudo dar de alta al alumno. Inténtalo de nuevo.");
+        setNewError(tx("noSePudoDar"));
         return;
       }
       const created: StudentOption = {
@@ -138,7 +142,7 @@ export function StepStudents({
       setNewName("");
       setNewLevel("");
     } catch {
-      setNewError("Error de red. Inténtalo de nuevo.");
+      setNewError(tx("errorDeRedIntentalo"));
     } finally {
       setSavingNew(false);
     }
@@ -203,7 +207,7 @@ export function StepStudents({
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="size-5 animate-spin mr-2" />
-        <span className="text-sm">Cargando alumnos…</span>
+        <span className="text-sm">{tx("cargandoAlumnos")}</span>
       </div>
     );
   }
@@ -213,17 +217,17 @@ export function StepStudents({
       <div className="flex flex-col items-center text-center py-12 px-4 rounded-2xl border border-dashed border-border">
         <Users className="size-10 text-muted-foreground mb-3" />
         <p className="text-sm font-semibold text-foreground mb-1">
-          Aún no tienes alumnos
+          {tx("aunNoTienesAlumnos")}
         </p>
         <p className="text-xs text-muted-foreground mb-5 max-w-sm">
-          Puedes crear la sesión sin asignar alumnos o añadirlos más tarde.
+          {tx("puedesCrearLaSesion")}
         </p>
         <Link
           href="/students/new"
           className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-brand text-brand-foreground text-sm font-semibold hover:bg-brand/90 transition-colors"
         >
           <UserPlus className="size-4" />
-          Añadir alumno
+          {tx("anadirAlumno")}
         </Link>
       </div>
     );
@@ -233,23 +237,22 @@ export function StepStudents({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Selecciona los alumnos para esta sesión.
+          {tx("seleccionaLosAlumnosPara")}
         </p>
         <span className="text-xs font-semibold text-foreground tabular-nums">
-          {state.studentIds.length} seleccionado
-          {state.studentIds.length !== 1 ? "s" : ""}
+          {tx("v1SeleccionadoV2", { v1: state.studentIds.length, v2: state.studentIds.length !== 1 ? "s" : "" })}
         </span>
       </div>
 
       {/* Nuevo alumno: alguien que aún no está dado de alta */}
       {creating ? (
         <div className="space-y-3 rounded-xl border border-brand/40 bg-brand/5 p-3">
-          <p className="text-sm font-semibold text-foreground">Nuevo alumno</p>
+          <p className="text-sm font-semibold text-foreground">{tx("nuevoAlumno")}</p>
           <input
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nombre y apellidos"
+            placeholder={tx("nombreYApellidos")}
             maxLength={120}
             autoFocus
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40"
@@ -257,13 +260,13 @@ export function StepStudents({
           <select
             value={newLevel}
             onChange={(e) => setNewLevel(e.target.value)}
-            aria-label="Nivel del alumno"
+            aria-label={tx("nivelDelAlumno")}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
           >
-            <option value="">Nivel (opcional)</option>
+            <option value="">{tx("nivelOpcional")}</option>
             {NEW_STUDENT_LEVELS.map((l) => (
               <option key={l.id} value={l.id}>
-                {l.label} · {l.desc}
+                {term(l.label)} · {term(l.desc)}
               </option>
             ))}
           </select>
@@ -278,7 +281,7 @@ export function StepStudents({
               className="inline-flex h-9 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-brand-foreground hover:bg-brand/90 disabled:opacity-60"
             >
               {savingNew && <Loader2 className="size-4 animate-spin" />}
-              Dar de alta y elegir
+              {tx("darDeAltaY")}
             </button>
             <button
               type="button"
@@ -288,11 +291,11 @@ export function StepStudents({
               }}
               className="h-9 rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Queda guardado en tus alumnos; puedes completar su ficha después.
+            {tx("quedaGuardadoEnTus")}
           </p>
         </div>
       ) : (
@@ -302,7 +305,7 @@ export function StepStudents({
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-foreground/25 px-3 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
         >
           <Plus className="size-4" />
-          Nuevo alumno
+          {tx("nuevoAlumno")}
         </button>
       )}
 
@@ -319,7 +322,7 @@ export function StepStudents({
           )}
         >
           <Users className="size-3.5" />
-          Clase suelta (alumnos)
+          {tx("claseSueltaAlumnos")}
         </button>
         <button
           type="button"
@@ -332,7 +335,7 @@ export function StepStudents({
           )}
         >
           <Users2 className="size-3.5" />
-          Por grupo
+          {tx("porGrupo")}
           {groups.length > 0 && (
             <span className="ml-0.5 size-4 rounded-full bg-brand/15 text-brand text-[9px] flex items-center justify-center font-bold">
               {groups.length}
@@ -347,13 +350,13 @@ export function StepStudents({
             <div className="text-center py-8 border border-dashed border-border rounded-xl">
               <Users2 className="size-8 text-muted-foreground/40 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
-                No tienes grupos creados.
+                {tx("noTienesGruposCreados")}
               </p>
               <Link
                 href="/groups"
                 className="mt-2 inline-block text-xs text-brand hover:underline"
               >
-                Crear un grupo
+                {tx("crearUnGrupo")}
               </Link>
             </div>
           ) : (
@@ -388,7 +391,7 @@ export function StepStudents({
                       </p>
                       <span className="text-[10px] text-muted-foreground tabular-nums">
                         {g.memberCount}{" "}
-                        {g.memberCount === 1 ? "alumno" : "alumnos"}
+                        {g.memberCount === 1 ? tx("studentOne") : tx("studentMany")}
                       </span>
                     </div>
                     {g.description && (
@@ -408,10 +411,7 @@ export function StepStudents({
           )}
           {state.studentIds.length > 0 && (
             <p className="text-xs text-muted-foreground pt-1">
-              {state.studentIds.length} alumno
-              {state.studentIds.length !== 1 ? "s" : ""} seleccionado
-              {state.studentIds.length !== 1 ? "s" : ""} en total
-            </p>
+              {tx("v1AlumnoV2Seleccionado", { v1: state.studentIds.length, v2: state.studentIds.length !== 1 ? "s" : "", v3: state.studentIds.length !== 1 ? "s" : "" })}</p>
           )}
         </div>
       ) : (
@@ -422,7 +422,7 @@ export function StepStudents({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar alumnos…"
+              placeholder={tx("buscarAlumnos")}
               className="w-full h-10 pl-10 pr-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
             />
           </div>
@@ -465,14 +465,12 @@ export function StepStudents({
             })}
             {students.length === 0 ? (
               <p className="col-span-full py-6 text-center text-xs text-muted-foreground">
-                Aún no tienes alumnos. Usa «Nuevo alumno» para dar de alta al
-                primero.
+                {tx("aunNoTienesAlumnos2")}
               </p>
             ) : (
               filtered.length === 0 && (
                 <p className="text-xs text-muted-foreground col-span-full text-center py-6">
-                  Sin resultados para &ldquo;{search}&rdquo;
-                </p>
+                  {tx("sinResultadosParaV1", { v1: search })}</p>
               )
             )}
           </div>
@@ -480,7 +478,7 @@ export function StepStudents({
       )}
 
       <p className="text-xs text-muted-foreground">
-        Este paso es opcional, puedes continuar sin seleccionar alumnos.
+        {tx("estePasoEsOpcional")}
       </p>
     </div>
   );

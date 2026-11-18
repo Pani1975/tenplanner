@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type SessionOption = {
   id: string;
@@ -25,8 +27,8 @@ const BLOCKS: Array<{ order: 1 | 2 | 3; label: string }> = [
   { order: 3, label: "Bloque final" },
 ];
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatDate(iso: string, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -50,6 +52,8 @@ export function AddToSessionDialog({
   /** Nombre del ejercicio o de la lista, para el título. */
   label: string;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_addtosessiondialog");
   const [includePast, setIncludePast] = useState(false);
   const [options, setOptions] = useState<SessionOption[] | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -103,12 +107,12 @@ export function AddToSessionDialog({
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
         };
-        setError(data.error ?? "No se pudo añadir. Inténtalo de nuevo.");
+        setError(data.error ?? tx("noSePudoAnadir"));
         return;
       }
       setDone(options?.find((o) => o.id === selected) ?? null);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setSaving(false);
     }
@@ -121,7 +125,7 @@ export function AddToSessionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Añadir a una sesión</DialogTitle>
+          <DialogTitle>{tx("anadirAUnaSesion")}</DialogTitle>
           <DialogDescription>
             {count === 1 ? `“${label}”` : `${count} ejercicios de “${label}”`}
           </DialogDescription>
@@ -141,14 +145,14 @@ export function AddToSessionDialog({
                 href={`/sessions/${done.id}`}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-bold text-[#050505] hover:bg-[#c8ef2f]"
               >
-                Ver sesión
+                {tx("verSesion")}
               </Link>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
                 className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
               >
-                Cerrar
+                {tx("cerrar")}
               </button>
             </div>
           </div>
@@ -156,14 +160,14 @@ export function AddToSessionDialog({
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {includePast ? "Todas las sesiones" : "Sesiones programadas"}
+                {includePast ? tx("todasLasSesiones") : "Sesiones programadas"}
               </p>
               <button
                 type="button"
                 onClick={() => setIncludePast((v) => !v)}
                 className="text-xs font-semibold text-brand hover:underline"
               >
-                {includePast ? "Solo próximas" : "Ver también pasadas"}
+                {includePast ? "Solo próximas" : tx("verTambienPasadas")}
               </button>
             </div>
 
@@ -171,15 +175,15 @@ export function AddToSessionDialog({
               {options === null && !loadError ? (
                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
-                  Cargando sesiones…
+                  {tx("cargandoSesiones")}
                 </div>
               ) : loadError ? (
                 <p className="py-8 text-center text-sm text-destructive">
-                  No se pudieron cargar las sesiones.
+                  {tx("noSePudieronCargar")}
                 </p>
               ) : options && options.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  No tienes sesiones programadas. Crea una nueva abajo.
+                  {tx("noTienesSesionesProgramadas")}
                 </p>
               ) : (
                 options?.map((option) => {
@@ -209,8 +213,8 @@ export function AddToSessionDialog({
                           {option.title}
                         </span>
                         <span className="block text-xs capitalize text-muted-foreground">
-                          {formatDate(option.scheduledAt)}
-                          {option.status === "completed" ? " · completada" : ""}
+                          {formatDate(option.scheduledAt, intlLocale)}
+                          {option.status === "completed" ? tx("completada") : ""}
                         </span>
                       </span>
                     </button>
@@ -221,7 +225,7 @@ export function AddToSessionDialog({
 
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                ¿En qué bloque?
+                {tx("enQueBloque")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {BLOCKS.map((block) => (
@@ -241,8 +245,7 @@ export function AddToSessionDialog({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                Se añade al final del bloque. Luego puedes reordenarlo desde
-                Editar sesión.
+                {tx("seAnadeAlFinal")}
               </p>
             </div>
 
@@ -256,7 +259,7 @@ export function AddToSessionDialog({
                 className="inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
               >
                 <Plus className="size-4" />
-                Crear sesión nueva
+                {tx("crearSesionNueva")}
               </Link>
               <button
                 type="button"
@@ -269,7 +272,7 @@ export function AddToSessionDialog({
                 ) : (
                   <CalendarPlus className="size-4" />
                 )}
-                Añadir a la sesión
+                {tx("anadirALaSesion")}
               </button>
             </div>
           </div>
@@ -291,6 +294,7 @@ export function AddToSessionButton({
   variant?: "pill" | "icon";
   className?: string;
 }) {
+  const tx = useTranslations("ui.s_app_addtosessiondialog");
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -302,8 +306,8 @@ export function AddToSessionButton({
             e.stopPropagation();
             setOpen(true);
           }}
-          title="Añadir a una sesión"
-          aria-label="Añadir a una sesión"
+          title={tx("anadirAUnaSesion")}
+          aria-label={tx("anadirAUnaSesion")}
           className={cn(
             "flex size-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-[#D6FF38]",
             className
@@ -321,7 +325,7 @@ export function AddToSessionButton({
           )}
         >
           <CalendarPlus className="size-4 text-brand" strokeWidth={1.6} />
-          Añadir a sesión
+          {tx("anadirASesion")}
         </button>
       )}
       <AddToSessionDialog

@@ -14,9 +14,11 @@ import {
   X,
 } from "lucide-react";
 import type { FavoriteSessionList } from "@/lib/sessions/favorites";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("es-ES", {
+function formatDate(iso: string, loc: string = "es-ES") {
+  return new Intl.DateTimeFormat(loc, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -35,6 +37,8 @@ export function FavoritesClient({
 }: {
   initialLists: FavoriteSessionList[];
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_favorites_favoritesclient");
   const router = useRouter();
   const [lists, setLists] = useState(initialLists);
   const [busy, setBusy] = useState<string | null>(null);
@@ -55,12 +59,12 @@ export function FavoritesClient({
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) {
-        setError("No se pudo completar la acción. Inténtalo de nuevo.");
+        setError(tx("noSePudoCompletar"));
         return null;
       }
       return res;
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
       return null;
     } finally {
       setBusy(null);
@@ -139,16 +143,16 @@ export function FavoritesClient({
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-14 text-center">
           <Heart className="size-8 text-foreground/20" />
           <p className="text-sm font-semibold text-foreground">
-            Aún no tienes sesiones favoritas
+            {tx("aunNoTienesSesiones")}
           </p>
           <p className="max-w-sm text-xs text-muted-foreground">
-            Abre una sesión y pulsa el corazón para guardarla en una lista.
+            {tx("abreUnaSesionY")}
           </p>
           <Link
             href="/sessions"
             className="rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-bold text-[#050505] hover:bg-[#c8ef2f]"
           >
-            Ir a mis sesiones
+            {tx("irAMisSesiones")}
           </Link>
         </div>
       )}
@@ -178,7 +182,7 @@ export function FavoritesClient({
                 />
                 <button
                   type="submit"
-                  aria-label="Guardar nombre"
+                  aria-label={tx("guardarNombre")}
                   disabled={busy === list.id}
                   className="flex size-8 items-center justify-center rounded-full bg-[#D6FF38] text-[#050505]"
                 >
@@ -190,7 +194,7 @@ export function FavoritesClient({
                 </button>
                 <button
                   type="button"
-                  aria-label="Cancelar"
+                  aria-label={tx("cancelar")}
                   onClick={() => setRenaming(null)}
                   className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
                 >
@@ -209,7 +213,7 @@ export function FavoritesClient({
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
-                    aria-label="Cambiar nombre"
+                    aria-label={tx("cambiarNombre")}
                     onClick={() =>
                       setRenaming({ id: list.id, name: list.name })
                     }
@@ -228,20 +232,20 @@ export function FavoritesClient({
                         {busy === list.id && (
                           <Loader2 className="size-3 animate-spin" />
                         )}
-                        Borrar lista
+                        {tx("borrarLista")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmDelete(null)}
                         className="rounded-full px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted"
                       >
-                        No
+                        {tx("no")}
                       </button>
                     </>
                   ) : (
                     <button
                       type="button"
-                      aria-label="Borrar lista"
+                      aria-label={tx("borrarLista")}
                       onClick={() => setConfirmDelete(list.id)}
                       className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     >
@@ -255,13 +259,13 @@ export function FavoritesClient({
 
           {confirmDelete === list.id && (
             <p className="border-b border-border bg-destructive/5 px-4 py-2 text-xs text-muted-foreground">
-              Se borra solo la lista; las sesiones no se eliminan.
+              {tx("seBorraSoloLa")}
             </p>
           )}
 
           {list.sessions.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Lista vacía. Pulsa el corazón en una sesión para añadirla aquí.
+              {tx("listaVaciaPulsaEl")}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -275,18 +279,18 @@ export function FavoritesClient({
                       {s.title}
                     </p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs capitalize text-muted-foreground">
-                      <span>{formatDate(s.scheduledAt)}</span>
+                      <span>{formatDate(s.scheduledAt, intlLocale)}</span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="size-3" />
-                        {s.durationMinutes} min
+                        {s.durationMinutes}{" "}{tx("min")}
                       </span>
                       <span>{STATUS_LABEL[s.status]}</span>
                     </p>
                   </Link>
                   <button
                     type="button"
-                    aria-label="Quitar de la lista"
-                    title="Quitar de la lista"
+                    aria-label={tx("quitarDeLaLista")}
+                    title={tx("quitarDeLaLista")}
                     disabled={busy === `${list.id}:${s.id}`}
                     onClick={() => void removeSession(list.id, s.id)}
                     className="flex size-8 shrink-0 items-center justify-center rounded-full text-red-400 hover:bg-red-400/10 disabled:opacity-50"
@@ -315,7 +319,7 @@ export function FavoritesClient({
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nombre de la lista"
+            placeholder={tx("nombreDeLaLista")}
             maxLength={100}
             autoFocus
             className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm focus:border-[#D6FF38] focus:outline-none"
@@ -326,7 +330,7 @@ export function FavoritesClient({
             className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-5 py-2 text-sm font-bold text-[#050505] disabled:opacity-50"
           >
             {busy === "new" && <Loader2 className="size-4 animate-spin" />}
-            Crear
+            {tx("crear")}
           </button>
           <button
             type="button"
@@ -336,7 +340,7 @@ export function FavoritesClient({
             }}
             className="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         </form>
       ) : (
@@ -346,7 +350,7 @@ export function FavoritesClient({
           className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-[#D6FF38] hover:text-foreground"
         >
           <Plus className="size-4" />
-          Nueva lista
+          {tx("nuevaLista")}
         </button>
       )}
     </div>

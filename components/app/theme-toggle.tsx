@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { applyAccentColor } from "@/lib/accent-colors";
+import { useTranslations } from "next-intl";
 
 type VTDocument = Document & {
   startViewTransition?: (cb: () => void) => { ready: Promise<void> };
@@ -15,6 +16,7 @@ function getTimeBasedDarkMode() {
 }
 
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {
+  const tx = useTranslations("ui.s_app_themetoggle");
   const [isDark, setIsDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -99,7 +101,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     <button
       onClick={toggle}
       aria-pressed={isDark}
-      aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+      aria-label={isDark ? tx("cambiarAModoClaro") : tx("cambiarAModoOscuro")}
       className={cn(
         "group border font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D6FF38] disabled:pointer-events-none disabled:opacity-50",
         compact

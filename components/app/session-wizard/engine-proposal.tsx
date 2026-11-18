@@ -11,6 +11,7 @@ import { MONTAR } from "@/lib/session-engine/messages";
 import type { PlanItem } from "@/lib/session-engine/types";
 import type { Proposal } from "@/lib/session-engine/today";
 import type { AvailableExercise, WizardExercise, WizardState } from "./types";
+import { useTranslations } from "next-intl";
 
 export type EngineConfig = {
   /** Un grupo guardado… */
@@ -56,6 +57,7 @@ export function useEngineProposal({
   update: (patch: Partial<WizardState>) => void;
   availableExercises: AvailableExercise[];
 }) {
+  const tx = useTranslations("ui.s_sessionwizard_engineproposal");
   const [info, setInfo] = useState<EngineInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [changingIdx, setChangingIdx] = useState<number | null>(null);
@@ -136,7 +138,7 @@ export function useEngineProposal({
       });
       return true;
     } catch {
-      setError("No se pudo preparar la propuesta. Inténtalo de nuevo.");
+      setError(tx("noSePudoPreparar"));
       return false;
     } finally {
       setBusy(false);
@@ -201,7 +203,7 @@ export function useEngineProposal({
       setInfo({ ...info, slotByExercise });
       update({ exercises: next });
     } catch {
-      setError("No se pudo cambiar el ejercicio. Inténtalo de nuevo.");
+      setError(tx("noSePudoCambiar"));
     } finally {
       setChangingIdx(null);
     }

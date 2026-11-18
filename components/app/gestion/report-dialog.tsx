@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export interface DialogBlock {
   id: string;
@@ -60,6 +62,8 @@ export function ReportDialog({
   initialTo: string;
   today: string;
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_gestion_reportdialog");
   const router = useRouter();
   const allIds = useMemo(
     () => blocks.flatMap((b) => b.metrics.map((m) => m.id)),
@@ -133,7 +137,7 @@ export function ReportDialog({
       const res = await fetch(`/api/gestion/informe/pdf?${q.toString()}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "No se pudo generar el informe");
+        throw new Error(data.error ?? tx("noSePudoGenerar"));
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -173,7 +177,7 @@ export function ReportDialog({
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok)
-        throw new Error(data.error ?? "No se pudo guardar la plantilla");
+        throw new Error(data.error ?? tx("noSePudoGuardar"));
       const saved = data.data as DialogTemplate;
       setTemplates((prev) =>
         [...prev.filter((t) => t.id !== saved.id), saved].sort((a, b) =>
@@ -201,7 +205,7 @@ export function ReportDialog({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "No se pudo borrar la plantilla");
+        throw new Error(data.error ?? tx("noSePudoBorrar"));
       }
       setTemplates((prev) => prev.filter((x) => x.id !== t.id));
       if (editing?.id === t.id) {
@@ -256,7 +260,7 @@ export function ReportDialog({
         className="inline-flex h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-sm font-black text-[#050505] shadow-sm transition-transform hover:scale-[1.02]"
       >
         <FileDown className="size-4" />
-        Generar informe
+        {tx("generarInforme")}
       </button>
 
       {open && (
@@ -267,17 +271,17 @@ export function ReportDialog({
           />
           <div
             role="dialog"
-            aria-label="Generar informe"
+            aria-label={tx("generarInforme")}
             className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-[28px] border border-[#050505]/10 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-[#10100e]"
           >
             <div className="mb-3 flex items-center gap-2">
               <h2 className="text-base font-black text-foreground">
-                Generar informe
+                {tx("generarInforme")}
               </h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar"
+                aria-label={tx("cerrar")}
                 className="ml-auto flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
               >
                 <X className="size-4" />
@@ -287,7 +291,7 @@ export function ReportDialog({
             {/* Periodo: común a las dos pestañas */}
             <div className="mb-3 flex flex-wrap items-end gap-2 text-sm">
               <span className="w-full text-[11px] font-black uppercase text-foreground/55">
-                Periodo
+                {tx("periodo")}
               </span>
               {PERIOD_OPTIONS.map((p) => (
                 <button
@@ -301,13 +305,13 @@ export function ReportDialog({
                       : "border-border text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  {p.label}
+                  {term(p.label)}
                 </button>
               ))}
               {period === "personalizado" && (
                 <div className="flex w-full flex-wrap gap-2 pt-1">
                   <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-                    Desde
+                    {tx("desde")}
                     <input
                       type="date"
                       value={from}
@@ -317,7 +321,7 @@ export function ReportDialog({
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-                    Hasta
+                    {tx("hasta")}
                     <input
                       type="date"
                       value={to}
@@ -364,14 +368,14 @@ export function ReportDialog({
                     className="text-brand"
                     onClick={() => setSelected(new Set(allIds))}
                   >
-                    Seleccionar todo
+                    {tx("seleccionarTodo")}
                   </button>
                   <button
                     type="button"
                     className="text-muted-foreground"
                     onClick={() => setSelected(new Set())}
                   >
-                    Quitar todo
+                    {tx("quitarTodo")}
                   </button>
                   {editing && (
                     <button
@@ -379,7 +383,7 @@ export function ReportDialog({
                       className="ml-auto text-muted-foreground"
                       onClick={startNew}
                     >
-                      Empezar un informe nuevo
+                      {tx("empezarUnInformeNuevo")}
                     </button>
                   )}
                 </div>
@@ -449,17 +453,17 @@ export function ReportDialog({
                       ) : (
                         <FileDown className="size-4" />
                       )}
-                      Descargar PDF ({selectedList.length})
+                      {tx("descargarPdf")}{selectedList.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => viewOnScreen(null)}
                       disabled={periodInvalid}
                       className="inline-flex h-11 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-foreground disabled:opacity-50"
-                      title="Ver todos los datos en la página con este periodo"
+                      title={tx("verTodosLosDatos")}
                     >
                       <Eye className="size-4" />
-                      Ver todo en pantalla
+                      {tx("verTodoEnPantalla")}
                     </button>
                   </div>
 
@@ -470,7 +474,7 @@ export function ReportDialog({
                         value={name}
                         maxLength={120}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Nombre de la plantilla (p. ej. Altas y bajas)"
+                        placeholder={tx("nombreDeLaPlantilla")}
                         className={cn(inputClass, "min-w-0 flex-1")}
                       />
                       <button
@@ -486,7 +490,7 @@ export function ReportDialog({
                         ) : (
                           <Save className="size-4" />
                         )}
-                        {editing ? "Guardar cambios" : "Guardar como plantilla"}
+                        {editing ? "Guardar cambios" : tx("guardarComoPlantilla")}
                       </button>
                       {editing && (
                         <button
@@ -497,14 +501,13 @@ export function ReportDialog({
                           }
                           className="h-10 rounded-full border border-border px-4 text-sm font-semibold text-foreground disabled:opacity-50"
                         >
-                          Guardar como nueva
+                          {tx("guardarComoNueva")}
                         </button>
                       )}
                     </div>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Las plantillas aún no están disponibles: falta aplicar la
-                      migración de la base de datos.
+                      {tx("lasPlantillasAunNo")}
                     </p>
                   )}
                 </div>
@@ -514,8 +517,7 @@ export function ReportDialog({
                 {templates.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
                     <LayoutTemplate className="mx-auto mb-2 size-6 opacity-50" />
-                    Aún no hay plantillas. Elige los datos en «Nuevo informe» y
-                    guárdalos como plantilla para generarlos rápidamente.
+                    {tx("aunNoHayPlantillas")}
                   </div>
                 ) : (
                   <ul className="space-y-2">
@@ -530,11 +532,10 @@ export function ReportDialog({
                               {t.name}
                             </p>
                             <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                              {t.metrics.length} datos ·{" "}
-                              {t.metrics
+                              {tx("v1DatosV2", { v1: t.metrics.length, v2: t.metrics
                                 .map((id) => labelById.get(id))
                                 .filter(Boolean)
-                                .join(" · ")}
+                                .join(" · ") })}
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -551,14 +552,14 @@ export function ReportDialog({
                               ) : (
                                 <FileDown className="size-3.5" />
                               )}
-                              PDF
+                              {tx("pdf")}
                             </button>
                             <button
                               type="button"
                               onClick={() => viewOnScreen(t.id)}
                               disabled={periodInvalid}
                               aria-label={`Ver «${t.name}» en pantalla`}
-                              title="Ver en pantalla"
+                              title={tx("verEnPantalla")}
                               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-muted disabled:opacity-50"
                             >
                               <Eye className="size-4" />
@@ -567,7 +568,7 @@ export function ReportDialog({
                               type="button"
                               onClick={() => editTemplate(t)}
                               aria-label={`Editar «${t.name}»`}
-                              title="Editar"
+                              title={tx("editar")}
                               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-muted"
                             >
                               <Pencil className="size-4" />
@@ -577,7 +578,7 @@ export function ReportDialog({
                               onClick={() => removeTemplate(t)}
                               disabled={!!busy}
                               aria-label={`Borrar «${t.name}»`}
-                              title="Borrar"
+                              title={tx("borrar")}
                               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                             >
                               {busy === `del-${t.id}` ? (
@@ -597,7 +598,7 @@ export function ReportDialog({
 
             {periodInvalid && (
               <p className="mt-2 text-xs text-red-500">
-                Revisa las fechas del periodo personalizado.
+                {tx("revisaLasFechasDel")}
               </p>
             )}
             {error && <p className="mt-2 text-xs text-red-500">{error}</p>}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface SessionList {
   id: string;
@@ -23,6 +24,7 @@ export function SessionListPicker({
   onClose: () => void;
   onFavoritedChange?: (favorited: boolean) => void;
 }) {
+  const tx = useTranslations("ui.s_app_sessionlistpicker");
   const [lists, setLists] = useState<SessionList[]>([]);
   const [inLists, setInLists] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ export function SessionListPicker({
           error?: string;
         };
         if (json.setupNeeded) {
-          setSetupError(json.error ?? "Las listas aún no están activadas.");
+          setSetupError(json.error ?? tx("lasListasAunNo"));
           return;
         }
         const all = Array.isArray(json.data) ? json.data : [];
@@ -56,7 +58,7 @@ export function SessionListPicker({
           new Set(all.filter((l) => l.containsSession).map((l) => l.id))
         );
       } catch {
-        setError("No se pudieron cargar las listas.");
+        setError(tx("noSePudieronCargar"));
       } finally {
         setLoading(false);
       }
@@ -88,7 +90,7 @@ export function SessionListPicker({
         body: JSON.stringify({ sessionId }),
       });
       if (!res.ok) {
-        setError("No se pudo guardar. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       const next = new Set(inLists);
@@ -108,7 +110,7 @@ export function SessionListPicker({
       );
       onFavoritedChange?.(next.size > 0);
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
     } finally {
       setToggling(null);
     }
@@ -126,7 +128,7 @@ export function SessionListPicker({
         body: JSON.stringify({ name }),
       });
       if (!res.ok) {
-        setError("No se pudo crear la lista.");
+        setError(tx("noSePudoCrear"));
         return;
       }
       const { data: created } = (await res.json()) as { data: SessionList };
@@ -136,7 +138,7 @@ export function SessionListPicker({
         body: JSON.stringify({ sessionId }),
       });
       if (!add.ok) {
-        setError("La lista se creó, pero no se pudo añadir la sesión.");
+        setError(tx("laListaSeCreo"));
         return;
       }
       setLists((prev) => [
@@ -162,16 +164,16 @@ export function SessionListPicker({
         <div className="flex items-center justify-between border-b border-foreground/10 px-5 pb-4 pt-5">
           <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">
-              Guardar en lista
+              {tx("guardarEnLista")}
             </p>
             <h2 className="truncate text-lg font-black text-foreground">
-              {sessionTitle ?? "Elige una lista"}
+              {sessionTitle ?? tx("eligeUnaLista")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={tx("cerrar")}
             className="flex size-8 items-center justify-center rounded-xl text-foreground/40 hover:bg-foreground/10 hover:text-foreground"
           >
             <X className="size-4" />
@@ -245,7 +247,7 @@ export function SessionListPicker({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") void createList();
                   }}
-                  placeholder="Ej: Sesiones de volea"
+                  placeholder={tx("ejSesionesDeVolea")}
                   maxLength={100}
                   className="min-w-0 flex-1 rounded-xl border border-foreground/15 bg-foreground/[0.02] px-3 py-2 text-sm placeholder:text-foreground/30 focus:border-[#D6FF38] focus:outline-none"
                 />
@@ -269,7 +271,7 @@ export function SessionListPicker({
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground"
               >
                 <Plus className="size-4" />
-                Nueva lista
+                {tx("nuevaLista")}
               </button>
             )}
             {error && (

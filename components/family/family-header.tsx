@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { FamilyPlayer } from "@/lib/family-data";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /** Cabecera común del panel de familias. */
 export function FamilyHeader({
@@ -38,11 +39,12 @@ export function PlayerSwitcher({
   current: string;
   basePath: string;
 }) {
+  const tx = useTranslations("ui.s_family_familyheader");
   if (players.length < 2) return null;
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 dark:border-white/10 dark:bg-white/[0.045]">
       <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-        Jugador
+        {tx("jugador")}
       </span>
       {players.map((p) => (
         <Link
@@ -64,11 +66,11 @@ export function PlayerSwitcher({
 
 /** Estado vacío: la cuenta aún no está vinculada a ningún jugador. */
 export function NoPlayers() {
+  const tx = useTranslations("ui.s_family_familyheader");
   return (
     <div className="tp-panel flex flex-col items-center justify-center gap-3 border-dashed py-16 text-center">
       <p className="max-w-sm text-sm leading-6 text-foreground/60">
-        Tu cuenta todavía no está vinculada a ningún jugador. Cuando el club te
-        envíe el enlace de invitación y lo actives, aparecerá aquí.
+        {tx("tuCuentaTodaviaNo")}
       </p>
     </div>
   );

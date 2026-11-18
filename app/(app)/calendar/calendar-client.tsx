@@ -40,6 +40,9 @@ import {
 import { retitleForDate } from "@/lib/sessions/retitle";
 import { useTouchDragSessions } from "@/lib/hooks/use-touch-drag-sessions";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface SessionData {
   id: string;
@@ -158,8 +161,8 @@ function isSameDate(a: Date, b: Date) {
   );
 }
 
-function formatDayTitle(d: Date) {
-  const s = new Intl.DateTimeFormat("es-ES", {
+function formatDayTitle(d: Date, loc: string = "es-ES") {
+  const s = new Intl.DateTimeFormat(loc, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -178,6 +181,9 @@ export function CalendarClient({
   tasks: initialTasks = [],
   coaches = [],
 }: CalendarClientProps) {
+  const term = useTerm();
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_calendar_calendarclient");
   const router = useRouter();
   const today = new Date();
   const todayMidnight = new Date(
@@ -459,18 +465,18 @@ export function CalendarClient({
   }
 
   function headerLabel() {
-    if (view === "day") return formatDayTitle(focusDate);
+    if (view === "day") return formatDayTitle(focusDate, intlLocale);
     if (view === "week") {
       const start = startOfWeek(focusDate);
       const end = addDays(start, 6);
       const sameMonth = start.getMonth() === end.getMonth();
       const startLabel = sameMonth
         ? `${start.getDate()}`
-        : `${start.getDate()} ${MONTHS[start.getMonth()].slice(0, 3)}`;
-      return `${startLabel} – ${end.getDate()} ${MONTHS[end.getMonth()].slice(0, 3)} ${end.getFullYear()}`;
+        : `${start.getDate()} ${term(MONTHS[start.getMonth()]).slice(0, 3)}`;
+      return `${startLabel} – ${end.getDate()} ${term(MONTHS[end.getMonth()]).slice(0, 3)} ${end.getFullYear()}`;
     }
     if (view === "year") return `${viewYear}`;
-    return `${MONTHS[viewMonth]} ${viewYear}`;
+    return `${term(MONTHS[viewMonth])} ${viewYear}`;
   }
 
   function handleEventSaved(saved: CalendarEventData) {
@@ -497,13 +503,13 @@ export function CalendarClient({
         method: "DELETE",
       });
       if (!res.ok) {
-        setEventError("No se pudo eliminar el evento. Inténtalo de nuevo.");
+        setEventError(tx("noSePudoEliminar"));
         return;
       }
       setEvents((prev) => prev.filter((e) => e.id !== event.id));
       router.refresh();
     } catch {
-      setEventError("Error de red. Inténtalo de nuevo.");
+      setEventError(tx("errorDeRedIntentalo"));
     } finally {
       setDeletingEventId(null);
     }
@@ -533,13 +539,13 @@ export function CalendarClient({
         method: "DELETE",
       });
       if (!res.ok) {
-        setHolidayError("No se pudo eliminar el festivo. Inténtalo de nuevo.");
+        setHolidayError(tx("noSePudoEliminar2"));
         return;
       }
       setHolidays((prev) => prev.filter((h) => h.id !== holiday.id));
       router.refresh();
     } catch {
-      setHolidayError("Error de red. Inténtalo de nuevo.");
+      setHolidayError(tx("errorDeRedIntentalo"));
     } finally {
       setDeletingHolidayId(null);
     }
@@ -553,13 +559,13 @@ export function CalendarClient({
         method: "DELETE",
       });
       if (!res.ok) {
-        setDeleteError("No se pudo eliminar la sesión. Inténtalo de nuevo.");
+        setDeleteError(tx("noSePudoEliminar3"));
         return;
       }
       setSessions((prev) => prev.filter((s) => s.id !== session.id));
       router.refresh();
     } catch {
-      setDeleteError("Error de red. Inténtalo de nuevo.");
+      setDeleteError(tx("errorDeRedIntentalo"));
     } finally {
       setDeletingId(null);
     }
@@ -606,7 +612,7 @@ export function CalendarClient({
       router.refresh();
     } catch {
       setSessions(previous);
-      setActionError("No se pudo mover la sesión. Inténtalo de nuevo.");
+      setActionError(tx("noSePudoMover"));
     }
   }
 
@@ -704,7 +710,7 @@ export function CalendarClient({
           }}
           className="mb-2 block w-full text-center text-xs font-black uppercase text-foreground/70 hover:text-brand"
         >
-          {MONTHS[month]}
+          {term(MONTHS[month])}
         </button>
         <div className="grid grid-cols-7 gap-y-1">
           {Array.from({ length: cells }).map((_, idx) => {
@@ -759,11 +765,11 @@ export function CalendarClient({
         <>
           <div
             role="group"
-            aria-label="Qué calendario ver"
+            aria-label={tx("queCalendarioVer")}
             className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 dark:border-white/10 dark:bg-white/[0.045]"
           >
             <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-              Ver
+              {tx("ver")}
             </span>
             {(["club", "gestion", "both"] as const).map((s) => (
               <button
@@ -786,7 +792,7 @@ export function CalendarClient({
           <section className="tp-panel space-y-3 p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
-                Tareas de gestión
+                {tx("tareasDeGestion")}
               </h2>
               <button
                 type="button"
@@ -794,13 +800,12 @@ export function CalendarClient({
                 className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#b45309] px-3.5 text-[13px] font-black text-white transition-colors hover:bg-[#92400e]"
               >
                 <Plus className="size-3.5" />
-                Nueva tarea
+                {tx("nuevaTarea")}
               </button>
             </div>
             {tasks.length === 0 ? (
               <p className="text-sm text-foreground/55">
-                Aún no hay tareas. Crea la primera: solo la ves tú, en el Modo
-                gestión.
+                {tx("aunNoHayTareas")}
               </p>
             ) : (
               <ul className="divide-y divide-[#050505]/10 dark:divide-white/10">
@@ -816,7 +821,7 @@ export function CalendarClient({
                         type="button"
                         onClick={() => void toggleTaskDone(t)}
                         aria-label={
-                          t.done ? "Marcar como pendiente" : "Marcar como hecha"
+                          t.done ? tx("marcarComoPendiente") : tx("marcarComoHecha")
                         }
                         className="shrink-0 text-[#b45309]"
                       >
@@ -841,7 +846,7 @@ export function CalendarClient({
                         </p>
                         <p className="truncate text-xs text-foreground/55">
                           {t.dueDate
-                            ? new Intl.DateTimeFormat("es-ES", {
+                            ? new Intl.DateTimeFormat(intlLocale, {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
@@ -849,7 +854,7 @@ export function CalendarClient({
                             : "Sin fecha"}
                           {" · "}
                           {t.responsibleLabel}
-                          {t.notifyEmail ? " · aviso por correo" : ""}
+                          {t.notifyEmail ? tx("avisoPorCorreo") : ""}
                         </p>
                       </button>
                     </li>
@@ -866,7 +871,7 @@ export function CalendarClient({
           <button
             onClick={goToPrev}
             className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 bg-white transition-colors hover:bg-brand dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-brand dark:hover:text-brand-foreground"
-            aria-label="Anterior"
+            aria-label={tx("anterior")}
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -876,7 +881,7 @@ export function CalendarClient({
           <button
             onClick={goToNext}
             className="flex size-10 items-center justify-center rounded-full border border-[#050505]/10 bg-white transition-colors hover:bg-brand dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-brand dark:hover:text-brand-foreground"
-            aria-label="Siguiente"
+            aria-label={tx("siguiente")}
           >
             <ChevronRight className="size-4" />
           </button>
@@ -895,7 +900,7 @@ export function CalendarClient({
                     : "text-foreground/60 hover:text-foreground"
                 )}
               >
-                {VIEW_LABELS[v]}
+                {term(VIEW_LABELS[v])}
               </button>
             ))}
           </div>
@@ -903,7 +908,7 @@ export function CalendarClient({
             onClick={goToToday}
             className="h-10 rounded-full border border-[#050505]/10 bg-white px-4 text-sm font-black text-foreground/62 transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/[0.04]"
           >
-            Hoy
+            {tx("hoy")}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -915,17 +920,17 @@ export function CalendarClient({
               }
             >
               <Plus className="size-3.5" />
-              <span className="hidden sm:inline">Añadir</span>
+              <span className="hidden sm:inline">{tx("anadir")}</span>
               <ChevronDown className="size-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem render={<Link href="/sessions/new" />}>
                 <ClipboardList className="size-4" />
-                Nueva sesión
+                {tx("nuevaSesion")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEventDialog({ event: null })}>
                 <CalendarDays className="size-4 text-[#2563eb]" />
-                Nuevo evento
+                {tx("nuevoEvento")}
               </DropdownMenuItem>
               {management && (
                 <DropdownMenuItem
@@ -937,14 +942,14 @@ export function CalendarClient({
                   }
                 >
                   <CheckCircle2 className="size-4 text-[#b45309]" />
-                  Nueva tarea
+                  {tx("nuevaTarea")}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
                 onClick={() => setHolidayDialog({ holiday: null })}
               >
                 <CalendarOff className="size-4 text-[#e11d48]" />
-                Nuevo festivo
+                {tx("nuevoFestivo")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -962,7 +967,7 @@ export function CalendarClient({
                     key={d}
                     className="py-3 text-center text-xs font-black uppercase text-foreground/52"
                   >
-                    {d}
+                    {term(d)}
                   </div>
                 ))}
               </div>
@@ -1072,8 +1077,7 @@ export function CalendarClient({
                               ))}
                               {dayHolidays.length > 1 && (
                                 <div className="px-1.5 text-[10px] text-[#be123c] dark:text-[#fda4af]">
-                                  +{dayHolidays.length - 1} festivo
-                                  {dayHolidays.length - 1 !== 1 ? "s" : ""}
+                                  {tx("v1FestivoV2", { v1: dayHolidays.length - 1, v2: dayHolidays.length - 1 !== 1 ? "s" : "" })}
                                 </div>
                               )}
                               {dayItems.slice(0, 2).map((item) =>
@@ -1159,8 +1163,7 @@ export function CalendarClient({
                               )}
                               {dayItems.length > 2 && (
                                 <div className="text-[10px] text-muted-foreground px-1.5">
-                                  +{dayItems.length - 2} más
-                                </div>
+                                  {tx("v1Mas", { v1: dayItems.length - 2 })}</div>
                               )}
                             </div>
                           )}
@@ -1175,7 +1178,7 @@ export function CalendarClient({
 
           {selectedDay !== null && (
             <DayAgenda
-              title={`${MONTHS[viewMonth]} ${selectedDay}`}
+              title={`${term(MONTHS[viewMonth])} ${selectedDay}`}
               items={selectedDayItems}
               sessionsForPdf={selectedSessions}
               pdfDayLabel={pdfLabelFor(
@@ -1211,7 +1214,7 @@ export function CalendarClient({
       {/* Vista diaria */}
       {view === "day" && (
         <DayAgenda
-          title={formatDayTitle(focusDate)}
+          title={formatDayTitle(focusDate, intlLocale)}
           items={focusDayItems}
           sessionsForPdf={focusDaySessions}
           pdfDayLabel={pdfLabelFor(focusDate)}
@@ -1279,7 +1282,7 @@ export function CalendarClient({
                     className="mb-2 flex w-full items-center justify-between gap-2 rounded-lg px-1 py-0.5 text-left hover:bg-muted"
                   >
                     <span className="text-[11px] font-black uppercase text-foreground/52">
-                      {DAYS[(d.getDay() + 6) % 7]}
+                      {term(DAYS[(d.getDay() + 6) % 7])}
                     </span>
                     <span
                       className={cn(
@@ -1463,13 +1466,13 @@ export function CalendarClient({
         onOpenChange={(open) => {
           if (!open) setHolidayToDelete(null);
         }}
-        title="¿Eliminar este festivo?"
+        title={tx("eliminarEsteFestivo")}
         description={
           holidayToDelete
             ? `“${holidayToDelete.title}” dejará de aparecer en el calendario y las sesiones que marcaba como «no se imparte» volverán a la normalidad.`
             : undefined
         }
-        confirmLabel="Eliminar"
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (holidayToDelete) void deleteHoliday(holidayToDelete);
@@ -1481,13 +1484,13 @@ export function CalendarClient({
         onOpenChange={(open) => {
           if (!open) setToDelete(null);
         }}
-        title="¿Eliminar esta sesión?"
+        title={tx("eliminarEstaSesion")}
         description={
           toDelete
             ? `“${toDelete.title}” se borrará con su plan de ejercicios y sus notas. Esta acción no se puede deshacer.`
             : undefined
         }
-        confirmLabel="Eliminar"
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (toDelete) void deleteSession(toDelete);
@@ -1499,13 +1502,13 @@ export function CalendarClient({
         onOpenChange={(open) => {
           if (!open) setEventToDelete(null);
         }}
-        title="¿Eliminar este evento?"
+        title={tx("eliminarEsteEvento")}
         description={
           eventToDelete
             ? `“${eventToDelete.title}” se eliminará del calendario. Esta acción no se puede deshacer.`
             : undefined
         }
-        confirmLabel="Eliminar"
+        confirmLabel={tx("eliminar")}
         destructive
         onConfirm={() => {
           if (eventToDelete) void deleteEvent(eventToDelete);

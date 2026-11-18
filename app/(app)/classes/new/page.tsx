@@ -12,8 +12,11 @@ import {
   exerciseListableCondition,
   isPlatformAdmin,
 } from "@/lib/exercise-access";
+import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewClassPage() {
+  const tx = await getTranslations("ui.s_new_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -56,21 +59,20 @@ export default async function NewClassPage() {
         <Link
           href="/classes"
           className="flex size-9 shrink-0 items-center justify-center rounded-full border border-foreground/15 text-muted-foreground transition-colors hover:border-[#D6FF38] hover:bg-[#D6FF38] hover:text-[#050505]"
-          aria-label="Volver a clases"
+          aria-label={tx("volverAClases")}
         >
           <ArrowLeft className="size-4" />
         </Link>
 
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#D6FF38]">
-            {spaceTitle("Clases", workMode)}
+            {spaceTitle("Clases", workMode, await getLocale())}
           </p>
           <h1 className="font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl">
-            Nueva clase
+            {tx("nuevaClase")}
           </h1>
           <p className="mt-1.5 max-w-prose text-sm text-muted-foreground">
-            Define una plantilla reutilizable. Luego podrás cargarla en
-            cualquier sesión.
+            {tx("defineUnaPlantillaReutilizable")}
           </p>
         </div>
       </div>

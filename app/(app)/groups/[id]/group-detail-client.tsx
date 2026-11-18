@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const LEVEL_LABEL: Record<string, string> = {
   beginner: "Iniciación",
@@ -91,6 +92,7 @@ export function GroupDetailClient({
   availableStudents,
   isOwner = true,
 }: Props) {
+  const tx = useTranslations("ui.s_id_groupdetailclient");
   const router = useRouter();
   const [currentMembers, setCurrentMembers] = useState(members);
   const [available, setAvailable] = useState(availableStudents);
@@ -178,7 +180,7 @@ export function GroupDetailClient({
           <div className="flex items-center gap-2">
             <Users className="size-4 text-brand" />
             <h2 className="text-[13px] font-black uppercase text-foreground">
-              Equipo
+              {tx("equipo")}
             </h2>
           </div>
           <span className="inline-flex items-center gap-1 rounded-full bg-brand/15 px-2.5 py-1 text-[11px] font-black tabular-nums text-foreground">
@@ -193,10 +195,10 @@ export function GroupDetailClient({
             </div>
             <div>
               <p className="text-sm font-medium text-foreground/40">
-                Sin alumnos todavía
+                {tx("sinAlumnosTodavia")}
               </p>
               <p className="text-xs text-foreground/25 mt-0.5">
-                Añade alumnos desde el panel de la derecha.
+                {tx("anadeAlumnosDesdeEl")}
               </p>
             </div>
           </div>
@@ -244,7 +246,7 @@ export function GroupDetailClient({
                   <button
                     onClick={() => removeStudent(m.id)}
                     disabled={loadingId === m.id}
-                    aria-label="Quitar del grupo"
+                    aria-label={tx("quitarDelGrupo")}
                     className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive disabled:opacity-40 md:opacity-0 md:group-hover/row:opacity-100"
                   >
                     {loadingId === m.id ? (
@@ -272,7 +274,7 @@ export function GroupDetailClient({
             <div className="flex items-center gap-2 border-b border-[#050505]/10 px-5 py-4 dark:border-white/10">
               <UserPlus className="size-4 text-brand" />
               <h2 className="text-[13px] font-black uppercase text-foreground">
-                Añadir alumno
+                {tx("anadirAlumno")}
               </h2>
             </div>
 
@@ -283,7 +285,7 @@ export function GroupDetailClient({
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar alumno..."
+                    placeholder={tx("buscarAlumno")}
                     className="tp-field h-10 w-full pl-8 pr-3 text-[13px] font-medium placeholder:text-foreground/30"
                   />
                 </div>
@@ -294,7 +296,7 @@ export function GroupDetailClient({
               {filteredAvailable.length === 0 ? (
                 <p className="px-5 py-6 text-[13px] text-muted-foreground italic text-center">
                   {available.length === 0
-                    ? "Todos tus alumnos ya están en este grupo."
+                    ? tx("todosTusAlumnosYa")
                     : "Sin resultados."}
                 </p>
               ) : (
@@ -339,20 +341,19 @@ export function GroupDetailClient({
         {isOwner && (
           <div className="rounded-[28px] border border-destructive/20 bg-white p-5 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)] dark:bg-[#10100e]">
             <h3 className="mb-3 text-[10px] font-black uppercase text-destructive/60">
-              Zona de peligro
+              {tx("zonaDePeligro")}
             </h3>
             {showDeleteConfirm ? (
               <div className="space-y-3">
                 <p className="text-sm text-foreground leading-relaxed">
-                  ¿Eliminar <strong>{groupName}</strong>? Esta acción no se
-                  puede deshacer.
+                  {tx("eliminar")}{" "}<strong>{groupName}</strong>{tx("questionCannotUndo")}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
                     className="flex-1 rounded-full border border-[#050505]/10 px-3 py-2 text-[13px] font-black text-muted-foreground transition-colors hover:bg-muted dark:border-white/10"
                   >
-                    Cancelar
+                    {tx("cancelar")}
                   </button>
                   <button
                     onClick={deleteGroup}
@@ -362,7 +363,7 @@ export function GroupDetailClient({
                     {deletingGroup && (
                       <Loader2 className="size-3.5 animate-spin" />
                     )}
-                    Eliminar
+                    {tx("eliminar2")}
                   </button>
                 </div>
               </div>
@@ -371,7 +372,7 @@ export function GroupDetailClient({
                 onClick={() => setShowDeleteConfirm(true)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 px-3 py-2 text-[13px] font-black text-destructive transition-colors hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" /> Eliminar grupo
+                <Trash2 className="size-3.5" />{" "}{tx("eliminarGrupo")}
               </button>
             )}
           </div>

@@ -11,6 +11,7 @@ import {
   objectiveLabels,
   parseObjectiveLines,
 } from "@/lib/session-engine/objectives";
+import { useTranslations } from "next-intl";
 
 const DURATIONS = [45, 60, 75, 90];
 
@@ -41,6 +42,7 @@ export function BeforeProposalForm({
   /** Ya se eligieron dos pistas en el primer paso. */
   defaultTwoCourts?: boolean;
 }) {
+  const tx = useTranslations("ui.s_montar_beforeproposalform");
   const router = useRouter();
   const [duration, setDuration] = useState(defaultDuration);
   const [custom, setCustom] = useState(!DURATIONS.includes(defaultDuration));
@@ -249,10 +251,9 @@ export function BeforeProposalForm({
             className="mt-0.5 size-4 accent-[#D6FF38]"
           />
           <span>
-            Uso dos pistas
+            {tx("usoDosPistas")}
             <span className="block text-xs text-muted-foreground">
-              En una pista trabajas con el monitor y en la otra el grupo juega por
-              su cuenta.
+              {tx("enUnaPistaTrabajas")}
             </span>
           </span>
         </label>
@@ -265,10 +266,9 @@ export function BeforeProposalForm({
               className="mt-0.5 size-4 accent-[#D6FF38]"
             />
             <span>
-              Los grupos rotan
+              {tx("losGruposRotan")}
               <span className="block text-xs text-muted-foreground">
-                El grupo se parte en dos y cada mitad hace las dos pistas: a
-                mitad del bloque principal cambian de pista.
+                {tx("elGrupoSeParte")}
               </span>
             </span>
           </label>

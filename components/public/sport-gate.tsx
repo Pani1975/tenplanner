@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
+import { useTranslations } from "next-intl";
 
 export function SportGate({
   title = "¿Qué deporte entrenas?",
@@ -12,6 +13,7 @@ export function SportGate({
   title?: string;
   description?: string;
 }) {
+  const tx = useTranslations("ui.s_public_sportgate");
   const router = useRouter();
   const [loading, setLoading] = useState<Sport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function SportGate({
         body: JSON.stringify({ sport }),
       });
       if (!res.ok) {
-        setError("No se pudo guardar tu elección. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
         return;
       }
       router.refresh();
@@ -42,7 +44,7 @@ export function SportGate({
         <div className="flex flex-col items-center gap-6 p-6 sm:p-8">
           <div>
             <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-[#D6FF38]">
-              Biblioteca pública
+              {tx("bibliotecaPublica")}
             </p>
             <h1 className="mt-3 font-heading text-3xl font-semibold leading-tight text-white">
               {title}

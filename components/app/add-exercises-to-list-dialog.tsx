@@ -21,6 +21,7 @@ import {
 } from "@/components/app/save-search-to-list";
 import { ExerciseQuickDescription } from "@/components/app/exercise-quick-description";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const PAGE_SIZE = 40;
 
@@ -72,6 +73,7 @@ export function AddExercisesToListDialog({
   /** Tras añadir todos los resultados de golpe: recargar la colección. */
   onBulkAdded?: () => void;
 }) {
+  const tx = useTranslations("ui.s_app_addexercisestolistdialog");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ListableExercise[]>([]);
   const [filters, setFilters] = useState<PickerFilters>(EMPTY_PICKER_FILTERS);
@@ -167,14 +169,14 @@ export function AddExercisesToListDialog({
       });
       if (!res.ok) {
         setActionError(
-          "No se pudo actualizar la colección. Inténtalo de nuevo."
+          tx("noSePudoActualizar")
         );
         return;
       }
       if (adding) onAdded(exercise);
       else onRemoved(exercise.id);
     } catch {
-      setActionError("No se pudo actualizar la colección. Inténtalo de nuevo.");
+      setActionError(tx("noSePudoActualizar"));
     } finally {
       setBusyId(null);
     }
@@ -195,8 +197,8 @@ export function AddExercisesToListDialog({
     >
       <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Añadir ejercicios</DialogTitle>
-          <DialogDescription>A la colección “{listName}”.</DialogDescription>
+          <DialogTitle>{tx("anadirEjercicios")}</DialogTitle>
+          <DialogDescription>{tx("aLaColeccionV1", { v1: listName })}</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
@@ -205,7 +207,7 @@ export function AddExercisesToListDialog({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar ejercicio por nombre…"
+            placeholder={tx("buscarEjercicioPorNombre")}
             autoFocus
             className="h-10 w-full rounded-lg border border-foreground/15 bg-background pl-9 pr-3 text-sm text-foreground focus:border-brand/60 focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
@@ -230,11 +232,11 @@ export function AddExercisesToListDialog({
             </div>
           ) : loadError ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              No se pudieron cargar los ejercicios.
+              {tx("noSePudieronCargar")}
             </p>
           ) : results.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Sin resultados.
+              {tx("sinResultados")}
             </p>
           ) : (
             <ul className="divide-y divide-foreground/8">
@@ -255,7 +257,7 @@ export function AddExercisesToListDialog({
                         </span>
                         <span className="inline-flex items-center gap-1 tabular-nums">
                           <Clock className="size-3" />
-                          {ex.durationMinutes} min
+                          {ex.durationMinutes}{" "}{tx("min")}
                         </span>
                       </p>
                       <ExerciseQuickDescription text={ex.description} />
@@ -299,15 +301,14 @@ export function AddExercisesToListDialog({
                 className="inline-flex h-8 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-brand hover:bg-brand/10 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="size-3.5 animate-spin" /> : null}
-                Mostrar más
+                {tx("mostrarMas")}
               </button>
             </div>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] text-muted-foreground">
-            {total} ejercicio{total === 1 ? "" : "s"}
-            {hasCriteria ? " con esos criterios" : ""}
+            {tx("v1EjercicioV2V3", { v1: total, v2: total === 1 ? "" : "s", v3: hasCriteria ? tx("withCriteria") : "" })}
           </p>
           {hasCriteria && total > 0 ? (
             <button
@@ -321,7 +322,7 @@ export function AddExercisesToListDialog({
               ) : (
                 <Plus className="size-3.5" />
               )}
-              Añadir los {total} resultados
+              {tx("anadirLos")}{" "}{total}{" "}{tx("resultados")}
             </button>
           ) : null}
         </div>

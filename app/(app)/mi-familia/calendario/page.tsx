@@ -12,6 +12,7 @@ import {
   PlayerSwitcher,
 } from "@/components/family/family-header";
 import { FamilyCalendarClient } from "./family-calendar-client";
+import { getTranslations } from "next-intl/server";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -20,6 +21,7 @@ export default async function FamilyCalendarPage({
 }: {
   searchParams: Promise<{ alumno?: string }>;
 }) {
+  const tx = await getTranslations("ui.s_calendario_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -45,11 +47,11 @@ export default async function FamilyCalendarPage({
         <FamilyHeader
           icon={CalendarDays}
           kicker="Panel de familias"
-          title="Calendario"
+          title={tx("calendario")}
           description={
             player
               ? `Clases de ${player.name}, festivos del club y cambios de agenda.`
-              : "Las clases de tu jugador y los festivos del club."
+              : tx("lasClasesDeTu")
           }
         />
         {!player || !calendar ? (

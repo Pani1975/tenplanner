@@ -79,6 +79,7 @@ import {
   isTextItem,
   isWarmupItem,
 } from "./timeline";
+import { useTranslations } from "next-intl";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "text-blue-400 bg-blue-400/10",
@@ -173,11 +174,12 @@ function DetailsWhen({
   when: boolean;
   children: ReactNode;
 }) {
+  const tx = useTranslations("ui.s_sessionwizard_stepexercises");
   if (!when) return <>{children}</>;
   return (
     <details className="rounded-lg border border-dashed border-foreground/20 bg-card/50 p-3">
       <summary className="cursor-pointer text-sm font-semibold text-foreground">
-        Edición detallada (notas, estaciones, ajustes de cada elemento…)
+        {tx("edicionDetalladaNotasEstaciones")}
       </summary>
       <div className="mt-3">{children}</div>
     </details>
@@ -196,6 +198,7 @@ export function StepExercises({
   canAutoChange,
   autoChangingIdx = null,
 }: StepExercisesProps) {
+  const tx = useTranslations("ui.s_sessionwizard_stepexercises");
   const [libraryExercises, setLibraryExercises] = useState(availableExercises);
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
   const [search, setSearch] = useState("");
@@ -306,10 +309,10 @@ export function StepExercises({
     else minutesByKind.exercise += minutes;
   }
   const timeParts = [
-    { label: "Ejercicios", minutes: minutesByKind.exercise },
-    { label: "Estaciones", minutes: minutesByKind.stations },
-    { label: "Textos/actividades", minutes: minutesByKind.text },
-    { label: "Descansos", minutes: minutesByKind.rest },
+    { label: tx("ejercicios"), minutes: minutesByKind.exercise },
+    { label: tx("estaciones"), minutes: minutesByKind.stations },
+    { label: tx("textosActividades"), minutes: minutesByKind.text },
+    { label: tx("descansos"), minutes: minutesByKind.rest },
   ].filter((p) => p.minutes > 0);
   const availableCategories = Array.from(
     new Set(libraryExercises.map((e) => e.category))
@@ -620,7 +623,7 @@ export function StepExercises({
     if (!ex) {
       return {
         ok: false,
-        message: "Este ejercicio no está disponible para esta sesión.",
+        message: tx("esteEjercicioNoEsta"),
       };
     }
     const target = pickTargetRef.current ?? {
@@ -635,18 +638,18 @@ export function StepExercises({
       pickTargetRef.current = null;
       return {
         ok: true,
-        message: "Añadido a la estación. Ya puedes cerrar esta pestaña.",
+        message: tx("anadidoALaEstacion"),
       };
     }
     if (selectedIds.has(ex.id)) {
-      return { ok: false, message: "Este ejercicio ya está en la sesión." };
+      return { ok: false, message: tx("esteEjercicioYaEsta") };
     }
     if (replacing?.target === "exercise") {
       replaceAt(replacing.idx, exerciseItemFrom(ex, target.phase));
       setPickerPhase(null);
       return {
         ok: true,
-        message: "Ejercicio sustituido. Ya puedes cerrar esta pestaña.",
+        message: tx("ejercicioSustituidoYaPuedes"),
       };
     }
     addExercise(ex, target.phase);
@@ -964,7 +967,7 @@ export function StepExercises({
         }}
         className="text-[10px] text-muted-foreground hover:text-foreground"
       >
-        Cancelar
+        {tx("cancelar")}
       </button>
     </div>
   );
@@ -984,7 +987,7 @@ export function StepExercises({
             )}
           >
             <BookOpen className="size-3.5" />
-            Biblioteca
+            {tx("biblioteca")}
           </button>
           <button
             type="button"
@@ -997,14 +1000,13 @@ export function StepExercises({
             )}
           >
             <CalendarDays className="size-3.5" />
-            Listas
+            {tx("listas")}
           </button>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {sourceTab === "library" && filteredAvailable.length > 0 ? (
             <span className="text-xs text-muted-foreground hidden sm:block">
-              {filteredAvailable.length} disponibles
-            </span>
+              {tx("v1Disponibles", { v1: filteredAvailable.length })}</span>
           ) : null}
           <button
             type="button"
@@ -1012,7 +1014,7 @@ export function StepExercises({
             className="inline-flex items-center gap-1 text-[10px] font-bold text-brand bg-brand/10 hover:bg-brand/20 px-2 py-1 rounded-lg transition-colors"
           >
             <Plus className="size-3" />
-            Nuevo
+            {tx("nuevo")}
           </button>
           <button
             type="button"
@@ -1021,8 +1023,8 @@ export function StepExercises({
               setPickingStation(null);
               setReplacing(null);
             }}
-            aria-label="Cerrar buscador de ejercicios"
-            title="Cerrar"
+            aria-label={tx("cerrarBuscadorDeEjercicios")}
+            title={tx("cerrar")}
             className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <X className="size-3.5" />
@@ -1034,8 +1036,7 @@ export function StepExercises({
         <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
           <RefreshCw className="size-3.5 text-brand shrink-0" />
           <span className="min-w-0 truncate text-xs font-semibold text-foreground">
-            Elige el ejercicio que sustituye a «{replacing.name}»
-          </span>
+            {tx("eligeElEjercicioQue", { v1: replacing.name })}</span>
           <button
             type="button"
             onClick={() => {
@@ -1044,7 +1045,7 @@ export function StepExercises({
             }}
             className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         </div>
       )}
@@ -1053,7 +1054,7 @@ export function StepExercises({
         <div className="flex items-center gap-2 border-b border-brand/30 bg-brand/10 px-3 py-2">
           <LayoutGrid className="size-3.5 text-brand shrink-0" />
           <span className="text-xs font-semibold text-foreground">
-            Elige un ejercicio para la estación {pickingStation.stationIdx + 1}
+            {tx("eligeUnEjercicioPara", { v1: pickingStation.stationIdx + 1 })}
           </span>
           <button
             type="button"
@@ -1063,7 +1064,7 @@ export function StepExercises({
             }}
             className="ml-auto text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         </div>
       )}
@@ -1084,7 +1085,7 @@ export function StepExercises({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar ejercicios…"
+                placeholder={tx("buscarEjercicios")}
                 className="w-full h-8 pl-8 pr-3 text-xs bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -1120,10 +1121,10 @@ export function StepExercises({
                   {search ||
                   libCategoryFilter !== "all" ||
                   hasPickerFilters(pickerFilters)
-                    ? "Sin resultados para ese filtro"
+                    ? tx("sinResultadosParaEse")
                     : libraryExercises.length === 0
-                      ? "No hay ejercicios en la biblioteca"
-                      : "Todos los ejercicios están en la sesión"}
+                      ? tx("noHayEjerciciosEn")
+                      : tx("todosLosEjerciciosEstan")}
                 </p>
                 <div className="mt-4 flex flex-col items-center gap-2">
                   <button
@@ -1132,12 +1133,12 @@ export function StepExercises({
                     className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
                   >
                     <Plus className="size-3.5" />
-                    Crear ejercicio rápido
+                    {tx("crearEjercicioRapido")}
                   </button>
                   {refreshingLibrary ? (
                     <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
                       <Loader2 className="size-3 animate-spin" />
-                      Actualizando biblioteca…
+                      {tx("actualizandoBiblioteca")}
                     </span>
                   ) : null}
                 </div>
@@ -1165,7 +1166,7 @@ export function StepExercises({
                         rel="noopener noreferrer"
                         onClick={rememberPickTarget}
                         draggable={false}
-                        title="Ver la ficha del ejercicio"
+                        title={tx("verLaFichaDel")}
                         className="min-w-0 break-words hover:text-brand hover:underline"
                       >
                         {ex.name}
@@ -1185,7 +1186,7 @@ export function StepExercises({
                   </div>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                     <Clock className="size-3" />
-                    {ex.durationMinutes} min
+                    {ex.durationMinutes}{" "}{tx("min")}
                   </span>
                   <NextLink
                     href={pickExerciseHref(ex.id, pickerId, "sesion")}
@@ -1195,7 +1196,7 @@ export function StepExercises({
                       e.stopPropagation();
                       rememberPickTarget();
                     }}
-                    title="Ver ficha completa del ejercicio"
+                    title={tx("verFichaCompletaDel")}
                     className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <ExternalLink className="size-3.5" />
@@ -1221,7 +1222,7 @@ export function StepExercises({
                     }}
                     title={
                       pickingStation
-                        ? "Añadir a esta estación"
+                        ? tx("anadirAEstaEstacion")
                         : `Añadir a ${PHASE_LABELS[activeAddPhase]}`
                     }
                     className={cn(
@@ -1239,9 +1240,7 @@ export function StepExercises({
           </div>
           {filteredAvailable.length > VISIBLE_RESULTS && (
             <p className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
-              Mostrando {VISIBLE_RESULTS} de {filteredAvailable.length}. Escribe
-              en el buscador para encontrar el resto.
-            </p>
+              {tx("mostrandoV1DeV2", { v1: VISIBLE_RESULTS, v2: filteredAvailable.length })}</p>
           )}
         </>
       )}
@@ -1260,13 +1259,13 @@ export function StepExercises({
           <DialogHeader>
             <DialogTitle>
               {convertingItemKey
-                ? "Convertir en ficha de ejercicio"
-                : "Crear ejercicio rápido"}
+                ? tx("convertirEnFichaDe")
+                : tx("crearEjercicioRapido")}
             </DialogTitle>
             <DialogDescription>
               {convertingItemKey
-                ? "Completa la ficha a partir de tu texto libre. Al guardar, sustituye al texto en esta sesión y queda disponible en tu biblioteca."
-                : "Crea un ejercicio mínimo sin salir de la sesión y añádelo automáticamente a esta sesión."}
+                ? tx("completaLaFichaA")
+                : tx("creaUnEjercicioMinimo")}
             </DialogDescription>
           </DialogHeader>
           <ExerciseForm
@@ -1314,7 +1313,7 @@ export function StepExercises({
               ))}
             </span>
             <span className="text-sm font-bold text-foreground">
-              Total: {formatMinutes(totalDuration)}
+              {tx("totalV1", { v1: formatMinutes(totalDuration) })}
             </span>
           </div>
         )}
@@ -1361,7 +1360,7 @@ export function StepExercises({
                     {blockEntries.length === 0 ? (
                       dragSrcIdx !== null ? (
                         <div className="w-full rounded-xl border-2 border-dashed border-brand bg-brand/5 py-4 text-center text-xs text-muted-foreground">
-                          Suelta aquí para moverlo a este bloque
+                          {tx("sueltaAquiParaMoverlo")}
                         </div>
                       ) : null
                     ) : (
@@ -1438,7 +1437,7 @@ export function StepExercises({
                                             })
                                           }
                                           maxLength={120}
-                                          placeholder="Título (opcional)"
+                                          placeholder={tx("tituloOpcional")}
                                           className="w-full cursor-text rounded-lg border border-transparent bg-transparent px-0.5 text-sm font-semibold leading-snug text-foreground placeholder:font-normal placeholder:text-muted-foreground/60 focus:border-brand/50 focus:bg-background focus:px-2 focus:py-1 focus:outline-none focus:ring-1 focus:ring-brand/40"
                                         />
                                         <textarea
@@ -1456,19 +1455,19 @@ export function StepExercises({
                                           autoFocus={!ex.freeText && !ex.title}
                                           rows={2}
                                           maxLength={2000}
-                                          placeholder="Escribe aquí: explicación, juego, consigna, descanso…"
+                                          placeholder={tx("escribeAquiExplicacionJuego")}
                                           className="field-sizing-content min-h-[2.75rem] w-full cursor-text resize-y rounded-lg border border-border/60 bg-background px-2.5 py-1.5 text-sm leading-snug text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40"
                                         />
                                       </div>
                                     ) : isWarmupItem(ex) ? (
                                       <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
                                         <Coffee className="size-3.5 text-sky-400 shrink-0" />
-                                        Descanso
+                                        {tx("descanso")}
                                       </p>
                                     ) : isStationsItem(ex) ? (
                                       <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate leading-snug">
                                         <LayoutGrid className="size-3.5 text-emerald-500 shrink-0" />
-                                        Estaciones ({ex.stations?.length ?? 0})
+                                        {tx("estaciones2")}{ex.stations?.length ?? 0})
                                       </p>
                                     ) : (
                                       <p className="text-sm font-medium text-foreground line-clamp-2 break-words leading-snug">
@@ -1533,7 +1532,7 @@ export function StepExercises({
                                           className="w-14 h-7 text-xs text-center bg-background border border-brand/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand/40"
                                         />
                                         <span className="text-xs text-muted-foreground">
-                                          min
+                                          {tx("min")}
                                         </span>
                                       </div>
                                     ) : isTextItem(ex) &&
@@ -1543,11 +1542,11 @@ export function StepExercises({
                                         onClick={() =>
                                           startEditDuration(flatIdx)
                                         }
-                                        title="Poner duración (se convierte en actividad)"
+                                        title={tx("ponerDuracionSeConvierte")}
                                         className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 px-1.5 py-1 rounded-lg hover:bg-muted"
                                       >
                                         <Clock className="size-3" />
-                                        <span>Sin duración</span>
+                                        <span>{tx("sinDuracion")}</span>
                                       </button>
                                     ) : (
                                       <div className="flex items-center gap-0.5 shrink-0">
@@ -1558,17 +1557,16 @@ export function StepExercises({
                                           }
                                           title={
                                             isStationsItem(ex)
-                                              ? "Duración total de las estaciones"
+                                              ? tx("duracionTotalDeLas")
                                               : "Editar duración"
                                           }
                                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-1 rounded-lg hover:bg-muted group/dur"
                                         >
                                           <Clock className="size-3" />
                                           <span>
-                                            {effectiveDuration} min
-                                            {isStationsItem(ex)
-                                              ? " en total"
-                                              : ""}
+                                            {tx("v1MinV2", { v1: effectiveDuration, v2: isStationsItem(ex)
+                                              ? tx("inTotalSuffix")
+                                              : "" })}
                                           </span>
                                           <ChevronDown className="size-2.5 opacity-0 group-hover/dur:opacity-100 transition-opacity" />
                                         </button>
@@ -1580,7 +1578,7 @@ export function StepExercises({
                                                 overrideDuration: null,
                                               })
                                             }
-                                            title="Quitar duración (queda como anotación)"
+                                            title={tx("quitarDuracionQuedaComo")}
                                             className="flex size-5 items-center justify-center rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
                                           >
                                             <X className="size-3" />
@@ -1598,8 +1596,8 @@ export function StepExercises({
                                           rel="noopener noreferrer"
                                           draggable={false}
                                           onClick={(e) => e.stopPropagation()}
-                                          title="Ver la ficha completa (se abre en una ventana nueva)"
-                                          aria-label="Ver la ficha completa del ejercicio en una ventana nueva"
+                                          title={tx("verLaFichaCompleta")}
+                                          aria-label={tx("verLaFichaCompleta2")}
                                           className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                         >
                                           <ExternalLink className="size-3.5" />
@@ -1611,7 +1609,7 @@ export function StepExercises({
                                         type="button"
                                         onClick={() => onAutoChange(flatIdx)}
                                         disabled={autoChangingIdx !== null}
-                                        title="Cambiar por otro ejercicio adecuado (Ten Planner)"
+                                        title={tx("cambiarPorOtroEjercicio")}
                                         className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
                                       >
                                         {autoChangingIdx === flatIdx ? (
@@ -1620,7 +1618,7 @@ export function StepExercises({
                                           <Shuffle className="size-3" />
                                         )}
                                         <span className="hidden sm:inline">
-                                          Cambiar
+                                          {tx("cambiar")}
                                         </span>
                                       </button>
                                     )}
@@ -1635,7 +1633,7 @@ export function StepExercises({
                                         )
                                       }
                                       aria-expanded={replaceMenuIdx === flatIdx}
-                                      title="Sustituir por otro ejercicio, texto, descanso o estaciones"
+                                      title={tx("sustituirPorOtroEjercicio")}
                                       className={cn(
                                         "inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold transition-colors",
                                         replaceMenuIdx === flatIdx ||
@@ -1646,7 +1644,7 @@ export function StepExercises({
                                     >
                                       <RefreshCw className="size-3" />
                                       <span className="hidden sm:inline">
-                                        Sustituir
+                                        {tx("sustituir")}
                                       </span>
                                     </button>
 
@@ -1657,7 +1655,7 @@ export function StepExercises({
                                           isExpanded ? null : flatIdx
                                         )
                                       }
-                                      title="Ajustes"
+                                      title={tx("ajustes")}
                                       className={cn(
                                         "size-6 rounded-md flex items-center justify-center transition-colors shrink-0",
                                         isExpanded || ex.notes || ex.aspecto
@@ -1698,7 +1696,7 @@ export function StepExercises({
                                 {replaceMenuIdx === flatIdx && (
                                   <div className="flex flex-wrap items-center gap-1.5 border-t border-border/40 px-3 py-2">
                                     <span className="text-[11px] font-semibold text-muted-foreground">
-                                      Sustituir por:
+                                      {tx("sustituirPor")}
                                     </span>
                                     {(
                                       [
@@ -1725,7 +1723,7 @@ export function StepExercises({
                                       onClick={() => setReplaceMenuIdx(null)}
                                       className="ml-auto text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                                     >
-                                      Cancelar
+                                      {tx("cancelar")}
                                     </button>
                                   </div>
                                 )}
@@ -1740,7 +1738,7 @@ export function StepExercises({
                                           freeText: e.target.value,
                                         })
                                       }
-                                      placeholder="Explica el ejercicio de estaciones (opcional)…"
+                                      placeholder={tx("explicaElEjercicioDe")}
                                       className="field-sizing-content w-full resize-none rounded-lg border border-border/60 bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/40"
                                     />
                                     <ul className="space-y-2">
@@ -1818,7 +1816,7 @@ export function StepExercises({
                                                         : "border-border text-muted-foreground hover:border-brand/40"
                                                     )}
                                                   >
-                                                    Ejercicio
+                                                    {tx("ejercicio")}
                                                   </button>
                                                   <button
                                                     type="button"
@@ -1840,7 +1838,7 @@ export function StepExercises({
                                                         : "border-border text-muted-foreground hover:border-brand/40"
                                                     )}
                                                   >
-                                                    Texto libre
+                                                    {tx("textoLibre")}
                                                   </button>
                                                 </div>
                                                 {station.kind === "exercise" ? (
@@ -1869,11 +1867,10 @@ export function StepExercises({
                                                         flatIdx &&
                                                       pickingStation?.stationIdx ===
                                                         stationIdx
-                                                        ? "Elige en la Biblioteca →"
+                                                        ? tx("eligeEnLaBiblioteca")
                                                         : station.name || (
                                                             <span className="italic text-muted-foreground">
-                                                              Elige un
-                                                              ejercicio…
+                                                              {tx("eligeUnEjercicio")}
                                                             </span>
                                                           )}
                                                     </button>
@@ -1885,7 +1882,7 @@ export function StepExercises({
                                                         onClick={(e) =>
                                                           e.stopPropagation()
                                                         }
-                                                        title="Ver ficha completa del ejercicio"
+                                                        title={tx("verFichaCompletaDel")}
                                                         className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                       >
                                                         <ExternalLink className="size-3" />
@@ -1906,7 +1903,7 @@ export function StepExercises({
                                                         }
                                                       )
                                                     }
-                                                    placeholder="Describe la estación…"
+                                                    placeholder={tx("describeLaEstacion")}
                                                     className="w-full resize-none rounded-lg border-0 bg-transparent text-xs text-foreground focus:outline-none placeholder:text-muted-foreground"
                                                   />
                                                 )}
@@ -1948,7 +1945,7 @@ export function StepExercises({
                                       className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand hover:text-brand/80 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-brand"
                                     >
                                       <Plus className="size-3" />
-                                      Añadir estación
+                                      {tx("anadirEstacion")}
                                       {(ex.stations?.length ?? 0) >=
                                         STATION_COUNT_MAX &&
                                         ` (máximo ${STATION_COUNT_MAX})`}
@@ -1960,7 +1957,7 @@ export function StepExercises({
                                   <div className="px-3 pb-3 border-t border-border/40 pt-3 space-y-3">
                                     <div className="space-y-1.5">
                                       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Bloque
+                                        {tx("bloque")}
                                       </label>
                                       <div className="flex flex-wrap gap-1.5">
                                         {PHASE_ORDER.map((p) => (
@@ -1987,7 +1984,7 @@ export function StepExercises({
                                       <div className="space-y-1.5 rounded-lg border border-border/60 bg-muted/20 p-2.5">
                                         <div className="flex items-center justify-between gap-2">
                                           <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                            ¿Es un ejercicio?
+                                            {tx("esUnEjercicio")}
                                           </label>
                                           <button
                                             type="button"
@@ -2001,12 +1998,11 @@ export function StepExercises({
                                             className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand transition-colors hover:bg-brand/20 disabled:cursor-not-allowed disabled:opacity-40"
                                           >
                                             <Plus className="size-3" />
-                                            Crear ficha de ejercicio
+                                            {tx("crearFichaDeEjercicio")}
                                           </button>
                                         </div>
                                         <p className="text-[10px] text-muted-foreground">
-                                          Si no, dinos al menos de qué tipo es
-                                          para que cuente en las estadísticas:
+                                          {tx("siNoDinosAl")}
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
                                           {ASPECTO_JUEGO_VALUES.map((a) => (
@@ -2043,7 +2039,7 @@ export function StepExercises({
                                       placeholder={
                                         isTextItem(ex)
                                           ? "Notas…"
-                                          : "Notas para este ejercicio…"
+                                          : tx("notasParaEsteEjercicio")
                                       }
                                       rows={2}
                                       className="w-full text-xs bg-muted/40 border border-border/50 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-none"
@@ -2084,7 +2080,7 @@ export function StepExercises({
                           )}
                         >
                           <Dumbbell className="size-3" />
-                          Añadir ejercicio
+                          {tx("anadirEjercicio")}
                         </button>
                         <button
                           type="button"
@@ -2092,7 +2088,7 @@ export function StepExercises({
                           className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:border-brand/50 hover:bg-brand/10"
                         >
                           <Type className="size-3" />
-                          Texto libre
+                          {tx("textoLibre")}
                         </button>
                         <button
                           type="button"
@@ -2100,7 +2096,7 @@ export function StepExercises({
                           className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:border-brand/50 hover:bg-brand/10"
                         >
                           <Coffee className="size-3" />
-                          Descanso
+                          {tx("descanso")}
                         </button>
                         <button
                           type="button"
@@ -2111,7 +2107,7 @@ export function StepExercises({
                           className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:border-brand/50 hover:bg-brand/10"
                         >
                           <LayoutGrid className="size-3" />
-                          Estaciones
+                          {tx("estaciones")}
                         </button>
                       </div>
                     )}

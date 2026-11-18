@@ -46,6 +46,8 @@ import { getSpaceLabel, isUserAdmin } from "@/lib/classes/lists";
 import { ClassesGrid } from "./classes-grid";
 import { LevelBallDot } from "@/components/app/level-balls";
 import { AutoSubmitRadio } from "@/components/app/auto-submit-radio";
+import { getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 const TABS = ["all", "library", "mine", "favorites", "drafts"] as const;
 
@@ -124,6 +126,8 @@ function paramList(value: string | string[] | undefined) {
 }
 
 export default async function ClassesPage({ searchParams }: PageProps) {
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
+  const tx = await getTranslations("ui.s_classes_page");
   const params = await searchParams;
   const supabase = await createClient();
   const {
@@ -170,7 +174,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
 
   // Cabecera con el dueño: "Clases Ten Planner" en la Biblioteca,
   // "Clases CT Tenerife" / "Clases de David" en el espacio propio.
-  const heading = libraryHeading("Clases", workMode, activeTab === "library");
+  const heading = libraryHeading("Clases", workMode, activeTab === "library", await getLocale());
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const nivel = typeof params.nivel === "string" ? params.nivel : "";
@@ -418,8 +422,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 {heading.title}
               </h1>
               <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-white/68">
-                Plantillas reutilizables con bloques y ejercicios para preparar
-                sesiones completas sin perder criterio en pista o cancha.
+                {tx("plantillasReutilizablesConBloques")}
               </p>
             </div>
             <div className="flex flex-col items-start gap-3 lg:items-end lg:justify-between">
@@ -430,7 +433,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       {totalRows}
                     </p>
                     <p className="mt-1 text-[9px] uppercase tracking-[0.18em] text-white/45">
-                      visibles
+                      {tx("visibles")}
                     </p>
                   </div>
                 )}
@@ -442,7 +445,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       kind="classes"
                       allowFile={!!activeClubId}
                       spaceLabel={
-                        activeClubId ? "el espacio de tu club" : "tu espacio"
+                        activeClubId ? tx("elEspacioDeTu") : "tu espacio"
                       }
                     />
                   )}
@@ -451,7 +454,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D6FF38] px-5 text-[13px] font-black text-[#050505] transition hover:bg-white"
                   >
                     <Plus className="size-4" />
-                    Nueva clase
+                    {tx("nuevaClase")}
                   </Link>
                 </div>
               )}
@@ -505,23 +508,23 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <p className="text-base font-semibold text-foreground/40">
-                  Sin borradores
+                  {tx("sinBorradores")}
                 </p>
                 <p className="text-sm text-foreground/30 mt-1">
-                  Las clases que guardes como borrador aparecerán aquí.
+                  {tx("lasClasesQueGuardes")}
                 </p>
               </div>
               <Link
                 href="/classes/new"
                 className="mt-1 inline-flex items-center gap-2 rounded-full bg-[#050505] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505]"
               >
-                Crear clase
+                {tx("crearClase")}
               </Link>
             </div>
           ) : (
             <ul className="space-y-2">
               {draftRows.map((draft, i) => {
-                const name = draft.name.trim() || "Clase sin título";
+                const name = draft.name.trim() || tx("claseSinTitulo");
                 return (
                   <li
                     key={draft.id}
@@ -535,7 +538,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                         {name}
                       </p>
                       <p className="text-[11px] text-foreground/45 mt-0.5 tabular-nums">
-                        {new Intl.DateTimeFormat("es-ES", {
+                        {new Intl.DateTimeFormat(intlLocale, {
                           dateStyle: "medium",
                           timeStyle: "short",
                         }).format(new Date(draft.updatedAt))}
@@ -545,7 +548,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       href={`/classes/${draft.id}/edit`}
                       className="inline-flex items-center gap-1 rounded-full bg-[#D6FF38] px-3 py-1.5 text-[12px] font-semibold text-[#050505] transition hover:bg-[#050505] hover:text-white dark:hover:bg-white"
                     >
-                      Continuar
+                      {tx("continuar")}
                     </Link>
                   </li>
                 );
@@ -585,7 +588,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                   htmlFor="q"
                   className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5"
                 >
-                  Buscar
+                  {tx("buscar")}
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
@@ -593,14 +596,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     id="q"
                     name="q"
                     defaultValue={q}
-                    placeholder="Nombre, contenido, objetivos…"
+                    placeholder={tx("nombreContenidoObjetivos")}
                     className="h-11 w-full rounded-full border border-[#050505]/12 bg-[#F4F4F1] pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#D6FF38] focus:outline-none focus:ring-2 focus:ring-[#D6FF38]/40 dark:border-white/10 dark:bg-[#050505]"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Nivel
+                  {tx("nivel")}
                 </label>
                 {/* Desplegable propio (no <select>) para poder mostrar la
                     pelota de cada nivel: roja, naranja, verde y amarilla. */}
@@ -641,7 +644,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                   htmlFor="duracion"
                   className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5"
                 >
-                  Duración
+                  {tx("duracion")}
                 </label>
                 <select
                   id="duracion"
@@ -658,9 +661,9 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Aspecto{" "}
+                  {tx("aspecto")}{" "}
                   <span className="normal-case tracking-normal text-muted-foreground/70">
-                    (varios)
+                    {tx("varios")}
                   </span>
                 </label>
                 <details className="relative">
@@ -695,16 +698,16 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       type="submit"
                       className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
                     >
-                      Aplicar
+                      {tx("aplicar")}
                     </button>
                   </div>
                 </details>
               </div>
               <div>
                 <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Golpe{" "}
+                  {tx("golpe")}{" "}
                   <span className="normal-case tracking-normal text-muted-foreground/70">
-                    (varios)
+                    {tx("varios")}
                   </span>
                 </label>
                 <details className="relative">
@@ -737,16 +740,16 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       type="submit"
                       className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
                     >
-                      Aplicar
+                      {tx("aplicar")}
                     </button>
                   </div>
                 </details>
               </div>
               <div>
                 <label className="block text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Autoría{" "}
+                  {tx("autoria")}{" "}
                   <span className="normal-case tracking-normal text-muted-foreground/70">
-                    (varios)
+                    {tx("varios")}
                   </span>
                 </label>
                 <details className="relative">
@@ -779,7 +782,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       type="submit"
                       className="mt-1 h-10 w-full rounded-full bg-[#050505] text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
                     >
-                      Aplicar
+                      {tx("aplicar")}
                     </button>
                   </div>
                 </details>
@@ -788,14 +791,14 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                 type="submit"
                 className="h-11 rounded-full bg-[#050505] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505] dark:hover:bg-white"
               >
-                Filtrar
+                {tx("filtrar")}
               </button>
             </form>
 
             {/* Orden */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="shrink-0 px-1 font-sans text-[10px] uppercase tracking-[0.2em] text-foreground/40">
-                Ordenar por:
+                {tx("ordenarPor")}
               </span>
               {CLASS_SORTS.map((s) => {
                 const isActive = activeSort === s;
@@ -818,7 +821,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             {user && rows.length > 0 && activeTab !== "drafts" ? (
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-foreground/40">
-                  {totalRows} clase{totalRows !== 1 ? "s" : ""}
+                  {tx("v1ClaseV2", { v1: totalRows, v2: totalRows !== 1 ? "s" : "" })}
                 </p>
                 <SaveSearchToListButton
                   kind="class"
@@ -832,10 +835,10 @@ export default async function ClassesPage({ searchParams }: PageProps) {
             {rows.length === 0 ? (
               <div className="rounded-lg border border-dashed border-[#050505]/18 bg-white/60 px-6 py-16 text-center dark:border-white/15 dark:bg-white/[0.04]">
                 <p className="text-[15px] font-medium text-foreground mb-2">
-                  No hay clases que coincidan
+                  {tx("noHayClasesQue")}
                 </p>
                 <p className="text-[13px] text-foreground/55 max-w-md mx-auto">
-                  Prueba a quitar algún filtro o crea una clase nueva.
+                  {tx("pruebaAQuitarAlgun")}
                 </p>
                 {user && (
                   <Link
@@ -843,7 +846,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                     className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#050505] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#D6FF38] hover:text-[#050505] dark:bg-[#D6FF38] dark:text-[#050505]"
                   >
                     <Plus className="size-3.5" />
-                    Crear la primera
+                    {tx("crearLaPrimera")}
                   </Link>
                 )}
               </div>
@@ -860,13 +863,11 @@ export default async function ClassesPage({ searchParams }: PageProps) {
 
             {totalPages > 1 && (
               <nav
-                aria-label="Paginación"
+                aria-label={tx("paginacion")}
                 className="flex items-center justify-between gap-3 rounded-lg border border-[#050505]/10 bg-white/70 px-4 py-3 text-[13px] shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
               >
                 <span className="tabular-nums text-foreground/60">
-                  {(currentPage - 1) * PAGE_SIZE + 1}–
-                  {Math.min(currentPage * PAGE_SIZE, totalRows)} de {totalRows}{" "}
-                  · Página {currentPage} de {totalPages}
+                  {tx("v1V2DeV3", { v1: (currentPage - 1) * PAGE_SIZE + 1, v2: Math.min(currentPage * PAGE_SIZE, totalRows), v3: totalRows, v4: currentPage, v5: totalPages })}
                 </span>
                 <span className="flex items-center gap-2">
                   {currentPage > 1 ? (
@@ -874,7 +875,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       href={buildPageHref(currentPage - 1)}
                       className="inline-flex items-center gap-1.5 rounded-full border border-[#050505]/12 px-3.5 py-1.5 font-semibold transition hover:border-[#D6FF38] dark:border-white/12"
                     >
-                      <ArrowLeft className="size-3.5" /> Anterior
+                      <ArrowLeft className="size-3.5" />{" "}{tx("anterior")}
                     </Link>
                   ) : null}
                   {currentPage < totalPages ? (
@@ -882,7 +883,7 @@ export default async function ClassesPage({ searchParams }: PageProps) {
                       href={buildPageHref(currentPage + 1)}
                       className="inline-flex items-center gap-1.5 rounded-full bg-[#D6FF38] px-3.5 py-1.5 font-semibold text-[#050505] transition hover:bg-[#c8f52e]"
                     >
-                      Siguiente <ArrowRight className="size-3.5" />
+                      {tx("siguiente")}{" "}<ArrowRight className="size-3.5" />
                     </Link>
                   ) : null}
                 </span>

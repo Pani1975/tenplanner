@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /**
  * Botón del administrador para publicar o retirar de la biblioteca un
@@ -20,6 +21,7 @@ export function ExercisePublishToggle({
   className?: string;
   compact?: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_exercisepublishtoggle");
   const router = useRouter();
   const [published, setPublished] = useState(initialPublished);
   const [saving, setSaving] = useState(false);
@@ -39,7 +41,7 @@ export function ExercisePublishToggle({
       setPublished(next);
       router.refresh();
     } catch {
-      setError("No se pudo guardar");
+      setError(tx("noSePudoGuardar"));
     } finally {
       setSaving(false);
     }
@@ -78,7 +80,7 @@ export function ExercisePublishToggle({
         ) : (
           <Eye className="size-3.5" />
         )}
-        {published ? "Retirar de la biblioteca" : "Publicar"}
+        {published ? tx("retirarDeLaBiblioteca") : "Publicar"}
       </button>
       {error && <span className="text-xs text-destructive">{error}</span>}
     </div>

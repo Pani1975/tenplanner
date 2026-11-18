@@ -19,6 +19,7 @@ import {
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 import { cn } from "@/lib/utils";
 import { ExerciseDiagramView } from "@/components/app/exercise-diagram";
+import { useTranslations } from "next-intl";
 
 const STATIC_KINDS = new Set(["player", "ball", "move", "shot"]);
 const R = 5.2;
@@ -156,6 +157,7 @@ export function DiagramFrame({
   /** Pista azul con líneas blancas (para fondos oscuros). */
   dark?: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_exercisediagramanimated");
   const P = projector(diagram.court).point;
   const sample = sampleTimeline(timeline, time);
   const trail = time > 0 ? ballTrail(timeline, time) : [];
@@ -172,7 +174,7 @@ export function DiagramFrame({
           : `0 0 ${scene.width} ${scene.height}`
       }
       role="img"
-      aria-label={diagram.caption ?? "Animación del ejercicio"}
+      aria-label={diagram.caption ?? tx("animacionDelEjercicio")}
       style={{ width: "100%", maxWidth, height: "auto", display: "block" }}
     >
       <g
@@ -360,6 +362,7 @@ function AnimatedPlayer({
   className?: string;
   maxWidth?: number;
 }) {
+  const tx = useTranslations("ui.s_app_exercisediagramanimated");
   const timeline = useMemo(() => buildTimeline(diagram), [diagram]);
   const scene = useMemo(() => {
     // Los conos que derriba la pelota los dibuja el fotograma.
@@ -442,7 +445,7 @@ function AnimatedPlayer({
             setTime(0);
             setPlaying(true);
           }}
-          aria-label="Repetir desde el principio"
+          aria-label={tx("repetirDesdeElPrincipio")}
           className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground"
         >
           <RotateCcw className="size-3.5" />
@@ -456,7 +459,7 @@ function AnimatedPlayer({
             setPlaying(false);
             setTime(Number(e.target.value) / 100);
           }}
-          aria-label="Avance de la animación"
+          aria-label={tx("avanceDeLaAnimacion")}
           className="h-1 min-w-0 flex-1 accent-[var(--primary)]"
         />
         <button
@@ -483,7 +486,7 @@ function AnimatedPlayer({
             {text}
           </span>
         )}
-        <span className="block opacity-70">Animación orientativa</span>
+        <span className="block opacity-70">{tx("animacionOrientativa")}</span>
       </figcaption>
     </figure>
   );

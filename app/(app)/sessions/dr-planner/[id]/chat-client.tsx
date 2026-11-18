@@ -39,6 +39,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
+import { useLocale } from "next-intl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -420,6 +423,7 @@ function ReasoningBubble({
   text: string;
   streaming: boolean;
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   const [open, setOpen] = useState(streaming);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- collapse when stream ends
@@ -446,10 +450,10 @@ function ReasoningBubble({
                 <span className="absolute inline-flex size-full bg-brand/60 opacity-75 animate-ping" />
                 <span className="relative inline-flex size-1.5 bg-brand" />
               </span>
-              <span className="text-brand">Pensando…</span>
+              <span className="text-brand">{tx("pensando")}</span>
             </>
           ) : (
-            <span>Razonamiento</span>
+            <span>{tx("razonamiento")}</span>
           )}
           <ChevronDown
             className={cn("size-3 transition-transform", open && "rotate-180")}
@@ -519,6 +523,8 @@ function ExerciseCard({
   onToggle: () => void;
   onModify: (ex: ExerciseItem) => void;
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_id_chatclient");
   const cat = CAT[exercise.category] ?? CAT.technique;
   const diff = DIFF[exercise.difficulty] ?? DIFF.intermediate;
   return (
@@ -540,11 +546,11 @@ function ExerciseCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55">
-            {cat.code} · {cat.label}
+            {cat.code} · {term(cat.label)}
           </span>
           {exercise.isAiGenerated && (
             <span className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand">
-              ◆ IA
+              {tx("ia")}
             </span>
           )}
         </div>
@@ -587,7 +593,7 @@ function ExerciseCard({
                 />
               ))}
             </span>
-            {diff.label}
+            {term(diff.label)}
           </span>
         </div>
         <button
@@ -597,7 +603,7 @@ function ExerciseCard({
           }}
           className="flex items-center gap-1 text-[10px] tracking-[0.18em] uppercase text-foreground/50 hover:text-brand transition-colors"
         >
-          Modificar →
+          {tx("modificar")}
         </button>
       </div>
     </div>
@@ -615,16 +621,17 @@ function ExerciseGrid({
   onToggle: (id: string) => void;
   onModify: (ex: ExerciseItem) => void;
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   if (!ejercicios.length) return null;
   const sel = ejercicios.filter((e) => selectedExercises.has(e.id)).length;
   return (
     <div className="ml-2 sm:ml-10 mt-2 space-y-2">
       <p className="text-xs text-muted-foreground">
         <span className="font-medium text-foreground">{ejercicios.length}</span>{" "}
-        ejercicio{ejercicios.length !== 1 ? "s" : ""}
+        {tx("ejercicio")}{ejercicios.length !== 1 ? "s" : ""}
         {sel > 0 && (
           <span className="text-brand ml-1.5">
-            · {sel} seleccionado{sel !== 1 ? "s" : ""}
+            {tx("v1SeleccionadoV2", { v1: sel, v2: sel !== 1 ? "s" : "" })}
           </span>
         )}
       </p>
@@ -648,11 +655,12 @@ function ExerciseToolCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground animate-fade-in">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Guardando ejercicio…
+        {tx("guardandoEjercicio")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -667,10 +675,10 @@ function ExerciseToolCard({
         {r.name}
       </span>
       <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/50">
-        guardado
+        {tx("guardado")}
       </span>
       <span className="ml-auto font-sans text-[9px] uppercase tracking-[0.22em] text-brand shrink-0 flex items-center gap-1">
-        <Sparkles className="size-2.5" /> IA
+        <Sparkles className="size-2.5" />{" "}{tx("ia2")}
       </span>
     </div>
   ) : (
@@ -689,12 +697,13 @@ function SessionCreatedCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   const router = useRouter();
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground animate-fade-in">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Creando sesión…
+        {tx("creandoSesion")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -722,7 +731,7 @@ function SessionCreatedCard({
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/50">
-          Sesión creada
+          {tx("sesionCreada")}
         </p>
         <p className="font-heading italic text-[14px] text-foreground truncate">
           {r.title}
@@ -737,7 +746,7 @@ function SessionCreatedCard({
         onClick={() => router.push(`/sessions/${r.sessionId}`)}
         className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/70 border border-foreground/20 px-3 py-2 hover:border-brand hover:text-brand transition-colors shrink-0"
       >
-        Ver →
+        {tx("ver")}
       </button>
     </div>
   );
@@ -750,6 +759,7 @@ function QuestionForm({
   preguntas: Pregunta[];
   onSubmit: (a: Record<string, string>) => void;
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(preguntas.map((p) => [p.id, ""]))
   );
@@ -775,7 +785,7 @@ function QuestionForm({
               required
               className="w-full text-[13px] bg-transparent border-0 border-b border-foreground/20 px-0 py-1.5 focus:outline-none focus:border-brand transition-colors"
             >
-              <option value="">Selecciona…</option>
+              <option value="">{tx("selecciona")}</option>
               {p.opciones.map((o) => (
                 <option key={o} value={o}>
                   {o}
@@ -801,7 +811,7 @@ function QuestionForm({
         type="submit"
         className="w-full font-sans text-[11px] uppercase tracking-[0.22em] font-semibold bg-brand text-brand-foreground py-2.5 hover:bg-brand/90 transition-colors"
       >
-        Enviar
+        {tx("enviar")}
       </button>
     </form>
   );
@@ -814,6 +824,7 @@ function StudentPickerCard({
   part: { state: string; output?: unknown };
   onSend: (text: string) => void;
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmed, setConfirmed] = useState(false);
 
@@ -821,7 +832,7 @@ function StudentPickerCard({
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Cargando alumnos…
+        {tx("cargandoAlumnos")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -837,7 +848,7 @@ function StudentPickerCard({
           strokeWidth={1.6}
         />
         <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55">
-          Selección confirmada
+          {tx("seleccionConfirmada")}
         </span>
       </div>
     );
@@ -847,13 +858,13 @@ function StudentPickerCard({
     return (
       <div className="ml-2 sm:ml-10 mt-2 border border-foreground/15 p-4 max-w-sm space-y-3 bg-foreground/[0.02]">
         <p className="text-[12px] text-foreground/65">
-          Aún no tienes alumnos — puedes crear uno.
+          {tx("aunNoTienesAlumnos")}
         </p>
         <Link
           href="/students/new"
           className="inline-flex items-center gap-1.5 font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/70 border border-foreground/20 px-3 py-2 hover:border-brand hover:text-brand transition-colors"
         >
-          <UserPlus className="size-3" strokeWidth={1.6} /> Crear alumno
+          <UserPlus className="size-3" strokeWidth={1.6} />{" "}{tx("crearAlumno")}
         </Link>
       </div>
     );
@@ -880,7 +891,7 @@ function StudentPickerCard({
     const text =
       names.length > 0
         ? `He seleccionado a: ${names.join(", ")}`
-        : "Continuar sin seleccionar alumnos específicos";
+        : tx("continuarSinSeleccionarAlumnos");
     setConfirmed(true);
     onSend(text);
   }
@@ -888,7 +899,7 @@ function StudentPickerCard({
   return (
     <div className="ml-2 sm:ml-10 mt-2 border border-foreground/15 p-4 max-w-sm space-y-3 bg-foreground/[0.02]">
       <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55">
-        {r.pregunta ?? "¿Para quién es esta sesión?"}
+        {r.pregunta ?? tx("paraQuienEsEsta")}
       </p>
       <div className="space-y-1">
         {estudiantes.map((s) => {
@@ -934,7 +945,7 @@ function StudentPickerCard({
         onClick={confirm}
         className="w-full font-sans text-[11px] uppercase tracking-[0.22em] font-semibold bg-brand text-brand-foreground py-2.5 hover:bg-brand/90 transition-colors"
       >
-        Confirmar selección
+        {tx("confirmarSeleccion")}
       </button>
     </div>
   );
@@ -945,11 +956,12 @@ function CrearAlumnoCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Creando alumno…
+        {tx("creandoAlumno")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -976,7 +988,7 @@ function CrearAlumnoCard({
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/50">
-          Alumno creado
+          {tx("alumnoCreado")}
         </p>
         <p className="font-heading italic text-[14px] text-foreground truncate">
           {r.name}
@@ -986,7 +998,7 @@ function CrearAlumnoCard({
         href={`/students/${r.id}`}
         className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/70 border border-foreground/20 px-3 py-2 hover:border-brand hover:text-brand transition-colors shrink-0"
       >
-        Ver →
+        {tx("ver")}
       </Link>
     </div>
   );
@@ -999,6 +1011,7 @@ function ConfigurarSesionMetaCard({
   part: { state: string; output?: unknown };
   onSend: (text: string) => void;
 }) {
+  const tx = useTranslations("ui.s_id_chatclient");
   const [confirmed, setConfirmed] = useState(false);
   const output = part.output as SessionMetaInput | undefined;
 
@@ -1012,7 +1025,7 @@ function ConfigurarSesionMetaCard({
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Preparando configuración…
+        {tx("preparandoConfiguracion")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -1025,7 +1038,7 @@ function ConfigurarSesionMetaCard({
           strokeWidth={1.6}
         />
         <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55">
-          Configuración confirmada
+          {tx("configuracionConfirmada")}
         </span>
       </div>
     );
@@ -1047,25 +1060,25 @@ function ConfigurarSesionMetaCard({
   return (
     <div className="ml-2 sm:ml-10 mt-2 border border-foreground/15 p-4 max-w-sm space-y-4 bg-foreground/[0.02]">
       <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand">
-        Configurar sesión
+        {tx("configurarSesion")}
       </p>
 
       <div className="space-y-1.5">
         <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55">
-          Objetivo
+          {tx("objetivo")}
         </label>
         <textarea
           value={objective}
           onChange={(e) => setObjective(e.target.value)}
           rows={2}
-          placeholder="Ej. Mejorar la volea de derecha bajo presión"
+          placeholder={tx("ejMejorarLaVolea")}
           className="w-full text-[13px] bg-transparent border-0 border-b border-foreground/20 px-0 py-1.5 focus:outline-none focus:border-brand transition-colors resize-none placeholder:text-foreground/30"
         />
       </div>
 
       <div className="space-y-1.5">
         <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55 flex items-center gap-1.5">
-          <Flame className="size-3" strokeWidth={1.6} /> Intensidad
+          <Flame className="size-3" strokeWidth={1.6} />{" "}{tx("intensidad")}
         </label>
         <div className="flex">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -1088,33 +1101,33 @@ function ConfigurarSesionMetaCard({
 
       <div className="space-y-1.5">
         <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55 flex items-center gap-1.5">
-          <MapPin className="size-3" strokeWidth={1.6} /> Ubicación
+          <MapPin className="size-3" strokeWidth={1.6} />{" "}{tx("ubicacion")}
         </label>
         <input
           type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          placeholder="Ej. Pista 3 · Club Pádel Norte"
+          placeholder={tx("ejPista3Club")}
           className="w-full text-[13px] bg-transparent border-0 border-b border-foreground/20 px-0 py-1.5 focus:outline-none focus:border-brand transition-colors placeholder:text-foreground/30"
         />
       </div>
 
       <div className="space-y-1.5">
         <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55 flex items-center gap-1.5">
-          <Tag className="size-3" strokeWidth={1.6} /> Etiquetas
+          <Tag className="size-3" strokeWidth={1.6} />{" "}{tx("etiquetas")}
         </label>
         <input
           type="text"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="técnica, volea, avanzado"
+          placeholder={tx("tecnicaVoleaAvanzado")}
           className="w-full text-[13px] bg-transparent border-0 border-b border-foreground/20 px-0 py-1.5 focus:outline-none focus:border-brand transition-colors placeholder:text-foreground/30"
         />
       </div>
 
       <div className="space-y-1.5">
         <label className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/55">
-          Fecha y hora
+          {tx("fechaYHora")}
         </label>
         <input
           type="datetime-local"
@@ -1128,7 +1141,7 @@ function ConfigurarSesionMetaCard({
         onClick={confirm}
         className="w-full font-sans text-[11px] uppercase tracking-[0.22em] font-semibold bg-brand text-brand-foreground py-2.5 hover:bg-brand/90 transition-colors"
       >
-        Confirmar y crear sesión
+        {tx("confirmarYCrearSesion")}
       </button>
     </div>
   );
@@ -1139,11 +1152,13 @@ function BuscarContextoCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_chatclient");
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Buscando…
+        {tx("buscando")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -1151,7 +1166,7 @@ function BuscarContextoCard({
   if (!r?.resultados?.length)
     return (
       <div className="ml-2 sm:ml-10 mt-2 text-xs text-muted-foreground">
-        Sin resultados.
+        {tx("sinResultados")}
       </div>
     );
 
@@ -1195,7 +1210,7 @@ function BuscarContextoCard({
           const subtitle =
             item.category ??
             (item.scheduledAt
-              ? new Date(item.scheduledAt).toLocaleDateString("es-ES")
+              ? new Date(item.scheduledAt).toLocaleDateString(intlLocale)
               : null) ??
             item.playerLevel ??
             null;
@@ -1229,11 +1244,13 @@ function AnalizarAlumnoCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_chatclient");
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Analizando alumno…
+        {tx("analizandoAlumno")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -1298,7 +1315,7 @@ function AnalizarAlumnoCard({
               </span>
             )}
             {student.yearsExperience != null && (
-              <span>{student.yearsExperience}y exp.</span>
+              <span>{tx("v1YExp", { v1: student.yearsExperience })}</span>
             )}
           </div>
         </div>
@@ -1315,16 +1332,16 @@ function AnalizarAlumnoCard({
           {totalSessions}
         </p>
         <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/50">
-          sesiones
+          {tx("sesiones2")}
           <br />
-          registradas
+          {tx("registradas")}
         </p>
       </div>
 
       {recentSessions.length > 0 && (
         <div className="space-y-1">
           <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/50 mb-1.5">
-            Últimas sesiones
+            {tx("ultimasSesiones")}
           </p>
           {recentSessions.slice(0, 4).map((s) => (
             <div
@@ -1339,7 +1356,7 @@ function AnalizarAlumnoCard({
                   {s.title}
                 </p>
                 <p className="text-[10px] text-foreground/50 tabular-nums">
-                  {new Date(s.scheduledAt).toLocaleDateString("es-ES")} ·{" "}
+                  {new Date(s.scheduledAt).toLocaleDateString(intlLocale)} ·{" "}
                   {s.durationMinutes}′
                 </p>
               </div>
@@ -1365,7 +1382,7 @@ function AnalizarAlumnoCard({
         href={`/students/${student.id}`}
         className="flex items-center justify-center gap-1.5 w-full text-[11px] tracking-[0.18em] uppercase text-foreground/70 border border-foreground/20 px-3 py-2 hover:border-brand hover:text-brand transition-colors"
       >
-        Ver perfil completo →
+        {tx("verPerfilCompleto")}
       </Link>
     </div>
   );
@@ -1376,11 +1393,13 @@ function SesionesSimilaresCard({
 }: {
   part: { state: string; output?: unknown };
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_chatclient");
   if (part.state === "input-streaming" || part.state === "input-available")
     return (
       <div className="ml-2 sm:ml-10 mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin text-brand" />
-        Buscando sesiones…
+        {tx("buscandoSesiones")}
       </div>
     );
   if (part.state !== "output-available") return null;
@@ -1399,7 +1418,7 @@ function SesionesSimilaresCard({
   if (!r.sesiones?.length)
     return (
       <div className="ml-2 sm:ml-10 mt-2 text-xs text-muted-foreground">
-        No se encontraron sesiones.
+        {tx("noSeEncontraronSesiones")}
       </div>
     );
 
@@ -1409,7 +1428,7 @@ function SesionesSimilaresCard({
         <span className="tabular-nums text-brand">
           {String(r.sesiones.length).padStart(2, "0")}
         </span>{" "}
-        · sesión{r.sesiones.length !== 1 ? "es" : ""} encontrada
+        {tx("sesion")}{r.sesiones.length !== 1 ? "es" : ""}{" "}{tx("encontrada")}
         {r.sesiones.length !== 1 ? "s" : ""}
       </p>
       <ul className="border-y border-foreground/10">
@@ -1431,7 +1450,7 @@ function SesionesSimilaresCard({
                 </p>
                 <div className="flex items-center gap-2 font-sans text-[10px] tabular-nums tracking-[0.18em] text-foreground/50 mt-0.5">
                   <span>
-                    {new Date(s.scheduledAt).toLocaleDateString("es-ES")}
+                    {new Date(s.scheduledAt).toLocaleDateString(intlLocale)}
                   </span>
                   <span>·</span>
                   <span>{s.durationMinutes}′</span>
@@ -1485,6 +1504,8 @@ function MentionPopover({
   loading: boolean;
   onSelect: (r: MentionResult) => void;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_id_chatclient");
   const grouped = {
     ejercicio: results.filter((r) => r.type === "ejercicio") as Extract<
       MentionResult,
@@ -1509,20 +1530,19 @@ function MentionPopover({
             className="size-3 animate-spin text-brand"
             strokeWidth={1.6}
           />{" "}
-          Buscando…
+          {tx("buscando")}
         </div>
       )}
       {!loading && !hasResults && (
         <div className="px-3 py-3 font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55">
-          Sin resultados para &apos;@{query}&apos;
-        </div>
+          {tx("sinResultadosParaV1", { v1: query })}</div>
       )}
       {!loading && hasResults && (
         <div className="py-1">
           {grouped.ejercicio.length > 0 && (
             <>
               <p className="px-3 pt-2 pb-1.5 font-sans text-[9px] uppercase tracking-[0.22em] text-brand border-b border-foreground/10">
-                Ejercicios
+                {tx("ejercicios")}
               </p>
               {grouped.ejercicio.map((r) => (
                 <button
@@ -1549,7 +1569,7 @@ function MentionPopover({
           {grouped.sesion.length > 0 && (
             <>
               <p className="px-3 pt-2 pb-1.5 font-sans text-[9px] uppercase tracking-[0.22em] text-brand border-y border-foreground/10">
-                Sesiones
+                {tx("sesiones")}
               </p>
               {grouped.sesion.map((r) => (
                 <button
@@ -1566,7 +1586,7 @@ function MentionPopover({
                       {r.title}
                     </p>
                     <p className="font-sans text-[9px] tabular-nums tracking-[0.18em] text-foreground/50 truncate">
-                      {new Date(r.scheduledAt).toLocaleDateString("es-ES")}
+                      {new Date(r.scheduledAt).toLocaleDateString(intlLocale)}
                     </p>
                   </div>
                 </button>
@@ -1576,7 +1596,7 @@ function MentionPopover({
           {grouped.alumno.length > 0 && (
             <>
               <p className="px-3 pt-2 pb-1.5 font-sans text-[9px] uppercase tracking-[0.22em] text-brand border-y border-foreground/10">
-                Alumnos
+                {tx("alumnos")}
               </p>
               {grouped.alumno.map((r) => (
                 <button
@@ -1636,6 +1656,8 @@ export function DrPlannerChat({
   initialTitle: string;
   initialMessages: Record<string, unknown>[];
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_id_chatclient");
   const router = useRouter();
   const [modelMode, setModelMode] = useState<ModelMode>("auto");
 
@@ -1693,7 +1715,7 @@ export function DrPlannerChat({
   const lastMsgId = messages[messages.length - 1]?.id;
   const chatErrorText = error
     ? error.message.toLowerCase().includes("abort")
-      ? "La conexión con la IA tardó demasiado. Inténtalo de nuevo."
+      ? tx("laConexionConLa")
       : error.message
     : null;
 
@@ -1967,11 +1989,11 @@ export function DrPlannerChat({
           className="whitespace-nowrap rounded-full border border-[#050505]/10 px-3 py-1.5 text-[10px] font-black uppercase text-foreground/55 transition-colors hover:text-brand dark:border-white/10"
         >
           <span className="sm:hidden">←</span>
-          <span className="hidden sm:inline">← Dr. Planner</span>
+          <span className="hidden sm:inline">{tx("drPlanner")}</span>
         </Link>
         <div className="min-w-0 text-center">
           <p className="hidden text-[9px] font-black uppercase text-foreground/45 sm:block">
-            Conversación · IA
+            {tx("conversacionIa")}
           </p>
           <p className="truncate text-[14px] font-black text-foreground sm:mt-0.5 sm:text-[15px]">
             {title}
@@ -1981,20 +2003,20 @@ export function DrPlannerChat({
           {messages.length > 0 && (
             <button
               onClick={() => setMessages([])}
-              title="Limpiar conversación"
+              title={tx("limpiarConversacion")}
               className="flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-black uppercase text-foreground/55 transition-colors hover:bg-muted hover:text-foreground"
             >
               <RotateCcw className="size-3" strokeWidth={1.6} />
-              <span className="hidden sm:inline">Limpiar</span>
+              <span className="hidden sm:inline">{tx("limpiar")}</span>
             </button>
           )}
           <button
             onClick={handleDelete}
             className="flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-black uppercase text-foreground/55 transition-colors hover:bg-destructive/10 hover:text-destructive"
-            title="Eliminar"
+            title={tx("eliminar")}
           >
             <Trash2 className="size-3" strokeWidth={1.6} />
-            <span className="hidden sm:inline">Eliminar</span>
+            <span className="hidden sm:inline">{tx("eliminar")}</span>
           </button>
         </div>
       </header>
@@ -2010,7 +2032,7 @@ export function DrPlannerChat({
               />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black uppercase text-destructive">
-                  Error de conexión IA
+                  {tx("errorDeConexionIa")}
                 </p>
                 <p className="text-[12px] text-destructive/90 mt-1">
                   {chatErrorText}
@@ -2020,20 +2042,19 @@ export function DrPlannerChat({
                 onClick={clearError}
                 className="rounded-full px-2 py-1 text-[10px] font-black uppercase text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
-                Cerrar
+                {tx("cerrar")}
               </button>
             </div>
           </div>
         )}
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-8 max-w-xl mx-auto text-center pb-4">
-            <p className="tp-kicker">Consulta · Dr. Planner</p>
+            <p className="tp-kicker">{tx("consultaDrPlanner")}</p>
             <h2 className="text-4xl font-black leading-tight text-foreground md:text-5xl">
-              ¿Qué sesión necesitas hoy?
+              {tx("queSesionNecesitasHoy")}
             </h2>
             <p className="text-[13px] text-foreground/60 leading-relaxed max-w-md">
-              Describe nivel del grupo, duración disponible y objetivos.
-              Diseñaré el plan usando tu biblioteca de ejercicios.
+              {tx("describeNivelDelGrupo")}
             </p>
             <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
               {[
@@ -2282,8 +2303,7 @@ export function DrPlannerChat({
                 {String(selectedExercises.size).padStart(2, "0")}
               </span>
               <span className="text-[10px] font-black uppercase text-foreground/65">
-                ejercicio{selectedExercises.size !== 1 ? "s" : ""} seleccionado
-                {selectedExercises.size !== 1 ? "s" : ""}
+                {tx("ejercicioV1SeleccionadoV2", { v1: selectedExercises.size !== 1 ? "s" : "", v2: selectedExercises.size !== 1 ? "s" : "" })}
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -2291,7 +2311,7 @@ export function DrPlannerChat({
                 onClick={() => setSelectedExercises(new Set())}
                 className="flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-black uppercase text-foreground/55 transition-colors hover:bg-muted hover:text-foreground"
               >
-                <X className="size-3" strokeWidth={1.6} /> Limpiar
+                <X className="size-3" strokeWidth={1.6} />{" "}{tx("limpiar")}
               </button>
               <button
                 onClick={() =>
@@ -2301,7 +2321,7 @@ export function DrPlannerChat({
                 }
                 className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-[11px] font-black uppercase text-brand-foreground transition-colors hover:bg-brand/90"
               >
-                <Plus className="size-3" strokeWidth={2} /> Crear sesión
+                <Plus className="size-3" strokeWidth={2} />{" "}{tx("crearSesion")}
               </button>
             </div>
           </div>
@@ -2325,7 +2345,7 @@ export function DrPlannerChat({
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Describe la sesión que necesitas… (escribe @ para mencionar)"
+              placeholder={tx("describeLaSesionQue")}
               rows={1}
               className="flex-1 text-[14px] bg-transparent focus:outline-none text-foreground placeholder:text-foreground/40 resize-none max-h-32 py-0.5"
             />
@@ -2341,7 +2361,7 @@ export function DrPlannerChat({
                   }).catch(() => {});
                 }}
                 className="flex size-9 shrink-0 items-center justify-center rounded-full border border-destructive/40 text-destructive transition-colors hover:bg-destructive/10"
-                title="Detener generación"
+                title={tx("detenerGeneracion")}
               >
                 <X className="size-3.5" strokeWidth={1.6} />
               </button>
@@ -2358,14 +2378,14 @@ export function DrPlannerChat({
           </div>
           <div className="flex items-center justify-between mt-2 gap-2">
             <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-foreground/40">
-              Intro enviar · Shift+Intro nueva línea · @ mencionar
+              {tx("introEnviarShiftIntro")}
             </p>
             <div className="flex items-center gap-1">
               {MODEL_MODES.map((m) => (
                 <button
                   key={m.id}
                   type="button"
-                  title={m.desc}
+                  title={term(m.desc)}
                   onClick={() => updateModelMode(m.id)}
                   className={cn(
                     "font-sans text-[9px] uppercase tracking-[0.18em] px-2 py-0.5 border transition-colors",
@@ -2374,7 +2394,7 @@ export function DrPlannerChat({
                       : "border-foreground/15 text-foreground/40 hover:text-foreground/70 hover:border-foreground/30"
                   )}
                 >
-                  {m.label}
+                  {term(m.label)}
                 </button>
               ))}
             </div>

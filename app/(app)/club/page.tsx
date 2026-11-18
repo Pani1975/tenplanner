@@ -11,20 +11,24 @@ import { clubIdentityFromRow, getClubStats } from "@/lib/club-profile";
 import { NewClubForm } from "./new-club-form";
 import { BookOpen, Users2 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 function ObjectivesLink({ clubId }: { clubId: string }) {
+  const tx = useTranslations("ui.s_club_page");
   return (
     <Link
       href={`/club/${clubId}/objetivos`}
       className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#050505]/15 px-3 py-1.5 text-[11px] font-black uppercase text-foreground/70 transition-colors hover:border-brand hover:text-brand dark:border-white/15"
     >
       <BookOpen className="size-3.5" />
-      Objetivos
+      {tx("objetivos")}
     </Link>
   );
 }
 
 export default async function ClubPage() {
+  const tx = await getTranslations("ui.s_club_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -45,13 +49,12 @@ export default async function ClubPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
         <div>
-          <p className="tp-kicker">Mi club</p>
+          <p className="tp-kicker">{tx("miClub")}</p>
           <h1 className="mt-2 text-3xl font-black text-foreground">
             {ownedClub.name}
           </h1>
           <p className="mt-2 text-sm leading-6 text-foreground/62">
-            Datos, fotos e instalaciones del club. Los monitores se dan de alta
-            en Gestión → Monitores.
+            {tx("datosFotosEInstalaciones")}
           </p>
         </div>
         <ClubIdentityForm
@@ -66,7 +69,7 @@ export default async function ClubPage() {
           <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
             <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
               <Users2 className="size-4" />
-              También eres monitor en
+              {tx("tambienEresMonitorEn")}
             </h2>
             <ul className="mt-3 space-y-2">
               {coachOf.map(({ club, sports }) => (
@@ -100,9 +103,9 @@ export default async function ClubPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
       <div>
-        <p className="tp-kicker">Mi club</p>
+        <p className="tp-kicker">{tx("miClub")}</p>
         <h1 className="mt-2 text-3xl font-black text-foreground">
-          Monitores y clubs
+          {tx("monitoresYClubs")}
         </h1>
       </div>
 
@@ -110,7 +113,7 @@ export default async function ClubPage() {
         <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
           <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
             <Users2 className="size-4" />
-            Formas parte de
+            {tx("formasParteDe")}
           </h2>
           <ul className="mt-3 space-y-2">
             {coachOf.map(({ club, sports }) => (
@@ -134,8 +137,7 @@ export default async function ClubPage() {
             ))}
           </ul>
           <p className="mt-3 text-xs leading-5 text-foreground/50">
-            Lo que haces en el modo de ese club es compartido con el club. Tu
-            Modo monitor es privado: el club no lo ve.
+            {tx("loQueHacesEn")}
           </p>
         </div>
       )}
@@ -154,12 +156,12 @@ export default async function ClubPage() {
 
       <div className="rounded-[28px] border border-[#050505]/10 bg-white p-5 dark:border-white/10 dark:bg-[#10100e]">
         <h2 className="text-sm font-black uppercase tracking-wide text-foreground/70">
-          ¿Diriges un club?
+          {tx("dirigesUnClub")}
         </h2>
         <p className="mt-2 text-sm leading-6 text-foreground/62">
           {canCreateClub
-            ? "Regístralo para invitar a tus monitores y gestionar su espacio desde una cuenta común. Es solo informativo por ahora, sin facturación."
-            : "Un club se da de alta con su propia cuenta: cierra sesión y crea una cuenta nueva eligiendo «Como Club», con otro correo. Desde esa cuenta invitarás a tus monitores (también a ti) y tendrás el Modo gestión con los informes del club."}
+            ? tx("registraloParaInvitarA")
+            : tx("unClubSeDa")}
         </p>
         {canCreateClub && (
           <div className="mt-4">

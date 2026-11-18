@@ -27,6 +27,8 @@ import {
   type CoachProfileData,
 } from "@/lib/coach-profile";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 type Member = { name: string; email: string };
 
@@ -35,7 +37,7 @@ type Creating =
   | { mode: "direct"; prefill?: CoachProfileInitial }
   | { mode: "link" };
 
-const dateFormat = new Intl.DateTimeFormat("es-ES", {
+const dateFormat = (loc: string) => new Intl.DateTimeFormat(loc, {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -89,6 +91,8 @@ export function CoachProfilesPanel({
   initialProfiles: CoachProfileView[];
   members: Member[];
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_monitores_coachprofilespanel");
   const [profiles, setProfiles] = useState(initialProfiles);
   const [creating, setCreating] = useState<Creating>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -145,7 +149,7 @@ export function CoachProfilesPanel({
       email,
     });
     if (!ok || !json?.data) {
-      setError(json?.error ?? "No se pudo crear la ficha.");
+      setError(json?.error ?? tx("noSePudoCrear"));
       return false;
     }
     upsert(json.data);
@@ -180,7 +184,7 @@ export function CoachProfilesPanel({
         "POST"
       );
       if (!ok || !json?.data) {
-        setError(json?.error ?? "No se pudo enviar el enlace.");
+        setError(json?.error ?? tx("noSePudoEnviar"));
         return;
       }
       upsert(json.data);
@@ -206,7 +210,7 @@ export function CoachProfilesPanel({
         "DELETE"
       );
       if (!ok) {
-        setError(json?.error ?? "No se pudo eliminar la ficha.");
+        setError(json?.error ?? tx("noSePudoEliminar"));
         return;
       }
       setProfiles((prev) => prev.filter((p) => p.id !== profile.id));
@@ -233,13 +237,10 @@ export function CoachProfilesPanel({
         <div>
           <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
             <FileText className="size-4" />
-            Perfiles de monitores
+            {tx("perfilesDeMonitores")}
           </h2>
           <p className="mt-1 max-w-xl text-xs leading-5 text-foreground/55">
-            Datos de contacto, formación, disponibilidad y experiencia de cada
-            monitor. Zona privada: solo la ves tú como gestor. Los monitores con
-            cuenta mantienen su perfil desde su Perfil; para el resto, rellénala
-            tú o envíales un enlace.
+            {tx("datosDeContactoFormacion")}
           </p>
         </div>
         {creating === null && (
@@ -250,7 +251,7 @@ export function CoachProfilesPanel({
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-black text-brand-foreground"
             >
               <Plus className="size-4" />
-              Rellenar una ficha
+              {tx("rellenarUnaFicha")}
             </button>
             <button
               type="button"
@@ -258,7 +259,7 @@ export function CoachProfilesPanel({
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-bold text-foreground hover:bg-muted"
             >
               <Mail className="size-4" />
-              Pedir que la rellene el monitor
+              {tx("pedirQueLaRellene")}
             </button>
           </div>
         )}
@@ -270,7 +271,7 @@ export function CoachProfilesPanel({
       {creating?.mode === "direct" && (
         <div className="mt-4 rounded-2xl border border-brand/30 bg-brand/5 p-4">
           <h3 className="mb-4 text-sm font-black text-foreground">
-            Nueva ficha de monitor
+            {tx("nuevaFichaDeMonitor")}
           </h3>
           <CoachProfileForm
             key={creating.prefill?.email ?? "new"}
@@ -292,7 +293,7 @@ export function CoachProfilesPanel({
 
       {profiles.length === 0 && creating === null && (
         <p className="mt-4 text-sm text-foreground/50">
-          Todavía no hay fichas de monitores.
+          {tx("todaviaNoHayFichas")}
         </p>
       )}
 
@@ -327,7 +328,7 @@ export function CoachProfilesPanel({
                   </span>
                   {accountEmails.has(profile.email) && (
                     <span className="hidden shrink-0 rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-foreground/60 sm:inline">
-                      Con cuenta
+                      {tx("conCuenta")}
                     </span>
                   )}
                   <span
@@ -341,7 +342,7 @@ export function CoachProfilesPanel({
                     {profile.status === "pending" ? "Pendiente" : "Completa"}
                   </span>
                   <span className="shrink-0 text-[11px] font-bold text-foreground/55">
-                    Perfil
+                    {tx("perfil")}
                   </span>
                   <ChevronDown
                     className={cn(
@@ -365,8 +366,8 @@ export function CoachProfilesPanel({
                         {profile.status === "pending" ? (
                           <p className="text-sm text-foreground/60">
                             {profile.linkToken
-                              ? `Esperando a que ${profile.fullName.split(" ")[0]} rellene su ficha. El enlace caduca el ${dateFormat.format(new Date(profile.linkExpiresAt!))}.`
-                              : "No hay un enlace activo. Envíaselo al monitor para que la rellene, o rellena la ficha tú."}
+                              ? `Esperando a que ${profile.fullName.split(" ")[0]} rellene su ficha. El enlace caduca el ${dateFormat(intlLocale).format(new Date(profile.linkExpiresAt!))}.`
+                              : tx("noHayUnEnlace")}
                           </p>
                         ) : (
                           <ProfileSummary profile={profile} />
@@ -374,10 +375,7 @@ export function CoachProfilesPanel({
 
                         {coachControlled && (
                           <p className="text-xs text-foreground/55">
-                            Este perfil lo mantiene{" "}
-                            {profile.fullName.split(" ")[0]} desde su cuenta; tú
-                            solo puedes verlo.
-                          </p>
+                            {tx("estePerfilLoMantiene", { v1: profile.fullName.split(" ")[0] })}</p>
                         )}
 
                         <div className="flex flex-wrap gap-2">
@@ -403,8 +401,8 @@ export function CoachProfilesPanel({
                                 }
                               >
                                 {profile.status === "pending"
-                                  ? "Enviar enlace de nuevo"
-                                  : "Pedir que la actualice"}
+                                  ? tx("enviarEnlaceDeNuevo")
+                                  : tx("pedirQueLaActualice")}
                               </ActionButton>
                             </>
                           )}
@@ -430,7 +428,7 @@ export function CoachProfilesPanel({
                             icon={<Trash2 className="size-3.5" />}
                             danger
                           >
-                            Eliminar
+                            {tx("eliminar")}
                           </ActionButton>
                         </div>
                       </>
@@ -446,7 +444,7 @@ export function CoachProfilesPanel({
       {membersWithoutProfile.length > 0 && (
         <div className="mt-6">
           <h3 className="text-xs font-black uppercase tracking-wide text-foreground/55">
-            Monitores del club sin ficha
+            {tx("monitoresDelClubSin")}
           </h3>
           <ul className="mt-2 space-y-2">
             {membersWithoutProfile.map((member) => (
@@ -464,13 +462,13 @@ export function CoachProfilesPanel({
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] text-foreground/50">
-                    Lo rellena el monitor desde su Perfil
+                    {tx("loRellenaElMonitor")}
                   </span>
                   <ActionButton
                     onClick={() => requestLink(member.name, member.email)}
                     icon={<Mail className="size-3.5" />}
                   >
-                    Pedir ficha
+                    {tx("pedirFicha")}
                   </ActionButton>
                 </span>
               </li>
@@ -522,6 +520,7 @@ function RequestLinkForm({
   onSubmit: (fullName: string, email: string) => Promise<boolean>;
   onCancel: () => void;
 }) {
+  const tx = useTranslations("ui.s_monitores_coachprofilespanel");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -543,16 +542,14 @@ function RequestLinkForm({
       <div>
         <h3 className="flex items-center gap-2 text-sm font-black text-foreground">
           <Link2 className="size-4" />
-          Pedir la ficha al monitor
+          {tx("pedirLaFichaAl")}
         </h3>
         <p className="mt-1 text-xs leading-5 text-foreground/55">
-          Le llegará un correo de {clubName} con un enlace personal, de un solo
-          uso, para que rellene su ficha sin crear ninguna cuenta.
-        </p>
+          {tx("leLlegaraUnCorreo", { v1: clubName })}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="link-name">Nombre</Label>
+          <Label htmlFor="link-name">{tx("nombre")}</Label>
           <Input
             id="link-name"
             value={fullName}
@@ -561,7 +558,7 @@ function RequestLinkForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="link-email">Email</Label>
+          <Label htmlFor="link-email">{tx("email")}</Label>
           <Input
             id="link-email"
             type="email"
@@ -578,7 +575,7 @@ function RequestLinkForm({
           className="inline-flex h-10 items-center gap-2 rounded-full bg-brand px-5 text-sm font-black text-brand-foreground disabled:opacity-60"
         >
           {sending && <Loader2 className="size-4 animate-spin" />}
-          Enviar enlace
+          {tx("enviarEnlace")}
         </button>
         <button
           type="button"
@@ -586,7 +583,7 @@ function RequestLinkForm({
           disabled={sending}
           className="h-10 rounded-full border border-border px-4 text-sm font-bold text-foreground hover:bg-muted"
         >
-          Cancelar
+          {tx("cancelar")}
         </button>
       </div>
     </form>
@@ -594,17 +591,19 @@ function RequestLinkForm({
 }
 
 function ProfileSummary({ profile }: { profile: CoachProfileView }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_monitores_coachprofilespanel");
   const availability = summarizeAvailability(profile.availability);
   const rows: { label: string; value: React.ReactNode }[] = [
-    { label: "Teléfono", value: profile.phone ?? "—" },
-    { label: "Email", value: profile.email },
+    { label: tx("telefono"), value: profile.phone ?? "—" },
+    { label: tx("email"), value: profile.email },
     {
-      label: "Formación académica",
+      label: tx("formacionAcademica"),
       value: profile.academicTraining ?? "—",
     },
-    { label: "Formación en tenis", value: profile.tennisTraining ?? "—" },
+    { label: tx("formacionEnTenis"), value: profile.tennisTraining ?? "—" },
     {
-      label: "Disponibilidad",
+      label: tx("disponibilidad"),
       value:
         availability.length > 0 ? (
           <ul className="space-y-0.5">
@@ -617,11 +616,11 @@ function ProfileSummary({ profile }: { profile: CoachProfileView }) {
         ),
     },
     {
-      label: "Empezó a dar clases",
+      label: tx("empezoADarClases"),
       value: profile.startedTeachingYear ?? "—",
     },
     {
-      label: "Experiencia como monitor",
+      label: tx("experienciaComoMonitor"),
       value:
         profile.experience.length > 0 ? (
           <ul className="space-y-1">
@@ -659,10 +658,9 @@ function ProfileSummary({ profile }: { profile: CoachProfileView }) {
         ))}
       </dl>
       <p className="text-[11px] text-foreground/45">
-        {profile.filledByCoach
-          ? "Rellenada por el propio monitor"
-          : "Rellenada por el club"}{" "}
-        · actualizada el {dateFormat.format(new Date(profile.updatedAt))}
+        {tx("v1ActualizadaElV2", { v1: profile.filledByCoach
+          ? tx("filledByCoach")
+          : tx("filledByClub"), v2: dateFormat(intlLocale).format(new Date(profile.updatedAt)) })}
       </p>
     </div>
   );

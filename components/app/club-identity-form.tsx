@@ -24,6 +24,7 @@ import {
   type Courts,
 } from "@/lib/club-identity";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const inputClass =
   "h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:opacity-70";
@@ -34,7 +35,8 @@ const PHOTOS_BUCKET = "resources";
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 
 function Optional() {
-  return <span className="font-normal text-muted-foreground">(opcional)</span>;
+  const tx = useTranslations("ui.s_app_clubidentityform");
+  return <span className="font-normal text-muted-foreground">{tx("opcional")}</span>;
 }
 
 /** Sí / No / sin indicar, con dos botones. */
@@ -49,6 +51,7 @@ function YesNo({
   onChange: (v: boolean | null) => void;
   disabled: boolean;
 }) {
+  const tx = useTranslations("ui.s_app_clubidentityform");
   return (
     <div className="space-y-1.5">
       <span className="block text-sm font-semibold text-foreground">
@@ -56,8 +59,8 @@ function YesNo({
       </span>
       <div className="flex gap-2">
         {[
-          { v: true, text: "Sí" },
-          { v: false, text: "No" },
+          { v: true, text: tx("si") },
+          { v: false, text: tx("no") },
         ].map((opt) => (
           <button
             key={opt.text}
@@ -101,6 +104,7 @@ export function ClubIdentityForm({
   /** Calculados: monitores dados de alta y alumnos del club. */
   stats?: { monitors: number; students: number };
 }) {
+  const tx = useTranslations("ui.s_app_clubidentityform");
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [fullName, setFullName] = useState(initial.fullName ?? "");
@@ -166,7 +170,7 @@ export function ClubIdentityForm({
     } catch (e) {
       setMessage({
         ok: false,
-        text: e instanceof Error ? e.message : "No se pudo subir la imagen.",
+        text: e instanceof Error ? e.message : tx("noSePudoSubir"),
       });
     } finally {
       setUploading(null);
@@ -194,7 +198,7 @@ export function ClubIdentityForm({
     } catch (e) {
       setMessage({
         ok: false,
-        text: e instanceof Error ? e.message : "No se pudo subir la foto.",
+        text: e instanceof Error ? e.message : tx("noSePudoSubir2"),
       });
     } finally {
       setUploading(null);
@@ -209,7 +213,7 @@ export function ClubIdentityForm({
     try {
       new URL(url);
     } catch {
-      setMessage({ ok: false, text: "El enlace del vídeo no es válido." });
+      setMessage({ ok: false, text: tx("elEnlaceDelVideo") });
       return;
     }
     if (videos.length >= MAX_CLUB_VIDEOS) {
@@ -224,11 +228,11 @@ export function ClubIdentityForm({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (name.trim().length < 2) {
-      setMessage({ ok: false, text: "El nombre del club es obligatorio." });
+      setMessage({ ok: false, text: tx("elNombreDelClub") });
       return;
     }
     if (!email.trim()) {
-      setMessage({ ok: false, text: "El email del club es obligatorio." });
+      setMessage({ ok: false, text: tx("elEmailDelClub") });
       return;
     }
     const year = foundedYear.trim() ? Number(foundedYear) : null;
@@ -238,14 +242,14 @@ export function ClubIdentityForm({
         year < 1800 ||
         year > new Date().getFullYear())
     ) {
-      setMessage({ ok: false, text: "El año de fundación no es válido." });
+      setMessage({ ok: false, text: tx("elAnoDeFundacion") });
       return;
     }
     const padel = padelCourts.trim() ? Number(padelCourts) : null;
     if (padel !== null && (!Number.isInteger(padel) || padel < 0)) {
       setMessage({
         ok: false,
-        text: "El número de pistas de pádel no es válido.",
+        text: tx("elNumeroDePistas"),
       });
       return;
     }
@@ -281,14 +285,14 @@ export function ClubIdentityForm({
           text:
             typeof json.error === "string"
               ? json.error
-              : "No se pudo guardar la ficha del club.",
+              : tx("noSePudoGuardar"),
         });
         return;
       }
-      setMessage({ ok: true, text: "Ficha del club guardada." });
+      setMessage({ ok: true, text: tx("fichaDelClubGuardada") });
       router.refresh();
     } catch {
-      setMessage({ ok: false, text: "Error de red. Inténtalo de nuevo." });
+      setMessage({ ok: false, text: tx("errorDeRedIntentalo") });
     } finally {
       setSaving(false);
     }
@@ -302,12 +306,12 @@ export function ClubIdentityForm({
         <Building2 className="mt-0.5 size-5 shrink-0 text-brand" />
         <div>
           <h2 className="text-sm font-black uppercase text-foreground">
-            Ficha del club · {initial.name}
+            {tx("fichaDelClubV1", { v1: initial.name })}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-foreground/55">
             {canEdit
-              ? "El nombre del club es el que aparece en las cabeceras del espacio del club."
-              : "Solo el propietario del club puede cambiar estos datos."}
+              ? tx("elNombreDelClub2")
+              : tx("soloElPropietarioDel")}
           </p>
         </div>
       </div>
@@ -315,8 +319,8 @@ export function ClubIdentityForm({
       {stats && (
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Monitores", value: stats.monitors },
-            { label: "Alumnos", value: stats.students },
+            { label: tx("monitores"), value: stats.monitors },
+            { label: tx("alumnos"), value: stats.students },
           ].map((s) => (
             <div
               key={s.label}
@@ -336,13 +340,13 @@ export function ClubIdentityForm({
       {/* Portada */}
       <div className="space-y-2">
         <span className="block text-sm font-semibold text-foreground">
-          Foto de portada <Optional />
+          {tx("fotoDePortada")}{" "}<Optional />
         </span>
         {coverImageUrl ? (
           <div className="relative overflow-hidden rounded-2xl border border-border">
             <img
               src={coverImageUrl}
-              alt="Portada del club"
+              alt={tx("portadaDelClub")}
               className="aspect-[3/1] w-full object-cover"
             />
             {canEdit && (
@@ -352,12 +356,12 @@ export function ClubIdentityForm({
                   onClick={() => coverInput.current?.click()}
                   className="rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white"
                 >
-                  Cambiar
+                  {tx("cambiar")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCoverImageUrl(null)}
-                  aria-label="Quitar portada"
+                  aria-label={tx("quitarPortada")}
                   className="rounded-full bg-black/60 p-1.5 text-white"
                 >
                   <Trash2 className="size-3.5" />
@@ -377,10 +381,10 @@ export function ClubIdentityForm({
             ) : (
               <ImagePlus className="size-5" />
             )}
-            Subir portada
+            {tx("subirPortada")}
           </button>
         ) : (
-          <p className="text-xs italic text-muted-foreground">Sin portada.</p>
+          <p className="text-xs italic text-muted-foreground">{tx("sinPortada")}</p>
         )}
         <input
           ref={coverInput}
@@ -395,7 +399,7 @@ export function ClubIdentityForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1.5 sm:col-span-2">
           <span className="block text-sm font-semibold text-foreground">
-            Nombre del club
+            {tx("nombreDelClub")}
           </span>
           <input
             value={name}
@@ -403,26 +407,26 @@ export function ClubIdentityForm({
             maxLength={255}
             required
             disabled={disabled}
-            placeholder="Ej: CT Tenerife"
+            placeholder={tx("ejCtTenerife")}
             className={inputClass}
           />
         </label>
         <label className="space-y-1.5 sm:col-span-2">
           <span className="block text-sm font-semibold text-foreground">
-            Nombre completo <Optional />
+            {tx("nombreCompleto")}{" "}<Optional />
           </span>
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             maxLength={255}
             disabled={disabled}
-            placeholder="Ej: Club de Tenis Tenerife"
+            placeholder={tx("ejClubDeTenis")}
             className={inputClass}
           />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-semibold text-foreground">
-            Email
+            {tx("email")}
           </span>
           <input
             type="email"
@@ -431,13 +435,13 @@ export function ClubIdentityForm({
             maxLength={255}
             required
             disabled={disabled}
-            placeholder="info@club.com"
+            placeholder={tx("infoClubCom")}
             className={inputClass}
           />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-semibold text-foreground">
-            Teléfono <Optional />
+            {tx("telefono")}{" "}<Optional />
           </span>
           <input
             type="tel"
@@ -451,33 +455,33 @@ export function ClubIdentityForm({
         </label>
         <label className="space-y-1.5 sm:col-span-2">
           <span className="block text-sm font-semibold text-foreground">
-            Dirección <Optional />
+            {tx("direccion")}{" "}<Optional />
           </span>
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             maxLength={500}
             disabled={disabled}
-            placeholder="Calle, número, código postal y municipio"
+            placeholder={tx("calleNumeroCodigoPostal")}
             className={inputClass}
           />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-semibold text-foreground">
-            Web <Optional />
+            {tx("web")}{" "}<Optional />
           </span>
           <input
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             maxLength={255}
             disabled={disabled}
-            placeholder="www.club.com"
+            placeholder={tx("wwwClubCom")}
             className={inputClass}
           />
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-semibold text-foreground">
-            Año de fundación <Optional />
+            {tx("anoDeFundacion")}{" "}<Optional />
           </span>
           <input
             type="number"
@@ -487,7 +491,7 @@ export function ClubIdentityForm({
             value={foundedYear}
             onChange={(e) => setFoundedYear(e.target.value)}
             disabled={disabled}
-            placeholder="Ej: 1985"
+            placeholder={tx("ej1985")}
             className={inputClass}
           />
         </label>
@@ -496,14 +500,13 @@ export function ClubIdentityForm({
       {/* Instalaciones */}
       <fieldset className="space-y-4">
         <legend className="text-sm font-black uppercase text-foreground/70">
-          Instalaciones
+          {tx("instalaciones")}
         </legend>
         <div className="space-y-2">
           <span className="block text-sm font-semibold text-foreground">
-            Pistas de tenis por tipo{" "}
+            {tx("tennisCourtsByType")}{" "}
             <span className="font-normal text-muted-foreground">
-              · {totalCourts(courts)} en total
-            </span>
+              {tx("v1EnTotal", { v1: totalCourts(courts) })}</span>
           </span>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {COURT_TYPES.map((c) => (
@@ -529,7 +532,7 @@ export function ClubIdentityForm({
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="space-y-1.5">
             <span className="block text-sm font-semibold text-foreground">
-              Pistas de pádel
+              {tx("pistasDePadel")}
             </span>
             <input
               type="number"
@@ -544,13 +547,13 @@ export function ClubIdentityForm({
             />
           </label>
           <YesNo
-            label="Cafetería"
+            label={tx("cafeteria")}
             value={hasCafeteria}
             onChange={setHasCafeteria}
             disabled={disabled}
           />
           <YesNo
-            label="Aparcamiento"
+            label={tx("aparcamiento")}
             value={hasParking}
             onChange={setHasParking}
             disabled={disabled}
@@ -561,7 +564,7 @@ export function ClubIdentityForm({
       {/* Fotos */}
       <div className="space-y-2">
         <span className="block text-sm font-semibold text-foreground">
-          Fotos <Optional />
+          {tx("fotos")}{" "}<Optional />
         </span>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {photos.map((url) => (
@@ -571,7 +574,7 @@ export function ClubIdentityForm({
             >
               <img
                 src={url}
-                alt="Foto del club"
+                alt={tx("fotoDelClub")}
                 className="aspect-square w-full object-cover"
               />
               {canEdit && (
@@ -580,7 +583,7 @@ export function ClubIdentityForm({
                   onClick={() =>
                     setPhotos((prev) => prev.filter((p) => p !== url))
                   }
-                  aria-label="Quitar foto"
+                  aria-label={tx("quitarFoto")}
                   className="absolute right-1.5 top-1.5 rounded-full bg-black/60 p-1.5 text-white"
                 >
                   <Trash2 className="size-3.5" />
@@ -600,12 +603,12 @@ export function ClubIdentityForm({
               ) : (
                 <ImagePlus className="size-5" />
               )}
-              Añadir fotos
+              {tx("anadirFotos")}
             </button>
           )}
         </div>
         {!canEdit && photos.length === 0 && (
-          <p className="text-xs italic text-muted-foreground">Sin fotos.</p>
+          <p className="text-xs italic text-muted-foreground">{tx("sinFotos")}</p>
         )}
         <input
           ref={photosInput}
@@ -620,7 +623,7 @@ export function ClubIdentityForm({
       {/* Vídeos */}
       <div className="space-y-2">
         <span className="block text-sm font-semibold text-foreground">
-          Vídeos <Optional />
+          {tx("videos")}{" "}<Optional />
         </span>
         {videos.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -634,7 +637,7 @@ export function ClubIdentityForm({
                   {embed ? (
                     <iframe
                       src={embed}
-                      title="Vídeo del club"
+                      title={tx("videoDelClub")}
                       className="aspect-video w-full"
                       allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -646,7 +649,7 @@ export function ClubIdentityForm({
                       rel="noreferrer"
                       className="flex aspect-video items-center justify-center gap-2 bg-muted text-sm font-semibold text-foreground/70 hover:text-foreground"
                     >
-                      <Video className="size-4" /> Ver vídeo
+                      <Video className="size-4" />{" "}{tx("verVideo")}
                     </a>
                   )}
                   <div className="flex items-center justify-between gap-2 px-3 py-2">
@@ -659,7 +662,7 @@ export function ClubIdentityForm({
                         onClick={() =>
                           setVideos((prev) => prev.filter((v) => v !== url))
                         }
-                        aria-label="Quitar vídeo"
+                        aria-label={tx("quitarVideo")}
                         className="shrink-0 rounded-full p-1 text-foreground/55 hover:text-destructive"
                       >
                         <Trash2 className="size-3.5" />
@@ -682,7 +685,7 @@ export function ClubIdentityForm({
                   addVideo();
                 }
               }}
-              placeholder="Enlace de YouTube u otra web"
+              placeholder={tx("enlaceDeYoutubeU")}
               className={inputClass}
             />
             <button
@@ -690,12 +693,12 @@ export function ClubIdentityForm({
               onClick={addVideo}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-semibold text-foreground/70 hover:border-brand/60 hover:text-foreground"
             >
-              <Plus className="size-4" /> Añadir
+              <Plus className="size-4" />{" "}{tx("anadir")}
             </button>
           </div>
         )}
         {!canEdit && videos.length === 0 && (
-          <p className="text-xs italic text-muted-foreground">Sin vídeos.</p>
+          <p className="text-xs italic text-muted-foreground">{tx("sinVideos")}</p>
         )}
       </div>
 
@@ -719,7 +722,7 @@ export function ClubIdentityForm({
             className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-5 py-2 text-sm font-black text-[#050505] transition-colors hover:bg-[#c8ef2f] disabled:opacity-50"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
-            Guardar ficha
+            {tx("guardarFicha")}
           </button>
         </div>
       )}

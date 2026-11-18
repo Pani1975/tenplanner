@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const schema = z
   .object({
@@ -55,6 +56,7 @@ const STRENGTH_CONFIG: Record<
 };
 
 export default function ResetPasswordPage() {
+  const tx = useTranslations("ui.s_resetpassword_page");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -115,17 +117,16 @@ export default function ResetPasswordPage() {
       <div className="rounded-[32px] border border-[#050505]/10 bg-white p-5 text-center shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
         <div className="space-y-5">
           <h1 className="text-3xl font-black leading-tight text-foreground">
-            Enlace no válido
+            {tx("enlaceNoValido")}
           </h1>
           <p className="text-sm leading-6 text-foreground/62">
-            Este enlace de recuperación ha caducado o ya se ha utilizado.
-            Solicita uno nuevo y vuelve a intentarlo.
+            {tx("esteEnlaceDeRecuperacion")}
           </p>
           <Link
             href="/forgot-password"
             className="inline-flex h-11 items-center justify-center rounded-full bg-brand px-5 text-sm font-black text-brand-foreground transition-colors hover:bg-brand/90"
           >
-            Pedir enlace nuevo
+            {tx("pedirEnlaceNuevo")}
           </Link>
         </div>
       </div>
@@ -141,10 +142,10 @@ export default function ResetPasswordPage() {
               <CheckCircle2 className="size-8" />
             </div>
             <h1 className="text-3xl font-black leading-tight text-foreground">
-              Contraseña actualizada
+              {tx("contrasenaActualizada")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Redirigiendo a tu dashboard…
+              {tx("redirigiendoATuDashboard")}
             </p>
           </div>
         </div>
@@ -160,27 +161,27 @@ export default function ResetPasswordPage() {
             href="/login"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground w-fit transition-colors"
           >
-            <ArrowLeft className="size-3.5" /> Cancelar
+            <ArrowLeft className="size-3.5" />{" "}{tx("cancelar")}
           </Link>
           <div>
-            <p className="tp-kicker">Seguridad</p>
+            <p className="tp-kicker">{tx("seguridad")}</p>
             <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">
-              Nueva contraseña
+              {tx("nuevaContrasena")}
             </h1>
             <p className="mt-2 text-sm leading-6 text-foreground/62">
-              Elige una nueva contraseña para tu cuenta.
+              {tx("eligeUnaNuevaContrasena")}
             </p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="password">Nueva contraseña</Label>
+            <Label htmlFor="password">{tx("nuevaContrasena")}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Mín. 8 caracteres"
+                placeholder={tx("min8Caracteres")}
                 autoComplete="new-password"
                 className="h-10 pr-10"
                 aria-invalid={!!errors.password}
@@ -239,7 +240,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="confirm">Confirmar contraseña</Label>
+            <Label htmlFor="confirm">{tx("confirmarContrasena")}</Label>
             <div className="relative">
               <Input
                 id="confirm"
@@ -287,7 +288,7 @@ export default function ResetPasswordPage() {
             {loading ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-2" />
-                Actualizando…
+                {tx("actualizando")}
               </>
             ) : (
               "Cambiar contraseña"

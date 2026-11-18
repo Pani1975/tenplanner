@@ -35,6 +35,7 @@ import {
   restoreObjective,
   updateObjective,
 } from "./objective-actions";
+import { useTranslations } from "next-intl";
 
 type BallFilter = BallId | "todas";
 type AspectFilter = AspectId | "todos";
@@ -82,6 +83,7 @@ export function ObjectivesChecklist({
   defaultBall,
   scopes,
 }: Props) {
+  const tx = useTranslations("ui.s_id_objectiveschecklist");
   const router = useRouter();
   const [state, setState] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(items.map((i) => [i.id, i.achieved]))
@@ -168,7 +170,7 @@ export function ObjectivesChecklist({
         if (!res.ok) throw new Error(res.error);
       } catch {
         setState((s) => ({ ...s, ...previous }));
-        setError("No se pudo guardar el cambio. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
       }
     });
   }
@@ -188,7 +190,7 @@ export function ObjectivesChecklist({
         if (!res.ok) throw new Error(res.error);
       } catch {
         setState((s) => ({ ...s, [item.id]: !next }));
-        setError("No se pudo guardar el cambio. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
       } finally {
         setPendingId((p) => (p === item.id ? null : p));
       }
@@ -209,11 +211,11 @@ export function ObjectivesChecklist({
         if (!res.ok) throw new Error("failed");
         if (res.stillHidden)
           setNotice(
-            "Sigue oculto para este alumno. Cambia el alcance a «Solo este alumno» para mostrarlo."
+            tx("sigueOcultoParaEste")
           );
         router.refresh();
       } catch {
-        setError("No se pudo guardar el cambio. Inténtalo de nuevo.");
+        setError(tx("noSePudoGuardar"));
       } finally {
         setBusyId(null);
       }
@@ -244,7 +246,7 @@ export function ObjectivesChecklist({
               {item.title}
             </span>
             <span className="mt-0.5 block text-[11px] uppercase text-foreground/40">
-              Oculto · {BALL_LABEL[item.ball]}
+              {tx("ocultoV1", { v1: BALL_LABEL[item.ball] })}
             </span>
           </span>
         ) : (
@@ -279,7 +281,7 @@ export function ObjectivesChecklist({
                 {item.title}
                 {item.isFinal && (
                   <span className="ml-2 inline-block rounded-full bg-foreground px-2 py-0.5 align-middle text-[9px] font-black uppercase text-background">
-                    Final
+                    {tx("final")}
                   </span>
                 )}
                 {(tag || edited) && (
@@ -304,8 +306,8 @@ export function ObjectivesChecklist({
             ) : hidden ? (
               <button
                 type="button"
-                title="Restaurar"
-                aria-label="Restaurar objetivo"
+                title={tx("restaurar")}
+                aria-label={tx("restaurarObjetivo")}
                 className={iconBtn}
                 disabled={!editable(item)}
                 onClick={() =>
@@ -324,8 +326,8 @@ export function ObjectivesChecklist({
               <>
                 <button
                   type="button"
-                  title="Subir"
-                  aria-label="Subir objetivo"
+                  title={tx("subir")}
+                  aria-label={tx("subirObjetivo")}
                   className={iconBtn}
                   disabled={pos.first || !editable(item)}
                   onClick={() =>
@@ -343,8 +345,8 @@ export function ObjectivesChecklist({
                 </button>
                 <button
                   type="button"
-                  title="Bajar"
-                  aria-label="Bajar objetivo"
+                  title={tx("bajar")}
+                  aria-label={tx("bajarObjetivo")}
                   className={iconBtn}
                   disabled={pos.last || !editable(item)}
                   onClick={() =>
@@ -362,8 +364,8 @@ export function ObjectivesChecklist({
                 </button>
                 <button
                   type="button"
-                  title="Editar"
-                  aria-label="Editar objetivo"
+                  title={tx("editar")}
+                  aria-label={tx("editarObjetivo")}
                   className={iconBtn}
                   disabled={!editable(item)}
                   onClick={() => setEditor({ mode: "edit", item })}
@@ -373,8 +375,8 @@ export function ObjectivesChecklist({
                 {canRestore && item.scope === "base" && (
                   <button
                     type="button"
-                    title="Volver al original"
-                    aria-label="Volver al objetivo original"
+                    title={tx("volverAlOriginal")}
+                    aria-label={tx("volverAlObjetivoOriginal")}
                     className={iconBtn}
                     onClick={() =>
                       runEdit(item.id, () =>
@@ -391,8 +393,8 @@ export function ObjectivesChecklist({
                 )}
                 <button
                   type="button"
-                  title="Quitar"
-                  aria-label="Quitar objetivo"
+                  title={tx("quitar")}
+                  aria-label={tx("quitarObjetivo")}
                   className={iconBtn}
                   disabled={!editable(item)}
                   onClick={() =>
@@ -429,7 +431,7 @@ export function ObjectivesChecklist({
               className={chipClass(customizing)}
             >
               <SlidersHorizontal className="size-3.5" />
-              Personalizar objetivos
+              {tx("personalizarObjetivos")}
             </button>
             {customizing && (
               <button
@@ -438,7 +440,7 @@ export function ObjectivesChecklist({
                 className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1.5 text-[11px] font-black uppercase text-brand-foreground hover:bg-brand/90"
               >
                 <Plus className="size-3.5" />
-                Añadir objetivo
+                {tx("anadirObjetivo")}
               </button>
             )}
           </div>
@@ -446,7 +448,7 @@ export function ObjectivesChecklist({
           {customizing && (
             <div className="space-y-2 rounded-2xl border border-brand/30 bg-brand/5 p-3">
               <p className="text-[10px] font-black uppercase text-foreground/55">
-                Aplicar los cambios a
+                {tx("aplicarLosCambiosA")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {scopes.map((s) => (
@@ -462,9 +464,7 @@ export function ObjectivesChecklist({
               </div>
               {currentScope && (
                 <p className="text-[12px] leading-snug text-foreground/60">
-                  {currentScope.hint} Los objetivos originales de Ten Planner no
-                  se modifican: se pueden restaurar en cualquier momento.
-                </p>
+                  {tx("v1LosObjetivosOriginales", { v1: currentScope.hint })}</p>
               )}
             </div>
           )}
@@ -494,7 +494,7 @@ export function ObjectivesChecklist({
           onClick={() => setBall("todas")}
           className={chipClass(ball === "todas")}
         >
-          Todas
+          {tx("todas")}
           <span className="tabular-nums text-foreground/45">
             {countFor("todas")}
           </span>
@@ -507,7 +507,7 @@ export function ObjectivesChecklist({
           onClick={() => setAspect("todos")}
           className={chipClass(aspect === "todos")}
         >
-          Todos los aspectos
+          {tx("todosLosAspectos")}
         </button>
         {ASPECTS.map((a) => (
           <button
@@ -538,7 +538,7 @@ export function ObjectivesChecklist({
         )}
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-black uppercase text-foreground/55">
-            Conseguidos
+            {tx("conseguidos")}
           </span>
           <span className="text-2xl font-black tabular-nums text-foreground">
             {doneCount}/{visible.length} · {pct}%
@@ -565,7 +565,7 @@ export function ObjectivesChecklist({
 
       {groups.length === 0 ? (
         <p className="text-[13px] text-foreground/55">
-          No hay objetivos para este filtro.
+          {tx("noHayObjetivosPara")}
         </p>
       ) : (
         <div className="space-y-6">
@@ -604,7 +604,7 @@ export function ObjectivesChecklist({
       {customizing && visibleHidden.length > 0 && (
         <section>
           <h3 className="mb-2 text-[11px] font-black uppercase text-foreground/60">
-            Objetivos ocultos para este alumno
+            {tx("objetivosOcultosParaEste")}
           </h3>
           <ul className="divide-y divide-[#050505]/10 rounded-2xl border border-dashed border-[#050505]/15 dark:divide-white/10 dark:border-white/15">
             {visibleHidden.map((item) => renderRow(item, true))}
@@ -623,13 +623,13 @@ export function ObjectivesChecklist({
         state={editor}
         description={`${
           scope === "student"
-            ? "Se aplicará solo a este alumno."
+            ? tx("seAplicaraSoloA")
             : `Se aplicará a: ${(currentScope?.label ?? "").toLowerCase()}.`
         }${
           editor?.mode === "edit" &&
           editor.item.scope === "base" &&
           scope !== "student"
-            ? " El objetivo original de Ten Planner no cambia."
+            ? tx("elObjetivoOriginalDe")
             : ""
         }`}
         defaultBall={ball === "todas" ? defaultBall : ball}

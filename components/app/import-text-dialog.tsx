@@ -19,6 +19,9 @@ import {
   validateImportInput,
 } from "@/lib/import/schema";
 import type { ImportedClass, ImportedExercise } from "@/lib/import/schema";
+import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
+import { useLocale } from "next-intl";
 
 type Kind = "exercises" | "classes";
 type Item = ImportedExercise | ImportedClass;
@@ -61,6 +64,9 @@ export function ImportTextDialog({
   className,
   allowFile = false,
 }: Props) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const term = useTerm();
+  const tx = useTranslations("ui.s_app_importtextdialog");
   const router = useRouter();
   const copy = COPY[kind];
   const [open, setOpen] = useState(false);
@@ -97,7 +103,7 @@ export function ImportTextDialog({
         const bytes = await file.arrayBuffer();
         if (bytes.byteLength === 0) {
           setError(
-            "El navegador no puede leer el archivo (llega vacío). Si está en OneDrive o la nube, descárgalo al equipo y vuelve a elegirlo."
+            tx("elNavegadorNoPuede")
           );
           return;
         }
@@ -128,14 +134,14 @@ export function ImportTextDialog({
         remaining?: number;
       };
       if (!res.ok) {
-        setError(data.error ?? "No he podido convertir el texto.");
+        setError(data.error ?? tx("noHePodidoConvertir"));
         return;
       }
       setItems((kind === "exercises" ? data.exercises : data.classes) ?? []);
       setRemaining(data.remaining ?? null);
       setNotes(data.notes ?? []);
     } catch {
-      setError("No hay conexión. Comprueba tu red e inténtalo de nuevo.");
+      setError(tx("noHayConexionComprueba"));
     } finally {
       setBusy(false);
     }
@@ -179,7 +185,7 @@ export function ImportTextDialog({
       setError(
         saved > 0
           ? `Se guardaron ${saved} como borrador y falló uno. Revisa la lista e inténtalo de nuevo con el resto.`
-          : "No se pudo guardar. Inténtalo de nuevo."
+          : tx("noSePudoGuardar")
       );
     } finally {
       setBusy(false);
@@ -206,15 +212,13 @@ export function ImportTextDialog({
         }
       >
         <Sparkles className="size-4" />
-        Importar con Ten Planner
+        {tx("importarConTenPlanner")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{copy.title}</DialogTitle>
+          <DialogTitle>{term(copy.title)}</DialogTitle>
           <DialogDescription>
-            Se guardarán como borradores en {spaceLabel}. Nada se publica hasta
-            que lo revises y lo guardes tú.
-          </DialogDescription>
+            {tx("seGuardaranComoBorradores", { v1: spaceLabel })}</DialogDescription>
         </DialogHeader>
 
         {items === null ? (
@@ -222,32 +226,28 @@ export function ImportTextDialog({
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder={copy.placeholder}
+              placeholder={term(copy.placeholder)}
               rows={12}
               maxLength={IMPORT_MAX_CHARS + 1000}
               disabled={busy}
             />
             {file && (
               <p className="text-xs text-muted-foreground">
-                Se importará el archivo «{file.name}». Lo que escribas arriba
-                se usa solo como indicaciones extra (opcional).
-              </p>
+                {tx("seImportaraElArchivo", { v1: file.name })}</p>
             )}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span
                 className={text.length > IMPORT_MAX_CHARS ? "text-red-600" : ""}
               >
-                {text.length.toLocaleString("es-ES")} /{" "}
-                {IMPORT_MAX_CHARS.toLocaleString("es-ES")} caracteres
-              </span>
+                {tx("v1V2Caracteres", { v1: text.length.toLocaleString(intlLocale), v2: IMPORT_MAX_CHARS.toLocaleString(intlLocale) })}</span>
               {!allowFile && (
-                <span>Solo texto por ahora (PDF y Excel, más adelante).</span>
+                <span>{tx("soloTextoPorAhora")}</span>
               )}
             </div>
             {allowFile && (
               <div className="space-y-1 rounded-lg border border-dashed p-3">
                 <label className="text-sm font-medium" htmlFor="import-file">
-                  O sube un documento (PDF, Excel o CSV)
+                  {tx("oSubeUnDocumento")}
                 </label>
                 <input
                   id="import-file"
@@ -258,8 +258,7 @@ export function ImportTextDialog({
                   className="block w-full text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Máximo 4 MB (PDF hasta 30 páginas). El archivo no se guarda:
-                  solo se usa para generar los borradores.
+                  {tx("maximo4MbPdf")}
                 </p>
               </div>
             )}
@@ -276,7 +275,7 @@ export function ImportTextDialog({
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               {busy
                 ? kind === "classes"
-                  ? "Convirtiendo y buscando ejercicios… (hasta 1-2 min)"
+                  ? tx("convirtiendoYBuscandoEjercicios")
                   : "Convirtiendo…"
                 : "Convertir"}
             </Button>
@@ -284,11 +283,7 @@ export function ImportTextDialog({
         ) : (
           <div className="space-y-4">
             <p className="text-sm">
-              Esto es lo que he entendido ({items.length}{" "}
-              {items.length === 1 ? copy.one : copy.many}). Edita el nombre o
-              quita lo que no quieras; el resto de campos podrás ajustarlo
-              al abrir cada borrador.
-            </p>
+              {tx("estoEsLoQue", { v1: items.length, v2: items.length === 1 ? term(copy.one) : term(copy.many) })}</p>
             {notes.map((n) => (
               <p
                 key={n}
@@ -303,7 +298,7 @@ export function ImportTextDialog({
                 <li key={i} className="space-y-2 rounded-lg border p-3">
                   <div className="flex items-start gap-2">
                     <input
-                      aria-label="Nombre"
+                      aria-label={tx("nombre")}
                       className="min-h-11 flex-1 rounded-md border px-3 text-sm font-semibold"
                       value={nameOf(item)}
                       maxLength={255}
@@ -339,8 +334,7 @@ export function ImportTextDialog({
             ) : null}
             {remaining !== null ? (
               <p className="text-xs text-muted-foreground">
-                Te quedan {remaining} importaciones hoy.
-              </p>
+                {tx("teQuedanV1Importaciones", { v1: remaining })}</p>
             ) : null}
             <div className="flex flex-wrap gap-2">
               <Button
@@ -349,7 +343,7 @@ export function ImportTextDialog({
                 disabled={busy || items.length === 0 || items.some((it) => !nameOf(it).trim())}
               >
                 {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                Guardar {items.length}{" "}
+                {tx("guardar")}{" "}{items.length}{" "}
                 {items.length === 1 ? "borrador" : "borradores"}
               </Button>
               <Button
@@ -358,7 +352,7 @@ export function ImportTextDialog({
                 onClick={() => setItems(null)}
                 disabled={busy}
               >
-                Volver al texto
+                {tx("volverAlTexto")}
               </Button>
             </div>
           </div>
@@ -369,22 +363,18 @@ export function ImportTextDialog({
 }
 
 function ItemSummary({ item }: { item: Item }) {
+  const tx = useTranslations("ui.s_app_importtextdialog");
   if ("duracionMinutes" in item) {
     const n = item.blocks.reduce((s, b) => s + b.items.length, 0);
     return (
       <p className="text-xs text-muted-foreground">
-        {item.duracionMinutes} min · {item.blocks.length} bloques · {n}{" "}
-        actividades
-        {item.objetivos ? ` · ${item.objetivos.slice(0, 140)}` : ""}
+        {tx("v1MinV2Bloques", { v1: item.duracionMinutes, v2: item.blocks.length, v3: n, v4: item.objetivos ? ` · ${item.objetivos.slice(0, 140)}` : "" })}
       </p>
     );
   }
   return (
     <p className="text-xs text-muted-foreground">
-      {item.durationMinutes} min
-      {item.niveles.length ? ` · ${item.niveles.join(", ")}` : ""}
-      {item.golpes.length ? ` · ${item.golpes.join(", ")}` : ""}
-      {item.description ? ` · ${item.description.slice(0, 140)}` : ""}
+      {tx("v1MinV2V3", { v1: item.durationMinutes, v2: item.niveles.length ? ` · ${item.niveles.join(", ")}` : "", v3: item.golpes.length ? ` · ${item.golpes.join(", ")}` : "", v4: item.description ? ` · ${item.description.slice(0, 140)}` : "" })}
     </p>
   );
 }
@@ -406,6 +396,8 @@ function ClassItemsLinker({
   cls: ImportedClass;
   onChange: (blocks: ImportedClass["blocks"]) => void;
 }) {
+  const term = useTerm();
+  const tx = useTranslations("ui.s_app_importtextdialog");
   const linked = cls.blocks.reduce(
     (n, b) => n + b.items.filter((it) => it.exerciseId).length,
     0
@@ -431,13 +423,12 @@ function ClassItemsLinker({
   return (
     <details className="text-xs">
       <summary className="cursor-pointer select-none py-1 font-medium">
-        Actividades · {linked} de {total} vinculadas a la biblioteca
-      </summary>
+        {tx("actividadesV1DeV2", { v1: linked, v2: total })}</summary>
       <div className="mt-2 space-y-3">
         {cls.blocks.map((b, bi) => (
           <div key={bi} className="space-y-1.5">
             <p className="font-semibold uppercase tracking-wide text-muted-foreground">
-              {b.title || BLOCK_LABELS[b.orderIndex]}
+              {b.title || term(BLOCK_LABELS[b.orderIndex])}
             </p>
             {b.items.map((it, ii) => (
               <div
@@ -457,7 +448,7 @@ function ClassItemsLinker({
                       setExercise(bi, ii, e.target.value || null)
                     }
                   >
-                    <option value="">Dejar como texto</option>
+                    <option value="">{tx("dejarComoTexto")}</option>
                     {it.suggestions.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name}
@@ -467,13 +458,13 @@ function ClassItemsLinker({
                 ) : (
                   <span className="text-muted-foreground">
                     {it.searchTerms
-                      ? "Sin ejercicio parecido: texto"
+                      ? tx("sinEjercicioParecidoTexto")
                       : "Texto"}
                   </span>
                 )}
                 {it.exerciseId && it.reason ? (
                   <span className="text-muted-foreground sm:col-span-2">
-                    Ten Planner: {it.reason}
+                    {tx("tenPlannerV1", { v1: it.reason })}
                   </span>
                 ) : null}
               </div>

@@ -75,6 +75,7 @@ import {
   tipoEjercicioOptionLabel,
   type TipoEjercicio,
 } from "@/lib/exercise-taxonomy";
+import { useTranslations } from "next-intl";
 
 type Category = "technique" | "tactics" | "fitness" | "warm-up";
 type Difficulty = "beginner" | "intermediate" | "advanced";
@@ -481,6 +482,7 @@ function AccordionSection({
   onToggle: (next: boolean) => void;
   children: ReactNode;
 }) {
+  const tx = useTranslations("ui.s_app_exerciseform");
   const fillPct = total > 0 ? Math.round((filled / total) * 100) : 0;
   const isComplete = filled === total;
 
@@ -499,7 +501,7 @@ function AccordionSection({
             <p className="text-sm font-bold text-foreground">{title}</p>
             {isComplete ? (
               <span className="rounded-full border border-[#D6FF38]/30 bg-[#D6FF38]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
-                Completo
+                {tx("completo")}
               </span>
             ) : (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
@@ -545,6 +547,7 @@ export function ExerciseForm({
   onSuccess,
   onCancel,
 }: ExerciseFormProps) {
+  const tx = useTranslations("ui.s_app_exerciseform");
   const router = useRouter();
   const NIVELES_PMV = nivelesPmvForSport(sport);
   const showPelota = showsTipoPelota(sport);
@@ -961,7 +964,7 @@ export function ExerciseForm({
     try {
       await upsertExerciseDraft({
         id: nextDraftId,
-        name: draftPayload.name.trim() || "Ejercicio sin título",
+        name: draftPayload.name.trim() || tx("ejercicioSinTitulo"),
         updatedAt: new Date().toISOString(),
         payload: draftPayload,
       });
@@ -1091,7 +1094,7 @@ export function ExerciseForm({
       setServerError(
         responseData.details?.map((d) => d.message).join(". ") ??
           responseData.error ??
-          "Ha ocurrido un error."
+          tx("haOcurridoUnError")
       );
       return;
     }
@@ -1131,7 +1134,7 @@ export function ExerciseForm({
   const nivelesField = (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-foreground">
-        Nivel
+        {tx("nivel")}
       </label>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {NIVELES_PMV.map(({ id, label, desc, color }) => {
@@ -1167,7 +1170,7 @@ export function ExerciseForm({
   const durationRangeField = (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-foreground">
-        Rango de duración
+        {tx("rangoDeDuracion")}
       </label>
       <Controller
         name="duracionRango"
@@ -1206,9 +1209,9 @@ export function ExerciseForm({
   const categoryField = (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-foreground">
-        Categorías{" "}
+        {tx("categorias")}{" "}
         <span className="font-normal text-muted-foreground">
-          (multi-selección)
+          {tx("multiSeleccion")}
         </span>
       </label>
       <Controller
@@ -1260,7 +1263,7 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={Dumbbell}
-        title="Información básica"
+        title={tx("informacionBasica")}
         subtitle="Nombre, categoría, nivel y duración"
       />
       <div className="space-y-6">
@@ -1269,12 +1272,12 @@ export function ExerciseForm({
             htmlFor="name"
             className="block text-sm font-semibold text-foreground"
           >
-            Nombre del ejercicio
+            {tx("nombreDelEjercicio")}
           </label>
           <input
             id="name"
             type="text"
-            placeholder="Ej: Bandeja cruzada de revés"
+            placeholder={tx("ejBandejaCruzadaDe")}
             autoComplete="off"
             aria-invalid={!!errors.name}
             {...register("name")}
@@ -1294,9 +1297,9 @@ export function ExerciseForm({
         {/* Materials — always visible regardless of mode */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Material necesario{" "}
+            {tx("materialNecesario")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <div
@@ -1330,7 +1333,7 @@ export function ExerciseForm({
               }}
               placeholder={
                 materials.length === 0
-                  ? "Escribe y pulsa Enter para añadir…"
+                  ? tx("escribeYPulsaEnter")
                   : ""
               }
               className="flex-1 min-w-[140px] h-7 text-sm bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
@@ -1354,21 +1357,20 @@ export function ExerciseForm({
           <>
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-foreground">
-                Fase de la sesión{" "}
+                {tx("faseDeLaSesion")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <p className="text-xs text-muted-foreground">
-                Puedes marcar varias: un ejercicio puede servir, por ejemplo,
-                como calentamiento y como vuelta a la calma.
+                {tx("puedesMarcarVariasUn")}
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {(
                   [
-                    { id: "activation", label: "Calentamiento" },
-                    { id: "main", label: "Parte principal" },
-                    { id: "cooldown", label: "Vuelta a la calma" },
+                    { id: "activation", label: tx("calentamiento") },
+                    { id: "main", label: tx("partePrincipal") },
+                    { id: "cooldown", label: tx("vueltaALaCalma") },
                   ] as { id: Phase; label: string }[]
                 ).map(({ id, label }) => {
                   const isSelected = fases.has(id);
@@ -1409,10 +1411,10 @@ export function ExerciseForm({
                       />
                       <div className="flex-1">
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                          <Globe className="size-3.5" /> Ejercicio biblioteca
+                          <Globe className="size-3.5" />{" "}{tx("ejercicioBiblioteca")}
                         </span>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Pasa a la biblioteca pública de Ten Planner.
+                          {tx("pasaALaBiblioteca")}
                         </p>
                       </div>
                     </label>
@@ -1421,10 +1423,10 @@ export function ExerciseForm({
 
                 <div className="space-y-1.5 pt-1">
                   <label className="block text-sm font-semibold text-foreground">
-                    Autoría
+                    {tx("autoria")}
                   </label>
                   <p className="text-xs text-muted-foreground">
-                    De quién es este ejercicio dentro de la biblioteca pública.
+                    {tx("deQuienEsEste")}
                   </p>
                   <Controller
                     name="autoria"
@@ -1465,16 +1467,16 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={SlidersHorizontal}
-        title="Parámetros deportivos"
+        title={tx("parametrosDeportivos")}
         subtitle="Formato, jugadores, pelota, tipo de actividad, golpes, efecto y parámetros"
       />
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Formato{" "}
+              {tx("formato")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <Controller
@@ -1482,10 +1484,10 @@ export function ExerciseForm({
               control={control}
               render={({ field }) => {
                 const FORMATOS: { id: Formato; label: string }[] = [
-                  { id: "individual", label: "Individual" },
-                  { id: "parejas", label: "Parejas" },
-                  { id: "grupal", label: "Grupal" },
-                  { id: "multigrupo", label: "Multigrupo" },
+                  { id: "individual", label: tx("individual") },
+                  { id: "parejas", label: tx("parejas") },
+                  { id: "grupal", label: tx("grupal") },
+                  { id: "multigrupo", label: tx("multigrupo") },
                 ];
                 return (
                   <div className="grid grid-cols-2 gap-2">
@@ -1518,10 +1520,10 @@ export function ExerciseForm({
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <Users className="size-3.5" /> Nº jugadores
+                <Users className="size-3.5" />{" "}{tx("nJugadores")}
               </span>{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional)
+                {tx("opcional")}
               </span>
             </label>
             <Controller
@@ -1553,7 +1555,7 @@ export function ExerciseForm({
                       onClick={() => field.onChange(null)}
                       className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
                     >
-                      Limpiar
+                      {tx("limpiar")}
                     </button>
                   ) : null}
                 </div>
@@ -1565,9 +1567,9 @@ export function ExerciseForm({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Tipo de ejercicio{" "}
+              {tx("tipoDeEjercicio")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional, puedes elegir varios)
+                {tx("opcionalPuedesElegirVarios")}
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1609,9 +1611,9 @@ export function ExerciseForm({
           {showPelota && (
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-foreground">
-                Tipo de pelota{" "}
+                {tx("tipoDePelota")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  (opcional)
+                  {tx("opcional")}
                 </span>
               </label>
               <Controller
@@ -1674,9 +1676,9 @@ export function ExerciseForm({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Carácter{" "}
+              {tx("caracter")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional, puedes elegir varios)
+                {tx("opcionalPuedesElegirVarios")}
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1703,9 +1705,9 @@ export function ExerciseForm({
 
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Situación del juego{" "}
+              {tx("situacionDelJuego")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional, puedes elegir varias)
+                {tx("opcionalPuedesElegirVarias")}
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1734,9 +1736,9 @@ export function ExerciseForm({
 
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-foreground">
-              Tipo de competición{" "}
+              {tx("tipoDeCompeticion")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional, puedes elegir las dos)
+                {tx("opcionalPuedesElegirLas")}
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1766,9 +1768,9 @@ export function ExerciseForm({
 
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Golpes trabajados{" "}
+            {tx("golpesTrabajados")}{" "}
             <span className="font-normal text-muted-foreground">
-              (multi-selección, opcional)
+              {tx("multiSeleccionOpcional")}
             </span>
           </label>
           <div className="flex flex-wrap gap-2">
@@ -1802,16 +1804,16 @@ export function ExerciseForm({
               onClick={() => setGolpes(new Set<string>())}
               className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
             >
-              Limpiar golpes
+              {tx("limpiarGolpes")}
             </button>
           ) : null}
         </div>
 
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Efecto de pelota{" "}
+            {tx("efectoDePelota")}{" "}
             <span className="font-normal text-muted-foreground">
-              (multi-selección, opcional)
+              {tx("multiSeleccionOpcional")}
             </span>
           </label>
           <div className="flex flex-wrap gap-2">
@@ -1844,9 +1846,9 @@ export function ExerciseForm({
         {/* PMV: Parámetro */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Parámetros{" "}
+            {tx("parametros")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <div className="flex flex-wrap gap-2">
@@ -1878,7 +1880,7 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={Target}
-        title="¿Qué se trabaja?"
+        title={tx("queSeTrabaja")}
         subtitle="Objetivos y descripción del ejercicio"
       />
       <div className="space-y-4">
@@ -1888,9 +1890,9 @@ export function ExerciseForm({
               htmlFor="objectives"
               className="block text-sm font-semibold text-foreground"
             >
-              Objetivos{" "}
+              {tx("objetivos")}{" "}
               <span className="font-normal text-muted-foreground">
-                (opcional · uno por línea)
+                {tx("opcionalUnoPorLinea")}
               </span>
             </label>
             <ObjectivesPicker
@@ -1913,7 +1915,7 @@ export function ExerciseForm({
             id="objectives"
             rows={3}
             maxLength={1000}
-            placeholder="Ej: Mejorar la consistencia del globo defensivo"
+            placeholder={tx("ejMejorarLaConsistencia")}
             {...register("objectives")}
             className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-y leading-relaxed"
           />
@@ -1923,14 +1925,14 @@ export function ExerciseForm({
             htmlFor="description"
             className="block text-sm font-semibold text-foreground"
           >
-            Descripción{" "}
+            {tx("descripcion")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="description"
-            placeholder="Contexto del ejercicio, situación táctica, cómo encaja en el entrenamiento…"
+            placeholder={tx("contextoDelEjercicioSituacion")}
             rows={4}
             maxLength={2000}
             {...register("description")}
@@ -1945,7 +1947,7 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={ListOrdered}
-        title="Pasos de ejecución"
+        title={tx("pasosDeEjecucion")}
         subtitle="Guía paso a paso de cómo realizar el ejercicio"
       />
       <div className="space-y-3">
@@ -1953,14 +1955,14 @@ export function ExerciseForm({
           <div className="border border-dashed border-border rounded-xl p-6 text-center">
             <ListOrdered className="size-6 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-3">
-              Sin pasos definidos aún
+              {tx("sinPasosDefinidosAun")}
             </p>
             <button
               type="button"
               onClick={addStep}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:text-brand/80 transition-colors"
             >
-              <Plus className="size-4" /> Añadir primer paso
+              <Plus className="size-4" />{" "}{tx("anadirPrimerPaso")}
             </button>
           </div>
         ) : (
@@ -2010,7 +2012,7 @@ export function ExerciseForm({
                         onChange={(e) =>
                           updateStep(step.id, "description", e.target.value)
                         }
-                        placeholder="Descripción detallada del paso (opcional)…"
+                        placeholder={tx("descripcionDetalladaDelPaso")}
                         rows={2}
                         className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground resize-none"
                       />
@@ -2031,7 +2033,7 @@ export function ExerciseForm({
               onClick={addStep}
               className="w-full flex items-center justify-center gap-2 h-9 border border-dashed border-border rounded-xl text-sm text-muted-foreground hover:text-foreground hover:border-border/80 transition-colors"
             >
-              <Plus className="size-4" /> Añadir paso
+              <Plus className="size-4" />{" "}{tx("anadirPaso")}
             </button>
           </>
         )}
@@ -2043,15 +2045,15 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={Package}
-        title="Materiales y lugar"
+        title={tx("materialesYLugar")}
         subtitle="Equipamiento necesario y dónde se practica"
       />
       <div className="space-y-5">
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Materiales necesarios{" "}
+            {tx("materialesNecesarios")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <div
@@ -2086,7 +2088,7 @@ export function ExerciseForm({
               }}
               placeholder={
                 materials.length === 0
-                  ? "Escribe y pulsa Enter para añadir…"
+                  ? tx("escribeYPulsaEnter")
                   : ""
               }
               className="flex-1 min-w-[140px] h-7 text-sm bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
@@ -2108,7 +2110,7 @@ export function ExerciseForm({
 
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-foreground">
-            Lugar de práctica
+            {tx("lugarDePractica")}
           </label>
           <Controller
             name="location"
@@ -2150,7 +2152,7 @@ export function ExerciseForm({
     <section>
       <SectionHeader
         icon={Lightbulb}
-        title="Recursos y consejos"
+        title={tx("recursosYConsejos")}
         subtitle="Vídeo de referencia y tips para el entrenador"
       />
       <div className="space-y-4">
@@ -2160,16 +2162,16 @@ export function ExerciseForm({
             className="block text-sm font-semibold text-foreground"
           >
             <span className="inline-flex items-center gap-1.5">
-              <Video className="size-3.5" /> Vídeo de referencia
+              <Video className="size-3.5" />{" "}{tx("videoDeReferencia")}
             </span>
             <span className="font-normal text-muted-foreground ml-1">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <input
             id="videoUrl"
             type="url"
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder={tx("httpsWwwYoutubeCom")}
             {...register("videoUrl")}
             className="w-full h-10 px-3 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
           />
@@ -2181,15 +2183,15 @@ export function ExerciseForm({
             className="block text-sm font-semibold text-foreground"
           >
             <span className="inline-flex items-center gap-1.5">
-              <Lightbulb className="size-3.5" /> Tips para el entrenador
+              <Lightbulb className="size-3.5" />{" "}{tx("tipsParaElEntrenador")}
             </span>
             <span className="font-normal text-muted-foreground ml-1">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="tips"
-            placeholder="Puntos clave a observar, errores comunes, correcciones, progresiones…"
+            placeholder={tx("puntosClaveAObservar")}
             rows={4}
             maxLength={1000}
             {...register("tips")}
@@ -2202,14 +2204,14 @@ export function ExerciseForm({
             htmlFor="variantes"
             className="block text-sm font-semibold text-foreground"
           >
-            Variantes{" "}
+            {tx("variantes")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="variantes"
-            placeholder="Modificaciones del ejercicio, progresiones, adaptaciones para distintos niveles…"
+            placeholder={tx("modificacionesDelEjercicioProgresiones")}
             rows={3}
             maxLength={2000}
             {...register("variantes")}
@@ -2222,14 +2224,14 @@ export function ExerciseForm({
             htmlFor="observaciones"
             className="block text-sm font-semibold text-foreground"
           >
-            Observaciones{" "}
+            {tx("observaciones")}{" "}
             <span className="font-normal text-muted-foreground">
-              (opcional)
+              {tx("opcional")}
             </span>
           </label>
           <textarea
             id="observaciones"
-            placeholder="Notas adicionales, contexto o recordatorios sobre este ejercicio…"
+            placeholder={tx("notasAdicionalesContextoO")}
             rows={3}
             maxLength={2000}
             {...register("observaciones")}
@@ -2246,7 +2248,7 @@ export function ExerciseForm({
       <div className="flex flex-col gap-4 rounded-lg border border-foreground/10 bg-card p-3 shadow-sm shadow-black/5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">
           <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-            Modo
+            {tx("modo")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
@@ -2262,7 +2264,7 @@ export function ExerciseForm({
               {saveStatus === "saving" ? (
                 <Loader2 className="size-3.5 animate-spin" />
               ) : null}
-              GUARDAR BORRADOR
+              {tx("guardarBorrador")}
             </Button>
           )}
           {enableDrafts && mode === "create" && (
@@ -2276,7 +2278,7 @@ export function ExerciseForm({
               onClick={() => updateFormMode("quick")}
               className="h-8 rounded-full px-3 text-xs font-bold"
             >
-              Rápido
+              {tx("rapido")}
             </Button>
             <Button
               type="button"
@@ -2285,7 +2287,7 @@ export function ExerciseForm({
               onClick={() => updateFormMode("full")}
               className="h-8 rounded-full px-3 text-xs font-bold"
             >
-              Completo
+              {tx("completo")}
             </Button>
           </div>
         </div>
@@ -2295,7 +2297,7 @@ export function ExerciseForm({
         <section className="space-y-6 rounded-lg border border-foreground/10 bg-card p-4 shadow-sm shadow-black/5 sm:p-5">
           <SectionHeader
             icon={Dumbbell}
-            title="Información básica"
+            title={tx("informacionBasica")}
             subtitle="Solo lo imprescindible: nombre, categoría, nivel y rango"
           />
           {/* Nombre */}
@@ -2304,12 +2306,12 @@ export function ExerciseForm({
               htmlFor="quick-name"
               className="block text-sm font-semibold text-foreground"
             >
-              Nombre del ejercicio
+              {tx("nombreDelEjercicio")}
             </label>
             <input
               id="quick-name"
               type="text"
-              placeholder="Ej: Bandeja cruzada de revés"
+              placeholder={tx("ejBandejaCruzadaDe")}
               autoComplete="off"
               aria-invalid={!!errors.name}
               {...register("name")}
@@ -2333,15 +2335,15 @@ export function ExerciseForm({
               onClick={() => updateFormMode("full")}
               className="font-semibold text-brand hover:underline"
             >
-              modo Completo
+              {tx("modoCompleto")}
             </button>{" "}
-            cuando quieras.
+            {tx("cuandoQuieras")}
           </p>
         </section>
       ) : (
         <div className="flex flex-col gap-5">
           <AccordionSection
-            title="Esencial"
+            title={tx("esencial")}
             subtitle="Lo mínimo para guardar un ejercicio usable."
             filled={essentialFilled}
             total={essentialTotal}
@@ -2352,7 +2354,7 @@ export function ExerciseForm({
           </AccordionSection>
 
           <AccordionSection
-            title="Descripción y objetivos"
+            title={tx("descripcionYObjetivos")}
             subtitle="Qué se trabaja en este ejercicio y qué se busca."
             filled={pedagogicalFilled}
             total={7}
@@ -2367,11 +2369,11 @@ export function ExerciseForm({
           </AccordionSection>
 
           <AccordionSection
-            title="Parámetros deportivos"
+            title={tx("parametrosDeportivos")}
             subtitle={
               showPelota
-                ? "Formato, jugadores, pelota, tipo de actividad, golpes, efecto y parámetros."
-                : "Formato, jugadores, tipo de actividad, golpes, efecto y parámetros."
+                ? tx("formatoJugadoresPelotaTipo")
+                : tx("formatoJugadoresTipoDe")
             }
             filled={paramsFilled}
             total={showPelota ? 7 : 6}
@@ -2382,7 +2384,7 @@ export function ExerciseForm({
           </AccordionSection>
 
           <AccordionSection
-            title="Material y media"
+            title={tx("materialYMedia")}
             subtitle="Lugar y materiales necesarios."
             filled={mediaFilled}
             total={2}
@@ -2415,14 +2417,14 @@ export function ExerciseForm({
             onClick={onCancel}
             className="rounded-full px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            Cancelar
+            {tx("cancelar")}
           </button>
         ) : (
           <Link
             href="/exercises"
             className="rounded-full px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            Cancelar
+            {tx("cancelar")}
           </Link>
         )}
       </div>

@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export default function SetupPage() {
+  const tx = useTranslations("ui.s_setup_page");
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
     "idle"
@@ -37,7 +39,7 @@ export default function SetupPage() {
         setTimeout(() => router.push("/admin"), 1800);
       }
     } catch {
-      setMessage("No se pudo contactar con el servidor.");
+      setMessage(tx("noSePudoContactar"));
       setStatus("error");
     }
   }
@@ -60,27 +62,26 @@ export default function SetupPage() {
               <Shield className="size-5" strokeWidth={2.2} />
             </div>
             <div>
-              <p className="text-sm font-black">TenPlanner</p>
+              <p className="text-sm font-black">{tx("tenplanner")}</p>
               <p className="text-xs font-semibold text-foreground/45">
-                Arranque seguro
+                {tx("arranqueSeguro")}
               </p>
             </div>
           </div>
           <span className="rounded-full border border-[#050505]/10 px-3 py-1 text-[11px] font-black uppercase text-foreground/55 dark:border-white/10">
-            Setup
+            {tx("setup")}
           </span>
         </div>
 
         <div className="space-y-3">
           <h1 className="text-3xl font-black leading-tight text-foreground">
-            Configuración inicial
+            {tx("configuracionInicial")}
           </h1>
           <p className="text-sm leading-6 text-foreground/62">
-            No hay administrador detectado. Usa este paso para crear el primer
-            acceso de control de la plataforma.
+            {tx("noHayAdministradorDetectado")}
           </p>
           <p className="rounded-2xl border border-[#050505]/10 bg-[#F4F4F1] px-4 py-3 text-xs font-semibold leading-5 text-foreground/58 dark:border-white/10 dark:bg-white/[0.04]">
-            Este flujo se desactiva automáticamente cuando existe un admin.
+            {tx("esteFlujoSeDesactiva")}
           </p>
         </div>
 
@@ -88,7 +89,7 @@ export default function SetupPage() {
           type="password"
           value={token}
           onChange={(event) => setToken(event.target.value)}
-          placeholder="Token de arranque (opcional)"
+          placeholder={tx("tokenDeArranqueOpcional")}
           className="tp-field mt-6 h-11 w-full px-4 text-sm font-medium placeholder:text-muted-foreground"
         />
 
@@ -97,14 +98,14 @@ export default function SetupPage() {
             className="mt-4 h-11 w-full rounded-full"
             onClick={handleBootstrap}
           >
-            Hacerme administrador
+            {tx("hacermeAdministrador")}
           </Button>
         )}
 
         {status === "loading" && (
           <Button className="mt-4 h-11 w-full rounded-full" disabled>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            Configurando...
+            {tx("configurando")}
           </Button>
         )}
 
@@ -115,7 +116,7 @@ export default function SetupPage() {
               <p className="text-sm font-medium">{message}</p>
             </div>
             <p className="mt-1 text-center text-xs text-foreground/50">
-              Redirigiendo al panel...
+              {tx("redirigiendoAlPanel")}
             </p>
           </div>
         )}

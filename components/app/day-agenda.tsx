@@ -14,6 +14,8 @@ import {
 import { DayPdfButton } from "@/components/app/day-pdf-dialog";
 import type { CalendarEventData } from "@/components/app/event-dialog";
 import type { CalendarHolidayData } from "@/lib/calendar/holidays";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
 export interface AgendaSession {
   id: string;
@@ -81,6 +83,8 @@ export function DayAgenda({
   deletingHolidayId?: string | null;
   holidayError?: string | null;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_dayagenda");
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -88,7 +92,7 @@ export function DayAgenda({
           {title}
           {items.length === 0 && (
             <span className="ml-2 text-sm font-semibold text-muted-foreground">
-              — Sin planes
+              {tx("sinPlanes")}
             </span>
           )}
         </h3>
@@ -100,7 +104,7 @@ export function DayAgenda({
             className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#2563eb]/30 px-3 text-xs font-black text-[#2563eb] transition-colors hover:bg-[#2563eb] hover:text-white"
           >
             <Plus className="size-3.5" />
-            Evento
+            {tx("evento")}
           </button>
           {onAddHoliday && (
             <button
@@ -109,7 +113,7 @@ export function DayAgenda({
               className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e11d48]/30 px-3 text-xs font-black text-[#e11d48] transition-colors hover:bg-[#e11d48] hover:text-white"
             >
               <CalendarOff className="size-3.5" />
-              Festivo
+              {tx("festivo")}
             </button>
           )}
         </div>
@@ -137,14 +141,14 @@ export function DayAgenda({
                 </p>
               </div>
               <span className="rounded-full bg-[#e11d48]/15 px-3 py-1.5 text-xs font-black text-[#be123c] dark:text-[#fda4af]">
-                Festivo
+                {tx("festivo")}
               </span>
               {h.canEdit && onEditHoliday && (
                 <button
                   type="button"
                   onClick={() => onEditHoliday(h)}
                   aria-label={`Editar ${h.title}`}
-                  title="Editar festivo"
+                  title={tx("editarFestivo")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Pencil className="size-4" />
@@ -156,7 +160,7 @@ export function DayAgenda({
                   onClick={() => onDeleteHoliday(h)}
                   disabled={deletingHolidayId === h.id}
                   aria-label={`Eliminar ${h.title}`}
-                  title="Eliminar festivo"
+                  title={tx("eliminarFestivo")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 >
                   {deletingHolidayId === h.id ? (
@@ -174,14 +178,14 @@ export function DayAgenda({
       {items.length === 0 && holidays.length > 0 ? null : items.length === 0 ? (
         <div className="tp-panel border-dashed p-6 text-center">
           <p className="mb-3 text-sm text-muted-foreground">
-            No hay sesiones ni eventos este día.
+            {tx("noHaySesionesNi")}
           </p>
           <Link
             href="/sessions/new"
             className="inline-flex items-center gap-1.5 text-sm font-black text-brand transition-colors hover:text-brand/80"
           >
             <Plus className="size-4" />
-            Planificar una sesión
+            {tx("planificarUnaSesion")}
           </Link>
         </div>
       ) : (
@@ -214,25 +218,25 @@ export function DayAgenda({
                   </Link>
                   {isSessionNotTaught(item.session.id) && (
                     <p className="mt-0.5 text-xs font-bold text-[#be123c] dark:text-[#fda4af]">
-                      No se imparte (festivo)
+                      {tx("noSeImparteFestivo")}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Clock className="size-3" />
-                    {item.session.durationMinutes} min
+                    {item.session.durationMinutes}{" "}{tx("min")}
                   </p>
                 </div>
                 <Link
                   href={`/sessions/${item.session.id}`}
                   className="rounded-full border border-brand/30 px-3 py-1.5 text-xs font-black text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
                 >
-                  Ver
+                  {tx("ver")}
                 </Link>
                 <button
                   type="button"
                   onClick={() => onMoveSession(item.session)}
                   aria-label={`Mover ${item.session.title}`}
-                  title="Mover a otro día"
+                  title={tx("moverAOtroDia")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <CalendarDays className="size-4" />
@@ -241,7 +245,7 @@ export function DayAgenda({
                   type="button"
                   onClick={() => onDuplicateSession(item.session)}
                   aria-label={`Duplicar ${item.session.title}`}
-                  title="Duplicar sesión"
+                  title={tx("duplicarSesion")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Copy className="size-4" />
@@ -251,7 +255,7 @@ export function DayAgenda({
                   onClick={() => onDeleteSession(item.session)}
                   disabled={deletingSessionId === item.session.id}
                   aria-label={`Eliminar ${item.session.title}`}
-                  title="Eliminar sesión"
+                  title={tx("eliminarSesion")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 >
                   {deletingSessionId === item.session.id ? (
@@ -281,25 +285,25 @@ export function DayAgenda({
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Clock className="size-3" />
-                    {new Date(item.event.startAt).toLocaleTimeString("es-ES", {
+                    {new Date(item.event.startAt).toLocaleTimeString(intlLocale, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                     {" – "}
-                    {new Date(item.event.endAt).toLocaleTimeString("es-ES", {
+                    {new Date(item.event.endAt).toLocaleTimeString(intlLocale, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </p>
                 </div>
                 <span className="rounded-full bg-[#2563eb]/15 px-3 py-1.5 text-xs font-black text-[#1d4ed8] dark:text-[#93b9ff]">
-                  Evento
+                  {tx("evento")}
                 </span>
                 <button
                   type="button"
                   onClick={() => onEditEvent(item.event)}
                   aria-label={`Editar ${item.event.title}`}
-                  title="Editar evento"
+                  title={tx("editarEvento")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Pencil className="size-4" />
@@ -309,7 +313,7 @@ export function DayAgenda({
                   onClick={() => onDeleteEvent(item.event)}
                   disabled={deletingEventId === item.event.id}
                   aria-label={`Eliminar ${item.event.title}`}
-                  title="Eliminar evento"
+                  title={tx("eliminarEvento")}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 >
                   {deletingEventId === item.event.id ? (

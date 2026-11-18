@@ -9,8 +9,10 @@ import {
   sortSchedule,
   type GroupScheduleEntry,
 } from "@/lib/groups/schedule";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 
-const MONTH_FORMAT = new Intl.DateTimeFormat("es-ES", {
+const MONTH_FORMAT = (loc: string) => new Intl.DateTimeFormat(loc, {
   month: "long",
   year: "numeric",
 });
@@ -50,6 +52,8 @@ export function ClassDatesCalendar({
   /** Texto del botón (por defecto "Continuar" / "Crear sesiones"). */
   confirmLabel?: string;
 }) {
+  const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
+  const tx = useTranslations("ui.s_app_classdatescalendar");
   const today = startOfToday();
   const [viewMonth, setViewMonth] = useState(
     () => new Date(today.getFullYear(), today.getMonth(), 1)
@@ -120,18 +124,18 @@ export function ClassDatesCalendar({
         <button
           type="button"
           onClick={() => changeMonth(-1)}
-          aria-label="Mes anterior"
+          aria-label={tx("mesAnterior")}
           className="flex size-8 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
         >
           <ChevronLeft className="size-4" />
         </button>
         <p className="text-sm font-bold capitalize text-foreground">
-          {MONTH_FORMAT.format(viewMonth)}
+          {MONTH_FORMAT(intlLocale).format(viewMonth)}
         </p>
         <button
           type="button"
           onClick={() => changeMonth(1)}
-          aria-label="Mes siguiente"
+          aria-label={tx("mesSiguiente")}
           className="flex size-8 items-center justify-center rounded-lg text-foreground/50 hover:bg-foreground/10 hover:text-foreground"
         >
           <ChevronRight className="size-4" />
@@ -180,7 +184,7 @@ export function ClassDatesCalendar({
       <div className="flex items-center justify-between gap-3 rounded-xl border border-foreground/10 px-3 py-2.5">
         <span className="text-sm font-semibold text-foreground">
           {selected.size === 0
-            ? "Ninguna fecha elegida"
+            ? tx("ningunaFechaElegida")
             : `${selected.size} fecha${selected.size !== 1 ? "s" : ""} elegida${selected.size !== 1 ? "s" : ""}`}
         </span>
         <input

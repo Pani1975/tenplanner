@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { LandingScreen } from "@/lib/landing-screens";
+import { useTerm } from "@/lib/i18n-terms";
 
 const INTERVAL_MS = 4500;
 
@@ -13,6 +14,7 @@ const INTERVAL_MS = 4500;
  * tocar los puntos, y el pase automático sigue después.
  */
 export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
+  const term = useTerm();
   const [index, setIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
   // Cambia cada vez que el usuario elige pantalla, para reiniciar el temporizador.
@@ -57,7 +59,7 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
             <Image
               key={screen.src}
               src={screen.src}
-              alt={screen.alt}
+              alt={term(screen.alt)}
               fill
               sizes="264px"
               priority={i === 0}
@@ -79,7 +81,7 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
       {screens.length > 1 && (
         <div className="mt-5 flex flex-col items-center gap-3">
           <p className="min-h-5 text-sm font-semibold text-[#4d4d45]">
-            {screens[index]?.label}
+            {term(screens[index]?.label ?? "")}
           </p>
           <div className="flex items-center gap-2">
             {screens.map((screen, i) => (
@@ -87,7 +89,7 @@ export function AppScreensPhone({ screens }: { screens: LandingScreen[] }) {
                 key={screen.src}
                 type="button"
                 onClick={() => goTo(i)}
-                aria-label={`Ver ${screen.label}`}
+                aria-label={`${term("Ver")} ${term(screen.label)}`}
                 aria-current={i === index}
                 className={cn(
                   "h-2 rounded-full transition-all",

@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Sparkles, Clock, Flame, Target, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Recommendation = {
   focus: string;
@@ -22,6 +23,7 @@ export function RecommendationCard({
   part: { state: string; output?: unknown };
   onSend: (text: string) => void;
 }) {
+  const tx = useTranslations("ui.s_drplanner_recommendationcard");
   if (part.state !== "output-available") {
     return (
       <div className="border border-brand/20 bg-brand/[0.03] p-5 animate-pulse h-32" />
@@ -37,7 +39,7 @@ export function RecommendationCard({
   if (!data?.ok || !data.recomendacion) {
     return (
       <div className="border-l-2 border-destructive/50 bg-destructive/[0.05] px-4 py-3 text-[13px] text-destructive">
-        {data?.error ?? "No se pudo generar la recomendación."}
+        {data?.error ?? tx("noSePudoGenerar")}
       </div>
     );
   }
@@ -58,13 +60,13 @@ export function RecommendationCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-brand">
-            Propuesta de sesión
+            {tx("propuestaDeSesion")}
           </p>
           <h3 className="font-heading text-xl leading-tight mt-0.5">
             {r.focus}
           </h3>
           <p className="text-[12px] text-foreground/60 mt-1">
-            Para: <span className="text-foreground">{targetNames}</span>
+            {tx("para")}{" "}<span className="text-foreground">{targetNames}</span>
           </p>
         </div>
       </div>
@@ -72,22 +74,22 @@ export function RecommendationCard({
       <div className="grid grid-cols-3 border-b border-brand/20">
         <SpecKPI
           icon={Clock}
-          label="Duración"
+          label={tx("duracion")}
           value={`${r.durationSugerida}′`}
         />
         <SpecKPI
           icon={Flame}
-          label="Intensidad"
+          label={tx("intensidad")}
           value={`${r.intensitySugerida}/5`}
           bordered
         />
-        <SpecKPI icon={Target} label="Gaps" value={String(r.gaps.length)} />
+        <SpecKPI icon={Target} label={tx("gaps")} value={String(r.gaps.length)} />
       </div>
 
       <div className="px-5 py-4 space-y-3">
         <div>
           <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1">
-            Razonamiento
+            {tx("razonamiento")}
           </p>
           <p className="text-[13px] leading-relaxed text-foreground">
             {r.razonamiento}
@@ -97,7 +99,7 @@ export function RecommendationCard({
         {r.insight && (
           <div className="border-l-2 border-brand/50 bg-brand/[0.04] px-3 py-2">
             <p className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand mb-0.5">
-              Lectura de IA
+              {tx("lecturaDeIa")}
             </p>
             <p className="text-[12px] leading-relaxed italic">{r.insight}</p>
           </div>
@@ -106,7 +108,7 @@ export function RecommendationCard({
         {r.gaps.length > 0 && (
           <div>
             <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-foreground/55 mb-1.5">
-              Huecos a cubrir
+              {tx("huecosACubrir")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {r.gaps.map((g, i) => (
@@ -140,7 +142,7 @@ export function RecommendationCard({
           }
           className="inline-flex items-center gap-2 border border-brand bg-brand text-brand-foreground text-[11px] font-semibold tracking-[0.18em] uppercase px-4 py-2 hover:bg-brand/90 transition-colors"
         >
-          Diseñar esta sesión
+          {tx("disenarEstaSesion")}
           <ArrowRight className="size-3" strokeWidth={2} />
         </button>
         <button
@@ -150,7 +152,7 @@ export function RecommendationCard({
           }
           className="inline-flex items-center gap-2 border border-foreground/20 text-[11px] font-semibold tracking-[0.18em] uppercase px-3 py-2 hover:border-foreground/40 transition-colors"
         >
-          Afinar
+          {tx("afinar")}
         </button>
       </div>
     </motion.div>

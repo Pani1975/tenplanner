@@ -7,8 +7,10 @@ import {
   getClubAccountClubId,
   getOwnedClub,
 } from "@/lib/clubs";
+import { getTranslations } from "next-intl/server";
 
 export default async function ResourcesPage() {
+  const tx = await getTranslations("ui.s_resources_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,15 +32,15 @@ export default async function ResourcesPage() {
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
             <BookMarked className="size-3.5" />
-            {inClub ? "Espacio del club" : "Zona personal"}
+            {inClub ? tx("espacioDelClub") : "Zona personal"}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
             {inClub ? "Recursos club" : "Mis recursos"}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
             {inClub
-              ? "Enlaces, documentos, imágenes y dibujos de pizarra del club, en una carpeta por monitor. Todos los miembros ven todo; cada monitor edita lo suyo."
-              : "Enlaces, documentos, imágenes y dibujos de pizarra que te sirven para tu labor como monitor, organizados en Todos y Favoritos."}
+              ? tx("enlacesDocumentosImagenesY")
+              : tx("enlacesDocumentosImagenesY2")}
           </p>
         </header>
 

@@ -7,12 +7,14 @@ import {
   NoPlayers,
   PlayerSwitcher,
 } from "@/components/family/family-header";
+import { getTranslations } from "next-intl/server";
 
 export default async function FamilyReportsPage({
   searchParams,
 }: {
   searchParams: Promise<{ alumno?: string }>;
 }) {
+  const tx = await getTranslations("ui.s_informes_page");
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,8 +31,8 @@ export default async function FamilyReportsPage({
         <FamilyHeader
           icon={FileText}
           kicker="Panel de familias"
-          title="Informes"
-          description="Los informes de evolución que publiquen el monitor o el club sobre el jugador."
+          title={tx("informes")}
+          description={tx("losInformesDeEvolucion")}
         />
         {!player ? (
           <NoPlayers />
@@ -44,9 +46,7 @@ export default async function FamilyReportsPage({
             <div className="tp-panel flex flex-col items-center gap-3 border-dashed py-16 text-center">
               <FileText className="size-8 text-foreground/30" />
               <p className="max-w-sm text-sm leading-6 text-foreground/60">
-                Todavía no hay informes publicados de {player.name}. Cuando el
-                monitor publique uno, lo verás aquí.
-              </p>
+                {tx("todaviaNoHayInformes", { v1: player.name })}</p>
             </div>
           </>
         )}

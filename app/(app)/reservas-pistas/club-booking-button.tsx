@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarPlus, Loader2 } from "lucide-react";
 import { minutesLabel } from "@/lib/bookings/availability";
+import { useTranslations } from "next-intl";
 
 const START_MINUTES = Array.from({ length: 36 }, (_, i) => 6 * 60 + i * 30); // 06:00–23:30
 const DURATIONS = [30, 60, 90, 120, 180, 240, 360, 480];
@@ -17,6 +18,7 @@ export function ClubBookingButton({
   /** Día que se está viendo (YYYY-MM-DD), propuesto por defecto. */
   date: string;
 }) {
+  const tx = useTranslations("ui.s_reservaspistas_clubbookingbutton");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [placeId, setPlaceId] = useState(places[0]?.id ?? "");
@@ -31,7 +33,7 @@ export function ClubBookingButton({
 
   async function save() {
     if (purpose.trim().length < 2) {
-      setError("Indica para qué es la reserva.");
+      setError(tx("indicaParaQueEs"));
       return;
     }
     setSaving(true);
@@ -49,12 +51,12 @@ export function ClubBookingButton({
     }).catch(() => null);
     setSaving(false);
     if (!res) {
-      setError("Error de conexión. Inténtalo de nuevo.");
+      setError(tx("errorDeConexionIntentalo"));
       return;
     }
     if (!res.ok) {
       const json = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(json.error ?? "No se pudo reservar.");
+      setError(json.error ?? tx("noSePudoReservar"));
       return;
     }
     setOpen(false);
@@ -78,7 +80,7 @@ export function ClubBookingButton({
         className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-violet-700"
       >
         <CalendarPlus className="size-3.5" />
-        Reservar pista (club)
+        {tx("reservarPistaClub")}
       </button>
 
       {open && (
@@ -98,15 +100,15 @@ export function ClubBookingButton({
               className="flex items-center gap-2 text-lg font-black text-foreground"
             >
               <span className="size-3 rounded-sm bg-violet-500" />
-              Reserva del club
+              {tx("reservaDelClub")}
             </h2>
             <p className="mb-4 text-xs text-muted-foreground">
-              Ocupa la pista (también en la página pública de reservas).
+              {tx("ocupaLaPistaTambien")}
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-xs font-semibold text-muted-foreground sm:col-span-2">
-                Pista
+                {tx("pista")}
                 <select
                   value={placeId}
                   onChange={(e) => setPlaceId(e.target.value)}
@@ -120,7 +122,7 @@ export function ClubBookingButton({
                 </select>
               </label>
               <label className="block text-xs font-semibold text-muted-foreground sm:col-span-2">
-                Día
+                {tx("dia")}
                 <input
                   type="date"
                   value={day}
@@ -129,7 +131,7 @@ export function ClubBookingButton({
                 />
               </label>
               <label className="block text-xs font-semibold text-muted-foreground">
-                Hora de inicio
+                {tx("horaDeInicio")}
                 <select
                   value={startMinute}
                   onChange={(e) => setStartMinute(Number(e.target.value))}
@@ -143,7 +145,7 @@ export function ClubBookingButton({
                 </select>
               </label>
               <label className="block text-xs font-semibold text-muted-foreground">
-                Duración
+                {tx("duracion")}
                 <select
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
@@ -157,12 +159,12 @@ export function ClubBookingButton({
                 </select>
               </label>
               <label className="block text-xs font-semibold text-muted-foreground sm:col-span-2">
-                ¿Para qué es?
+                {tx("paraQueEs")}
                 <input
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   maxLength={120}
-                  placeholder="Mantenimiento, torneo interno, clase particular…"
+                  placeholder={tx("mantenimientoTorneoInternoClase")}
                   className={field}
                 />
               </label>
@@ -181,7 +183,7 @@ export function ClubBookingButton({
                 disabled={saving}
                 className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-muted"
               >
-                Cancelar
+                {tx("cancelar")}
               </button>
               <button
                 type="button"
@@ -190,7 +192,7 @@ export function ClubBookingButton({
                 className="inline-flex flex-[1.4] items-center justify-center gap-2 rounded-full bg-violet-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-60"
               >
                 {saving && <Loader2 className="size-4 animate-spin" />}
-                Reservar
+                {tx("reservar")}
               </button>
             </div>
           </div>

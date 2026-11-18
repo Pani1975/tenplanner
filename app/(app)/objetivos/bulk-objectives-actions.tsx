@@ -7,6 +7,7 @@ import {
   hideAllWorkspaceObjectives,
   restoreAllBaseWorkspaceObjectives,
 } from "./actions";
+import { useTranslations } from "next-intl";
 
 type Pending = "hide" | "restore" | null;
 
@@ -15,6 +16,7 @@ type Pending = "hide" | "restore" | null;
  * quitarlos todos o volver a los de Ten Planner tal y como están ahora.
  */
 export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
+  const tx = useTranslations("ui.s_objetivos_bulkobjectivesactions");
   const router = useRouter();
   const [confirm, setConfirm] = useState<Pending>(null);
   const [isPending, startTransition] = useTransition();
@@ -29,19 +31,19 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
           : await restoreAllBaseWorkspaceObjectives();
       setConfirm(null);
       if (!res.ok) {
-        setMessage("No se pudo completar. Inténtalo de nuevo.");
+        setMessage(tx("noSePudoCompletar"));
         return;
       }
       setMessage(
         kind === "hide"
-          ? "Objetivos quitados. Puedes restaurar los de Ten Planner cuando quieras."
-          : "Objetivos de Ten Planner restaurados."
+          ? tx("objetivosQuitadosPuedesRestaurar")
+          : tx("objetivosDeTenPlanner")
       );
       router.refresh();
     });
   }
 
-  const who = inClub ? "los alumnos del club" : "tus alumnos particulares";
+  const who = inClub ? tx("losAlumnosDelClub") : tx("tusAlumnosParticulares");
 
   return (
     <div className="space-y-2">
@@ -60,13 +62,13 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
             className="text-sm font-black text-foreground"
           >
             {confirm === "hide"
-              ? "¿Borrar todos los objetivos?"
-              : "¿Restaurar todos los objetivos de Ten Planner?"}
+              ? tx("borrarTodosLosObjetivos")
+              : tx("restaurarTodosLosObjetivos")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {confirm === "hide"
               ? `Se quitan todos: los de Ten Planner y los que habéis creado. ${who[0].toUpperCase()}${who.slice(1)} dejarán de verlos en su ficha. Los de Ten Planner se pueden restaurar después; los creados por vosotros, no.`
-              : `Vuelven todos los objetivos vigentes de Ten Planner con su texto y orden originales. Se pierden los cambios que hayáis hecho sobre ellos (textos, orden, ocultos). Los objetivos creados por vosotros se mantienen.`}
+              : tx("vuelvenTodosLosObjetivos")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -75,7 +77,7 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
               disabled={isPending}
               className="rounded-full border border-border px-4 py-2 text-xs font-black text-muted-foreground hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"
@@ -88,7 +90,7 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
               }
             >
               {isPending && <Loader2 className="size-3.5 animate-spin" />}
-              {confirm === "hide" ? "Sí, borrar todos" : "Sí, restaurar"}
+              {confirm === "hide" ? tx("siBorrarTodos") : "Sí, restaurar"}
             </button>
           </div>
         </div>
@@ -100,7 +102,7 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-xs font-black uppercase text-foreground hover:bg-muted"
           >
             <RotateCcw className="size-3.5" />
-            Restaurar objetivos de Ten Planner
+            {tx("restaurarObjetivosDeTen")}
           </button>
           <button
             type="button"
@@ -108,7 +110,7 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
             className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 bg-card px-4 py-2 text-xs font-black uppercase text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="size-3.5" />
-            Borrar todos los objetivos
+            {tx("borrarTodosLosObjetivos2")}
           </button>
         </div>
       )}

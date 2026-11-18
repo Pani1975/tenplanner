@@ -6,6 +6,7 @@ import { Loader2, Pencil, Target } from "lucide-react";
 import { ObjectivesPicker } from "@/components/objectives/objectives-picker";
 import { appendObjectiveLines, objectiveLines } from "@/lib/objectives-text";
 import type { BallId } from "@/lib/objectives-taxonomy";
+import { useTranslations } from "next-intl";
 
 /**
  * Objetivos de trabajo del grupo: se cargan del catálogo de Objetivos (el del
@@ -22,6 +23,7 @@ export function GroupObjectivesEditor({
   defaultBall: BallId | null;
   canEdit: boolean;
 }) {
+  const tx = useTranslations("ui.s_id_groupobjectiveseditor");
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(initialObjetivos ?? "");
@@ -40,13 +42,13 @@ export function GroupObjectivesEditor({
         body: JSON.stringify({ objetivos: next.trim() || null }),
       });
       if (!res.ok) {
-        setError("No se pudieron guardar los objetivos.");
+        setError(tx("noSePudieronGuardar"));
         return false;
       }
       router.refresh();
       return true;
     } catch {
-      setError("Error de red. Inténtalo de nuevo.");
+      setError(tx("errorDeRedIntentalo"));
       return false;
     } finally {
       setSaving(false);
@@ -66,11 +68,10 @@ export function GroupObjectivesEditor({
           <Target className="size-4 text-brand" />
           <div>
             <h2 className="text-lg font-black text-foreground">
-              Objetivos del grupo
+              {tx("objetivosDelGrupo")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Lo que se trabaja con este grupo. Cárgalos del catálogo de
-              objetivos o escríbelos a mano.
+              {tx("loQueSeTrabaja")}
             </p>
           </div>
         </div>
@@ -127,7 +128,7 @@ export function GroupObjectivesEditor({
               onClick={() => setEditing(false)}
               className="rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground/70 transition-colors hover:bg-muted"
             >
-              Cancelar
+              {tx("cancelar")}
             </button>
             <button
               type="button"
@@ -138,7 +139,7 @@ export function GroupObjectivesEditor({
               className="inline-flex items-center gap-2 rounded-full bg-[#D6FF38] px-4 py-2 text-sm font-black text-[#050505] transition-colors hover:bg-[#c8ef2f] disabled:opacity-50"
             >
               {saving && <Loader2 className="size-4 animate-spin" />}
-              Guardar
+              {tx("guardar")}
             </button>
           </div>
         </div>
@@ -157,15 +158,15 @@ export function GroupObjectivesEditor({
       ) : (
         <p className="mt-4 text-sm text-muted-foreground">
           {canEdit
-            ? "Aún no hay objetivos para este grupo."
-            : "Este grupo aún no tiene objetivos."}
+            ? tx("aunNoHayObjetivos")
+            : tx("esteGrupoAunNo")}
         </p>
       )}
 
       {saving && !editing && (
         <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <Loader2 className="size-3 animate-spin" />
-          Guardando…
+          {tx("guardando")}
         </p>
       )}
       {error && (

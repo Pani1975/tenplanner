@@ -5,6 +5,7 @@ import { Heart, Lock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ExerciseListPicker } from "./exercise-list-picker";
+import { useTranslations } from "next-intl";
 
 interface FavoriteToggleProps {
   exerciseId: string;
@@ -29,6 +30,7 @@ export function FavoriteToggle({
   locked = false,
   variant = "card",
 }: FavoriteToggleProps) {
+  const tx = useTranslations("ui.s_app_favoritetoggle");
   const [favorited, setFavorited] = useState(initialFavorited);
   const [open, setOpen] = useState(false);
 
@@ -37,7 +39,7 @@ export function FavoriteToggle({
       <Link
         href="/login"
         onClick={(e) => e.stopPropagation()}
-        aria-label="Inicia sesión para guardar en una lista"
+        aria-label={tx("iniciaSesionParaGuardar")}
         className={cn(
           "flex items-center justify-center rounded-full transition-all",
           size === "sm" ? "size-7" : "size-9",
@@ -64,7 +66,7 @@ export function FavoriteToggle({
     <>
       <button
         onClick={handleClick}
-        aria-label={favorited ? "Gestionar listas" : "Añadir a una lista"}
+        aria-label={favorited ? "Gestionar listas" : tx("anadirAUnaLista")}
         className={cn(
           "flex items-center justify-center rounded-full transition-all",
           size === "sm" ? "size-7" : "size-9",

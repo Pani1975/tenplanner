@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
+import { useTranslations } from "next-intl";
 
 export function SportSwitcher({
   activeSport: initialActiveSport,
 }: {
   activeSport: Sport;
 }) {
+  const tx = useTranslations("ui.s_app_sportswitcher");
   const router = useRouter();
   const [activeSport, setActiveSportState] = useState<Sport>(
     initialActiveSport
@@ -31,7 +33,7 @@ export function SportSwitcher({
       setActiveSportState(sport);
       router.refresh();
     } else {
-      setError("No se pudo cambiar de deporte. Inténtalo de nuevo.");
+      setError(tx("noSePudoCambiar"));
     }
     setSaving(null);
   }
@@ -40,12 +42,10 @@ export function SportSwitcher({
     <div className="tp-panel space-y-3 p-5 sm:p-6">
       <div>
         <h2 className="text-sm font-black uppercase text-foreground">
-          Deporte
+          {tx("deporte")}
         </h2>
         <p className="mt-1 text-xs text-foreground/55 leading-relaxed">
-          Elige con qué deporte trabajas ahora — filtra lo que ves y lo que
-          crees (sesiones, biblioteca, grupos). Puedes cambiarlo cuando
-          quieras; lo ya creado se queda en su deporte.
+          {tx("eligeConQueDeporte")}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
