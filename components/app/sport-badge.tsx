@@ -6,6 +6,7 @@ import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 /**
  * Indicador siempre visible (barra lateral / cabecera móvil) del deporte
@@ -20,6 +21,7 @@ export function SportBadge({
   activeSport: Sport;
   className?: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sportbadge");
   const router = useRouter();
   const [activeSport, setActiveSportState] = useState<Sport>(
@@ -104,7 +106,7 @@ export function SportBadge({
               ) : (
                 <span className="size-3.5 shrink-0" />
               )}
-              <span className="min-w-0 flex-1 truncate">{option.label}</span>
+              <span className="min-w-0 flex-1 truncate">{term(option.label)}</span>
               {activeSport === option.id && saving !== option.id && (
                 <Check className="size-3.5 shrink-0 text-brand" />
               )}

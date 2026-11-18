@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -24,49 +25,23 @@ function detectPlatform(): Platform {
   return "other";
 }
 
-const INSTRUCTIONS: Record<
-  Exclude<Platform, "android">,
-  { label: string; body: React.ReactNode }
-> = {
-  ios: {
-    label: "Añadir a inicio",
-    body: (
-      <>
-        Toca <span className="font-semibold">Compartir</span> en Safari y luego{" "}
-        <span className="font-semibold">Añadir a pantalla de inicio</span>.
-      </>
-    ),
-  },
-  "mac-safari": {
-    label: "Añadir al Dock",
-    body: (
-      <>
-        En el menú <span className="font-semibold">Archivo</span> de Safari,
-        elige <span className="font-semibold">Añadir al Dock</span>.
-      </>
-    ),
-  },
-  firefox: {
-    label: "Instalar app",
-    body: (
-      <>
-        Firefox de escritorio no permite instalar TenPlanner como app. Abre esta
-        página con <span className="font-semibold">Chrome</span> o{" "}
-        <span className="font-semibold">Edge</span> para instalarla.
-      </>
-    ),
-  },
-  other: {
-    label: "Instalar app",
-    body: (
-      <>
-        Busca el icono de instalación <span className="font-semibold">⊕</span>{" "}
-        en la barra de direcciones, o el menú del navegador &rsaquo;{" "}
-        <span className="font-semibold">Instalar TenPlanner</span>.
-      </>
-    ),
-  },
-};
+type Translator = ReturnType<typeof useTranslations>;
+
+function bold(chunks: React.ReactNode) {
+  return <span className="font-semibold">{chunks}</span>;
+}
+
+// Instrucciones de instalación por plataforma, traducidas al pintarlas.
+function getInstructions(
+  tx: Translator
+): Record<Exclude<Platform, "android">, { label: string; body: React.ReactNode }> {
+  return {
+    ios: { label: tx("iosLabel"), body: <>{tx.rich("iosBody", { b: bold })}</> },
+    "mac-safari": { label: tx("macLabel"), body: <>{tx.rich("macBody", { b: bold })}</> },
+    firefox: { label: tx("installApp"), body: <>{tx.rich("firefoxBody", { b: bold })}</> },
+    other: { label: tx("installApp"), body: <>{tx.rich("otherBody", { b: bold })}</> },
+  };
+}
 
 /**
  * Always shows a way to add TenPlanner to the device: a native "Instalar
@@ -82,6 +57,7 @@ const INSTRUCTIONS: Record<
  * trigger a hydration mismatch.
  */
 export function InstallAppButton({ className }: { className?: string }) {
+  const tx = useTranslations("ui.s_landing_installappbutton");
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [platform, setPlatform] = useState<Platform>("other");
@@ -119,10 +95,11 @@ export function InstallAppButton({ className }: { className?: string }) {
     return null;
   }
 
-  const instructions = platform === "android" ? null : INSTRUCTIONS[platform];
+  const instructions =
+    platform === "android" ? null : getInstructions(tx)[platform];
   const label = deferredPrompt
     ? "Instalar app"
-    : (instructions?.label ?? "Instalar app");
+    : (instructions?.label ?? tx("installApp"));
 
   const handleClick = async () => {
     if (deferredPrompt) {
@@ -150,7 +127,7 @@ export function InstallAppButton({ className }: { className?: string }) {
       {showHelp && !deferredPrompt && (
         <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-[#050505]/10 bg-white p-4 text-sm leading-6 text-[#050505] shadow-[0_24px_55px_rgba(5,5,5,0.12)]">
           {platform === "android"
-            ? "Abre el menú del navegador y elige Instalar app o Añadir a pantalla de inicio."
+            ? tx("abreElMenuDel")
             : instructions?.body}
         </div>
       )}

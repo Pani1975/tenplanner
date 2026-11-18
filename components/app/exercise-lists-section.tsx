@@ -432,7 +432,7 @@ function CollectionCard({
                             {embedUrl ? (
                               <iframe
                                 src={embedUrl}
-                                title={`Vídeo: ${item.name}`}
+                                title={tx("videoV1", { v1: item.name })}
                                 className="absolute inset-0 size-full"
                                 loading="lazy"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

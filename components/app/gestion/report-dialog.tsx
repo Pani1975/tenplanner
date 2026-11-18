@@ -195,7 +195,7 @@ export function ReportDialog({
   }
 
   async function removeTemplate(t: DialogTemplate) {
-    if (!window.confirm(`¿Borrar la plantilla «${t.name}»?`)) return;
+    if (!window.confirm(tx("borrarLaPlantillaV1", { v1: t.name }))) return;
     setBusy(`del-${t.id}`);
     setError(null);
     setMessage(null);
@@ -558,7 +558,7 @@ export function ReportDialog({
                               type="button"
                               onClick={() => viewOnScreen(t.id)}
                               disabled={periodInvalid}
-                              aria-label={`Ver «${t.name}» en pantalla`}
+                              aria-label={tx("verV1EnPantalla", { v1: t.name })}
                               title={tx("verEnPantalla")}
                               className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-muted disabled:opacity-50"
                             >

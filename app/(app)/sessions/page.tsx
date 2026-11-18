@@ -102,9 +102,9 @@ function humanDate(date: Date) {
 }
 
 export default async function SessionsPage({ searchParams }: PageProps) {
+  const tx = await getTranslations("ui.s_sessions_page");
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const term = await getTerm();
-  const tx = await getTranslations("ui.s_sessions_page");
   const supabase = await createClient();
   const {
     data: { session },
@@ -560,7 +560,7 @@ export default async function SessionsPage({ searchParams }: PageProps) {
                   </p>
                   <p className="text-[13px] text-foreground/55 max-w-sm mx-auto mb-5">
                     {searchTerm
-                      ? `No hay sesiones para "${searchTerm}".`
+                      ? tx("noHaySesionesPara", { v1: searchTerm })
                       : tx("creaUnaNuevaSesion")}
                   </p>
                   <Link

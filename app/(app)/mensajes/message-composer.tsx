@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { RecipientOptions } from "@/lib/messages";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 type Target = "coach" | "coaches" | "group" | "student";
 
@@ -38,6 +39,7 @@ export function MessageComposer({
   options: RecipientOptions;
   sportLabel: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_mensajes_messagecomposer");
   const router = useRouter();
   const [target, setTarget] = useState<Target>("coach");
@@ -62,15 +64,15 @@ export function MessageComposer({
     if (target === "coaches") {
       return options.coaches.length === 0
         ? `No hay monitores de ${sportLabel} en el club.`
-        : `Lo recibirán los ${options.coaches.length} monitores de ${sportLabel} del club.`;
+        : tx("loRecibiranLosV1", { v1: options.coaches.length, v2: sportLabel });
     }
     if (!recipientId) return null;
     if (target === "group") {
       const g = options.groups.find((x) => x.id === recipientId);
       if (!g) return null;
       return g.contacts === 0
-        ? `El grupo tiene ${g.students} alumnos, pero ninguna familia tiene cuenta todavía: nadie recibirá el mensaje.`
-        : `Lo recibirán las familias del grupo (${g.contacts} contactos con cuenta).`;
+        ? tx("elGrupoTieneV1", { v1: g.students })
+        : tx("loRecibiranLasFamilias", { v1: g.contacts });
     }
     if (target === "student") {
       const s = options.students.find((x) => x.id === recipientId);
@@ -79,8 +81,8 @@ export function MessageComposer({
         ? tx("alAlumnoEsMayor")
         : tx("aSusPadresO");
       return s.contacts === 0
-        ? `Se enviaría ${who}, pero aún no tiene contactos con cuenta: nadie lo recibirá.`
-        : `Se enviará ${who}.`;
+        ? tx("seEnviariaV1Pero", { v1: who })
+        : tx("seEnviaraV1", { v1: who });
     }
     return null;
   }, [target, recipientId, options, sportLabel]);
@@ -165,7 +167,7 @@ export function MessageComposer({
               )}
             >
               <Icon className="size-4 shrink-0" strokeWidth={1.7} />
-              <span className="leading-tight">{label}</span>
+              <span className="leading-tight">{term(label)}</span>
             </button>
           ))}
         </div>

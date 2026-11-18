@@ -115,8 +115,8 @@ const PAST_RENDER_LIMIT = 120;
 const UPCOMING_RENDER_LIMIT = 120;
 
 export default async function StudentDetailPage({ params }: PageProps) {
-  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const tx = await getTranslations("ui.s_id_page");
+  const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const { id } = await params;
 
   const supabase = await createClient();
@@ -492,7 +492,7 @@ export default async function StudentDetailPage({ params }: PageProps) {
                 label={tx("experiencia")}
                 value={
                   student.yearsExperience != null
-                    ? `${student.yearsExperience} año${student.yearsExperience !== 1 ? "s" : ""}`
+                    ? tx("v1AnoV2", { v1: student.yearsExperience, v2: student.yearsExperience !== 1 ? "s" : "" })
                     : "—"
                 }
               />

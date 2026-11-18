@@ -185,7 +185,7 @@ export function ClubIdentityForm({
     if (selected.length === 0) {
       setMessage({
         ok: false,
-        text: `Máximo ${MAX_CLUB_PHOTOS} fotos.`,
+        text: tx("maximoV1Fotos", { v1: MAX_CLUB_PHOTOS }),
       });
       return;
     }
@@ -217,7 +217,7 @@ export function ClubIdentityForm({
       return;
     }
     if (videos.length >= MAX_CLUB_VIDEOS) {
-      setMessage({ ok: false, text: `Máximo ${MAX_CLUB_VIDEOS} vídeos.` });
+      setMessage({ ok: false, text: tx("maximoV1Videos", { v1: MAX_CLUB_VIDEOS }) });
       return;
     }
     setVideos((prev) => [...prev, url]);

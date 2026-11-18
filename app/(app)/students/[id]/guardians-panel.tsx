@@ -178,8 +178,8 @@ export function GuardiansPanel({
     <div className="space-y-4">
       <p className="text-[13px] leading-relaxed text-foreground/60">
         {adult
-          ? `Quién recibe los mensajes de ${clubName} sobre ${studentName}: el propio alumno (es mayor de edad) o las personas que indique.`
-          : `${studentName} es menor de edad (o no consta su fecha de nacimiento): los mensajes de ${clubName} se envían a su madre, padre o tutor legal.`}
+          ? tx("quienRecibeLosMensajes", { v1: clubName, v2: studentName })
+          : tx("v1EsMenorDe", { v1: studentName, v2: clubName })}
       </p>
 
       {visible.length > 0 && (

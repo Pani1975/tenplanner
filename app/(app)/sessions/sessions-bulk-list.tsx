@@ -332,7 +332,7 @@ export function SessionsBulkList({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={
-          count === 1 ? tx("eliminar1Sesion") : `¿Eliminar ${count} sesiones?`
+          count === 1 ? tx("eliminar1Sesion") : tx("eliminarV1Sesiones", { v1: count })
         }
         description={tx("seBorraranConSu")}
         confirmLabel={tx("eliminar")}

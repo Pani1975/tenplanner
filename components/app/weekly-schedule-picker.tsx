@@ -137,7 +137,7 @@ export function WeeklySchedulePicker({
                   <span>a</span>
                   <input
                     type="time"
-                    aria-label={`Hora de finalización del ${label}`}
+                    aria-label={tx("horaDeFinalizacionDel", { v1: label })}
                     value={slot.endTime}
                     onChange={(e) => setEnd(weekday, e.target.value)}
                     className={cn(

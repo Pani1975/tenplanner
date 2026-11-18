@@ -179,6 +179,7 @@ export function ExerciseQuickViewDialog({
  * que el usuario lo pulsa, y entonces arranca dentro de la propia vista.
  */
 function VideoEmbed({ embedUrl, title }: { embedUrl: string; title: string }) {
+  const tx = useTranslations("ui.s_app_exercisequickviewdialog");
   const [playing, setPlaying] = useState(false);
   const videoId = embedUrl.match(/\/embed\/([A-Za-z0-9_-]{11})/)?.[1];
 
@@ -191,7 +192,7 @@ function VideoEmbed({ embedUrl, title }: { embedUrl: string; title: string }) {
             u.searchParams.set("autoplay", "1");
             return u.toString();
           })()}
-          title={`Vídeo: ${title}`}
+          title={tx("videoV1", { v1: title })}
           className="absolute inset-0 size-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
@@ -201,7 +202,7 @@ function VideoEmbed({ embedUrl, title }: { embedUrl: string; title: string }) {
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          aria-label={`Reproducir vídeo: ${title}`}
+          aria-label={tx("reproducirVideoV1", { v1: title })}
           className="group absolute inset-0 size-full"
         >
           {videoId ? (

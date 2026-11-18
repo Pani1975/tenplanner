@@ -96,7 +96,7 @@ export function AssignedCoachesPanel({
         <>
           {assigned.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              {emptyHint ?? `Todavía no hay monitores asignados a ${subject}.`}
+              {emptyHint ?? tx("todaviaNoHayMonitores", { v1: subject })}
             </p>
           ) : (
             <ul className="mt-3 flex flex-wrap gap-1.5">

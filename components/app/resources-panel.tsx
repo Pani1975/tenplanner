@@ -123,7 +123,7 @@ export function ResourcesPanel({
         method: "POST",
       });
       if (!res.ok) throw new Error("failed");
-      setNotice(`«${resource.title}» se copió a tu espacio particular.`);
+      setNotice(tx("v1SeCopioA", { v1: resource.title }));
     } catch {
       setActionError(tx("noSePudoCopiar"));
     } finally {
@@ -463,7 +463,7 @@ export function ResourcesPanel({
         }}
         title={tx("eliminarEsteRecurso")}
         description={
-          toDelete ? `“${toDelete.title}” se eliminará de tu lista.` : undefined
+          toDelete ? tx("v1SeEliminaraDe", { v1: toDelete.title }) : undefined
         }
         confirmLabel={tx("eliminar")}
         destructive

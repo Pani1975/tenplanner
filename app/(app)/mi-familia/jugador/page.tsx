@@ -180,7 +180,7 @@ export default async function FamilyPlayerPage({
                   label={tx("fechaDeNacimiento")}
                   value={
                     player.birthDate
-                      ? `${formatBirthDate(player.birthDate)}${age !== null ? ` (${age} años)` : ""}`
+                      ? `${formatBirthDate(player.birthDate)}${age !== null ? tx("v1Anos", { v1: age }) : ""}`
                       : null
                   }
                 />

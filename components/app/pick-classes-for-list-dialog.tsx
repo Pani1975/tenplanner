@@ -365,7 +365,7 @@ export function PickClassesForListDialog({
                       aria-label={
                         added
                           ? `Quitar ${cls.name} de la lista`
-                          : `Añadir ${cls.name} a la lista`
+                          : tx("anadirV1ALa", { v1: cls.name })
                       }
                       className={cn(
                         "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-60",
@@ -405,7 +405,7 @@ export function PickClassesForListDialog({
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] text-muted-foreground">
-            {tx("v1ClaseV2V3", { v1: total, v2: total === 1 ? "" : "s", v3: hasCriteria ? " con esos criterios" : "" })}
+            {tx("v1ClaseV2V3", { v1: total, v2: total === 1 ? "" : "s", v3: hasCriteria ? tx("conEsosCriterios") : "" })}
           </p>
           {hasCriteria && total > 0 ? (
             <button

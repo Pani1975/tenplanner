@@ -181,9 +181,9 @@ export function CalendarClient({
   tasks: initialTasks = [],
   coaches = [],
 }: CalendarClientProps) {
+  const tx = useTranslations("ui.s_calendar_calendarclient");
   const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
-  const tx = useTranslations("ui.s_calendar_calendarclient");
   const router = useRouter();
   const today = new Date();
   const todayMidnight = new Date(
@@ -1469,7 +1469,7 @@ export function CalendarClient({
         title={tx("eliminarEsteFestivo")}
         description={
           holidayToDelete
-            ? `“${holidayToDelete.title}” dejará de aparecer en el calendario y las sesiones que marcaba como «no se imparte» volverán a la normalidad.`
+            ? tx("v1DejaraDeAparecer", { v1: holidayToDelete.title })
             : undefined
         }
         confirmLabel={tx("eliminar")}
@@ -1487,7 +1487,7 @@ export function CalendarClient({
         title={tx("eliminarEstaSesion")}
         description={
           toDelete
-            ? `“${toDelete.title}” se borrará con su plan de ejercicios y sus notas. Esta acción no se puede deshacer.`
+            ? tx("v1SeBorraraCon", { v1: toDelete.title })
             : undefined
         }
         confirmLabel={tx("eliminar")}
@@ -1505,7 +1505,7 @@ export function CalendarClient({
         title={tx("eliminarEsteEvento")}
         description={
           eventToDelete
-            ? `“${eventToDelete.title}” se eliminará del calendario. Esta acción no se puede deshacer.`
+            ? tx("v1SeEliminaraDel", { v1: eventToDelete.title })
             : undefined
         }
         confirmLabel={tx("eliminar")}

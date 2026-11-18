@@ -1410,7 +1410,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                     </p>
                     <p className="text-[13px] text-foreground/55 max-w-sm mx-auto mb-4">
                       {searchTerm
-                        ? `No hay ejercicios para "${searchTerm}".`
+                        ? tx("noHayEjerciciosPara", { v1: searchTerm })
                         : tx("pruebaConOtraCombinacion")}
                     </p>
                     <Link
@@ -1497,7 +1497,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title={tx("verVideoDelEjercicio")}
-                                  aria-label={`Ver vídeo de ${exercise.name}`}
+                                  aria-label={tx("verVideoDeV1", { v1: exercise.name })}
                                   className="inline-flex items-center gap-1 rounded-full border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white/80 transition-colors hover:border-[#D6FF38] hover:text-[#D6FF38]"
                                 >
                                   <Play className="size-3" strokeWidth={2} />

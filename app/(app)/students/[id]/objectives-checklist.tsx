@@ -624,7 +624,7 @@ export function ObjectivesChecklist({
         description={`${
           scope === "student"
             ? tx("seAplicaraSoloA")
-            : `Se aplicará a: ${(currentScope?.label ?? "").toLowerCase()}.`
+            : tx("seAplicaraAV1", { v1: (currentScope?.label ?? "").toLowerCase() })
         }${
           editor?.mode === "edit" &&
           editor.item.scope === "base" &&

@@ -215,7 +215,7 @@ export function PlacesClient({ initialPlaces }: PlacesClientProps) {
   async function handleDelete(place: Place) {
     if (
       !confirm(
-        `Borrar "${place.name}"? Las sesiones que lo usen quedarán sin lugar asignado.`
+        tx("borrarV1LasSesiones", { v1: place.name })
       )
     ) {
       return;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface SessionList {
   id: string;
@@ -24,6 +25,7 @@ export function SessionListPicker({
   onClose: () => void;
   onFavoritedChange?: (favorited: boolean) => void;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sessionlistpicker");
   const [lists, setLists] = useState<SessionList[]>([]);
   const [inLists, setInLists] = useState<Set<string>>(new Set());
@@ -213,7 +215,7 @@ export function SessionListPicker({
                     </span>
                     <span className="block text-xs text-foreground/45">
                       {list.itemsCount ?? 0}{" "}
-                      {(list.itemsCount ?? 0) === 1 ? "sesión" : "sesiones"}
+                      {term((list.itemsCount ?? 0) === 1 ? "sesión" : "sesiones")}
                     </span>
                   </span>
                   <span

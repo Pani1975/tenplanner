@@ -268,8 +268,8 @@ export function AddExercisesToListDialog({
                       disabled={busyId === ex.id}
                       aria-label={
                         added
-                          ? `Quitar ${ex.name} de la colección`
-                          : `Añadir ${ex.name} a la colección`
+                          ? tx("quitarV1DeLa", { v1: ex.name })
+                          : tx("anadirV1ALa", { v1: ex.name })
                       }
                       className={cn(
                         "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-60",

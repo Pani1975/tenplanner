@@ -460,9 +460,9 @@ export function SessionDetailClient({
   authorName = null,
   sendClubs = [],
 }: Props) {
+  const tx = useTranslations("ui.s_id_sessiondetailclient");
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const term = useTerm();
-  const tx = useTranslations("ui.s_id_sessiondetailclient");
   const router = useRouter();
   const [sendingTo, setSendingTo] = useState<string | null>(null);
 
@@ -481,7 +481,7 @@ export function SessionDetailClient({
         toast.error(json.error ?? tx("noSePudoEnviar"));
         return;
       }
-      toast.success(`Sesión enviada a ${club.name}`);
+      toast.success(tx("sesionEnviadaAV1", { v1: club.name }));
       router.refresh();
     } finally {
       setSendingTo(null);
@@ -1280,7 +1280,7 @@ export function SessionDetailClient({
                 <div
                   className="flex items-center gap-0.5"
                   role="img"
-                  aria-label={`Valoración de la clase: ${session.coachRating} de 5`}
+                  aria-label={tx("valoracionDeLaClase", { v1: session.coachRating })}
                 >
                   {[1, 2, 3, 4, 5].map((n) => (
                     <Star
@@ -1315,16 +1315,12 @@ export function SessionDetailClient({
                 >
                   {session.planFollowed
                     ? tx("segunLoPlanificado")
-                    : `Cambió respecto al plan${
-                        planChangeReasonLabel(session.planChangeReason)
+                    : tx("cambioRespectoAlPlan", { v1: planChangeReasonLabel(session.planChangeReason)
                           ? ` · ${planChangeReasonLabel(session.planChangeReason)}`
-                          : ""
-                      }${
-                        session.planChangeReason === "otro" &&
+                          : "", v2: session.planChangeReason === "otro" &&
                         session.statusNote
                           ? `: ${session.statusNote}`
-                          : ""
-                      }`}
+                          : "" })}
                 </span>
               </p>
             )}

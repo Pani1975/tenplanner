@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const sections = [
   { id: "hero", label: "Inicio", href: "#" },
@@ -15,6 +16,7 @@ const sections = [
 ];
 
 export function FloatingSidebar() {
+  const tx = useTranslations("ui.s_landing_floatingsidebar");
   const [active, setActive] = useState<string>("hero");
   const [hovered, setHovered] = useState(false);
   const { scrollYProgress } = useScroll();
@@ -48,7 +50,7 @@ export function FloatingSidebar() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.7, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
       className="fixed right-5 top-1/2 z-50 hidden -translate-y-1/2 xl:flex"
-      aria-label="Navegación de secciones"
+      aria-label={tx("navegacionDeSecciones")}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -136,7 +138,7 @@ export function FloatingSidebar() {
             transition={{ duration: 0.22, delay: hovered ? 0.06 : 0 }}
             className="whitespace-nowrap text-sm font-semibold"
           >
-            Crear cuenta
+            {tx("crearCuenta")}
           </motion.span>
         </Link>
       </motion.div>

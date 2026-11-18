@@ -940,7 +940,7 @@ export function SessionWizard({
           tx("haOcurridoUnError");
         setServerError(
           createdCount > 0
-            ? `Se crearon ${createdCount} de ${sessionDates.length} sesiones; el resto falló: ${msg}`
+            ? tx("seCrearonV1De", { v1: createdCount, v2: sessionDates.length, v3: msg })
             : msg
         );
         return;
@@ -1238,7 +1238,7 @@ export function SessionWizard({
               {isEdit
                 ? "Guardar cambios"
                 : progress
-                  ? `Creando ${progress.done + 1} de ${progress.total}…`
+                  ? tx("creandoV1DeV2", { v1: progress.done + 1, v2: progress.total })
                   : state.recurrence.enabled
                     ? "Crear sesiones"
                     : "Crear sesión"}

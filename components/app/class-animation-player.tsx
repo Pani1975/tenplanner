@@ -48,6 +48,7 @@ import {
   type AnimationTimeline,
 } from "@/lib/classes/animation";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 // ---------------------------------------------------------------------
 // Botón de play (ficha de presentación y ficha de la clase)
@@ -305,6 +306,7 @@ export function ClassAnimationPlayer({
   sharePath?: string;
   kindLabel?: string;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_classanimationplayer");
   const timeline = useMemo(
     () => buildAnimationTimeline(blocks, { objectives }),
@@ -409,7 +411,7 @@ export function ClassAnimationPlayer({
           {sharePath && (
             <ShareButton
               title={`${kindLabel}: ${name}`}
-              text={`Mira la animación de «${name}» en TenPlanner`}
+              text={tx("miraLaAnimacionDe", { v1: name })}
               path={sharePath}
               iconOnly
               className="flex size-8 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
@@ -469,7 +471,7 @@ export function ClassAnimationPlayer({
                 ? null
                 : step.diagram
                   ? diagramCaption(step.diagram, t - step.start)
-                  : (SCENE_LEGEND[step.scene] ?? null)
+                  : (SCENE_LEGEND[step.scene] ? term(SCENE_LEGEND[step.scene] as string) : null)
             }
           />
         </div>

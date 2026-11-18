@@ -233,7 +233,7 @@ export function AssignClassToGroupButton({
                           </span>
                           <span className="block text-xs text-foreground/45">
                             {tx("v1MinV2", { v1: cls.duracionMinutes, v2: cls.isLibrary
-                              ? " · Biblioteca"
+                              ? tx("biblioteca")
                               : cls.authorName
                                 ? ` · ${cls.authorName}`
                                 : "" })}

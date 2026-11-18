@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ClassAnimationPlayer } from "@/components/app/class-animation-player";
 import { hasSessionAnimation } from "@/lib/classes/animation";
 import { loadSessionAnimationData } from "@/lib/sessions/animation-data";
+import { getTranslations } from "next-intl/server";
 
 // Enlace público para compartir la animación de una sesión. Solo existe para
 // las sesiones con animación activada y muestra únicamente la animación.
@@ -27,6 +28,7 @@ export async function generateMetadata({
 export default async function SharedSessionAnimationPage({
   params,
 }: PageProps) {
+  const tx = await getTranslations("ui.s_id_page");
   const { id } = await params;
   if (!hasSessionAnimation(id)) notFound();
   const data = await loadSessionAnimationData(id);
@@ -44,9 +46,9 @@ export default async function SharedSessionAnimationPage({
         />
       </div>
       <p className="mt-4 text-center text-xs text-white/45">
-        Hecho con{" "}
+        {tx("hechoCon")}{" "}
         <Link href="/" className="font-semibold text-[#D6FF38] hover:underline">
-          TenPlanner
+          {tx("tenplanner")}
         </Link>
       </p>
     </main>

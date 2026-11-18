@@ -24,6 +24,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 interface Step {
   title: string;
@@ -32,6 +33,7 @@ interface Step {
 }
 
 function StepList({ steps }: { steps: Step[] }) {
+  const term = useTerm();
   return (
     <ol className="space-y-3">
       {steps.map((step, i) => (
@@ -48,10 +50,10 @@ function StepList({ steps }: { steps: Step[] }) {
                 className="size-4 shrink-0 text-foreground/50"
                 strokeWidth={1.8}
               />
-              <p className="text-sm font-black text-foreground">{step.title}</p>
+              <p className="text-sm font-black text-foreground">{term(step.title)}</p>
             </div>
             <p className="mt-1 text-sm leading-6 text-foreground/66">
-              {step.description}
+              {term(step.description)}
             </p>
           </div>
         </li>
@@ -68,6 +70,7 @@ interface Section {
 }
 
 function SectionList({ sections }: { sections: Section[] }) {
+  const term = useTerm();
   return (
     <div className="space-y-3">
       {sections.map((section) => (
@@ -81,7 +84,7 @@ function SectionList({ sections }: { sections: Section[] }) {
               <section.icon className="size-4" strokeWidth={1.8} />
             </span>
             <span className="flex-1 text-sm font-black text-foreground">
-              {section.title}
+              {term(section.title)}
             </span>
             <span className="text-foreground/40 transition-transform group-open:rotate-90">
               ›
@@ -93,7 +96,7 @@ function SectionList({ sections }: { sections: Section[] }) {
                 key={i}
                 className="list-disc text-sm leading-6 text-foreground/66 marker:text-brand"
               >
-                {item}
+                {term(item)}
               </li>
             ))}
           </ul>

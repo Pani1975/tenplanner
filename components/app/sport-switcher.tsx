@@ -6,12 +6,14 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 export function SportSwitcher({
   activeSport: initialActiveSport,
 }: {
   activeSport: Sport;
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_sportswitcher");
   const router = useRouter();
   const [activeSport, setActiveSportState] = useState<Sport>(
@@ -65,7 +67,7 @@ export function SportSwitcher({
             {saving === option.id && (
               <Loader2 className="size-4 animate-spin" />
             )}
-            {option.label}
+            {term(option.label)}
           </button>
         ))}
       </div>

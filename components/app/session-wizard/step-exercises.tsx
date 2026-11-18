@@ -655,7 +655,7 @@ export function StepExercises({
     addExercise(ex, target.phase);
     return {
       ok: true,
-      message: `Añadido a ${PHASE_LABELS[target.phase]}. Ya puedes cerrar esta pestaña.`,
+      message: tx("anadidoAV1Ya", { v1: PHASE_LABELS[target.phase] }),
     };
   });
 
@@ -941,7 +941,7 @@ export function StepExercises({
     <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-brand/40 bg-brand/10 px-2 py-1.5">
       <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">
         {replacing?.target === "stations"
-          ? `Sustituir «${replacing.name}» por estaciones. ¿Cuántas?`
+          ? tx("sustituirV1PorEstaciones", { v1: replacing.name })
           : "¿Cuántas?"}
       </span>
       <input
@@ -1223,7 +1223,7 @@ export function StepExercises({
                     title={
                       pickingStation
                         ? tx("anadirAEstaEstacion")
-                        : `Añadir a ${PHASE_LABELS[activeAddPhase]}`
+                        : tx("anadirAV1", { v1: PHASE_LABELS[activeAddPhase] })
                     }
                     className={cn(
                       "flex size-6 shrink-0 items-center justify-center rounded-md bg-brand/10 text-brand transition-colors hover:bg-brand/20",
@@ -1923,7 +1923,7 @@ export function StepExercises({
                                                 title={
                                                   stationsCount <=
                                                   STATION_COUNT_MIN
-                                                    ? `Mínimo ${STATION_COUNT_MIN} estaciones`
+                                                    ? tx("minimoV1Estaciones", { v1: STATION_COUNT_MIN })
                                                     : "Quitar estación"
                                                 }
                                                 className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"

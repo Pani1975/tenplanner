@@ -2004,7 +2004,7 @@ export function ExerciseForm({
                         onChange={(e) =>
                           updateStep(step.id, "title", e.target.value)
                         }
-                        placeholder={`Paso ${idx + 1}: Ej: Posición inicial`}
+                        placeholder={tx("pasoV1EjPosicion", { v1: idx + 1 })}
                         className="w-full h-9 px-3 text-sm font-medium bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-colors text-foreground placeholder:text-muted-foreground"
                       />
                       <textarea

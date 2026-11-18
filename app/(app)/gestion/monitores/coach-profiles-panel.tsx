@@ -121,7 +121,7 @@ export function CoachProfilesPanel({
     setNotice(
       emailSent
         ? `Enlace enviado a ${view.email}.`
-        : `No hemos podido enviar el correo a ${view.email}. Copia el enlace de la ficha y envíaselo tú.`
+        : tx("noHemosPodidoEnviar", { v1: view.email })
     );
   }
 
@@ -197,7 +197,7 @@ export function CoachProfilesPanel({
   async function remove(profile: CoachProfileView) {
     if (
       !window.confirm(
-        `¿Eliminar la ficha de ${profile.fullName}? Se borrarán sus datos de la ficha. No desvincula al monitor del club.`
+        tx("eliminarLaFichaDe", { v1: profile.fullName })
       )
     )
       return;

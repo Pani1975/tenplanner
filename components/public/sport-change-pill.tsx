@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SPORT_OPTIONS, type Sport } from "@/lib/sport-constants";
 import { cn } from "@/lib/utils";
+import { useTerm } from "@/lib/i18n-terms";
 
 export function SportChangePill({ sport }: { sport: Sport }) {
+  const term = useTerm();
   const router = useRouter();
   const [loading, setLoading] = useState<Sport | null>(null);
 
@@ -42,7 +44,7 @@ export function SportChangePill({ sport }: { sport: Sport }) {
                 : "border-white/18 bg-white/[0.04] text-white/70 hover:border-[#D6FF38]/60 hover:text-[#D6FF38]"
             )}
           >
-            {option.label}
+            {term(option.label)}
           </button>
         );
       })}

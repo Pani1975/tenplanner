@@ -127,7 +127,7 @@ export function AddToSessionDialog({
         <DialogHeader>
           <DialogTitle>{tx("anadirAUnaSesion")}</DialogTitle>
           <DialogDescription>
-            {count === 1 ? `“${label}”` : `${count} ejercicios de “${label}”`}
+            {count === 1 ? `“${label}”` : tx("v1EjerciciosDeV2", { v1: count, v2: label })}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,7 +137,7 @@ export function AddToSessionDialog({
               <Check className="size-6" />
             </div>
             <p className="text-sm text-foreground">
-              {count === 1 ? "Añadido" : `${count} ejercicios añadidos`} a{" "}
+              {count === 1 ? "Añadido" : tx("v1EjerciciosAnadidos", { v1: count })} a{" "}
               <strong>{done.title}</strong>.
             </p>
             <div className="flex flex-wrap justify-center gap-2">

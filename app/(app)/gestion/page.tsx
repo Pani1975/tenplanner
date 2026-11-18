@@ -267,7 +267,7 @@ export default async function ManagementPage({
             hint={[
               "Monitores que han aceptado la invitación.",
               report.pendingInvites > 0
-                ? `${report.pendingInvites} invitación(es) pendiente(s).`
+                ? tx("v1InvitacionEsPendiente", { v1: report.pendingInvites })
                 : null,
             ]
               .filter(Boolean)

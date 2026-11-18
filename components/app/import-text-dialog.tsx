@@ -64,9 +64,9 @@ export function ImportTextDialog({
   className,
   allowFile = false,
 }: Props) {
+  const tx = useTranslations("ui.s_app_importtextdialog");
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const term = useTerm();
-  const tx = useTranslations("ui.s_app_importtextdialog");
   const router = useRouter();
   const copy = COPY[kind];
   const [open, setOpen] = useState(false);
@@ -184,7 +184,7 @@ export function ImportTextDialog({
       setItems((prev) => (prev ? prev.slice(saved) : prev));
       setError(
         saved > 0
-          ? `Se guardaron ${saved} como borrador y falló uno. Revisa la lista e inténtalo de nuevo con el resto.`
+          ? tx("seGuardaronV1Como", { v1: saved })
           : tx("noSePudoGuardar")
       );
     } finally {

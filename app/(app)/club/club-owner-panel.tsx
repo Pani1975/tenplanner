@@ -96,7 +96,7 @@ export function ClubOwnerPanel({
         ...prev.filter((i) => i.id !== body.data.id),
       ]);
       const sent = body.emailSent
-        ? `Invitación enviada a ${body.data.email}.`
+        ? tx("invitacionEnviadaAV1", { v1: body.data.email })
         : tx("noHemosPodidoEnviar");
       setNotice(
         body.profileCreated
@@ -121,7 +121,7 @@ export function ClubOwnerPanel({
   async function removeMember(member: Member) {
     if (
       !window.confirm(
-        `¿Desvincular a ${member.name} del club? Dejará de ver el contenido del club.`
+        tx("desvincularAV1Del", { v1: member.name })
       )
     )
       return;

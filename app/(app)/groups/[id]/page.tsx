@@ -358,7 +358,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground">
                 {groupSessions.length === 0
                   ? tx("aunNoHaySesiones")
-                  : `${groupSessions.length} sesión${groupSessions.length !== 1 ? "es" : ""} en total · ${pastSessions.length} impartida${pastSessions.length !== 1 ? "s" : ""} · ${upcomingSessions.length} próxima${upcomingSessions.length !== 1 ? "s" : ""}`}
+                  : tx("v1SesionV2En", { v1: groupSessions.length, v2: groupSessions.length !== 1 ? "es" : "", v3: pastSessions.length, v4: pastSessions.length !== 1 ? "s" : "", v5: upcomingSessions.length, v6: upcomingSessions.length !== 1 ? "s" : "" })}
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -409,7 +409,7 @@ export default async function GroupDetailPage({ params }: PageProps) {
         <TrainingStatsPanel
           stats={trainingStats.stats}
           studentHours={trainingStats.studentHours}
-          title={`Estadística de ${group.name}`}
+          title={tx("estadisticaDeV1", { v1: group.name })}
         />
       </div>
     </div>

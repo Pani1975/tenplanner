@@ -725,14 +725,14 @@ export function ClassForm({
         pickTargetRef.current = null;
         return {
           ok: true,
-          message: `Añadido a la estación (${blockName}). Ya puedes cerrar esta pestaña.`,
+          message: tx("anadidoALaEstacion", { v1: blockName }),
         };
       }
     }
     addExerciseToBlock(target.blockIdx, ex);
     return {
       ok: true,
-      message: `Añadido a ${blockName}. Ya puedes cerrar esta pestaña.`,
+      message: tx("anadidoAV1Ya", { v1: blockName }),
     };
   });
 

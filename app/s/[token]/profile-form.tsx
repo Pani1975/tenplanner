@@ -56,7 +56,7 @@ export function ProfileForm({ token, initialName, coachName }: Props) {
     }
     if (ageTooLow) {
       setError(
-        `Esta aplicación requiere al menos ${MIN_AGE} años. Pide a un adulto responsable que contacte con tu entrenador.`
+        tx("estaAplicacionRequiereAl", { v1: MIN_AGE })
       );
       return;
     }

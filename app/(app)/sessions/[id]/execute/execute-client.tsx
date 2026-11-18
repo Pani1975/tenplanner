@@ -36,6 +36,7 @@ import {
 } from "@/lib/sessions/plan-change";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 const CATEGORY_COLORS: Record<string, string> = {
   technique: "border-blue-500/40 bg-blue-500/5",
@@ -205,6 +206,7 @@ export function ExecuteSessionClient({
   students = [],
   diagrams,
 }: Props) {
+  const term = useTerm();
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_execute_executeclient");
   const router = useRouter();
@@ -863,7 +865,7 @@ export function ExecuteSessionClient({
                       [student.id]: next,
                     }))
                   }
-                  label={`Valoración de ${student.name}`}
+                  label={tx("valoracionDeV1", { v1: student.name })}
                 />
               </li>
             ))}
@@ -2182,7 +2184,7 @@ export function ExecuteSessionClient({
           onSaved={(resource) => {
             setBoardOpen(false);
             setBoardMessage(
-              `Dibujo «${resource.title || "sin título"}» guardado en Mis recursos.`
+              tx("dibujoV1GuardadoEn", { v1: resource.title || term("sin título") })
             );
           }}
         />

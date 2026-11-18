@@ -8,6 +8,7 @@ import type {
 } from "@/lib/stats/training-stats";
 import type { StudentHours } from "@/lib/stats/load-training-stats";
 import { useTranslations } from "next-intl";
+import { useTerm } from "@/lib/i18n-terms";
 
 // Estadística de entrenamiento de un grupo o de un alumno.
 
@@ -138,6 +139,7 @@ export function TrainingStatsPanel({
   /** Solo en el grupo: horas de cada alumno en sus sesiones. */
   studentHours?: StudentHours[];
 }) {
+  const term = useTerm();
   const tx = useTranslations("ui.s_app_trainingstatspanel");
   const top = stats.topExercises[0];
   const topType = stats.types[0];
@@ -151,7 +153,7 @@ export function TrainingStatsPanel({
         <p className="text-sm text-muted-foreground">
           {stats.sessionCount === 0
             ? tx("aunNoHaySesiones")
-            : `A partir de ${stats.sessionCount} sesión${stats.sessionCount !== 1 ? "es" : ""} ya pasada${stats.sessionCount !== 1 ? "s" : ""} (sin las canceladas).`}
+            : tx("aPartirDeV1", { v1: stats.sessionCount, v2: stats.sessionCount !== 1 ? "es" : "", v3: stats.sessionCount !== 1 ? "s" : "" })}
         </p>
       </div>
 
@@ -283,7 +285,7 @@ export function TrainingStatsPanel({
                     </span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
                       {formatHours(s.minutes)} · {s.sessions}{" "}
-                      {s.sessions === 1 ? "sesión" : "sesiones"}
+                      {term(s.sessions === 1 ? "sesión" : "sesiones")}
                     </span>
                   </li>
                 ))}

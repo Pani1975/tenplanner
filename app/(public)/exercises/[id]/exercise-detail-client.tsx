@@ -955,7 +955,7 @@ export function ExerciseDetailClient({
                 <div className="relative mb-2 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
                   <iframe
                     src={videoEmbedUrl}
-                    title={`Vídeo: ${exercise.name}`}
+                    title={tx("videoV1", { v1: exercise.name })}
                     className="absolute inset-0 size-full"
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

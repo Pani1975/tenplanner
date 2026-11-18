@@ -67,7 +67,7 @@ export function BulkObjectivesActions({ inClub }: { inClub: boolean }) {
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {confirm === "hide"
-              ? `Se quitan todos: los de Ten Planner y los que habéis creado. ${who[0].toUpperCase()}${who.slice(1)} dejarán de verlos en su ficha. Los de Ten Planner se pueden restaurar después; los creados por vosotros, no.`
+              ? tx("seQuitanTodosLos", { v1: who[0].toUpperCase(), v2: who.slice(1) })
               : tx("vuelvenTodosLosObjetivos")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
