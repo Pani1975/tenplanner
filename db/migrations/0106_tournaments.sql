@@ -302,3 +302,15 @@ CREATE INDEX IF NOT EXISTS "tournament_circuits_coach_id_idx" ON "tournament_cir
 CREATE INDEX IF NOT EXISTS "tournaments_circuit_id_idx" ON "tournaments" USING btree ("circuit_id");
 --> statement-breakpoint
 ALTER TABLE "tournament_circuits" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+-- Circuito: enlace público de la clasificación general y tabla de puntos
+-- propia (null = la de lib/tournaments/circuit.ts, DEFAULT_POINTS).
+ALTER TABLE "tournament_circuits" ADD COLUMN IF NOT EXISTS "slug" varchar(80);
+--> statement-breakpoint
+ALTER TABLE "tournament_circuits" ADD COLUMN IF NOT EXISTS "points" jsonb;
+--> statement-breakpoint
+UPDATE "tournament_circuits" SET "slug" = 'circuito-' || substr(replace("id"::text, '-', ''), 1, 12) WHERE "slug" IS NULL;
+--> statement-breakpoint
+ALTER TABLE "tournament_circuits" ALTER COLUMN "slug" SET NOT NULL;
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "tournament_circuits_slug_uniq" ON "tournament_circuits" USING btree ("slug");

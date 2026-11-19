@@ -26,6 +26,7 @@ import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
 import type { MatchScore } from "@/lib/tournaments/score";
+import type { PointsTable } from "@/lib/tournaments/circuit";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -2604,6 +2605,10 @@ export const tournamentCircuits = pgTable(
     sport: sportEnum("sport").default("tenis").notNull(),
     name: varchar("name", { length: 160 }).notNull(),
     season: varchar("season", { length: 20 }),
+    // Enlace público de la clasificación general (/t/c/<slug>).
+    slug: varchar("slug", { length: 80 }).notNull(),
+    // Tabla de puntos propia; null = DEFAULT_POINTS (lib/tournaments/circuit.ts).
+    points: jsonb("points").$type<PointsTable>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -2615,6 +2620,7 @@ export const tournamentCircuits = pgTable(
   (t) => [
     index("tournament_circuits_club_id_idx").on(t.clubId),
     index("tournament_circuits_coach_id_idx").on(t.coachId),
+    uniqueIndex("tournament_circuits_slug_uniq").on(t.slug),
   ]
 );
 
