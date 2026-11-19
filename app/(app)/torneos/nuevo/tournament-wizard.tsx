@@ -12,6 +12,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_TIME_ZONE,
@@ -21,6 +22,14 @@ import {
   type TournamentTimeZone,
 } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
+import {
+  CourtConflictsDialog,
+  CourtHoursPicker,
+  fetchCourtConflicts,
+  hoursErrors,
+  type CourtConflicts,
+  type TournamentHours,
+} from "../court-hours";
 
 type Option = { code: string; label: string; color: string | null };
 type Place = { id: string; name: string };
@@ -36,6 +45,7 @@ type Form = {
   timeZone: TournamentTimeZone;
   maxEntries: string;
   placeIds: string[];
+  playHours: TournamentHours;
   modality: "singles" | "doubles" | null;
   levelCode: string | null;
   format: "knockout" | "round_robin" | null;
@@ -62,11 +72,14 @@ export function TournamentWizard({
   circuits: Circuit[];
 }) {
   const t = useTranslations("tournaments");
+  const tc = useTranslations("tournaments.courts");
   const apiError = useApiError();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Sesiones/reservas que ya ocupan las pistas: se pregunta antes de crear.
+  const [conflicts, setConflicts] = useState<CourtConflicts | null>(null);
   const [f, setF] = useState<Form>({
     name: "",
     description: "",
@@ -77,6 +90,7 @@ export function TournamentWizard({
     timeZone: DEFAULT_TIME_ZONE,
     maxEntries: "",
     placeIds: [],
+    playHours: { mode: "all_day" },
     modality: null,
     levelCode: null,
     format: null,
@@ -109,6 +123,9 @@ export function TournamentWizard({
   if (f.deadlineDate && f.startDate && f.deadlineDate > f.startDate) {
     basicsErrors.push(t("wizard.errDeadline"));
   }
+  if (hoursErrors(f.playHours, f.startDate, f.endDate).length) {
+    basicsErrors.push(tc("hoursLabel"));
+  }
   const max = f.maxEntries ? Number(f.maxEntries) : null;
   if (f.circuitMode === "new" && f.circuitName.trim().length < 2) {
     basicsErrors.push(t("wizard.errCircuit"));
@@ -129,9 +146,24 @@ export function TournamentWizard({
           ? true
           : f.format !== null;
 
-  async function create() {
+  async function create(cancelSessionIds?: string[]) {
     setSaving(true);
     setError(null);
+    // Primera vez: ¿hay sesiones o reservas en esas pistas y horas?
+    if (!cancelSessionIds) {
+      const found = await fetchCourtConflicts({
+        placeIds: f.placeIds,
+        startDate: f.startDate,
+        endDate: f.endDate || null,
+        playHours: f.playHours,
+        timeZone: f.timeZone,
+      });
+      if (found && (found.sessions.length || found.bookings.length)) {
+        setSaving(false);
+        setConflicts(found);
+        return;
+      }
+    }
     const deadline = f.deadlineDate
       ? // En la zona horaria elegida para el torneo.
         zonedToIso(f.deadlineDate, f.deadlineTime || "23:59", f.timeZone)
@@ -148,6 +180,8 @@ export function TournamentWizard({
         timeZone: f.timeZone,
         maxEntries: max,
         placeIds: f.placeIds.length ? f.placeIds : null,
+        playHours: f.playHours,
+        cancelSessionIds: cancelSessionIds ?? [],
         circuitId: f.circuitMode === "existing" ? f.circuitId : null,
         visibility: f.visibility,
         newCircuit:
@@ -171,6 +205,11 @@ export function TournamentWizard({
       return;
     }
     const { data } = await res.json();
+    if (data.sessionsCancelled?.cancelled) {
+      toast.success(
+        tc("cancelledToast", { count: data.sessionsCancelled.cancelled })
+      );
+    }
     router.push(`/torneos/${data.id}`);
     router.refresh();
   }
@@ -466,6 +505,14 @@ export function TournamentWizard({
                 </div>
               )}
             </Field>
+            <Field label={tc("hoursLabel")}>
+              <CourtHoursPicker
+                value={f.playHours}
+                onChange={(h) => set("playHours", h)}
+                startDate={f.startDate}
+                endDate={f.endDate}
+              />
+            </Field>
             <Field label={t("wizard.description")} hint={t("wizard.optional")}>
               <textarea
                 value={f.description}
@@ -645,7 +692,7 @@ export function TournamentWizard({
         ) : (
           <button
             type="button"
-            onClick={create}
+            onClick={() => create()}
             disabled={!canNext || saving}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
           >
@@ -658,6 +705,15 @@ export function TournamentWizard({
           </button>
         )}
       </div>
+      {conflicts && (
+        <CourtConflictsDialog
+          conflicts={conflicts}
+          timeZone={f.timeZone}
+          saving={saving}
+          onClose={() => setConflicts(null)}
+          onConfirm={(ids) => create(ids)}
+        />
+      )}
     </div>
   );
 }

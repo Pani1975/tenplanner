@@ -1,7 +1,15 @@
 import { randomBytes } from "node:crypto";
 import { and, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { clubs, courtBookings, places, sessions, users } from "@/db/schema";
+import {
+  clubs,
+  courtBookings,
+  places,
+  sessions,
+  tournaments,
+  users,
+} from "@/db/schema";
+import { tournamentIntervals } from "@/lib/tournaments/hours";
 import {
   BOOKING_DAYS_AHEAD,
   BOOKING_DURATIONS,
@@ -79,6 +87,57 @@ export function expandSessionPlaces<
   });
 }
 
+type Exec = Pick<typeof db, "select">;
+
+/**
+ * Tramos en que los torneos ocupan las pistas indicadas entre `from` y
+ * `to` (según su horario: todo el día, cada día o por días). Una fila por
+ * pista y tramo.
+ */
+export async function loadTournamentBusy(
+  placeIds: string[],
+  from: Date,
+  to: Date,
+  exec: Exec = db
+): Promise<
+  { id: string; name: string; placeId: string; start: Date; end: Date }[]
+> {
+  if (!placeIds.length) return [];
+  // Fechas con un día de margen: la zona del torneo puede ser otra.
+  const day = (d: Date, shift: number) =>
+    new Date(d.getTime() + shift * 86400_000).toISOString().slice(0, 10);
+  const rows = await exec
+    .select({
+      id: tournaments.id,
+      name: tournaments.name,
+      placeIds: tournaments.placeIds,
+      startDate: tournaments.startDate,
+      endDate: tournaments.endDate,
+      playHours: tournaments.playHours,
+      timeZone: tournaments.timeZone,
+    })
+    .from(tournaments)
+    .where(
+      and(
+        sql`jsonb_exists_any(${tournaments.placeIds}, ARRAY[${sql.join(
+          placeIds.map((id) => sql`${id}`),
+          sql`, `
+        )}]::text[])`,
+        sql`${tournaments.startDate} <= ${day(to, 1)}`,
+        sql`coalesce(${tournaments.endDate}, ${tournaments.startDate}) >= ${day(from, -1)}`
+      )
+    );
+  return rows.flatMap((t) =>
+    tournamentIntervals(t)
+      .filter((i) => i.start < to && from < i.end)
+      .flatMap((i) =>
+        (t.placeIds ?? [])
+          .filter((p) => placeIds.includes(p))
+          .map((placeId) => ({ id: t.id, name: t.name, placeId, ...i }))
+      )
+  );
+}
+
 /**
  * Pistas reservables del dueño con lo que las ocupa entre `from` y `to`
  * (sesiones no canceladas y reservas no canceladas). Sin nombres.
@@ -110,7 +169,7 @@ export async function loadBookablePlaces(
   // Margen hacia atrás por si una sesión larga empezó antes de `from`.
   const windowStart = new Date(from.getTime() - 10 * 3600_000);
 
-  const [sessionRows, bookingRows] = await Promise.all([
+  const [sessionRows, bookingRows, tournamentRows] = await Promise.all([
     db
       .select({
         placeId: sessions.placeId,
@@ -143,16 +202,22 @@ export async function loadBookablePlaces(
           lt(courtBookings.startAt, to)
         )
       ),
+    loadTournamentBusy(ids, from, to),
   ]);
 
   return placeRows.map((p) => ({
     ...p,
-    busy: [...sessionRows, ...bookingRows]
-      .filter((b) => b.placeId === p.id)
-      .map((b) => ({
-        start: b.start,
-        end: new Date(b.start.getTime() + b.minutes * 60_000),
-      })),
+    busy: [
+      ...[...sessionRows, ...bookingRows]
+        .filter((b) => b.placeId === p.id)
+        .map((b) => ({
+          start: b.start,
+          end: new Date(b.start.getTime() + b.minutes * 60_000),
+        })),
+      ...tournamentRows
+        .filter((t) => t.placeId === p.id)
+        .map((t) => ({ start: t.start, end: t.end })),
+    ],
   }));
 }
 
@@ -248,7 +313,7 @@ async function loadBookablePlacesTx(
     .limit(1);
   if (!p) return [];
   const windowStart = new Date(from.getTime() - 10 * 3600_000);
-  const [sessionRows, bookingRows] = await Promise.all([
+  const [sessionRows, bookingRows, tournamentRows] = await Promise.all([
     tx
       .select({
         start: sessions.scheduledAt,
@@ -277,14 +342,18 @@ async function loadBookablePlacesTx(
           lt(courtBookings.startAt, to)
         )
       ),
+    loadTournamentBusy([placeId], from, to, tx),
   ]);
   return [
     {
       ...p,
-      busy: [...sessionRows, ...bookingRows].map((b) => ({
-        start: b.start,
-        end: new Date(b.start.getTime() + b.minutes * 60_000),
-      })),
+      busy: [
+        ...[...sessionRows, ...bookingRows].map((b) => ({
+          start: b.start,
+          end: new Date(b.start.getTime() + b.minutes * 60_000),
+        })),
+        ...tournamentRows.map((t) => ({ start: t.start, end: t.end })),
+      ],
     },
   ];
 }
@@ -332,7 +401,7 @@ export async function createClubBooking({
     if (!place) return { ok: false as const, error: "not_found" as const };
 
     const windowStart = new Date(start.getTime() - 12 * 3600_000);
-    const [sessionRows, bookingRows] = await Promise.all([
+    const [sessionRows, bookingRows, tournamentRows] = await Promise.all([
       tx
         .select({
           title: sessions.title,
@@ -363,7 +432,16 @@ export async function createClubBooking({
             lt(courtBookings.startAt, end)
           )
         ),
+      loadTournamentBusy([placeId], start, end, tx),
     ]);
+    const tournamentClash = tournamentRows[0];
+    if (tournamentClash) {
+      return {
+        ok: false as const,
+        error: "taken" as const,
+        conflict: `Torneo: ${tournamentClash.name}`,
+      };
+    }
     const clash = [...sessionRows, ...bookingRows].find(
       (b) =>
         b.start < end &&

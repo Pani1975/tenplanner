@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
+import { listUsablePlaces } from "@/lib/bookings/places";
 import {
   exercises,
   groups,
@@ -83,11 +84,7 @@ export default async function EditSessionPage({
         .select({ studentId: sessionStudents.studentId })
         .from(sessionStudents)
         .where(eq(sessionStudents.sessionId, id)),
-      db
-        .select({ id: places.id, name: places.name })
-        .from(places)
-        .where(eq(places.coachId, user.id))
-        .orderBy(places.name),
+      listUsablePlaces(user.id, sessionRow.clubId),
       db
         .select({ name: users.name })
         .from(users)

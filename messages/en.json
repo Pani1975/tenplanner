@@ -1019,6 +1019,7 @@
       "2Cuando": "2. When?",
       "3UnaPistaO": "3. One court or two?",
       "sinLugarAsignado": "No place assigned",
+      "sinPistaNoReserva": "Without a court, the session is not booked in Court bookings.",
       "continuar": "Continue",
       "opcional": "(optional)",
       "unaPista": "One court",
@@ -2216,6 +2217,7 @@
       "sesiones": "Sessions (",
       "reservasDeClientes": "Client bookings (",
       "reservasDelClub": "Club bookings (",
+      "torneos": "Tournaments",
       "hoy": "Today",
       "lugares": "Places",
       "2Pistas": " · 2 courts",
@@ -4535,6 +4537,30 @@
       "clash": "Same court and time as another match.",
       "result": "Result",
       "editResult": "Change result"
+    },
+    "courts": {
+      "allDay": "All day",
+      "daily": "Same hours every day",
+      "someHours": "Some hours",
+      "byDay": "Hours per day",
+      "from": "From",
+      "to": "To",
+      "noPlay": "No play",
+      "hint": "During these hours the tournament courts are blocked in Court bookings.",
+      "errRange": "The end time must be after the start time.",
+      "errNoDays": "Tick at least one playing day.",
+      "hoursLabel": "When are the courts used?",
+      "title": "The courts are already in use",
+      "intro": "These sessions overlap with the tournament. Choose whether to cancel or keep each one.",
+      "keep": "Keep session",
+      "cancel": "Cancel session",
+      "bookingsTitle": "Overlapping bookings",
+      "bookingsNote": "Bookings are not changed: let the customer know if needed. From now on no new bookings can be made at those times.",
+      "cancelNote": "Cancelled sessions are not deleted: they stay as “Cancelled” and the coach who teaches them gets an email.",
+      "back": "Back",
+      "save": "Save tournament",
+      "saveAndCancel": "Save and cancel {count, plural, one {# session} other {# sessions}}",
+      "cancelledToast": "{count, plural, one {# session cancelled} other {# sessions cancelled}}"
     }
   }
 }

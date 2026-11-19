@@ -11,6 +11,14 @@ import {
   type TournamentTimeZone,
 } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
+import {
+  CourtConflictsDialog,
+  CourtHoursPicker,
+  fetchCourtConflicts,
+  hoursErrors,
+  type CourtConflicts,
+  type TournamentHours,
+} from "../court-hours";
 
 /** Día "AAAA-MM-DD" y hora "HH:MM" de España de una fecha ISO. */
 function splitLocal(iso: string | null, tz: string) {
@@ -38,6 +46,8 @@ export function EditTournamentForm({
     registrationDeadline: string | null;
     maxEntries: number | null;
     timeZone: TournamentTimeZone;
+    placeIds: string[];
+    playHours: TournamentHours;
   };
   onDone: () => void;
   onCancel: () => void;
@@ -55,6 +65,9 @@ export function EditTournamentForm({
     timeZone: t.timeZone as string,
     maxEntries: t.maxEntries ? String(t.maxEntries) : "",
   });
+  const [playHours, setPlayHours] = useState<TournamentHours>(t.playHours);
+  const [conflicts, setConflicts] = useState<CourtConflicts | null>(null);
+  const tc = useTranslations("tournaments.courts");
   const [saving, setSaving] = useState(false);
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
 
@@ -69,11 +82,35 @@ export function EditTournamentForm({
   if (max !== null && (!Number.isInteger(max) || max < 2 || max > 256)) {
     errors.push(tr("wizard.errMax"));
   }
+  if (hoursErrors(playHours, f.startDate, f.endDate).length) {
+    errors.push(tc("hoursLabel"));
+  }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function save(e?: React.FormEvent, cancelSessionIds?: string[]) {
+    e?.preventDefault();
     if (errors.length) return;
     setSaving(true);
+    // Primera vez: ¿hay sesiones o reservas en las pistas con las fechas y
+    // el horario nuevos? (las ya canceladas no salen).
+    const courtsChanged =
+      f.startDate !== t.startDate ||
+      (f.endDate || null) !== t.endDate ||
+      f.timeZone !== t.timeZone ||
+      JSON.stringify(playHours) !== JSON.stringify(t.playHours);
+    if (!cancelSessionIds && courtsChanged) {
+      const found = await fetchCourtConflicts({
+        placeIds: t.placeIds,
+        startDate: f.startDate,
+        endDate: f.endDate || null,
+        playHours,
+        timeZone: f.timeZone,
+      });
+      if (found && (found.sessions.length || found.bookings.length)) {
+        setSaving(false);
+        setConflicts(found);
+        return;
+      }
+    }
     const res = await fetch(`/api/tournaments/${t.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -87,6 +124,8 @@ export function EditTournamentForm({
           : null,
         timeZone: f.timeZone,
         maxEntries: max,
+        playHours,
+        cancelSessionIds: cancelSessionIds ?? [],
       }),
     });
     setSaving(false);
@@ -95,6 +134,12 @@ export function EditTournamentForm({
       return;
     }
     const { data } = await res.json();
+    setConflicts(null);
+    if (data?.sessionsCancelled?.cancelled) {
+      toast.success(
+        tc("cancelledToast", { count: data.sessionsCancelled.cancelled })
+      );
+    }
     toast.success(
       data?.promoted?.length
         ? tr("manager.promoted", { count: data.promoted.length })
@@ -198,6 +243,17 @@ export function EditTournamentForm({
           />
         </label>
       </div>
+      {t.placeIds.length > 0 && (
+        <div className="space-y-1.5">
+          <span className={label}>{tc("hoursLabel")}</span>
+          <CourtHoursPicker
+            value={playHours}
+            onChange={setPlayHours}
+            startDate={f.startDate}
+            endDate={f.endDate}
+          />
+        </div>
+      )}
       <label className="block space-y-1.5">
         <span className={label}>{tr("wizard.description")}</span>
         <textarea
@@ -233,6 +289,15 @@ export function EditTournamentForm({
           {tr("edit.save")}
         </button>
       </div>
+      {conflicts && (
+        <CourtConflictsDialog
+          conflicts={conflicts}
+          timeZone={f.timeZone}
+          saving={saving}
+          onClose={() => setConflicts(null)}
+          onConfirm={(ids) => save(undefined, ids)}
+        />
+      )}
     </form>
   );
 }

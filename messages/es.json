@@ -1019,6 +1019,7 @@
       "2Cuando": "2. ¿Cuándo?",
       "3UnaPistaO": "3. ¿Una pista o dos?",
       "sinLugarAsignado": "Sin lugar asignado",
+      "sinPistaNoReserva": "Sin pista elegida, la sesión no queda reservada en Reservas de pistas.",
       "continuar": "Continuar",
       "opcional": "(opcional)",
       "unaPista": "Una pista",
@@ -2116,6 +2117,7 @@
       "sesiones": "Sesiones (",
       "reservasDeClientes": "Reservas de clientes (",
       "reservasDelClub": "Reservas del club (",
+      "torneos": "Torneos",
       "hoy": "Hoy",
       "lugares": "Lugares",
       "2Pistas": " · 2 pistas",
@@ -4146,6 +4148,30 @@
       "clash": "Coincide con otro partido en la misma pista y hora.",
       "result": "Resultado",
       "editResult": "Cambiar resultado"
+    },
+    "courts": {
+      "allDay": "Todo el día",
+      "daily": "Mismo horario cada día",
+      "someHours": "Unas horas",
+      "byDay": "Horario por días",
+      "from": "Desde",
+      "to": "Hasta",
+      "noPlay": "No se juega",
+      "hint": "Durante este horario las pistas del torneo quedan ocupadas en Reservas de pistas.",
+      "errRange": "La hora de fin tiene que ser posterior a la de inicio.",
+      "errNoDays": "Marca al menos un día de juego.",
+      "hoursLabel": "¿Cuándo se usan las pistas?",
+      "title": "Las pistas ya están ocupadas",
+      "intro": "Estas sesiones coinciden con el torneo. Elige si cada una se cancela o se deja.",
+      "keep": "Dejar la sesión",
+      "cancel": "Cancelar la sesión",
+      "bookingsTitle": "Reservas que coinciden",
+      "bookingsNote": "Las reservas no se tocan: avisa tú al cliente si hace falta. Desde ahora no se podrán hacer reservas nuevas en esas horas.",
+      "cancelNote": "Las sesiones canceladas no se borran: quedan como «Cancelada» y se avisa por correo al monitor que las imparte.",
+      "back": "Volver",
+      "save": "Guardar el torneo",
+      "saveAndCancel": "Guardar y cancelar {count, plural, one {# sesión} other {# sesiones}}",
+      "cancelledToast": "{count, plural, one {# sesión cancelada} other {# sesiones canceladas}}"
     }
   }
 }

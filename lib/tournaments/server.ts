@@ -404,7 +404,10 @@ export async function listPlaces(o: Organizer) {
     .orderBy(asc(places.name));
 }
 
-async function checkPlaces(o: Organizer, ids: string[] | null | undefined) {
+export async function checkPlaces(
+  o: Organizer,
+  ids: string[] | null | undefined
+) {
   if (!ids?.length) return;
   const owners = await placeOwners(o);
   const rows = await db
@@ -454,6 +457,10 @@ export async function createTournament(
             ? new Date(input.registrationDeadline)
             : null,
           placeIds: input.placeIds ?? null,
+          playHours:
+            input.playHours && input.playHours.mode !== "all_day"
+              ? input.playHours
+              : null,
           circuitId,
           visibility: input.visibility ?? "public",
           ...(input.timeZone && { timeZone: input.timeZone }),
@@ -581,6 +588,12 @@ export async function updateTournament(
           registrationDeadline: deadline,
         }),
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
+        ...(input.playHours !== undefined && {
+          playHours:
+            input.playHours && input.playHours.mode !== "all_day"
+              ? input.playHours
+              : null,
+        }),
         ...(circuitId !== undefined && { circuitId }),
         ...(input.visibility !== undefined && { visibility: input.visibility }),
         ...(input.timeZone !== undefined && { timeZone: input.timeZone }),

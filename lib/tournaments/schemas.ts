@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { TOURNAMENT_TIME_ZONES, zonedParts } from "./schedule";
+import { tournamentHoursSchema } from "./hours";
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha no válida");
 const optText = (max: number) =>
@@ -32,6 +33,9 @@ const tournamentFields = {
     .nullable(),
   maxEntries: z.number().int().min(2).max(256).optional().nullable(),
   placeIds: z.array(z.string().uuid()).max(20).optional().nullable(),
+  playHours: tournamentHoursSchema.optional().nullable(),
+  // Sesiones que coinciden y el organizador decide cancelar.
+  cancelSessionIds: z.array(z.string().uuid()).max(200).optional(),
   modality: z.enum(["singles", "doubles"]),
   levelCode: z.string().max(32).optional().nullable(),
   format: z.enum(["knockout", "round_robin"]),

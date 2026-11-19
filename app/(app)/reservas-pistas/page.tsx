@@ -16,7 +16,7 @@ import {
   localToUtc,
   minutesLabel,
 } from "@/lib/bookings/availability";
-import { sessionAtPlaces } from "@/lib/bookings/server";
+import { loadTournamentBusy, sessionAtPlaces } from "@/lib/bookings/server";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { ClubBookingButton } from "./club-booking-button";
@@ -34,7 +34,7 @@ const HOUR_PX = 56;
 
 type Block = {
   key: string;
-  kind: "session" | "booking" | "club";
+  kind: "session" | "booking" | "club" | "tournament";
   id: string;
   label: string;
   startMinute: number;
@@ -101,9 +101,9 @@ export default async function CourtBookingsPage({
     .orderBy(places.name);
   const placeIds = placeRows.map((p) => p.id);
 
-  const [sessionRows, bookingRows] =
+  const [sessionRows, bookingRows, tournamentRows] =
     placeIds.length === 0
-      ? [[], []]
+      ? [[], [], []]
       : await Promise.all([
           db
             .select({
@@ -148,6 +148,7 @@ export default async function CourtBookingsPage({
                 lt(courtBookings.startAt, dayEnd)
               )
             ),
+          loadTournamentBusy(placeIds, dayStart, dayEnd),
         ]);
 
   // Minutos del día (hora local) de cada bloque, recortados al día.
@@ -212,6 +213,20 @@ export default async function CourtBookingsPage({
       ...b,
     });
     blocksByPlace.set(r.placeId, list);
+  }
+
+  for (const t of tournamentRows) {
+    const b = toBlock(t.start, (t.end.getTime() - t.start.getTime()) / 60_000);
+    if (!b) continue;
+    const list = blocksByPlace.get(t.placeId) ?? [];
+    list.push({
+      key: `t-${t.id}-${t.placeId}-${b.startMinute}`,
+      kind: "tournament",
+      id: t.id,
+      label: `Torneo: ${t.name}`,
+      ...b,
+    });
+    blocksByPlace.set(t.placeId, list);
   }
 
   // Franja visible: horario de las pistas, ampliado si hay algo fuera.
@@ -324,6 +339,12 @@ export default async function CourtBookingsPage({
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-sm bg-violet-500" />{" "}{tx("reservasDelClub")}{bookingRows.filter((b) => b.bookingKind === "club").length})
           </span>
+          {tournamentRows.length > 0 && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-[#d6f04a]" />{" "}
+              {tx("torneos")} ({new Set(tournamentRows.map((t) => t.id)).size})
+            </span>
+          )}
           {date !== today && (
             <Link href="/reservas-pistas" className="font-semibold underline">
               {tx("hoy")}
@@ -423,6 +444,18 @@ export default async function CourtBookingsPage({
                           </span>
                         </>
                       );
+                      if (b.kind === "tournament") {
+                        return (
+                          <Link
+                            key={b.key}
+                            href={`/torneos/${b.id}`}
+                            className="absolute inset-x-1 overflow-hidden rounded-lg border border-[#a8c22a] bg-[#d6f04a]/40 px-2 py-1 text-foreground hover:bg-[#d6f04a]/60"
+                            style={{ top: top(b.startMinute) + 1, height }}
+                          >
+                            {content}
+                          </Link>
+                        );
+                      }
                       return b.kind === "session" ? (
                         <Link
                           key={b.key}

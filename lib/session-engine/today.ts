@@ -14,6 +14,7 @@ import {
   ne,
 } from "drizzle-orm";
 import { db } from "@/db";
+import { listUsablePlaces } from "@/lib/bookings/places";
 import {
   groupStudents,
   groups,
@@ -276,11 +277,7 @@ export async function loadAdHocBeforeContext(
   const group = await loadAdHocGroup(userId, studentIds, "tenis");
   const [levels, placeRows] = await Promise.all([
     loadSkillLevels(),
-    db
-      .select({ id: places.id, name: places.name })
-      .from(places)
-      .where(eq(places.coachId, userId))
-      .orderBy(asc(places.name)),
+    listUsablePlaces(userId),
   ]);
   const level = resolveGroupLevel(
     levels,
@@ -332,11 +329,7 @@ export async function loadBeforeProposalContext(
         )
         .orderBy(desc(sessions.scheduledAt))
         .limit(5),
-      db
-        .select({ id: places.id, name: places.name })
-        .from(places)
-        .where(eq(places.coachId, userId))
-        .orderBy(asc(places.name)),
+      listUsablePlaces(userId),
     ]);
   const level = resolveGroupLevel(
     levels,

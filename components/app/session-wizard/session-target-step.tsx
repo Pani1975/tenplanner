@@ -172,6 +172,11 @@ export function SessionTargetStep({ places, initial }: SessionTargetStepProps) {
                 </select>
               </label>
             )}
+            {!placeId && (
+              <p className="text-xs text-amber-700 dark:text-amber-400 sm:col-span-2">
+                {tx("sinPistaNoReserva")}
+              </p>
+            )}
           </div>
         )}
       </section>

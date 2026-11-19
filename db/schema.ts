@@ -27,6 +27,7 @@ import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
 import type { MatchScore } from "@/lib/tournaments/score";
 import type { PointsTable } from "@/lib/tournaments/circuit";
+import type { TournamentHours } from "@/lib/tournaments/hours";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -2694,6 +2695,8 @@ export const tournaments = pgTable(
     }),
     // Pistas/lugares usados (ids de places).
     placeIds: jsonb("place_ids").$type<string[]>(),
+    // Horario en que ocupa esas pistas; null = todo el día. 0110.
+    playHours: jsonb("play_hours").$type<TournamentHours>(),
     // Reglas del marcador (lib/tournaments/score.ts).
     bestOf: smallint("best_of").default(3).notNull(),
     gamesPerSet: smallint("games_per_set").default(6).notNull(),

@@ -27,6 +27,7 @@ import type { TournamentTimeZone } from "@/lib/tournaments/schedule";
 import { DrawPanel, type ManagerMatch } from "./draw-panel";
 import { DrawButton } from "./draw-button";
 import { EditTournamentForm } from "./edit-tournament-form";
+import type { TournamentHours } from "@/lib/tournaments/hours";
 import type { ScoringRules } from "@/lib/tournaments/score";
 import { cn } from "@/lib/utils";
 import {
@@ -66,6 +67,8 @@ export type ManagerTournament = {
   canArchive: boolean;
   schedulePublished: boolean;
   places: string[];
+  placeIds: string[];
+  playHours: TournamentHours;
   timeZone: TournamentTimeZone;
   description: string | null;
   rules: ScoringRules;
@@ -397,6 +400,8 @@ export function TournamentManager({
             registrationDeadline: t.registrationDeadline,
             maxEntries: t.maxEntries,
             timeZone: t.timeZone,
+            placeIds: t.placeIds,
+            playHours: t.playHours,
           }}
           onDone={() => {
             setEditingData(false);

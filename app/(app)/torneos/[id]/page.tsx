@@ -78,6 +78,8 @@ export default async function TorneoPage({ params }: Props) {
         }),
         schedulePublished: !!t.schedulePublishedAt,
         places: placeNames,
+        placeIds: t.placeIds ?? [],
+        playHours: t.playHours ?? { mode: "all_day" },
         timeZone: asTimeZone(t.timeZone),
         circuit: t.circuit,
         description: t.description,

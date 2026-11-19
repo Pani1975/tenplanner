@@ -1,10 +1,11 @@
-import { and, eq, gte, isNull, lt, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lt, ne } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { courtBookings, places, sessions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { sessionAtPlace } from "@/lib/bookings/server";
+import { loadTournamentBusy, sessionAtPlace } from "@/lib/bookings/server";
+import { usablePlaceOwners } from "@/lib/bookings/places";
 import { findOverlaps, slotEnd } from "@/lib/sessions/overlap";
 
 const schema = z.object({
@@ -41,11 +42,14 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid data" }, { status: 422 });
 
-  // La pista tiene que ser del usuario.
+  // La pista tiene que ser del usuario o de su club.
+  const { ownerIds } = await usablePlaceOwners(user.id);
   const [place] = await db
-    .select({ id: places.id, name: places.name })
+    .select({ id: places.id, name: places.name, ownerId: places.coachId })
     .from(places)
-    .where(and(eq(places.id, parsed.data.placeId), eq(places.coachId, user.id)))
+    .where(
+      and(eq(places.id, parsed.data.placeId), inArray(places.coachId, ownerIds))
+    )
     .limit(1);
   if (!place) return NextResponse.json({ data: { conflicts: [] } });
 
@@ -96,6 +100,11 @@ export async function POST(request: Request) {
       )
     );
 
+  // Torneos que usan la pista en esas horas.
+  const tournamentRows = await loadTournamentBusy([place.id], from, to);
+  // Los nombres de los clientes solo los ve el dueño de la pista.
+  const isOwner = place.ownerId === user.id;
+
   const conflicts = findOverlaps(
     slots,
     [
@@ -110,9 +119,19 @@ export async function POST(request: Request) {
         title:
           b.kind === "club"
             ? `Reserva del club: ${b.fullName}`
-            : `Reserva de ${b.fullName}`,
+            : isOwner
+              ? `Reserva de ${b.fullName}`
+              : "Reserva de un cliente",
         start: b.startAt,
         durationMinutes: b.durationMinutes,
+      })),
+      ...tournamentRows.map((t) => ({
+        id: `t-${t.id}-${t.start.getTime()}`,
+        title: `Torneo: ${t.name}`,
+        start: t.start,
+        durationMinutes: Math.round(
+          (t.end.getTime() - t.start.getTime()) / 60_000
+        ),
       })),
     ],
     parsed.data.excludeSessionId

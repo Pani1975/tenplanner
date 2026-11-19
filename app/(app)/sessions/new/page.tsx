@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
+import { listUsablePlaces } from "@/lib/bookings/places";
 import {
   exercises,
   sessions,
@@ -104,11 +105,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   }
 
   const [coachPlaces, userRow] = await Promise.all([
-    db
-      .select({ id: places.id, name: places.name })
-      .from(places)
-      .where(eq(places.coachId, user.id))
-      .orderBy(places.name),
+    listUsablePlaces(user.id),
     db
       .select({ name: users.name })
       .from(users)

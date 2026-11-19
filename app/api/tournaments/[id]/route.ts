@@ -10,6 +10,7 @@ import {
   pendingConsentStudentIds,
 } from "@/lib/tournaments/family-notify";
 import { updateTournamentSchema } from "@/lib/tournaments/schemas";
+import { cancelConflictingSessions } from "@/lib/tournaments/court-conflicts";
 import {
   getTournamentDetail,
   updateTournament,
@@ -34,6 +35,15 @@ export async function PATCH(request: Request, ctx: Ctx) {
     checkIds(id);
     const input = await parseBody(request, updateTournamentSchema);
     const result = await updateTournament(o, id, input);
+    const sessionsCancelled = await cancelConflictingSessions(
+      result.tournament,
+      input.cancelSessionIds ?? [],
+      result.tournament.name,
+      o.userId
+    ).catch((e) => {
+      console.error("[torneos] cancelar sesiones", e);
+      return { cancelled: 0, notified: 0 };
+    });
     let familiesNotified = 0;
     if (input.status === "open" && result.previousStatus === "draft") {
       familiesNotified = await pendingConsentStudentIds(id)
@@ -45,6 +55,6 @@ export async function PATCH(request: Request, ctx: Ctx) {
           return 0;
         });
     }
-    return json({ ...result, familiesNotified });
+    return json({ ...result, familiesNotified, sessionsCancelled });
   });
 }
