@@ -111,7 +111,7 @@ export type ObjectiveItem = {
 /** "base" = catálogo de Ten Planner; el resto, ámbito de quien lo crea o ajusta. */
 export type ObjectiveScope = "base" | "club" | "coach" | "student";
 
-const LEVEL_TO_BALL: Record<string, BallId> = {
+export const LEVEL_TO_BALL: Record<string, BallId> = {
   descubrimiento: "roja",
   desarrollo: "naranja",
   consolidacion: "verde",

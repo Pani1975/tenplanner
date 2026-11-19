@@ -31,6 +31,7 @@ import {
   Plus,
   ShieldCheck,
   Target,
+  Trophy,
   UserCircle,
   UserRound,
   Users,
@@ -140,6 +141,7 @@ const navItems: NavItem[] = [
     icon: CalendarDays,
     feature: "calendar",
   },
+  { href: "/torneos", label: "Torneos", icon: Trophy },
   {
     href: "/students",
     label: "Alumnos",
@@ -219,6 +221,7 @@ const managementNavItems: NavItem[] = [
     icon: CalendarDays,
     feature: "calendar",
   },
+  { href: "/torneos", label: "Torneos", icon: Trophy },
   { href: "/students", label: "Alumnos", icon: Users },
   { href: "/groups", label: "Grupos", icon: Users2, feature: "groups" },
   {
@@ -231,7 +234,7 @@ const managementNavItems: NavItem[] = [
 ];
 
 // Las etiquetas del menú se definen en español; se traducen al pintarlas.
-const NAV_LABEL_KEYS: Record<string, string> = {"Inicio":"home","Ejercicios":"exercises","Ver todos":"viewAllM","Biblioteca":"library","Mis ejercicios":"myExercises","Favoritos":"favorites","Borradores":"drafts","Nuevo ejercicio":"newExercise","Clases":"classes","Ver todas":"viewAllF","Mis clases":"myClasses","Mis listas":"myLists","Nueva clase":"newClass","Sesiones":"sessions","Mis sesiones":"mySessions","Listas":"lists","Canceladas":"cancelled","Nueva sesión":"newSession","Calendario":"calendar","Alumnos":"students","Lista de alumnos":"studentList","Grupos":"groups","Objetivos":"goals","Mensajes":"messages","Lugares":"places","Reservas de pistas":"courtBookings","Mis recursos":"myResources","Mi club":"myClub","Perfil":"profile","Ayuda":"help","Informes":"reports","Panel":"panel","Monitores":"coaches","Jugador":"player","Clases club":"clubClasses","Ejercicios club":"clubExercises","Favoritos club":"clubFavorites","Listas club":"clubLists","Recursos club":"clubResources","Sesiones club":"clubSessions"};
+const NAV_LABEL_KEYS: Record<string, string> = {"Inicio":"home","Ejercicios":"exercises","Ver todos":"viewAllM","Biblioteca":"library","Mis ejercicios":"myExercises","Favoritos":"favorites","Borradores":"drafts","Nuevo ejercicio":"newExercise","Clases":"classes","Ver todas":"viewAllF","Mis clases":"myClasses","Mis listas":"myLists","Nueva clase":"newClass","Sesiones":"sessions","Mis sesiones":"mySessions","Listas":"lists","Canceladas":"cancelled","Nueva sesión":"newSession","Calendario":"calendar","Torneos":"tournaments","Alumnos":"students","Lista de alumnos":"studentList","Grupos":"groups","Objetivos":"goals","Mensajes":"messages","Lugares":"places","Reservas de pistas":"courtBookings","Mis recursos":"myResources","Mi club":"myClub","Perfil":"profile","Ayuda":"help","Informes":"reports","Panel":"panel","Monitores":"coaches","Jugador":"player","Clases club":"clubClasses","Ejercicios club":"clubExercises","Favoritos club":"clubFavorites","Listas club":"clubLists","Recursos club":"clubResources","Sesiones club":"clubSessions"};
 
 /** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
 function PlatformBadge() {

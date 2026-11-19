@@ -256,6 +256,47 @@
     text-transform: uppercase;
     color: color-mix(in oklab, var(--foreground) 62%, transparent);
   }
+  /* Torneos: azul #1a6db5, texto en DM Sans y títulos en Fraunces
+     (decisión de David, 2026-11-19). Solo dentro de .tp-torneos. */
+  .tp-torneos {
+    --brand: #1a6db5;
+    --brand-muted: #d6e7f7;
+    --brand-foreground: #ffffff;
+    --brand-ink: #1a6db5;
+    --primary: #1a6db5;
+    --primary-foreground: #ffffff;
+    --ring: #1a6db5;
+    font-family: var(--font-dm-sans), var(--font-sans), sans-serif;
+  }
+  .dark .tp-torneos {
+    --brand: #4c95d9;
+    --brand-muted: #12395e;
+    --brand-ink: #7fb3e6;
+    --primary: #4c95d9;
+    --primary-foreground: #050505;
+    --ring: #4c95d9;
+  }
+  .tp-torneos .tp-title {
+    font-family: var(--font-heading), serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  /* Tarjetas de color sólido (sin transparencias). */
+  .tp-torneos .tp-card {
+    border-radius: calc(var(--radius) * 1.6);
+    background: var(--card);
+    border: 1px solid color-mix(in oklab, var(--foreground) 9%, var(--card));
+  }
+  .tp-torneos .tp-card-blue {
+    border-radius: calc(var(--radius) * 1.6);
+    background: #1a6db5;
+    color: #ffffff;
+  }
+  .tp-torneos .tp-card-soft {
+    border-radius: calc(var(--radius) * 1.6);
+    background: var(--brand-muted);
+    color: var(--foreground);
+  }
   .tp-lime-pill {
     display: inline-flex;
     align-items: center;
