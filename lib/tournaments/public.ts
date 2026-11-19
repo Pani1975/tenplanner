@@ -180,6 +180,7 @@ export async function getPublicTournament(
     );
 
   return {
+    id: t.id,
     slug: t.slug,
     name: t.name,
     description: t.description,
@@ -192,6 +193,7 @@ export async function getPublicTournament(
     registrationDeadline: t.registrationDeadline?.toISOString() ?? null,
     status: statusOf(t),
     visibility: t.visibility as "public" | "private",
+    photosPublic: t.photosPublic,
     acceptsRegistrations:
       t.visibility === "public" && acceptsRegistrations(statusInput(t)),
     maxEntries: t.maxEntries,

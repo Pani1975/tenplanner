@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PublicLinks } from "./public-links";
+import { MediaPanel } from "./media-panel";
 import { DrawPanel, type ManagerMatch } from "./draw-panel";
 import { DrawButton } from "./draw-button";
 import { EditTournamentForm } from "./edit-tournament-form";
@@ -53,6 +54,7 @@ export type ManagerTournament = {
   maxEntries: number | null;
   isClub: boolean;
   visibility: "public" | "private";
+  photosPublic: boolean;
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
@@ -493,6 +495,14 @@ export function TournamentManager({
           )
         )}
       </section>
+
+      {t.status !== "draft" && (
+        <MediaPanel
+          tournamentId={t.id}
+          photosPublic={t.photosPublic}
+          isPublic={t.visibility === "public"}
+        />
+      )}
 
       <ConfirmDialog
         open={toCancel !== null}

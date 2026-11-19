@@ -54,6 +54,7 @@ export default async function TorneoPage({ params }: Props) {
         maxEntries: t.maxEntries,
         isClub: t.clubId !== null,
         visibility: t.visibility as "public" | "private",
+        photosPublic: t.photosPublic,
         circuit: t.circuit,
         description: t.description,
         rules: {

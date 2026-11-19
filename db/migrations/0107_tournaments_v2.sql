@@ -75,3 +75,102 @@ END $$;
 ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "image_consent_at" timestamp with time zone;
 --> statement-breakpoint
 ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_image_consent_at" timestamp with time zone;
+--> statement-breakpoint
+-- Fotos del torneo en la página pública: por defecto no (solo familias y
+-- jugadores vinculados, con sesión). El organizador puede activarlo.
+ALTER TABLE "tournaments" ADD COLUMN IF NOT EXISTS "photos_public" boolean DEFAULT false NOT NULL;
+--> statement-breakpoint
+-- Noticias del torneo: las escribe el organizador o el club; sin datos de
+-- inscritos. published_at nulo = borrador.
+CREATE TABLE IF NOT EXISTS "tournament_news" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "tournament_id" uuid NOT NULL,
+  "author_type" varchar(10) NOT NULL,
+  "author_user_id" uuid,
+  "author_name" varchar(160) NOT NULL,
+  "title" varchar(160) NOT NULL,
+  "body" text NOT NULL,
+  "published_at" timestamp with time zone,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+-- Fotos: el archivo está en el bucket privado tournament-media; se ven con
+-- URLs firmadas de corta vida.
+CREATE TABLE IF NOT EXISTS "tournament_photos" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "tournament_id" uuid NOT NULL,
+  "storage_path" text NOT NULL,
+  "caption" varchar(200),
+  "width" integer,
+  "height" integer,
+  "published" boolean DEFAULT false NOT NULL,
+  "uploaded_by" uuid,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+-- Personas etiquetadas en una foto: una inscripción y el lado (jugador o
+-- pareja). Sirve para avisar de quién no tiene autorización de imagen.
+CREATE TABLE IF NOT EXISTS "tournament_photo_tags" (
+  "photo_id" uuid NOT NULL,
+  "entry_id" uuid NOT NULL,
+  "side" varchar(10) NOT NULL,
+  CONSTRAINT "tournament_photo_tags_pk" PRIMARY KEY ("photo_id", "entry_id", "side")
+);
+--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_news_tournament_id_fk') THEN
+    ALTER TABLE "tournament_news" ADD CONSTRAINT "tournament_news_tournament_id_fk"
+      FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_news_author_user_id_fk') THEN
+    ALTER TABLE "tournament_news" ADD CONSTRAINT "tournament_news_author_user_id_fk"
+      FOREIGN KEY ("author_user_id") REFERENCES "public"."users"("id") ON DELETE set null;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_news_author_type_chk') THEN
+    ALTER TABLE "tournament_news" ADD CONSTRAINT "tournament_news_author_type_chk"
+      CHECK ("author_type" IN ('organizer', 'club'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_photos_tournament_id_fk') THEN
+    ALTER TABLE "tournament_photos" ADD CONSTRAINT "tournament_photos_tournament_id_fk"
+      FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_photos_uploaded_by_fk') THEN
+    ALTER TABLE "tournament_photos" ADD CONSTRAINT "tournament_photos_uploaded_by_fk"
+      FOREIGN KEY ("uploaded_by") REFERENCES "public"."users"("id") ON DELETE set null;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_photo_tags_photo_id_fk') THEN
+    ALTER TABLE "tournament_photo_tags" ADD CONSTRAINT "tournament_photo_tags_photo_id_fk"
+      FOREIGN KEY ("photo_id") REFERENCES "public"."tournament_photos"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_photo_tags_entry_id_fk') THEN
+    ALTER TABLE "tournament_photo_tags" ADD CONSTRAINT "tournament_photo_tags_entry_id_fk"
+      FOREIGN KEY ("entry_id") REFERENCES "public"."tournament_entries"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_photo_tags_side_chk') THEN
+    ALTER TABLE "tournament_photo_tags" ADD CONSTRAINT "tournament_photo_tags_side_chk"
+      CHECK ("side" IN ('player', 'partner'));
+  END IF;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tournament_news_tournament_idx" ON "tournament_news" USING btree ("tournament_id", "published_at");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tournament_photos_tournament_idx" ON "tournament_photos" USING btree ("tournament_id", "created_at");
+--> statement-breakpoint
+ALTER TABLE "tournament_news" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+ALTER TABLE "tournament_photos" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+ALTER TABLE "tournament_photo_tags" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+-- Bucket privado para fotos y carteles de torneos: sin políticas públicas;
+-- solo el servidor accede, con URLs firmadas de corta vida. 5 MB por archivo.
+DO $$ BEGIN
+  IF to_regclass('storage.buckets') IS NOT NULL THEN
+    INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    VALUES ('tournament-media', 'tournament-media', false, 5242880,
+      ARRAY['image/jpeg','image/png','image/webp'])
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+END $$;

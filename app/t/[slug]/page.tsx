@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPublicTournament } from "@/lib/tournaments/public";
+import { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
 import { TournamentView } from "./tournament-view";
 
 export const dynamic = "force-dynamic";
@@ -26,5 +27,10 @@ export default async function PublicTournamentPage({ params }: Props) {
   if (!SLUG.test(slug)) notFound();
   const t = await getPublicTournament(slug);
   if (!t) notFound();
-  return <TournamentView t={t} withRegistration />;
+  const [news, photos] = await Promise.all([
+    publishedNews(t.id),
+    // Fotos en la página pública solo si el organizador lo ha activado.
+    t.photosPublic ? publishedPhotos(t.id) : Promise.resolve([]),
+  ]);
+  return <TournamentView t={t} withRegistration media={{ news, photos }} />;
 }

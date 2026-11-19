@@ -3808,7 +3808,11 @@
       "super_tiebreak_misplaced": "El super tie-break solo sustituye al set decisivo.",
       "winner_required": "Indica quién gana.",
       "circuit_not_found": "Ese circuito no es tuyo ni de tu club.",
-      "registration_closed": "Las inscripciones están cerradas."
+      "registration_closed": "Las inscripciones están cerradas.",
+      "photo_type": "Formato de imagen no admitido (JPG, PNG o WebP).",
+      "photo_too_big": "La foto pesa demasiado.",
+      "photo_upload_failed": "No se ha podido subir la foto.",
+      "invalid_tags": "Alguna persona etiquetada no está inscrita."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -3995,6 +3999,60 @@
         "no": "Imagen: no",
         "unknown": "Imagen: sin datos"
       }
+    },
+    "media": {
+      "newsTitle": "Noticias",
+      "newsTitlePlaceholder": "Título de la noticia",
+      "newsBodyPlaceholder": "Escribe la noticia (horarios, cambios, resultados…)",
+      "saveDraft": "Guardar borrador",
+      "publish": "Publicar",
+      "unpublish": "Retirar",
+      "published": "Publicada",
+      "draft": "Borrador",
+      "notPublished": "Sin publicar",
+      "delete": "Borrar",
+      "newsPublished": "Noticia publicada",
+      "newsSaved": "Borrador guardado",
+      "newsDeleted": "Noticia borrada",
+      "newsEmpty": "Todavía no hay noticias.",
+      "newsDeleteTitle": "¿Borrar la noticia?",
+      "author": {
+        "organizer": "Por {name}",
+        "club": "Por el club {name}"
+      },
+      "photosTitle": "Fotos",
+      "addPhotos": "Añadir fotos",
+      "uploading": "Subiendo {n}…",
+      "photosUploaded": "Fotos subidas",
+      "photoReadError": "No se ha podido leer una de las fotos.",
+      "photosEmpty": "Todavía no hay fotos. Se publican solo cuando tú lo decidas.",
+      "whoSees": "Quién ve las fotos publicadas",
+      "seesFamilies": "Familias y jugadores",
+      "seesPublic": "También en la página pública",
+      "seesFamiliesHelp": "Solo las ven, con su sesión, las familias y jugadores inscritos.",
+      "seesPublicHelp": "Las ve cualquiera con el enlace del torneo.",
+      "seesPublicButPrivate": "El torneo es privado: aunque esté activado, no hay página pública.",
+      "photosPublicOn": "Las fotos publicadas se verán en la página pública",
+      "photosPublicOff": "Las fotos publicadas solo las verán familias y jugadores",
+      "tag": "Etiquetar",
+      "whoAppears": "Quién sale en la foto",
+      "noPeople": "No hay inscritos para etiquetar.",
+      "captionPlaceholder": "Pie de foto (opcional)",
+      "saveTags": "Guardar",
+      "image": {
+        "no": "No autoriza imagen",
+        "unknown": "Sin autorización"
+      },
+      "missingConsent": "{n, plural, one {# persona etiquetada no tiene} other {# personas etiquetadas no tienen}} autorización de imagen.",
+      "consentWarnTitle": "Hay personas sin autorización de imagen",
+      "consentWarnText": "En esta foto salen {names}, sin autorización de imagen registrada. Puedes publicarla igualmente bajo tu responsabilidad.",
+      "publishAnyway": "Publicar igualmente",
+      "photoDeleteTitle": "¿Borrar la foto?",
+      "photoDeleteText": "Se borra del torneo y del almacenamiento. No se puede deshacer.",
+      "photoDeleted": "Foto borrada",
+      "photoAlt": "Foto del torneo",
+      "publicNewsTitle": "Noticias",
+      "publicPhotosTitle": "Fotos"
     }
   }
 }

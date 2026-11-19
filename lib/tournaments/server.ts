@@ -582,6 +582,9 @@ export async function updateTournament(
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
         ...(circuitId !== undefined && { circuitId }),
         ...(input.visibility !== undefined && { visibility: input.visibility }),
+        ...(input.photosPublic !== undefined && {
+          photosPublic: input.photosPublic,
+        }),
         ...(input.bestOf !== undefined && { bestOf: input.bestOf }),
         ...(input.gamesPerSet !== undefined && {
           gamesPerSet: input.gamesPerSet,

@@ -24,6 +24,7 @@ if (!enabled) {
     const s = await import("@/lib/tournaments/server");
     const pub = await import("@/lib/tournaments/public");
     const fam = await import("@/lib/tournaments/family");
+    const media = await import("@/lib/tournaments/media");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -754,5 +755,111 @@ if (!enabled) {
           )
         );
       expect(row.winnerEntryId).toBe(ms[0].entryAId);
+    });
+
+    it("noticias con autor y fotos: etiquetas y aviso de autorización de imagen", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT fotos",
+        description: null,
+        startDate: futureDay(12),
+        maxEntries: null,
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+
+      // Noticias: borrador no sale fuera; publicada sí, con autor organizador.
+      const draft = await media.createNews(o, t.id, {
+        title: "Borrador",
+        body: "x",
+        publish: false,
+      });
+      const pubNews = await media.createNews(o, t.id, {
+        title: "Horarios",
+        body: "Empezamos a las 9",
+        publish: true,
+      });
+      expect(pubNews.authorType).toBe("organizer");
+      expect((await media.publishedNews(t.id)).map((n) => n.id)).toEqual([
+        pubNews.id,
+      ]);
+      await media.updateNews(o, t.id, draft.id, { published: true });
+      expect(await media.publishedNews(t.id)).toHaveLength(2);
+      await expect(
+        media.listNews({ ...o, userId: crypto.randomUUID() }, t.id)
+      ).rejects.toMatchObject({ code: "not_found" });
+
+      // Dos externos: uno autoriza imagen y otro no.
+      const yes = await s.addManualEntry(o, t.id, {
+        kind: "manual",
+        player: {
+          firstName: "Con",
+          lastName: "Imagen IT",
+          email: "con.imagen@ejemplo.test",
+          isMinor: false,
+          guardianName: null,
+        },
+        consentDeclared: true,
+        imageConsent: true,
+      });
+      const no = await s.addManualEntry(o, t.id, {
+        kind: "manual",
+        player: {
+          firstName: "Sin",
+          lastName: "Imagen IT",
+          email: "sin.imagen@ejemplo.test",
+          isMinor: false,
+          guardianName: null,
+        },
+        consentDeclared: true,
+        imageConsent: false,
+      });
+      const people = await media.taggablePeople(t.id);
+      expect(people.map((p) => p.image)).toEqual(["yes", "unknown"]);
+
+      // Foto sin archivo real (solo la fila): etiquetas y publicación.
+      const [photo] = await db
+        .insert(schema.tournamentPhotos)
+        .values({ tournamentId: t.id, storagePath: `${t.id}/photos/it.webp` })
+        .returning();
+      await expect(
+        media.updatePhoto(o, t.id, photo.id, {
+          tags: [{ entryId: crypto.randomUUID(), side: "player" }],
+        })
+      ).rejects.toMatchObject({ code: "invalid_tags" });
+      await media.updatePhoto(o, t.id, photo.id, {
+        tags: [
+          { entryId: yes.entry.id, side: "player" },
+          { entryId: no.entry.id, side: "player" },
+        ],
+      });
+      // Aviso (no bloquea): 409 con quien no autoriza; con acknowledged, se publica.
+      await expect(
+        media.updatePhoto(o, t.id, photo.id, { published: true })
+      ).rejects.toMatchObject({
+        code: "image_consent_missing",
+        status: 409,
+        detail: { people: [{ name: "Sin Imagen IT", image: "unknown" }] },
+      });
+      await media.updatePhoto(o, t.id, photo.id, {
+        published: true,
+        acknowledged: true,
+      });
+      const [row] = await db
+        .select({ published: schema.tournamentPhotos.published })
+        .from(schema.tournamentPhotos)
+        .where(eq(schema.tournamentPhotos.id, photo.id));
+      expect(row.published).toBe(true);
+
+      // Fuera solo con etiquetas de este torneo y solo publicadas; quitar la
+      // etiqueta de quien no autoriza deja publicar sin aviso.
+      await media.updatePhoto(o, t.id, photo.id, { published: false });
+      await media.updatePhoto(o, t.id, photo.id, {
+        tags: [{ entryId: yes.entry.id, side: "player" }],
+      });
+      await media.updatePhoto(o, t.id, photo.id, { published: true });
     });
   });

@@ -10,6 +10,7 @@ import {
 } from "@/lib/tournaments/family";
 import { ConsentCard } from "../consent-card";
 import { getPublicTournament } from "@/lib/tournaments/public";
+import { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -41,6 +42,10 @@ export default async function FamilyTournamentPage({ params }: Props) {
     <TournamentView
       t={t}
       withRegistration={false}
+      media={{
+        news: await publishedNews(t.id),
+        photos: await publishedPhotos(t.id),
+      }}
       notice={mine
         .filter((m) => m.needsConsent)
         .map((m) => (

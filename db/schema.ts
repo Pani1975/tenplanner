@@ -2668,6 +2668,8 @@ export const tournaments = pgTable(
     // public: cualquiera con el enlace. private: solo jugadores y familias
     // vinculados al club (o a los alumnos del monitor). Migración 0107.
     visibility: varchar("visibility", { length: 10 }).default("public").notNull(),
+    // Fotos publicadas también en la página pública (si el torneo es público).
+    photosPublic: boolean("photos_public").default(false).notNull(),
     maxEntries: integer("max_entries"),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),
@@ -2846,5 +2848,78 @@ export const tournamentMatches = pgTable(
       t.round,
       t.position
     ),
+  ]
+);
+
+// Noticias del torneo (migración 0107): del organizador o del club, sin datos
+// de inscritos. publishedAt nulo = borrador.
+export const tournamentNews = pgTable(
+  "tournament_news",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tournamentId: uuid("tournament_id")
+      .references(() => tournaments.id, { onDelete: "cascade" })
+      .notNull(),
+    authorType: varchar("author_type", { length: 10 }).notNull(), // organizer | club
+    authorUserId: uuid("author_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    authorName: varchar("author_name", { length: 160 }).notNull(),
+    title: varchar("title", { length: 160 }).notNull(),
+    body: text("body").notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("tournament_news_tournament_idx").on(t.tournamentId, t.publishedAt)]
+);
+
+// Fotos del torneo: archivo en el bucket privado tournament-media (URLs
+// firmadas de corta vida).
+export const tournamentPhotos = pgTable(
+  "tournament_photos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tournamentId: uuid("tournament_id")
+      .references(() => tournaments.id, { onDelete: "cascade" })
+      .notNull(),
+    storagePath: text("storage_path").notNull(),
+    caption: varchar("caption", { length: 200 }),
+    width: integer("width"),
+    height: integer("height"),
+    published: boolean("published").default(false).notNull(),
+    uploadedBy: uuid("uploaded_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("tournament_photos_tournament_idx").on(t.tournamentId, t.createdAt)]
+);
+
+// Personas etiquetadas en una foto (inscripción + lado).
+export const tournamentPhotoTags = pgTable(
+  "tournament_photo_tags",
+  {
+    photoId: uuid("photo_id")
+      .references(() => tournamentPhotos.id, { onDelete: "cascade" })
+      .notNull(),
+    entryId: uuid("entry_id")
+      .references(() => tournamentEntries.id, { onDelete: "cascade" })
+      .notNull(),
+    side: varchar("side", { length: 10 }).notNull(), // player | partner
+  },
+  (t) => [
+    primaryKey({ name: "tournament_photo_tags_pk", columns: [t.photoId, t.entryId, t.side] }),
   ]
 );

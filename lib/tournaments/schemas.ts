@@ -34,6 +34,7 @@ const tournamentFields = {
   levelCode: z.string().max(32).optional().nullable(),
   format: z.enum(["knockout", "round_robin"]),
   visibility: z.enum(["public", "private"]).optional(),
+  photosPublic: z.boolean().optional(),
   ...scoringFields,
   // Independiente (null) o de un circuito: uno existente (circuitId) o uno
   // nuevo que se crea al guardar (newCircuit).

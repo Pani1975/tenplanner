@@ -4197,7 +4197,11 @@
       "super_tiebreak_misplaced": "The match tie-break only replaces the deciding set.",
       "winner_required": "Say who wins.",
       "circuit_not_found": "That circuit isn't yours or your club's.",
-      "registration_closed": "Registration is closed."
+      "registration_closed": "Registration is closed.",
+      "photo_type": "Unsupported image format (JPG, PNG or WebP).",
+      "photo_too_big": "The photo is too large.",
+      "photo_upload_failed": "The photo could not be uploaded.",
+      "invalid_tags": "Someone tagged is not entered."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4384,6 +4388,60 @@
         "no": "Image: no",
         "unknown": "Image: unknown"
       }
+    },
+    "media": {
+      "newsTitle": "News",
+      "newsTitlePlaceholder": "News title",
+      "newsBodyPlaceholder": "Write the news (times, changes, results…)",
+      "saveDraft": "Save draft",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "published": "Published",
+      "draft": "Draft",
+      "notPublished": "Not published",
+      "delete": "Delete",
+      "newsPublished": "News published",
+      "newsSaved": "Draft saved",
+      "newsDeleted": "News deleted",
+      "newsEmpty": "No news yet.",
+      "newsDeleteTitle": "Delete this news?",
+      "author": {
+        "organizer": "By {name}",
+        "club": "By the club {name}"
+      },
+      "photosTitle": "Photos",
+      "addPhotos": "Add photos",
+      "uploading": "Uploading {n}…",
+      "photosUploaded": "Photos uploaded",
+      "photoReadError": "One of the photos could not be read.",
+      "photosEmpty": "No photos yet. They are only published when you decide.",
+      "whoSees": "Who sees published photos",
+      "seesFamilies": "Families and players",
+      "seesPublic": "Also on the public page",
+      "seesFamiliesHelp": "Only signed-in families and entered players see them.",
+      "seesPublicHelp": "Anyone with the tournament link sees them.",
+      "seesPublicButPrivate": "The tournament is private: there is no public page even if enabled.",
+      "photosPublicOn": "Published photos will show on the public page",
+      "photosPublicOff": "Published photos will only be seen by families and players",
+      "tag": "Tag",
+      "whoAppears": "Who is in the photo",
+      "noPeople": "No entries to tag.",
+      "captionPlaceholder": "Caption (optional)",
+      "saveTags": "Save",
+      "image": {
+        "no": "Image not authorised",
+        "unknown": "No authorisation"
+      },
+      "missingConsent": "{n, plural, one {# tagged person has} other {# tagged people have}} no image authorisation.",
+      "consentWarnTitle": "Some people have no image authorisation",
+      "consentWarnText": "This photo shows {names}, with no image authorisation on record. You can still publish it under your responsibility.",
+      "publishAnyway": "Publish anyway",
+      "photoDeleteTitle": "Delete this photo?",
+      "photoDeleteText": "It is removed from the tournament and storage. This cannot be undone.",
+      "photoDeleted": "Photo deleted",
+      "photoAlt": "Tournament photo",
+      "publicNewsTitle": "News",
+      "publicPhotosTitle": "Photos"
     }
   }
 }

@@ -1,11 +1,20 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import { CalendarDays, Lock, MapPin, Trophy, Users } from "lucide-react";
+import {
+  Camera,
+  CalendarDays,
+  Lock,
+  MapPin,
+  Newspaper,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { dmSans } from "@/app/fonts/dm-sans";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import { formatDateRange, STATUS_BADGE } from "@/lib/tournaments/labels";
 import { levelOptions } from "@/lib/tournaments/levels";
 import type { PublicTournament } from "@/lib/tournaments/public";
+import type { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
 import { cn } from "@/lib/utils";
 import { PublicDraw } from "./public-draw";
 import { RegistrationForm } from "./registration-form";
@@ -20,12 +29,18 @@ export async function TournamentView({
   withRegistration,
   top,
   notice,
+  media,
 }: {
   t: PublicTournament;
   withRegistration: boolean;
   top?: React.ReactNode;
   // Avisos al principio del contenido (p. ej. consentimientos pendientes).
   notice?: React.ReactNode;
+  // Noticias y fotos publicadas (las fotos solo si quien mira puede verlas).
+  media?: {
+    news: Awaited<ReturnType<typeof publishedNews>>;
+    photos: Awaited<ReturnType<typeof publishedPhotos>>;
+  };
 }) {
   const [tr, locale, levels] = await Promise.all([
     getTranslations("tournaments"),
@@ -149,6 +164,64 @@ export async function TournamentView({
               {tr("public.closedNote")}
             </p>
           )
+        )}
+
+        {media && media.news.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="tp-title flex items-center gap-2 text-2xl">
+              <Newspaper className="size-5 text-[var(--brand-ink)]" />
+              {tr("media.publicNewsTitle")}
+            </h2>
+            <ul className="space-y-3">
+              {media.news.map((n) => (
+                <li key={n.id} className="tp-card space-y-2 p-5">
+                  <p className="tp-title text-lg">{n.title}</p>
+                  <p className="text-xs text-foreground/60">
+                    {tr(
+                      `media.author.${n.authorType as "organizer" | "club"}`,
+                      {
+                        name: n.authorName,
+                      }
+                    )}
+                    {n.publishedAt &&
+                      ` · ${n.publishedAt.toLocaleDateString(locale, { day: "numeric", month: "long" })}`}
+                  </p>
+                  <p className="whitespace-pre-line text-sm leading-6">
+                    {n.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {media && media.photos.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="tp-title flex items-center gap-2 text-2xl">
+              <Camera className="size-5 text-[var(--brand-ink)]" />
+              {tr("media.publicPhotosTitle")}
+            </h2>
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {media.photos.map((p) => (
+                <li key={p.id} className="overflow-hidden rounded-2xl">
+                  <a href={p.url!} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.url!}
+                      alt={p.caption ?? tr("media.photoAlt")}
+                      loading="lazy"
+                      className="aspect-square w-full bg-foreground/5 object-cover"
+                    />
+                  </a>
+                  {p.caption && (
+                    <p className="px-1 pt-1 text-xs text-foreground/70">
+                      {p.caption}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {t.matches.length > 0 && (
