@@ -3931,6 +3931,34 @@
       "save": "Guardar cambios",
       "saved": "Datos guardados",
       "note": "Si amplías las plazas, entra gente de la lista de espera. Para reabrir un torneo cerrado por plazo, mueve antes la fecha límite."
+    },
+    "visibility": {
+      "title": "Visibilidad",
+      "public": "Público",
+      "private": "Privado",
+      "publicHelp": "Cualquiera con el enlace ve el torneo (sin datos de contacto) y puede inscribirse mientras esté abierto.",
+      "privateHelpClub": "Solo lo ven los jugadores y las familias vinculados al club, desde su menú Torneos. El enlace público no muestra nada y no admite inscripciones.",
+      "privateHelpCoach": "Solo lo ven los jugadores y las familias de tus alumnos, desde su menú Torneos. El enlace público no muestra nada y no admite inscripciones.",
+      "privateHelpShort": "Solo lo ven los jugadores y familias vinculados; sin inscripción por enlace.",
+      "changed": {
+        "public": "El torneo ahora es público",
+        "private": "El torneo ahora es privado"
+      }
+    },
+    "family": {
+      "kicker": "Panel de familias",
+      "intro": "Torneos del club o de tu monitor: inscripciones, cuadros y resultados.",
+      "tabs": "Torneos por fecha",
+      "tab": {
+        "current": "Actuales",
+        "upcoming": "Próximos",
+        "past": "Pasados"
+      },
+      "empty": {
+        "current": "No hay torneos en curso ahora mismo.",
+        "upcoming": "No hay torneos próximos.",
+        "past": "Aún no hay torneos pasados."
+      }
     }
   }
 }

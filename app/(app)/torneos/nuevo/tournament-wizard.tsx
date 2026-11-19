@@ -39,6 +39,7 @@ type Form = {
   circuitId: string;
   circuitName: string;
   circuitSeason: string;
+  visibility: "public" | "private";
 };
 
 const STEPS = ["basics", "modality", "level", "format"] as const;
@@ -77,6 +78,7 @@ export function TournamentWizard({
     circuitId: circuits[0]?.id ?? "",
     circuitName: "",
     circuitSeason: String(new Date().getFullYear()),
+    visibility: "public",
   });
   const set = <K extends keyof Form>(k: K, v: Form[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
@@ -129,6 +131,7 @@ export function TournamentWizard({
         maxEntries: max,
         placeIds: f.placeIds.length ? f.placeIds : null,
         circuitId: f.circuitMode === "existing" ? f.circuitId : null,
+        visibility: f.visibility,
         newCircuit:
           f.circuitMode === "new"
             ? {
@@ -302,6 +305,34 @@ export function TournamentWizard({
                   )}
                 </div>
               )}
+            </fieldset>
+            <fieldset className="space-y-2">
+              <legend className="mb-1.5 text-xs font-bold uppercase text-foreground/60">
+                {t("visibility.title")}
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(["public", "private"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={f.visibility === v}
+                    onClick={() => set("visibility", v)}
+                    className={cn(
+                      "min-h-11 rounded-xl px-3 text-sm font-semibold",
+                      f.visibility === v
+                        ? "bg-[#1a6db5] text-white"
+                        : "bg-foreground/5 text-foreground"
+                    )}
+                  >
+                    {t(`visibility.${v}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-foreground/65">
+                {f.visibility === "public"
+                  ? t("visibility.publicHelp")
+                  : t("visibility.privateHelpShort")}
+              </p>
             </fieldset>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("wizard.startDate")} required>

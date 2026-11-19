@@ -97,14 +97,22 @@ export type PublicMatch = {
   resultType: string | null;
 };
 
-/** Torneo público por su slug (no en borrador), sin datos de contacto. */
-export async function getPublicTournament(slug: string) {
+/**
+ * Torneo por su slug (no en borrador), sin datos de contacto. Un torneo
+ * privado solo se devuelve con `allowPrivate` (familias y jugadores
+ * vinculados, que ya se han comprobado antes).
+ */
+export async function getPublicTournament(
+  slug: string,
+  opts: { allowPrivate?: boolean } = {}
+) {
   const [t] = await db
     .select()
     .from(tournaments)
     .where(and(eq(tournaments.slug, slug), ne(tournaments.status, "draft")))
     .limit(1);
   if (!t) return null;
+  if (t.visibility === "private" && !opts.allowPrivate) return null;
 
   const [entries, matches, organizer, circuit, placeRows] = await Promise.all([
     db
@@ -182,7 +190,9 @@ export async function getPublicTournament(slug: string) {
     endDate: t.endDate,
     registrationDeadline: t.registrationDeadline?.toISOString() ?? null,
     status: statusOf(t),
-    acceptsRegistrations: acceptsRegistrations(statusInput(t)),
+    visibility: t.visibility as "public" | "private",
+    acceptsRegistrations:
+      t.visibility === "public" && acceptsRegistrations(statusInput(t)),
     maxEntries: t.maxEntries,
     // Decisión de David (2026-11-19): el número de inscritos cuenta también
     // la lista de espera.
@@ -245,7 +255,7 @@ export async function registerPublic(
       .where(eq(tournaments.id, found.id))
       .for("update")
       .limit(1)) as TournamentRow[];
-    if (!acceptsRegistrations(statusInput(t))) {
+    if (t.visibility !== "public" || !acceptsRegistrations(statusInput(t))) {
       throw new TournamentError("registration_closed", 409);
     }
     const doubles = t.modality === "doubles";
@@ -486,7 +496,12 @@ export async function getPublicCircuit(slug: string) {
     .select()
     .from(tournaments)
     .where(
-      and(eq(tournaments.circuitId, c.id), ne(tournaments.status, "draft"))
+      and(
+        eq(tournaments.circuitId, c.id),
+        ne(tournaments.status, "draft"),
+        // Los torneos privados no salen en la clasificación pública.
+        eq(tournaments.visibility, "public")
+      )
     )
     .orderBy(asc(tournaments.startDate));
   const finished = ts.filter((t) => t.status === "finished");

@@ -2657,6 +2657,9 @@ export const tournaments = pgTable(
     // draft | open | closed | in_progress | finished. "open" pasado el plazo
     // se muestra como "closed" (lib/tournaments/status.ts).
     status: varchar("status", { length: 20 }).default("draft").notNull(),
+    // public: cualquiera con el enlace. private: solo jugadores y familias
+    // vinculados al club (o a los alumnos del monitor). Migración 0107.
+    visibility: varchar("visibility", { length: 10 }).default("public").notNull(),
     maxEntries: integer("max_entries"),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),

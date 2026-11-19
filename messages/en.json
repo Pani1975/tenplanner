@@ -4320,6 +4320,34 @@
       "save": "Save changes",
       "saved": "Details saved",
       "note": "If you add spots, people from the waiting list get in. To reopen a tournament closed by its deadline, move the deadline first."
+    },
+    "visibility": {
+      "title": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "publicHelp": "Anyone with the link sees the tournament (no contact details) and can sign up while it's open.",
+      "privateHelpClub": "Only players and families linked to the club see it, from their Tournaments menu. The public link shows nothing and takes no sign-ups.",
+      "privateHelpCoach": "Only your students' players and families see it, from their Tournaments menu. The public link shows nothing and takes no sign-ups.",
+      "privateHelpShort": "Only linked players and families see it; no sign-up by link.",
+      "changed": {
+        "public": "The tournament is now public",
+        "private": "The tournament is now private"
+      }
+    },
+    "family": {
+      "kicker": "Family panel",
+      "intro": "Tournaments from the club or your coach: entries, draws and results.",
+      "tabs": "Tournaments by date",
+      "tab": {
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "past": "Past"
+      },
+      "empty": {
+        "current": "No tournaments in progress right now.",
+        "upcoming": "No upcoming tournaments.",
+        "past": "No past tournaments yet."
+      }
     }
   }
 }

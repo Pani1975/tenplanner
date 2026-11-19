@@ -413,6 +413,7 @@ export async function createTournament(
             : null,
           placeIds: input.placeIds ?? null,
           circuitId,
+          visibility: input.visibility ?? "public",
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
           finalSet: input.finalSet,
@@ -536,6 +537,7 @@ export async function updateTournament(
         }),
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
         ...(circuitId !== undefined && { circuitId }),
+        ...(input.visibility !== undefined && { visibility: input.visibility }),
         ...(input.bestOf !== undefined && { bestOf: input.bestOf }),
         ...(input.gamesPerSet !== undefined && {
           gamesPerSet: input.gamesPerSet,

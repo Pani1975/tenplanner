@@ -23,6 +23,7 @@ if (!enabled) {
     const { and, eq, inArray, ne } = await import("drizzle-orm");
     const s = await import("@/lib/tournaments/server");
     const pub = await import("@/lib/tournaments/public");
+    const fam = await import("@/lib/tournaments/family");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -492,6 +493,85 @@ if (!enabled) {
       await db
         .delete(schema.tournamentCircuits)
         .where(eq(schema.tournamentCircuits.id, det.tournament.circuitId!));
+    });
+
+    it("visibilidad: privado se oculta en público y lo ven las familias vinculadas", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT privado",
+        description: null,
+        startDate: futureDay(30),
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+        visibility: "private",
+      });
+      created.push(t.id);
+      expect(t.visibility).toBe("private");
+      await s.updateTournament(o, t.id, { status: "open" });
+
+      // Privado: ni página pública ni inscripción por enlace.
+      expect(await pub.getPublicTournament(t.slug)).toBeNull();
+      await expect(
+        pub.registerPublic(t.slug, {
+          player: {
+            firstName: "Ext",
+            lastName: "Erno",
+            email: "ext@it.test",
+            isMinor: false,
+            guardianName: null,
+          },
+          consent: true,
+        })
+      ).rejects.toMatchObject({ code: "registration_closed" });
+      const asFamily = await pub.getPublicTournament(t.slug, {
+        allowPrivate: true,
+      });
+      expect(asFamily?.visibility).toBe("private");
+      expect(asFamily?.acceptsRegistrations).toBe(false);
+
+      // Una cuenta vinculada a un alumno del monitor lo ve en su menú.
+      const cand = await s.listCandidates(o, t.id);
+      const student = cand.students[0];
+      const [g] = await db
+        .insert(schema.studentGuardians)
+        .values({
+          studentId: student.id,
+          userId: user.id,
+          name: "IT tutor",
+          relationship: "madre",
+        })
+        .returning({ id: schema.studentGuardians.id });
+      try {
+        await s.addSchoolEntries(o, t.id, {
+          kind: "school",
+          items: [{ studentId: student.id }],
+          consentDeclared: true,
+        });
+        const list = await fam.listFamilyTournaments(user.id);
+        const mine = list.tournaments.find((x) => x.slug === t.slug);
+        expect(mine).toMatchObject({
+          visibility: "private",
+          tab: "upcoming",
+          mine: [{ status: "confirmed" }],
+        });
+        expect(
+          await fam.getTournamentForFamily(user.id, t.slug)
+        ).not.toBeNull();
+        // Una cuenta sin vínculos no lo ve.
+        expect(
+          await fam.getTournamentForFamily(crypto.randomUUID(), t.slug)
+        ).toBeNull();
+
+        // Pasar a público: vuelve a verse con el enlace.
+        await s.updateTournament(o, t.id, { visibility: "public" });
+        expect(await pub.getPublicTournament(t.slug)).not.toBeNull();
+      } finally {
+        await db
+          .delete(schema.studentGuardians)
+          .where(eq(schema.studentGuardians.id, g.id));
+      }
     });
 
     it("liguilla: calendario y resultados", async () => {

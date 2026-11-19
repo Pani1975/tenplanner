@@ -51,6 +51,7 @@ export type ManagerTournament = {
   registrationDeadline: string | null;
   maxEntries: number | null;
   isClub: boolean;
+  visibility: "public" | "private";
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
@@ -358,8 +359,11 @@ export function TournamentManager({
       )}
 
       <PublicLinks
+        tournamentId={t.id}
         slug={t.slug}
-        isPublic={t.status !== "draft"}
+        isDraft={t.status === "draft"}
+        visibility={t.visibility}
+        isClub={t.isClub}
         circuitSlug={t.circuit?.slug ?? null}
         baseUrl={baseUrl}
       />

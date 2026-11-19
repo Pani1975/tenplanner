@@ -41,6 +41,7 @@ const PRIVATE_PAGE_PREFIXES = [
   "/exercises",
   "/groups",
   "/mi-espacio",
+  "/mi-familia",
   "/places",
   "/profile",
   "/resources",
