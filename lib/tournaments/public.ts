@@ -104,12 +104,18 @@ export type PublicMatch = {
  */
 export async function getPublicTournament(
   slug: string,
-  opts: { allowPrivate?: boolean } = {}
+  // allowDraft: solo para quien ya ha comprobado que es el organizador
+  // (p. ej. el cartel, que se prepara antes de abrir inscripciones).
+  opts: { allowPrivate?: boolean; allowDraft?: boolean } = {}
 ) {
   const [t] = await db
     .select()
     .from(tournaments)
-    .where(and(eq(tournaments.slug, slug), ne(tournaments.status, "draft")))
+    .where(
+      opts.allowDraft
+        ? eq(tournaments.slug, slug)
+        : and(eq(tournaments.slug, slug), ne(tournaments.status, "draft"))
+    )
     .limit(1);
   if (!t) return null;
   if (t.visibility === "private" && !opts.allowPrivate) return null;

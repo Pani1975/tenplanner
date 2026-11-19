@@ -118,7 +118,10 @@ export async function buildPoster(
   image: Buffer | null;
 }> {
   const row = await getTournament(o, tournamentId);
-  const t = await getPublicTournament(row.slug, { allowPrivate: true });
+  const t = await getPublicTournament(row.slug, {
+    allowPrivate: true,
+    allowDraft: true,
+  });
   if (!t) throw new TournamentError("not_found", 404);
   const { tr, locale } = opts;
 

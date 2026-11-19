@@ -25,6 +25,7 @@ if (!enabled) {
     const pub = await import("@/lib/tournaments/public");
     const fam = await import("@/lib/tournaments/family");
     const media = await import("@/lib/tournaments/media");
+    const poster = await import("@/lib/tournaments/poster");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -861,5 +862,39 @@ if (!enabled) {
         tags: [{ entryId: yes.entry.id, side: "player" }],
       });
       await media.updatePhoto(o, t.id, photo.id, { published: true });
+    });
+
+    it("cartel: se genera también en borrador y solo para el organizador", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT cartel borrador",
+        description: null,
+        startDate: futureDay(15),
+        maxEntries: 8,
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+      expect(t.status).toBe("draft");
+      const tr = (k: string) => k;
+      const p = await poster.buildPoster(o, t.id, {
+        baseUrl: "https://tenplanner.com",
+        locale: "es",
+        tr,
+      });
+      expect(p.data.name).toBe("IT cartel borrador");
+      expect(p.data.url).toBe(`https://tenplanner.com/t/${t.slug}`);
+      expect(p.data.cta).toBe("poster.ctaRegister");
+      // La página pública sigue sin mostrar borradores.
+      expect(await pub.getPublicTournament(t.slug)).toBeNull();
+      await expect(
+        poster.buildPoster({ ...o, userId: crypto.randomUUID() }, t.id, {
+          baseUrl: "https://tenplanner.com",
+          locale: "es",
+          tr,
+        })
+      ).rejects.toMatchObject({ code: "not_found" });
     });
   });
