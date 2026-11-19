@@ -98,36 +98,30 @@ describe("estado del torneo", () => {
 });
 
 describe("nombre público", () => {
-  it("nombre e inicial del primer apellido; nunca contacto", () => {
+  it("nombre e iniciales de los apellidos; nunca contacto", () => {
     expect(publicName({ firstName: "Lucía", lastName: "García López" })).toBe(
-      "Lucía G."
+      "Lucía G. L."
     );
-    expect(publicName({ firstName: "Juan Carlos", lastName: "ñúñez" })).toBe(
-      "Juan Ñ."
+    expect(publicName({ firstName: " Juan  Carlos ", lastName: "ñúñez" })).toBe(
+      "Juan Carlos Ñ."
+    );
+    expect(
+      publicName({ firstName: "Ana", lastName: "Fernández de la Vega" })
+    ).toBe("Ana F. V.");
+    expect(publicName({ firstName: "Ana", lastName: "Ruiz-Mateos" })).toBe(
+      "Ana R. M."
     );
     expect(publicName({ firstName: "Ana", lastName: null })).toBe("Ana");
     expect(publicName({ firstName: "  Ana  ", lastName: "  " })).toBe("Ana");
   });
 
-  it("menores: solo iniciales por defecto", () => {
-    expect(
-      publicName({ firstName: "lucía", lastName: "García", isMinor: true })
-    ).toBe("L. G.");
-    expect(
-      publicName(
-        { firstName: "Lucía", lastName: "García", isMinor: true },
-        { minorsInitialsOnly: false }
-      )
-    ).toBe("Lucía G.");
-  });
-
   it("dobles", () => {
     expect(
       publicTeamName(
-        { firstName: "Lucía", lastName: "García" },
-        { firstName: "Marta", lastName: "Ruiz", isMinor: true }
+        { firstName: "Lucía", lastName: "García López" },
+        { firstName: "Marta", lastName: "Ruiz" }
       )
-    ).toBe("Lucía G. / M. R.");
+    ).toBe("Lucía G. L. / Marta R.");
     expect(
       publicTeamName({ firstName: "Lucía", lastName: "García" }, null)
     ).toBe("Lucía G.");
