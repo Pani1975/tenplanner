@@ -52,7 +52,7 @@ export const LANDING_SCREENS: LandingScreen[] = [
 export const LANDING_SCREENS_EN: LandingScreen[] = [
   {
     src: "/landing/app/en/exercise-filters.webp",
-    alt: "Exercise filters by level, aspect, phase and game situation",
+    alt: "Drill filters by level, aspect, phase and game situation",
     label: "Filter by level and goal",
   },
   {
