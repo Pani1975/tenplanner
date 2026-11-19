@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PublicLinks } from "./public-links";
+import { DrawPanel, type ManagerMatch } from "./draw-panel";
+import { DrawButton } from "./draw-button";
+import { EditTournamentForm } from "./edit-tournament-form";
+import type { ScoringRules } from "@/lib/tournaments/score";
 import { cn } from "@/lib/utils";
 import {
   ENTRY_BADGE,
@@ -47,6 +51,8 @@ export type ManagerTournament = {
   registrationDeadline: string | null;
   maxEntries: number | null;
   isClub: boolean;
+  description: string | null;
+  rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
 };
 
@@ -76,6 +82,7 @@ export type ManagerEntry = {
   consentMethod: string | null;
   createdAt: string;
   contactsHidden: boolean;
+  seed: number | null;
 };
 
 type Level = { code: string; label: string };
@@ -95,14 +102,14 @@ const fullName = (first: string | null, last: string | null) =>
 export function TournamentManager({
   tournament: t,
   entries,
-  matchCount,
+  matches,
   levels,
   canSeeContacts,
   baseUrl,
 }: {
   tournament: ManagerTournament;
   entries: ManagerEntry[];
-  matchCount: number;
+  matches: ManagerMatch[];
   levels: Level[];
   canSeeContacts: boolean;
   baseUrl: string;
@@ -114,6 +121,21 @@ export function TournamentManager({
   const [panel, setPanel] = useState<"none" | "students" | "external">("none");
   const [busy, setBusy] = useState<string | null>(null);
   const [toCancel, setToCancel] = useState<ManagerEntry | null>(null);
+  const [editingData, setEditingData] = useState(false);
+  const matchCount = matches.length;
+  const anyPlayed = matches.some((m) => m.status === "played");
+  const names = useMemo(
+    () =>
+      Object.fromEntries(
+        entries.map((e) => [
+          e.id,
+          e.partnerFirstName
+            ? `${fullName(e.firstName, e.lastName)} / ${fullName(e.partnerFirstName, e.partnerLastName)}`
+            : fullName(e.firstName, e.lastName),
+        ])
+      ),
+    [entries]
+  );
 
   const statusInput = {
     status: t.status as TournamentStatus,
@@ -121,6 +143,8 @@ export function TournamentManager({
   };
   const status = t.effectiveStatus as TournamentStatus;
   const editable = canEditEntries(statusInput);
+  // Cabezas de serie: en eliminatoria, antes de generar el cuadro.
+  const seedable = t.format === "knockout" && matchCount === 0 && editable;
   const levelLabel = (code: string | null) =>
     code ? (levels.find((l) => l.code === code)?.label ?? code) : null;
 
@@ -275,10 +299,58 @@ export function TournamentManager({
             ))}
           </div>
         )}
+        <div className="flex flex-wrap gap-2">
+          {status === "closed" && matchCount === 0 && (
+            <DrawButton tournamentId={t.id} redraw={false} />
+          )}
+          {status === "in_progress" && matchCount > 0 && !anyPlayed && (
+            <DrawButton tournamentId={t.id} redraw variant="secondary" />
+          )}
+          {status !== "finished" && (
+            <button
+              type="button"
+              onClick={() => setEditingData((v) => !v)}
+              aria-expanded={editingData}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-white/15 px-5 text-sm font-bold text-white hover:bg-white/25"
+            >
+              {tr("edit.open")}
+            </button>
+          )}
+        </div>
         {status === "closed" && matchCount === 0 && (
           <p className="text-sm text-white/85">{tr("manager.drawSoon")}</p>
         )}
       </header>
+
+      {editingData && (
+        <EditTournamentForm
+          tournament={{
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            startDate: t.startDate,
+            endDate: t.endDate,
+            registrationDeadline: t.registrationDeadline,
+            maxEntries: t.maxEntries,
+          }}
+          onDone={() => {
+            setEditingData(false);
+            router.refresh();
+          }}
+          onCancel={() => setEditingData(false)}
+        />
+      )}
+
+      {matchCount > 0 && (
+        <DrawPanel
+          tournamentId={t.id}
+          format={t.format}
+          matches={matches}
+          names={names}
+          rules={t.rules}
+          canEdit={status === "in_progress"}
+        />
+      )}
 
       <PublicLinks
         slug={t.slug}
@@ -386,6 +458,14 @@ export function TournamentManager({
                         levelLabel={levelLabel(e.levelCode)}
                         busy={busy === e.id}
                         editable={editable}
+                        seedOptions={
+                          seedable && g === "confirmed"
+                            ? Math.min(8, groups.confirmed.length)
+                            : 0
+                        }
+                        onSeed={(seed) =>
+                          patchEntry(e.id, { action: "seed", seed })
+                        }
                         onConsent={() =>
                           patchEntry(e.id, { action: "declare_consent" })
                         }
@@ -427,6 +507,8 @@ function EntryRow({
   levelLabel,
   busy,
   editable,
+  seedOptions,
+  onSeed,
   onConsent,
   onCancel,
 }: {
@@ -435,6 +517,8 @@ function EntryRow({
   levelLabel: string | null;
   busy: boolean;
   editable: boolean;
+  seedOptions: number;
+  onSeed: (seed: number | null) => void;
   onConsent: () => void;
   onCancel: () => void;
 }) {
@@ -511,7 +595,27 @@ function EntryRow({
         )}
       </div>
       {editable && e.status !== "cancelled" && (
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {seedOptions > 0 && (
+            <label className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground/5 pl-4 pr-2 text-sm font-semibold">
+              {tr("draw.seed")}
+              <select
+                value={e.seed ?? ""}
+                disabled={busy}
+                onChange={(ev) =>
+                  onSeed(ev.target.value ? Number(ev.target.value) : null)
+                }
+                className="h-9 rounded-full bg-background px-2 text-sm"
+              >
+                <option value="">–</option>
+                {Array.from({ length: seedOptions }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {!e.consentAt && (
             <button
               type="button"

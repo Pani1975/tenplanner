@@ -3882,6 +3882,55 @@
       "knockoutPoints": "Eliminatoria: campeón {winner}, finalista {final}, semifinal {semifinal}, cuartos {quarterfinal}, octavos {earlier}.",
       "roundRobinPoints": "Liguilla, por puesto: {list}.",
       "participation": "Por jugar un torneo: {n} como mínimo. En dobles, puntúa cada jugador."
+    },
+    "score": {
+      "title": "Resultado",
+      "type": {
+        "normal": "Jugado",
+        "walkover": "No presentado",
+        "retired": "Retirada"
+      },
+      "player": "Jugador",
+      "set": "Set {n}",
+      "stb": "STB",
+      "superTiebreak": "Super tie-break a 10",
+      "gamesOf": "Juegos del set {n} de {name}",
+      "stbOf": "Super tie-break de {name}",
+      "tiebreakOfSet": "Tie-break del set {n} (opcional)",
+      "tiebreakPoints": "Puntos del tie-break del set {n} de {name}",
+      "whoWins": "¿Quién gana? (el otro no se presentó)",
+      "whoWinsRetired": "¿Quién gana? (el otro se retiró)",
+      "court": "Pista",
+      "courtPlaceholder": "Opcional",
+      "winnerIs": "Gana {name}",
+      "clear": "Borrar resultado",
+      "save": "Guardar resultado",
+      "saved": "Resultado guardado",
+      "cleared": "Resultado borrado"
+    },
+    "draw": {
+      "generate": "Generar cuadro",
+      "redraw": "Rehacer cuadro",
+      "generated": "Cuadro generado. El torneo está en curso.",
+      "redrawn": "Cuadro rehecho",
+      "pendingTitle": "Hay inscripciones sin consentimiento",
+      "pendingText": "{count, plural, one {# inscripción no tiene} other {# inscripciones no tienen}} el consentimiento y no entrarán en el cuadro. ¿Generarlo igualmente?",
+      "pendingConfirm": "Generar sin ellas",
+      "redrawTitle": "¿Rehacer el cuadro?",
+      "redrawText": "Se vuelve a sortear con los inscritos confirmados y las cabezas de serie. Solo se puede mientras no haya resultados.",
+      "progress": "{played} de {total} partidos jugados",
+      "tapToScore": "Toca un partido para poner el resultado; el ganador pasa solo a la siguiente ronda.",
+      "champion": "Campeón",
+      "games": "Juegos",
+      "editMatch": "Poner resultado: {a} contra {b}",
+      "seed": "Cabeza de serie"
+    },
+    "edit": {
+      "open": "Editar datos",
+      "title": "Datos del torneo",
+      "save": "Guardar cambios",
+      "saved": "Datos guardados",
+      "note": "Si amplías las plazas, entra gente de la lista de espera. Para reabrir un torneo cerrado por plazo, mueve antes la fecha límite."
     }
   }
 }

@@ -4271,6 +4271,55 @@
       "knockoutPoints": "Knockout: winner {winner}, runner-up {final}, semi-final {semifinal}, quarter-final {quarterfinal}, round of 16 {earlier}.",
       "roundRobinPoints": "Round robin, by position: {list}.",
       "participation": "For playing a tournament: at least {n}. In doubles, each player scores."
+    },
+    "score": {
+      "title": "Result",
+      "type": {
+        "normal": "Played",
+        "walkover": "Walkover",
+        "retired": "Retired"
+      },
+      "player": "Player",
+      "set": "Set {n}",
+      "stb": "MTB",
+      "superTiebreak": "Match tie-break to 10",
+      "gamesOf": "Set {n} games for {name}",
+      "stbOf": "Match tie-break for {name}",
+      "tiebreakOfSet": "Set {n} tie-break (optional)",
+      "tiebreakPoints": "Set {n} tie-break points for {name}",
+      "whoWins": "Who wins? (the other didn't show up)",
+      "whoWinsRetired": "Who wins? (the other retired)",
+      "court": "Court",
+      "courtPlaceholder": "Optional",
+      "winnerIs": "{name} wins",
+      "clear": "Clear result",
+      "save": "Save result",
+      "saved": "Result saved",
+      "cleared": "Result cleared"
+    },
+    "draw": {
+      "generate": "Make the draw",
+      "redraw": "Redo the draw",
+      "generated": "Draw made. The tournament is in progress.",
+      "redrawn": "Draw redone",
+      "pendingTitle": "Some entries have no consent",
+      "pendingText": "{count, plural, one {# entry has} other {# entries have}} no consent and won't enter the draw. Make it anyway?",
+      "pendingConfirm": "Make it without them",
+      "redrawTitle": "Redo the draw?",
+      "redrawText": "It's drawn again with the confirmed entries and seeds. Only possible while there are no results.",
+      "progress": "{played} of {total} matches played",
+      "tapToScore": "Tap a match to enter the result; the winner moves on automatically.",
+      "champion": "Champion",
+      "games": "Games",
+      "editMatch": "Enter result: {a} vs {b}",
+      "seed": "Seed"
+    },
+    "edit": {
+      "open": "Edit details",
+      "title": "Tournament details",
+      "save": "Save changes",
+      "saved": "Details saved",
+      "note": "If you add spots, people from the waiting list get in. To reopen a tournament closed by its deadline, move the deadline first."
     }
   }
 }

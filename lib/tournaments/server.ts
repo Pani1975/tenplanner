@@ -1143,7 +1143,10 @@ export async function generateDraw(
 ) {
   return db.transaction(async (tx) => {
     const t = await lockTournament(tx, o, id);
-    if (statusOf(t) !== "closed") {
+    // Cerrado: primer cuadro. En curso: rehacerlo, solo si aún no hay
+    // resultados (se comprueba más abajo).
+    const current = statusOf(t);
+    if (current !== "closed" && current !== "in_progress") {
       throw new TournamentError("must_be_closed", 409);
     }
     const entries = await existingIdentities(tx, id);

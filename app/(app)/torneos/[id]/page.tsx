@@ -54,6 +54,12 @@ export default async function TorneoPage({ params }: Props) {
         maxEntries: t.maxEntries,
         isClub: t.clubId !== null,
         circuit: t.circuit,
+        description: t.description,
+        rules: {
+          bestOf: t.bestOf as 1 | 3 | 5,
+          gamesPerSet: t.gamesPerSet,
+          finalSet: t.finalSet as "full" | "super_tiebreak",
+        },
       }}
       entries={detail.entries.map((e) => ({
         id: e.id,
@@ -81,8 +87,20 @@ export default async function TorneoPage({ params }: Props) {
         consentMethod: e.consentMethod,
         createdAt: e.createdAt.toISOString(),
         contactsHidden: e.contactsHidden,
+        seed: e.seed,
       }))}
-      matchCount={detail.matches.length}
+      matches={detail.matches.map((m) => ({
+        id: m.id,
+        round: m.round,
+        position: m.position,
+        entryAId: m.entryAId,
+        entryBId: m.entryBId,
+        status: m.status,
+        winnerEntryId: m.winnerEntryId,
+        score: m.score,
+        resultType: m.resultType,
+        courtLabel: m.courtLabel,
+      }))}
       levels={levels}
       canSeeContacts={organizer.canSeeContacts}
       baseUrl={await siteBaseUrl()}
