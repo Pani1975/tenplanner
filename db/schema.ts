@@ -2653,7 +2653,7 @@ export const tournamentEntries = pgTable(
     tournamentId: uuid("tournament_id")
       .references(() => tournaments.id, { onDelete: "cascade" })
       .notNull(),
-    source: varchar("source", { length: 10 }).notNull(), // school | link
+    source: varchar("source", { length: 10 }).notNull(), // school | link | manual (externo añadido por el organizador)
     studentId: uuid("student_id").references(() => students.id, {
       onDelete: "set null",
     }),
@@ -2722,10 +2722,14 @@ export const tournamentEntries = pgTable(
       .where(sql`partner_student_id IS NOT NULL AND status <> 'cancelled'`),
     uniqueIndex("tournament_entries_email_uniq")
       .on(t.tournamentId, sql`lower(${t.email})`)
-      .where(sql`email IS NOT NULL AND status <> 'cancelled'`),
+      .where(
+        sql`email IS NOT NULL AND source <> 'school' AND status <> 'cancelled'`
+      ),
     uniqueIndex("tournament_entries_phone_uniq")
       .on(t.tournamentId, t.phone)
-      .where(sql`phone IS NOT NULL AND status <> 'cancelled'`),
+      .where(
+        sql`phone IS NOT NULL AND source <> 'school' AND status <> 'cancelled'`
+      ),
   ]
 );
 

@@ -1,8 +1,8 @@
 -- Torneos: un club (modo club) o un monitor (modo particular) organiza un
 -- torneo; los participantes vienen de sus alumnos o de un enlace público.
 -- Los datos de contacto solo los ve el organizador; la página pública solo
--- muestra nombre e inicial (lib/tournaments/public-name.ts).
--- Idempotente: se puede aplicar más de una vez. NO aplicada en producción.
+-- muestra nombre e iniciales de los apellidos (lib/tournaments/public-name.ts).
+-- Idempotente: se puede aplicar más de una vez. Aplicada solo en pruebas.
 CREATE TABLE IF NOT EXISTS "tournaments" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "owner_type" varchar(10) NOT NULL,
@@ -162,7 +162,7 @@ DO $$ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_entries_source_chk') THEN
     ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_source_chk"
-      CHECK ("source" IN ('school', 'link'));
+      CHECK ("source" IN ('school', 'link', 'manual'));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_entries_status_chk') THEN
     ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_status_chk"
@@ -238,10 +238,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS "tournament_entries_partner_student_uniq" ON "
   WHERE "partner_student_id" IS NOT NULL AND "status" <> 'cancelled';
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tournament_entries_email_uniq" ON "tournament_entries" USING btree ("tournament_id", lower("email"))
-  WHERE "email" IS NOT NULL AND "status" <> 'cancelled';
+  WHERE "email" IS NOT NULL AND "source" <> 'school' AND "status" <> 'cancelled';
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tournament_entries_phone_uniq" ON "tournament_entries" USING btree ("tournament_id", "phone")
-  WHERE "phone" IS NOT NULL AND "status" <> 'cancelled';
+  WHERE "phone" IS NOT NULL AND "source" <> 'school' AND "status" <> 'cancelled';
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tournament_matches_slot_uniq" ON "tournament_matches" USING btree ("tournament_id", "round", "position");
 --> statement-breakpoint
