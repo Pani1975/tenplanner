@@ -2,7 +2,7 @@
 -- torneo; los participantes vienen de sus alumnos o de un enlace público.
 -- Los datos de contacto solo los ve el organizador; la página pública solo
 -- muestra nombre e iniciales de los apellidos (lib/tournaments/public-name.ts).
--- Idempotente: se puede aplicar más de una vez. Aplicada solo en pruebas.
+-- Idempotente: se puede aplicar más de una vez. Aplicada en pruebas y en producción (2026-11-19).
 CREATE TABLE IF NOT EXISTS "tournaments" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "owner_type" varchar(10) NOT NULL,

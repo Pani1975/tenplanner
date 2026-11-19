@@ -1,6 +1,6 @@
 # Torneos — decisiones y pendientes
 
-Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/tournaments/server.ts`, API de gestión en `app/api/tournaments/`. Tablas en la migración `0106_tournaments.sql`: **aplicada solo en pruebas** (`xiqppj…`, 2026-11-19); en producción la aplica David.
+Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/tournaments/server.ts`, API de gestión en `app/api/tournaments/`. Tablas en la migración `0106_tournaments.sql`: **aplicada en pruebas y en producción** (2026-11-19).
 
 ## Decisiones
 
