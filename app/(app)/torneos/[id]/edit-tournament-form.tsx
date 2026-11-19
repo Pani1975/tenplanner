@@ -4,17 +4,14 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
+import { madridParts, madridToIso } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
 
-/** Hora local "HH:MM" y día "AAAA-MM-DD" de una fecha ISO. */
+/** Día "AAAA-MM-DD" y hora "HH:MM" de España de una fecha ISO. */
 function splitLocal(iso: string | null) {
   if (!iso) return { date: "", time: "23:59" };
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return {
-    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
-  };
+  // En hora de España, sea cual sea la zona del navegador.
+  return madridParts(new Date(iso));
 }
 
 /**
@@ -79,9 +76,7 @@ export function EditTournamentForm({
         startDate: f.startDate,
         endDate: f.endDate || null,
         registrationDeadline: f.deadlineDate
-          ? new Date(
-              `${f.deadlineDate}T${f.deadlineTime || "23:59"}`
-            ).toISOString()
+          ? madridToIso(f.deadlineDate, f.deadlineTime || "23:59")
           : null,
         maxEntries: max,
       }),

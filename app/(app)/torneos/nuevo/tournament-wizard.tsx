@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { madridToIso } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
 
 type Option = { code: string; label: string; color: string | null };
@@ -117,7 +118,8 @@ export function TournamentWizard({
     setSaving(true);
     setError(null);
     const deadline = f.deadlineDate
-      ? new Date(`${f.deadlineDate}T${f.deadlineTime || "23:59"}`).toISOString()
+      ? // Hora de España, sea cual sea la zona del navegador.
+        madridToIso(f.deadlineDate, f.deadlineTime || "23:59")
       : null;
     const res = await fetch("/api/tournaments", {
       method: "POST",

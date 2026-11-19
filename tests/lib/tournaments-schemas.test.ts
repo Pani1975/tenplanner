@@ -210,3 +210,34 @@ describe("updateEntrySchema / matchResultSchema", () => {
     ).toBe(false);
   });
 });
+
+describe("plazo de inscripción en hora de España", () => {
+  const base = {
+    name: "Torneo plazo",
+    startDate: "2026-12-10",
+    modality: "singles",
+    format: "knockout",
+    bestOf: 3,
+    gamesPerSet: 6,
+    finalSet: "super_tiebreak",
+  };
+  it("23:59 del día de inicio en España vale", async () => {
+    const { madridToIso } = await import("@/lib/tournaments/schedule");
+    const { createTournamentSchema } =
+      await import("@/lib/tournaments/schemas");
+    const r = createTournamentSchema.safeParse({
+      ...base,
+      registrationDeadline: madridToIso("2026-12-10", "23:59"),
+    });
+    expect(r.success).toBe(true);
+  });
+  it("las 00:30 del día siguiente en España no vale (aunque en UTC sea el mismo día)", async () => {
+    const { createTournamentSchema } =
+      await import("@/lib/tournaments/schemas");
+    const r = createTournamentSchema.safeParse({
+      ...base,
+      registrationDeadline: "2026-12-10T23:30:00.000Z",
+    });
+    expect(r.success).toBe(false);
+  });
+});

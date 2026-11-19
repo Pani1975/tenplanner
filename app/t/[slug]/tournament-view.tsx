@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  CalendarDays,
-  Download,
-  Lock,
-  MapPin,
-  Trophy,
-} from "lucide-react";
+import { CalendarDays, Download, Lock, MapPin, Trophy } from "lucide-react";
 import { dmSans } from "@/app/fonts/dm-sans";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import {
@@ -174,6 +168,7 @@ export async function TournamentView({
                   value={new Intl.DateTimeFormat(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: "Europe/Madrid",
                   }).format(new Date(t.registrationDeadline))}
                 />
               )}

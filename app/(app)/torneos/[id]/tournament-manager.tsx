@@ -317,6 +317,7 @@ export function TournamentManager({
                 date: new Intl.DateTimeFormat(locale, {
                   dateStyle: "medium",
                   timeStyle: "short",
+                  timeZone: "Europe/Madrid",
                 }).format(new Date(t.registrationDeadline)),
               })}
             </span>
