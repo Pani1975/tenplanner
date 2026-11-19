@@ -6,7 +6,7 @@ import type { TournamentStatus } from "./status";
 /** Clases de la etiqueta de estado (fondos sólidos). */
 export const STATUS_BADGE: Record<TournamentStatus, string> = {
   draft: "bg-foreground/10 text-foreground",
-  open: "bg-[#1a6db5] text-white",
+  open: "bg-[#d6f04a] text-black",
   closed: "bg-amber-500 text-black",
   in_progress: "bg-emerald-600 text-white",
   finished: "bg-foreground text-background",
@@ -15,7 +15,7 @@ export const STATUS_BADGE: Record<TournamentStatus, string> = {
 export const ENTRY_BADGE: Record<string, string> = {
   confirmed: "bg-emerald-600 text-white",
   pending: "bg-amber-500 text-black",
-  waitlist: "bg-[#1a6db5] text-white",
+  waitlist: "bg-[#d6f04a] text-black",
   cancelled: "bg-foreground/10 text-foreground/60",
 };
 

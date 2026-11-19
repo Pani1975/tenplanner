@@ -17,6 +17,7 @@ import type { PublicTournament } from "@/lib/tournaments/public";
 import type { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
 import { cn } from "@/lib/utils";
 import { PublicDraw } from "./public-draw";
+import { PublicSchedule } from "./public-schedule";
 import { RegistrationForm } from "./registration-form";
 
 /**
@@ -56,7 +57,7 @@ export async function TournamentView({
     <div
       className={`${dmSans.variable} tp-torneos min-h-[100dvh] bg-background text-foreground`}
     >
-      <header className="bg-[#1a6db5] px-5 pb-10 pt-6 text-white">
+      <header className="bg-[#d6f04a] px-5 pb-10 pt-6 text-black">
         <div className="mx-auto max-w-3xl space-y-3">
           {top}
           <div className="flex flex-wrap items-center gap-2">
@@ -64,14 +65,14 @@ export async function TournamentView({
               className={cn(
                 "rounded-full px-2.5 py-1 text-[11px] font-bold",
                 t.status === "open"
-                  ? "bg-white text-[#1a6db5]"
+                  ? "bg-black text-[#d6f04a]"
                   : STATUS_BADGE[t.status]
               )}
             >
               {tr(`status.${t.status}`)}
             </span>
             {t.visibility === "private" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
                 <Lock className="size-3.5" />
                 {tr("visibility.private")}
               </span>
@@ -79,7 +80,7 @@ export async function TournamentView({
             {t.circuit && (
               <Link
                 href={`/t/c/${t.circuit.slug}`}
-                className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold hover:bg-white/25"
+                className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold hover:bg-black/15"
               >
                 <Trophy className="size-3.5" />
                 {t.circuit.season
@@ -92,11 +93,11 @@ export async function TournamentView({
             {t.name}
           </h1>
           {t.organizer && (
-            <p className="text-sm text-white/85">
+            <p className="text-sm text-black/85">
               {tr("public.organizer", { name: t.organizer })}
             </p>
           )}
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/90">
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-black/90">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="size-4" />
               {formatDateRange(t.startDate, t.endDate, locale)}
@@ -108,7 +109,7 @@ export async function TournamentView({
               </span>
             )}
           </div>
-          <p className="text-sm text-white/90">
+          <p className="text-sm text-black/90">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
             {level && ` · ${level.label}`}
           </p>
@@ -222,6 +223,10 @@ export async function TournamentView({
               ))}
             </ul>
           </section>
+        )}
+
+        {t.schedulePublished && (
+          <PublicSchedule matches={t.matches} format={t.format} />
         )}
 
         {t.matches.length > 0 && (

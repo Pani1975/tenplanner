@@ -2,13 +2,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CalendarDays, ChevronRight, Plus, Trophy, Users } from "lucide-react";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { clubs } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { getOrganizer, listTournaments } from "@/lib/tournaments/server";
 import { formatDateRange, STATUS_BADGE } from "@/lib/tournaments/labels";
 import type { TournamentStatus } from "@/lib/tournaments/status";
 import { cn } from "@/lib/utils";
 
-export default async function TorneosPage() {
+type Props = { searchParams: Promise<{ archivados?: string }> };
+
+export default async function TorneosPage({ searchParams }: Props) {
+  const showArchived = (await searchParams).archivados === "1";
   const supabase = await createClient();
   const {
     data: { user },
@@ -20,33 +26,77 @@ export default async function TorneosPage() {
     getLocale(),
     getOrganizer(user.id),
   ]);
-  const rows = await listTournaments(organizer);
+  const [allRows, club] = await Promise.all([
+    listTournaments(organizer),
+    organizer.clubId
+      ? db
+          .select({ name: clubs.name })
+          .from(clubs)
+          .where(eq(clubs.id, organizer.clubId))
+          .limit(1)
+          .then((r) => r[0] ?? null)
+      : Promise.resolve(null),
+  ]);
+  const archivedCount = allRows.filter((r) => r.archivedAt).length;
+  const rows = allRows.filter((r) => !!r.archivedAt === showArchived);
 
   return (
     <div className="tp-page-pad mx-auto w-full max-w-5xl space-y-6">
       <header className="tp-card-blue flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
         <div>
-          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/80">
+          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-black/80">
             <Trophy className="size-4" />
             {organizer.clubId ? t("list.kickerClub") : t("list.kickerCoach")}
           </p>
           <h1 className="tp-title text-4xl leading-tight sm:text-5xl">
             {t("list.title")}
+            {club && (
+              <span className="block text-2xl text-black/75 sm:text-3xl">
+                {club.name}
+              </span>
+            )}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/85">
+          <p className="mt-2 max-w-xl text-sm text-black/85">
             {t("list.intro")}
           </p>
         </div>
         <Link
           href="/torneos/nuevo"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-bold text-[#1a6db5] transition hover:bg-white/90"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
         >
           <Plus className="size-4" />
           {t("list.new")}
         </Link>
       </header>
 
-      {rows.length === 0 ? (
+      <nav
+        className="grid grid-cols-2 gap-1 rounded-full bg-foreground/5 p-1"
+        aria-label={t("archive.tabs")}
+      >
+        {[false, true].map((v) => (
+          <Link
+            key={String(v)}
+            href={v ? "/torneos?archivados=1" : "/torneos"}
+            aria-current={showArchived === v ? "page" : undefined}
+            className={cn(
+              "inline-flex min-h-11 items-center justify-center rounded-full text-sm font-bold",
+              showArchived === v
+                ? "bg-black text-white dark:bg-[#d6f04a] dark:text-black"
+                : "text-foreground/70"
+            )}
+          >
+            {v
+              ? t("archive.tabArchived", { count: archivedCount })
+              : t("archive.tabActive")}
+          </Link>
+        ))}
+      </nav>
+
+      {rows.length === 0 && showArchived ? (
+        <p className="tp-card-soft p-6 text-center text-sm">
+          {t("archive.empty")}
+        </p>
+      ) : rows.length === 0 ? (
         <div className="tp-card-soft p-8 text-center">
           <Trophy className="mx-auto mb-3 size-8 text-[var(--brand-ink)]" />
           <p className="tp-title text-xl">{t("list.emptyTitle")}</p>
@@ -62,7 +112,7 @@ export default async function TorneosPage() {
               <li key={r.id}>
                 <Link
                   href={`/torneos/${r.id}`}
-                  className="tp-card group flex h-full flex-col gap-3 p-5 transition hover:border-[#1a6db5]"
+                  className="tp-card group flex h-full flex-col gap-3 p-5 transition hover:border-[var(--brand-ink)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="tp-title text-xl leading-snug">{r.name}</h2>

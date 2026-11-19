@@ -211,7 +211,7 @@ export function PosterPanel({
             className={cn(
               "space-y-1.5 rounded-xl p-1.5 text-left disabled:opacity-60",
               template === v
-                ? "bg-[#1a6db5]/10 ring-2 ring-[#1a6db5]"
+                ? "bg-[var(--brand-muted)] ring-2 ring-[var(--brand-ink)]"
                 : "bg-background"
             )}
           >
@@ -270,7 +270,7 @@ export function PosterPanel({
       <div className="flex flex-wrap gap-2">
         <a
           href={`${base}/poster`}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-5 text-sm font-bold text-white"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black"
         >
           <Download className="size-4" />
           {t("download")}

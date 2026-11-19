@@ -72,7 +72,7 @@ export function PublicLinks({
             className={cn(
               "inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-bold disabled:opacity-60",
               visibility === v
-                ? "bg-[#1a6db5] text-white"
+                ? "bg-[#d6f04a] text-black"
                 : "text-foreground/70"
             )}
           >
@@ -114,7 +114,7 @@ export function PublicLinks({
                     toast.error(t("manager.copyFailed"));
                   }
                 }}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-4 text-sm font-bold text-white"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-4 text-sm font-bold text-black"
               >
                 <Copy className="size-4" />
                 {t("manager.copyLink")}

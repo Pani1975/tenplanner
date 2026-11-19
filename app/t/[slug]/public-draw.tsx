@@ -5,6 +5,7 @@ import type { PublicMatch } from "@/lib/tournaments/public";
 import { computeStandings } from "@/lib/tournaments/round-robin";
 import { formatScore, type MatchScore } from "@/lib/tournaments/score";
 import { cn } from "@/lib/utils";
+import { BracketColumns } from "./bracket-columns";
 
 /** Sets y juegos de un marcador, desde el lado de A. */
 function totals(score: MatchScore | null) {
@@ -103,6 +104,34 @@ export function PublicDraw({
     }));
   }
 
+  const byRound = (r: number) =>
+    matches
+      .filter((m) => m.round === r)
+      .sort((x, y) => x.position - y.position);
+  const card = (m: PublicMatch) => (
+    <div key={m.id} className="tp-card space-y-1 p-3 text-sm">
+      <Side
+        name={m.a}
+        won={m.winner === "a"}
+        bye={m.status === "bye" && !m.a}
+      />
+      <Side
+        name={m.b}
+        won={m.winner === "b"}
+        bye={m.status === "bye" && !m.b}
+      />
+      <p className="text-xs text-foreground/60">
+        {m.status === "bye"
+          ? t("public.byeMatch")
+          : m.resultType === "walkover"
+            ? t("public.walkover")
+            : m.score
+              ? `${formatScore(m.score)}${m.resultType === "retired" ? ` (${t("public.retired")})` : ""}`
+              : t("public.pending")}
+      </p>
+    </div>
+  );
+
   return (
     <section className="space-y-4">
       <h2 className="tp-title text-2xl">
@@ -115,7 +144,7 @@ export function PublicDraw({
         <p className="tp-card-blue flex items-center gap-3 p-4">
           <Trophy className="size-6 shrink-0" />
           <span>
-            <span className="block text-xs font-bold uppercase text-white/80">
+            <span className="block text-xs font-bold uppercase text-black/80">
               {t("draw.champion")}
             </span>
             <span className="tp-title text-xl">{champion}</span>
@@ -150,51 +179,24 @@ export function PublicDraw({
         </div>
       )}
 
-      <div
-        className={cn(
-          format === "knockout" &&
-            "-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2"
-        )}
-      >
-        {rounds.map((r) => (
-          <div
-            key={r}
-            className={cn(
-              "space-y-2",
-              format === "knockout" && "w-64 shrink-0 snap-start"
-            )}
-          >
+      {format === "knockout" ? (
+        <BracketColumns
+          rounds={rounds.map((r) => ({
+            key: r,
+            title: roundTitle(r),
+            items: byRound(r).map(card),
+          }))}
+        />
+      ) : (
+        rounds.map((r) => (
+          <div key={r} className="space-y-2">
             <h3 className="pt-1 text-xs font-bold uppercase text-foreground/60">
               {roundTitle(r)}
             </h3>
-            {matches
-              .filter((m) => m.round === r)
-              .map((m) => (
-                <div key={m.id} className="tp-card space-y-1 p-3 text-sm">
-                  <Side
-                    name={m.a}
-                    won={m.winner === "a"}
-                    bye={m.status === "bye" && !m.a}
-                  />
-                  <Side
-                    name={m.b}
-                    won={m.winner === "b"}
-                    bye={m.status === "bye" && !m.b}
-                  />
-                  <p className="text-xs text-foreground/60">
-                    {m.status === "bye"
-                      ? t("public.byeMatch")
-                      : m.resultType === "walkover"
-                        ? t("public.walkover")
-                        : m.score
-                          ? `${formatScore(m.score)}${m.resultType === "retired" ? ` (${t("public.retired")})` : ""}`
-                          : t("public.pending")}
-                  </p>
-                </div>
-              ))}
+            {byRound(r).map(card)}
           </div>
-        ))}
-      </div>
+        ))
+      )}
     </section>
   );
 }

@@ -74,7 +74,7 @@ export function ConsentCard({
           type="checkbox"
           checked={imageConsent}
           onChange={(e) => setImageConsent(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
         />
         <span>{t("imageConsent", { player })}</span>
       </label>
@@ -83,7 +83,7 @@ export function ConsentCard({
           type="button"
           onClick={() => send("consent")}
           disabled={busy !== null}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-5 text-sm font-bold text-white disabled:opacity-50"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-50"
         >
           {busy === "consent" ? (
             <Loader2 className="size-4 animate-spin" />

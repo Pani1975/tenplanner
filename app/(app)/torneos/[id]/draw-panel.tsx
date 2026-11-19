@@ -15,6 +15,7 @@ import {
   type ScoringRules,
 } from "@/lib/tournaments/score";
 import { ScoreEditor, type EditableMatch } from "./score-editor";
+import { BracketColumns } from "@/app/t/[slug]/bracket-columns";
 
 export type ManagerMatch = {
   id: string;
@@ -129,6 +130,70 @@ export function DrawPanel({
     });
   }
 
+  const byRound = (r: number) =>
+    matches
+      .filter((m) => m.round === r)
+      .sort((x, y) => x.position - y.position);
+  const renderMatch = (m: ManagerMatch) => {
+    const editable =
+      canEdit && m.status !== "bye" && !!m.entryAId && !!m.entryBId;
+    const label = (id: string | null) => (id ? (names[id] ?? "") : null);
+    return (
+      <button
+        key={m.id}
+        type="button"
+        disabled={!editable}
+        onClick={() => open(m)}
+        aria-label={
+          editable
+            ? t("draw.editMatch", {
+                a: label(m.entryAId) ?? "",
+                b: label(m.entryBId) ?? "",
+              })
+            : undefined
+        }
+        className={cn(
+          "tp-card block w-full space-y-1 p-3 text-left text-sm",
+          editable && "hover:border-[var(--brand-ink)]",
+          editable && m.status !== "played" && "border-[var(--brand-ink)]/50"
+        )}
+      >
+        {(["a", "b"] as const).map((s) => {
+          const id = s === "a" ? m.entryAId : m.entryBId;
+          const won = !!id && id === m.winnerEntryId;
+          return (
+            <p
+              key={s}
+              className={cn(
+                "truncate",
+                won
+                  ? "font-bold text-[var(--brand-ink)]"
+                  : "text-foreground/85",
+                !id && "italic text-foreground/40"
+              )}
+            >
+              {label(id) ??
+                (m.status === "bye" ? t("public.bye") : t("public.tbd"))}
+            </p>
+          );
+        })}
+        <p className="flex items-center justify-between gap-2 text-xs text-foreground/60">
+          <span>
+            {m.status === "bye"
+              ? t("public.byeMatch")
+              : m.resultType === "walkover"
+                ? t("public.walkover")
+                : m.score
+                  ? `${formatScore(m.score)}${m.resultType === "retired" ? ` (${t("public.retired")})` : ""}`
+                  : t("public.pending")}
+            {m.courtLabel && ` · ${m.courtLabel}`}
+          </span>
+          {editable && <Pencil className="size-3.5 shrink-0" />}
+        </p>
+      </button>
+    );
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -149,7 +214,7 @@ export function DrawPanel({
         <p className="tp-card-blue flex items-center gap-3 p-4">
           <Trophy className="size-6 shrink-0" />
           <span>
-            <span className="block text-xs font-bold uppercase text-white/80">
+            <span className="block text-xs font-bold uppercase text-black/80">
               {t("draw.champion")}
             </span>
             <span className="tp-title text-xl">{champion}</span>
@@ -190,101 +255,26 @@ export function DrawPanel({
         </div>
       )}
 
-      <div
-        className={cn(
-          format === "knockout" &&
-            "-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0"
-        )}
-      >
-        {rounds.map((r) => (
-          <div
-            key={r}
-            className={cn(
-              "space-y-2",
-              format === "knockout" ? "w-64 shrink-0 snap-start" : "pt-2"
-            )}
-          >
+      {format === "knockout" ? (
+        <BracketColumns
+          rounds={rounds.map((r) => ({
+            key: r,
+            title: roundTitle(r),
+            items: byRound(r).map(renderMatch),
+          }))}
+        />
+      ) : (
+        rounds.map((r) => (
+          <div key={r} className="space-y-2 pt-2">
             <h3 className="text-xs font-bold uppercase text-foreground/60">
               {roundTitle(r)}
             </h3>
-            <div
-              className={cn(
-                format === "round_robin" && "grid gap-2 sm:grid-cols-2"
-              )}
-            >
-              {matches
-                .filter((m) => m.round === r)
-                .map((m) => {
-                  const editable =
-                    canEdit &&
-                    m.status !== "bye" &&
-                    !!m.entryAId &&
-                    !!m.entryBId;
-                  const label = (id: string | null) =>
-                    id ? (names[id] ?? "") : null;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      disabled={!editable}
-                      onClick={() => open(m)}
-                      aria-label={
-                        editable
-                          ? t("draw.editMatch", {
-                              a: label(m.entryAId) ?? "",
-                              b: label(m.entryBId) ?? "",
-                            })
-                          : undefined
-                      }
-                      className={cn(
-                        "tp-card mb-2 block w-full space-y-1 p-3 text-left text-sm",
-                        editable && "hover:border-[#1a6db5]",
-                        editable &&
-                          m.status !== "played" &&
-                          "border-[#1a6db5]/50"
-                      )}
-                    >
-                      {(["a", "b"] as const).map((s) => {
-                        const id = s === "a" ? m.entryAId : m.entryBId;
-                        const won = !!id && id === m.winnerEntryId;
-                        return (
-                          <p
-                            key={s}
-                            className={cn(
-                              "truncate",
-                              won
-                                ? "font-bold text-[var(--brand-ink)]"
-                                : "text-foreground/85",
-                              !id && "italic text-foreground/40"
-                            )}
-                          >
-                            {label(id) ??
-                              (m.status === "bye"
-                                ? t("public.bye")
-                                : t("public.tbd"))}
-                          </p>
-                        );
-                      })}
-                      <p className="flex items-center justify-between gap-2 text-xs text-foreground/60">
-                        <span>
-                          {m.status === "bye"
-                            ? t("public.byeMatch")
-                            : m.resultType === "walkover"
-                              ? t("public.walkover")
-                              : m.score
-                                ? `${formatScore(m.score)}${m.resultType === "retired" ? ` (${t("public.retired")})` : ""}`
-                                : t("public.pending")}
-                          {m.courtLabel && ` · ${m.courtLabel}`}
-                        </span>
-                        {editable && <Pencil className="size-3.5 shrink-0" />}
-                      </p>
-                    </button>
-                  );
-                })}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {byRound(r).map(renderMatch)}
             </div>
           </div>
-        ))}
-      </div>
+        ))
+      )}
 
       {editing && (
         <ScoreEditor

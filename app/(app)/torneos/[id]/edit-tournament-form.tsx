@@ -207,7 +207,7 @@ export function EditTournamentForm({
         <button
           type="submit"
           disabled={errors.length > 0 || saving}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
           {tr("edit.save")}

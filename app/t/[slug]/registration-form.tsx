@@ -195,7 +195,7 @@ export function RegistrationForm({
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
           required
-          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
         />
         <span>
           {t("consent", { organizer: organizer ?? t("theOrganizer") })}{" "}
@@ -213,7 +213,7 @@ export function RegistrationForm({
           type="checkbox"
           checked={imageConsent}
           onChange={(e) => setImageConsent(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
         />
         <span>{t("imageConsent")}</span>
       </label>
@@ -228,7 +228,7 @@ export function RegistrationForm({
       <button
         type="submit"
         disabled={!ok || saving}
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1a6db5] px-6 text-base font-bold text-white disabled:opacity-40"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#d6f04a] px-6 text-base font-bold text-black disabled:opacity-40"
       >
         {saving && <Loader2 className="size-4 animate-spin" />}
         {full ? t("submitWaitlist") : t("submit")}
@@ -284,7 +284,7 @@ function Fields({
           type="checkbox"
           checked={p.isMinor}
           onChange={(e) => set("isMinor", e.target.checked)}
-          className="size-5 accent-[#1a6db5]"
+          className="size-5 accent-[var(--brand-ink)]"
         />
         {t("isMinor")}
       </label>

@@ -8,6 +8,10 @@ import {
   getTournamentDetail,
   TournamentError,
 } from "@/lib/tournaments/server";
+import { inArray } from "drizzle-orm";
+import { db } from "@/db";
+import { places } from "@/db/schema";
+import { canArchive } from "@/lib/tournaments/schedule-server";
 import { TournamentManager } from "./tournament-manager";
 
 const UUID =
@@ -37,6 +41,14 @@ export default async function TorneoPage({ params }: Props) {
 
   // Fechas a texto para el cliente.
   const t = detail.tournament;
+  const placeNames = t.placeIds?.length
+    ? (
+        await db
+          .select({ name: places.name })
+          .from(places)
+          .where(inArray(places.id, t.placeIds))
+      ).map((p) => p.name)
+    : [];
   return (
     <TournamentManager
       tournament={{
@@ -57,6 +69,14 @@ export default async function TorneoPage({ params }: Props) {
         photosPublic: t.photosPublic,
         posterTemplate: t.posterTemplate as "classic" | "court" | "image",
         hasPosterImage: !!t.posterImagePath,
+        archived: !!t.archivedAt,
+        canArchive: canArchive({
+          status: t.effectiveStatus,
+          startDate: t.startDate,
+          endDate: t.endDate,
+        }),
+        schedulePublished: !!t.schedulePublishedAt,
+        places: placeNames,
         circuit: t.circuit,
         description: t.description,
         rules: {
@@ -105,6 +125,7 @@ export default async function TorneoPage({ params }: Props) {
         score: m.score,
         resultType: m.resultType,
         courtLabel: m.courtLabel,
+        scheduledAt: m.scheduledAt?.toISOString() ?? null,
       }))}
       levels={levels}
       canSeeContacts={organizer.canSeeContacts}

@@ -193,7 +193,7 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
             type="button"
             disabled={!canSend}
             onClick={() => create(true)}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-5 text-sm font-bold text-white disabled:opacity-50"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-50"
           >
             {busy === "publish" && <Loader2 className="size-4 animate-spin" />}
             {t("publish")}
@@ -396,7 +396,7 @@ function PhotosSection({
           type="button"
           onClick={() => input.current?.click()}
           disabled={uploading > 0}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-5 text-sm font-bold text-white disabled:opacity-60"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
         >
           {uploading > 0 ? (
             <Loader2 className="size-4 animate-spin" />
@@ -436,7 +436,7 @@ function PhotosSection({
               className={cn(
                 "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-2 text-sm font-bold",
                 showPublic === v
-                  ? "bg-[#1a6db5] text-white"
+                  ? "bg-[#d6f04a] text-black"
                   : "text-foreground/70"
               )}
             >
@@ -674,7 +674,7 @@ function PhotoCard({
           onClick={() => run({ published: !p.published })}
           className={cn(
             "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full text-sm font-bold disabled:opacity-50",
-            p.published ? "bg-background" : "bg-[#1a6db5] text-white"
+            p.published ? "bg-background" : "bg-[#d6f04a] text-black"
           )}
         >
           {busy ? (

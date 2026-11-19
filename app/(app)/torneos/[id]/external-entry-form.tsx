@@ -153,7 +153,7 @@ export function ExternalEntryForm({
           type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
         />
         <span>{t("consent")}</span>
       </label>
@@ -162,7 +162,7 @@ export function ExternalEntryForm({
           type="checkbox"
           checked={imageConsent}
           onChange={(e) => setImageConsent(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+          className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
         />
         <span>{t("imageConsent")}</span>
       </label>
@@ -179,7 +179,7 @@ export function ExternalEntryForm({
         <button
           type="submit"
           disabled={!valid || saving}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
           {t("submit")}
@@ -239,7 +239,7 @@ function PersonFields({
           type="checkbox"
           checked={p.isMinor}
           onChange={(e) => set("isMinor", e.target.checked)}
-          className="size-5 accent-[#1a6db5]"
+          className="size-5 accent-[var(--brand-ink)]"
         />
         {t("isMinor")}
       </label>

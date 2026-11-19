@@ -267,7 +267,7 @@ export function StudentPicker({
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-md border-2",
                         on
-                          ? "border-[#1a6db5] bg-[#1a6db5] text-white"
+                          ? "border-[var(--brand-ink)] bg-[#d6f04a] text-black"
                           : "border-foreground/30"
                       )}
                     >
@@ -328,7 +328,7 @@ export function StudentPicker({
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+            className="mt-0.5 size-5 shrink-0 accent-[var(--brand-ink)]"
           />
           <span>{t("consent")}</span>
         </label>
@@ -347,7 +347,7 @@ export function StudentPicker({
             type="button"
             onClick={submit}
             disabled={!canSubmit}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
             {doubles
@@ -377,7 +377,7 @@ function Chip({
       className={cn(
         "min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold",
         selected
-          ? "bg-[#1a6db5] text-white"
+          ? "bg-[#d6f04a] text-black"
           : "bg-foreground/5 text-foreground hover:bg-foreground/10"
       )}
     >

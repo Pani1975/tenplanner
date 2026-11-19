@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
+  Archive,
+  ArchiveRestore,
   ArrowLeft,
   Camera,
   CalendarDays,
@@ -20,6 +22,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PublicLinks } from "./public-links";
 import { MediaPanel } from "./media-panel";
 import { PosterPanel } from "./poster-panel";
+import { SchedulePanel } from "./schedule-panel";
 import { DrawPanel, type ManagerMatch } from "./draw-panel";
 import { DrawButton } from "./draw-button";
 import { EditTournamentForm } from "./edit-tournament-form";
@@ -58,6 +61,10 @@ export type ManagerTournament = {
   photosPublic: boolean;
   posterTemplate: "classic" | "court" | "image";
   hasPosterImage: boolean;
+  archived: boolean;
+  canArchive: boolean;
+  schedulePublished: boolean;
+  places: string[];
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
@@ -121,7 +128,7 @@ export function TournamentManager({
 }: {
   tournament: ManagerTournament;
   entries: ManagerEntry[];
-  matches: ManagerMatch[];
+  matches: (ManagerMatch & { scheduledAt: string | null })[];
   levels: Level[];
   canSeeContacts: boolean;
   baseUrl: string;
@@ -184,6 +191,23 @@ export function TournamentManager({
     cancelled: entries.filter((e) => e.status === "cancelled"),
   };
   const taken = groups.confirmed.length + groups.pending.length;
+
+  async function archive(archived: boolean) {
+    setBusy("archive");
+    const res = await fetch(`/api/tournaments/${t.id}/archive`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived }),
+    });
+    setBusy(null);
+    if (!res.ok) {
+      toast.error(await apiError(res));
+      return;
+    }
+    toast.success(tr(archived ? "archive.done" : "archive.restored"));
+    if (archived) router.push("/torneos");
+    else router.refresh();
+  }
 
   async function patchTournament(body: object, key: string) {
     setBusy(key);
@@ -250,18 +274,23 @@ export function TournamentManager({
             className={cn(
               "rounded-full px-2.5 py-1 text-[11px] font-bold",
               status === "open"
-                ? "bg-white text-[#1a6db5]"
+                ? "bg-black text-[#d6f04a]"
                 : STATUS_BADGE[status]
             )}
           >
             {tr(`status.${status}`)}
           </span>
-          <span className="text-xs font-semibold text-white/80">
+          {t.archived && (
+            <span className="rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
+              {tr("archive.badge")}
+            </span>
+          )}
+          <span className="text-xs font-semibold text-black/80">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
             {t.levelCode && ` · ${levelLabel(t.levelCode)}`}
           </span>
         </div>
-        <p className="text-xs font-bold uppercase tracking-wide text-white/85">
+        <p className="text-xs font-bold uppercase tracking-wide text-black/85">
           {t.circuit
             ? tr("manager.circuit", {
                 name: t.circuit.season
@@ -273,7 +302,7 @@ export function TournamentManager({
         <h1 className="tp-title text-3xl leading-tight sm:text-5xl">
           {t.name}
         </h1>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/85">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-black/85">
           <span className="flex items-center gap-1.5">
             <CalendarDays className="size-4" />
             {formatDateRange(t.startDate, t.endDate, locale)}
@@ -306,8 +335,8 @@ export function TournamentManager({
                 className={cn(
                   "inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold disabled:opacity-50",
                   i === 0
-                    ? "bg-white text-[#1a6db5]"
-                    : "bg-white/15 text-white hover:bg-white/25"
+                    ? "bg-black text-[#d6f04a]"
+                    : "bg-black/10 text-black hover:bg-black/15"
                 )}
               >
                 {busy === a.to && <Loader2 className="size-4 animate-spin" />}
@@ -323,19 +352,36 @@ export function TournamentManager({
           {status === "in_progress" && matchCount > 0 && !anyPlayed && (
             <DrawButton tournamentId={t.id} redraw variant="secondary" />
           )}
+          {(t.archived || t.canArchive) && (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => archive(!t.archived)}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-black/10 px-5 text-sm font-bold text-black hover:bg-black/15 disabled:opacity-50"
+            >
+              {busy === "archive" ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : t.archived ? (
+                <ArchiveRestore className="size-4" />
+              ) : (
+                <Archive className="size-4" />
+              )}
+              {t.archived ? tr("archive.restore") : tr("archive.archive")}
+            </button>
+          )}
           {status !== "finished" && (
             <button
               type="button"
               onClick={() => setEditingData((v) => !v)}
               aria-expanded={editingData}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-white/15 px-5 text-sm font-bold text-white hover:bg-white/25"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-black/10 px-5 text-sm font-bold text-black hover:bg-black/15"
             >
               {tr("edit.open")}
             </button>
           )}
         </div>
         {status === "closed" && matchCount === 0 && (
-          <p className="text-sm text-white/85">{tr("manager.drawSoon")}</p>
+          <p className="text-sm text-black/85">{tr("manager.drawSoon")}</p>
         )}
       </header>
 
@@ -369,6 +415,19 @@ export function TournamentManager({
         />
       )}
 
+      {matchCount > 0 && t.isClub && (
+        <SchedulePanel
+          tournamentId={t.id}
+          format={t.format}
+          matches={matches}
+          names={names}
+          rules={t.rules}
+          places={t.places}
+          published={t.schedulePublished}
+          canScore={status === "in_progress"}
+        />
+      )}
+
       <PublicLinks
         tournamentId={t.id}
         slug={t.slug}
@@ -397,7 +456,7 @@ export function TournamentManager({
                   setPanel(panel === "students" ? "none" : "students")
                 }
                 aria-expanded={panel === "students"}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-5 text-sm font-bold text-white"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black"
               >
                 <Users className="size-4" />
                 {tr("manager.addStudents")}
@@ -657,7 +716,7 @@ function EntryRow({
               type="button"
               onClick={onConsent}
               disabled={busy}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#1a6db5] px-4 text-sm font-bold text-white disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#d6f04a] px-4 text-sm font-bold text-black disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="size-4 animate-spin" />

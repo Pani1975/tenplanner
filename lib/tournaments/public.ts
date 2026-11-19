@@ -95,6 +95,9 @@ export type PublicMatch = {
   winner: "a" | "b" | null;
   score: MatchScore | null;
   resultType: string | null;
+  // Solo si el orden de juego está publicado.
+  scheduledAt: string | null;
+  courtLabel: string | null;
 };
 
 /**
@@ -200,6 +203,7 @@ export async function getPublicTournament(
     status: statusOf(t),
     visibility: t.visibility as "public" | "private",
     photosPublic: t.photosPublic,
+    schedulePublished: !!t.schedulePublishedAt,
     acceptsRegistrations:
       t.visibility === "public" && acceptsRegistrations(statusInput(t)),
     maxEntries: t.maxEntries,
@@ -235,6 +239,11 @@ export async function getPublicTournament(
               : "b",
         score: m.score,
         resultType: m.resultType,
+        scheduledAt:
+          t.schedulePublishedAt && m.scheduledAt
+            ? m.scheduledAt.toISOString()
+            : null,
+        courtLabel: t.schedulePublishedAt ? m.courtLabel : null,
       })
     ),
   };

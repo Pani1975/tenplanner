@@ -256,25 +256,28 @@
     text-transform: uppercase;
     color: color-mix(in oklab, var(--foreground) 62%, transparent);
   }
-  /* Torneos: azul #1a6db5, texto en DM Sans y títulos en Fraunces
-     (decisión de David, 2026-11-19). Solo dentro de .tp-torneos. */
+  /* Torneos: verde lima #d6f04a con letras negras (decisión de David,
+     2026-11-19; antes azul). Texto en DM Sans y títulos en Fraunces.
+     Solo dentro de .tp-torneos. --brand-ink es el tono para texto e iconos
+     sobre fondo claro (el lima puro no se lee sobre blanco). */
   .tp-torneos {
-    --brand: #1a6db5;
-    --brand-muted: #d6e7f7;
-    --brand-foreground: #ffffff;
-    --brand-ink: #1a6db5;
-    --primary: #1a6db5;
-    --primary-foreground: #ffffff;
-    --ring: #1a6db5;
+    --brand: #d6f04a;
+    --brand-muted: #eef6cf;
+    --brand-foreground: #0b0d05;
+    --brand-ink: #4f5e00;
+    --primary: #d6f04a;
+    --primary-foreground: #0b0d05;
+    --ring: #8aa300;
     font-family: var(--font-dm-sans), var(--font-sans), sans-serif;
   }
   .dark .tp-torneos {
-    --brand: #4c95d9;
-    --brand-muted: #12395e;
-    --brand-ink: #7fb3e6;
-    --primary: #4c95d9;
-    --primary-foreground: #050505;
-    --ring: #4c95d9;
+    --brand: #d6f04a;
+    --brand-muted: #262d0b;
+    --brand-foreground: #0b0d05;
+    --brand-ink: #d6f04a;
+    --primary: #d6f04a;
+    --primary-foreground: #0b0d05;
+    --ring: #d6f04a;
   }
   .tp-torneos .tp-title {
     font-family: var(--font-heading), serif;
@@ -289,8 +292,8 @@
   }
   .tp-torneos .tp-card-blue {
     border-radius: calc(var(--radius) * 1.6);
-    background: #1a6db5;
-    color: #ffffff;
+    background: #d6f04a;
+    color: #0b0d05;
   }
   .tp-torneos .tp-card-soft {
     border-radius: calc(var(--radius) * 1.6);

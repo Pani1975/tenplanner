@@ -26,6 +26,7 @@ if (!enabled) {
     const fam = await import("@/lib/tournaments/family");
     const media = await import("@/lib/tournaments/media");
     const poster = await import("@/lib/tournaments/poster");
+    const sched = await import("@/lib/tournaments/schedule-server");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -895,6 +896,48 @@ if (!enabled) {
           locale: "es",
           tr,
         })
+      ).rejects.toMatchObject({ code: "not_found" });
+    });
+
+    it("archivar solo si ha terminado; orden de juego solo en torneos de club", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT archivar",
+        description: null,
+        startDate: futureDay(5),
+        maxEntries: null,
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+      await expect(sched.setArchived(o, t.id, true)).rejects.toMatchObject({
+        code: "not_past",
+      });
+      await db
+        .update(schema.tournaments)
+        .set({ status: "finished" })
+        .where(eq(schema.tournaments.id, t.id));
+      await sched.setArchived(o, t.id, true);
+      let [row] = await db
+        .select({ a: schema.tournaments.archivedAt })
+        .from(schema.tournaments)
+        .where(eq(schema.tournaments.id, t.id));
+      expect(row.a).not.toBeNull();
+      await sched.setArchived(o, t.id, false);
+      [row] = await db
+        .select({ a: schema.tournaments.archivedAt })
+        .from(schema.tournaments)
+        .where(eq(schema.tournaments.id, t.id));
+      expect(row.a).toBeNull();
+      // Torneo de monitor (sin club): el orden de juego no está disponible.
+      await expect(
+        sched.setSchedulePublished(o, t.id, true)
+      ).rejects.toMatchObject({ code: "schedule_club_only", status: 403 });
+      // Otro organizador no lo encuentra.
+      await expect(
+        sched.setArchived({ ...o, userId: crypto.randomUUID() }, t.id, false)
       ).rejects.toMatchObject({ code: "not_found" });
     });
   });

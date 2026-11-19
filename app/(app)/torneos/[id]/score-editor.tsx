@@ -165,7 +165,7 @@ export function ScoreEditor({
               onClick={() => setType(k)}
               className={cn(
                 "min-h-10 rounded-full px-2 text-xs font-bold",
-                type === k ? "bg-[#1a6db5] text-white" : "text-foreground/70"
+                type === k ? "bg-[#d6f04a] text-black" : "text-foreground/70"
               )}
             >
               {t(`type.${k}`)}
@@ -293,7 +293,7 @@ export function ScoreEditor({
                   onClick={() => setWinner(s)}
                   className={cn(
                     "min-h-11 truncate rounded-xl px-3 text-sm font-semibold",
-                    winner === s ? "bg-[#1a6db5] text-white" : "bg-foreground/5"
+                    winner === s ? "bg-[#d6f04a] text-black" : "bg-foreground/5"
                   )}
                 >
                   {name(s)}
@@ -352,7 +352,7 @@ export function ScoreEditor({
             type="button"
             onClick={save}
             disabled={!result.ok || saving}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
             {t("save")}

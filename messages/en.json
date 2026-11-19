@@ -4202,7 +4202,9 @@
       "photo_too_big": "The photo is too large.",
       "photo_upload_failed": "The photo could not be uploaded.",
       "invalid_tags": "Someone tagged is not entered.",
-      "poster_type": "The poster image must be JPG or PNG."
+      "poster_type": "The poster image must be JPG or PNG.",
+      "not_past": "Only finished tournaments can be archived.",
+      "schedule_club_only": "For now, the order of play is only for club tournaments."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4478,6 +4480,41 @@
       "ctaPrivate": "More information",
       "organizedBy": "Organised by",
       "footer": "Organised with Ten Planner · tenplanner.com"
+    },
+    "archive": {
+      "archive": "Archive",
+      "restore": "Restore",
+      "badge": "Archived",
+      "done": "Tournament archived",
+      "restored": "Tournament restored",
+      "tabs": "Active and archived tournaments",
+      "tabActive": "Active",
+      "tabArchived": "Archived ({count})",
+      "empty": "No archived tournaments."
+    },
+    "schedule": {
+      "title": "Order of play",
+      "help": "Set the day, time and court of each match. Nobody else sees it until you publish it.",
+      "helpPublished": "Published: shown on the tournament page and to families. Saved changes show at once.",
+      "isPublished": "Published",
+      "notPublished": "Not published",
+      "edit": "Edit order of play",
+      "cancelEdit": "Cancel",
+      "save": "Save order of play",
+      "saved": "Order of play saved",
+      "publish": "Publish order of play",
+      "unpublish": "Unpublish",
+      "publishedToast": "Order of play published",
+      "unpublishedToast": "Order of play unpublished",
+      "date": "Day",
+      "time": "Time",
+      "court": "Court",
+      "vs": "vs",
+      "empty": "No matches with a day and time yet.",
+      "incomplete": "A match is missing its day or time.",
+      "clash": "Same court and time as another match.",
+      "result": "Result",
+      "editResult": "Change result"
     }
   }
 }

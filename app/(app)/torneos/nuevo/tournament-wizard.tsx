@@ -179,7 +179,7 @@ export function TournamentWizard({
                 className={cn(
                   "flex w-full flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-[11px] font-bold uppercase",
                   i === step
-                    ? "bg-[#1a6db5] text-white"
+                    ? "bg-[#d6f04a] text-black"
                     : i < step
                       ? "bg-[var(--brand-muted)] text-foreground"
                       : "bg-foreground/5 text-foreground/45"
@@ -238,7 +238,7 @@ export function TournamentWizard({
                       className={cn(
                         "min-h-11 rounded-xl px-3 text-sm font-semibold",
                         on
-                          ? "bg-[#1a6db5] text-white"
+                          ? "bg-[#d6f04a] text-black"
                           : "bg-foreground/5 text-foreground"
                       )}
                     >
@@ -320,7 +320,7 @@ export function TournamentWizard({
                     className={cn(
                       "min-h-11 rounded-xl px-3 text-sm font-semibold",
                       f.visibility === v
-                        ? "bg-[#1a6db5] text-white"
+                        ? "bg-[#d6f04a] text-black"
                         : "bg-foreground/5 text-foreground"
                     )}
                   >
@@ -416,7 +416,7 @@ export function TournamentWizard({
                         className={cn(
                           "min-h-11 rounded-full px-4 text-sm font-semibold",
                           on
-                            ? "bg-[#1a6db5] text-white"
+                            ? "bg-[#d6f04a] text-black"
                             : "bg-foreground/5 text-foreground"
                         )}
                       >
@@ -598,7 +598,7 @@ export function TournamentWizard({
             type="button"
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
           >
             {t("wizard.next")}
             <ArrowRight className="size-4" />
@@ -608,7 +608,7 @@ export function TournamentWizard({
             type="button"
             onClick={create}
             disabled={!canNext || saving}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#1a6db5] px-6 text-sm font-bold text-white disabled:opacity-40"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-6 text-sm font-bold text-black disabled:opacity-40"
           >
             {saving ? (
               <Loader2 className="size-4 animate-spin" />
@@ -671,7 +671,7 @@ function Choice({
       className={cn(
         "flex min-h-28 flex-col items-start gap-2 rounded-2xl p-4 text-left transition",
         selected
-          ? "bg-[#1a6db5] text-white"
+          ? "bg-[#d6f04a] text-black"
           : "bg-foreground/5 text-foreground hover:bg-foreground/10"
       )}
     >
@@ -680,7 +680,7 @@ function Choice({
       <span
         className={cn(
           "text-sm",
-          selected ? "text-white/85" : "text-foreground/65"
+          selected ? "text-black/85" : "text-foreground/65"
         )}
       >
         {text}
@@ -708,7 +708,7 @@ function LevelChip({
       className={cn(
         "inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold",
         selected
-          ? "bg-[#1a6db5] text-white"
+          ? "bg-[#d6f04a] text-black"
           : "bg-foreground/5 text-foreground hover:bg-foreground/10"
       )}
     >

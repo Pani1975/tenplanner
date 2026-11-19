@@ -3813,7 +3813,9 @@
       "photo_too_big": "La foto pesa demasiado.",
       "photo_upload_failed": "No se ha podido subir la foto.",
       "invalid_tags": "Alguna persona etiquetada no está inscrita.",
-      "poster_type": "La imagen del cartel debe ser JPG o PNG."
+      "poster_type": "La imagen del cartel debe ser JPG o PNG.",
+      "not_past": "Solo se pueden archivar torneos ya terminados.",
+      "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -4089,6 +4091,41 @@
       "ctaPrivate": "Más información",
       "organizedBy": "Organiza",
       "footer": "Organizado con Ten Planner · tenplanner.com"
+    },
+    "archive": {
+      "archive": "Archivar",
+      "restore": "Recuperar",
+      "badge": "Archivado",
+      "done": "Torneo archivado",
+      "restored": "Torneo recuperado",
+      "tabs": "Torneos activos y archivados",
+      "tabActive": "Activos",
+      "tabArchived": "Archivados ({count})",
+      "empty": "No hay torneos archivados."
+    },
+    "schedule": {
+      "title": "Orden de juego",
+      "help": "Pon día, hora y pista a cada partido. Nadie más lo ve hasta que lo publiques.",
+      "helpPublished": "Publicado: lo ven la página del torneo y las familias. Los cambios que guardes se ven al momento.",
+      "isPublished": "Publicado",
+      "notPublished": "Sin publicar",
+      "edit": "Editar orden de juego",
+      "cancelEdit": "Cancelar",
+      "save": "Guardar orden de juego",
+      "saved": "Orden de juego guardado",
+      "publish": "Publicar orden de juego",
+      "unpublish": "Retirar",
+      "publishedToast": "Orden de juego publicado",
+      "unpublishedToast": "Orden de juego retirado",
+      "date": "Día",
+      "time": "Hora",
+      "court": "Pista",
+      "vs": "vs",
+      "empty": "Todavía no hay partidos con día y hora.",
+      "incomplete": "Falta el día o la hora en algún partido.",
+      "clash": "Coincide con otro partido en la misma pista y hora.",
+      "result": "Resultado",
+      "editResult": "Cambiar resultado"
     }
   }
 }

@@ -67,7 +67,7 @@ export default async function FamilyTournamentsPage({ searchParams }: Props) {
                   className={cn(
                     "flex min-h-11 items-center justify-center rounded-full px-2 text-sm font-bold",
                     k === current
-                      ? "bg-[#1a6db5] text-white"
+                      ? "bg-[#d6f04a] text-black"
                       : "text-foreground/70"
                   )}
                 >
@@ -86,7 +86,7 @@ export default async function FamilyTournamentsPage({ searchParams }: Props) {
                   <li key={x.slug}>
                     <Link
                       href={`/mi-familia/torneos/${x.slug}`}
-                      className="tp-card group flex h-full flex-col gap-2 p-5 transition hover:border-[#1a6db5]"
+                      className="tp-card group flex h-full flex-col gap-2 p-5 transition hover:border-[var(--brand-ink)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <h2 className="tp-title text-xl leading-snug">

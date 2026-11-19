@@ -2667,13 +2667,21 @@ export const tournaments = pgTable(
     status: varchar("status", { length: 20 }).default("draft").notNull(),
     // public: cualquiera con el enlace. private: solo jugadores y familias
     // vinculados al club (o a los alumnos del monitor). Migración 0107.
-    visibility: varchar("visibility", { length: 10 }).default("public").notNull(),
+    visibility: varchar("visibility", { length: 10 })
+      .default("public")
+      .notNull(),
     // Fotos publicadas también en la página pública (si el torneo es público).
     photosPublic: boolean("photos_public").default(false).notNull(),
     posterTemplate: varchar("poster_template", { length: 10 })
       .default("classic")
       .notNull(),
     posterImagePath: text("poster_image_path"),
+    // Archivado por el organizador (sale de su lista principal). 0108.
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    // Orden de juego publicado (página pública y familias). 0108.
+    schedulePublishedAt: timestamp("schedule_published_at", {
+      withTimezone: true,
+    }),
     maxEntries: integer("max_entries"),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),
@@ -2880,7 +2888,9 @@ export const tournamentNews = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("tournament_news_tournament_idx").on(t.tournamentId, t.publishedAt)]
+  (t) => [
+    index("tournament_news_tournament_idx").on(t.tournamentId, t.publishedAt),
+  ]
 );
 
 // Fotos del torneo: archivo en el bucket privado tournament-media (URLs
@@ -2908,7 +2918,9 @@ export const tournamentPhotos = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("tournament_photos_tournament_idx").on(t.tournamentId, t.createdAt)]
+  (t) => [
+    index("tournament_photos_tournament_idx").on(t.tournamentId, t.createdAt),
+  ]
 );
 
 // Personas etiquetadas en una foto (inscripción + lado).
@@ -2924,6 +2936,9 @@ export const tournamentPhotoTags = pgTable(
     side: varchar("side", { length: 10 }).notNull(), // player | partner
   },
   (t) => [
-    primaryKey({ name: "tournament_photo_tags_pk", columns: [t.photoId, t.entryId, t.side] }),
+    primaryKey({
+      name: "tournament_photo_tags_pk",
+      columns: [t.photoId, t.entryId, t.side],
+    }),
   ]
 );
