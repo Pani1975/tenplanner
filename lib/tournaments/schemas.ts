@@ -184,6 +184,8 @@ export const addManualEntrySchema = z
     partner: z.object(person).optional().nullable(),
     levelCode: z.string().max(32).optional().nullable(),
     consentDeclared: z.boolean(),
+    // Autorización de imagen (opcional; aparte del consentimiento).
+    imageConsent: z.boolean().optional(),
   })
   .superRefine((v, ctx) => {
     checkContact(v.player, ctx, ["player"]);
@@ -237,6 +239,8 @@ export const publicRegistrationSchema = z
     partner: z.object(person).optional().nullable(),
     levelCode: z.string().max(32).optional().nullable(),
     consent: z.literal(true),
+    // Autorización de imagen: opcional, aparte del consentimiento.
+    imageConsent: z.boolean().optional(),
     website: z.string().max(0).optional(),
   })
   .superRefine((v, ctx) => {

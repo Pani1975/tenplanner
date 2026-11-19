@@ -29,13 +29,18 @@ export function ConsentCard({
   const router = useRouter();
   const [busy, setBusy] = useState<"consent" | "decline" | null>(null);
   const [confirmDecline, setConfirmDecline] = useState(false);
+  const [imageConsent, setImageConsent] = useState(false);
 
   async function send(action: "consent" | "decline") {
     setBusy(action);
     const res = await fetch(`/api/family/tournaments/entries/${entryId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ side, action }),
+      body: JSON.stringify({
+        side,
+        action,
+        imageConsent: action === "consent" && imageConsent,
+      }),
     });
     setBusy(null);
     if (!res.ok) {
@@ -64,6 +69,15 @@ export function ConsentCard({
           organizer: organizer ?? t("theOrganizer"),
         })}
       </p>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={imageConsent}
+          onChange={(e) => setImageConsent(e.target.checked)}
+          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+        />
+        <span>{t("imageConsent", { player })}</span>
+      </label>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

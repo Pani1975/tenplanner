@@ -89,6 +89,7 @@ export default async function TorneoPage({ params }: Props) {
         createdAt: e.createdAt.toISOString(),
         contactsHidden: e.contactsHidden,
         seed: e.seed,
+        image: e.image,
       }))}
       matches={detail.matches.map((m) => ({
         id: m.id,

@@ -51,3 +51,27 @@ DO $$ BEGIN
       CHECK ("status" <> 'confirmed' OR "partner_first_name" IS NULL OR "partner_consent_at" IS NOT NULL);
   END IF;
 END $$;
+--> statement-breakpoint
+-- Autorización de imagen, guardada en la persona (vale para todo, no solo
+-- para un torneo): sí / no / sin datos (NULL), fecha del documento firmado,
+-- referencia a ese documento (texto: dónde está guardado) y quién la anotó.
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "image_consent" boolean;
+--> statement-breakpoint
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "image_consent_on" date;
+--> statement-breakpoint
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "image_consent_ref" varchar(200);
+--> statement-breakpoint
+ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "image_consent_by" uuid;
+--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'students_image_consent_by_users_id_fk') THEN
+    ALTER TABLE "students" ADD CONSTRAINT "students_image_consent_by_users_id_fk"
+      FOREIGN KEY ("image_consent_by") REFERENCES "public"."users"("id") ON DELETE set null;
+  END IF;
+END $$;
+--> statement-breakpoint
+-- Jugadores externos (enlace o añadidos a mano): no tienen ficha de alumno;
+-- su autorización de imagen se guarda en la inscripción.
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "image_consent_at" timestamp with time zone;
+--> statement-breakpoint
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_image_consent_at" timestamp with time zone;

@@ -3758,7 +3758,8 @@
         "pending": "Jugador añadido: pendiente de consentimiento.",
         "waitlist": "Jugador añadido a la lista de espera.",
         "cancelled": "Jugador añadido."
-      }
+      },
+      "imageConsent": "Tengo su autorización de imagen (o la de sus padres o tutores) para las fotos del torneo."
     },
     "errors": {
       "generic": "No se ha podido completar. Inténtalo de nuevo.",
@@ -3869,7 +3870,8 @@
       "cancelDoneText": "La inscripción en «{tournament}» está cancelada.",
       "cancelInvalid": "Enlace no válido",
       "cancelInvalidText": "Este enlace de cancelación no existe o ha caducado. Contacta con el organizador.",
-      "backToTournament": "Ver el torneo"
+      "backToTournament": "Ver el torneo",
+      "imageConsent": "Opcional: autorizo que aparezcan en las fotos del torneo que publique el organizador (yo, o mi hijo o hija si es menor)."
     },
     "circuit": {
       "kicker": "Circuito",
@@ -3971,7 +3973,28 @@
       "declineTitle": "¿{player} no participará?",
       "declineText": "Se cancela la inscripción y, si hay lista de espera, entra el siguiente.",
       "given": "Consentimiento registrado. ¡Gracias!",
-      "declined": "Inscripción cancelada."
+      "declined": "Inscripción cancelada.",
+      "imageConsent": "Autorizo también el uso de la imagen de {player} en fotos y vídeos del club (se guarda en su ficha y vale para todo)."
+    },
+    "imageConsent": {
+      "title": "Autorización de imagen",
+      "help": "Si el alumno (o su familia, si es menor) autoriza el uso de su imagen en fotos y vídeos del club. Vale para todo, no solo para torneos.",
+      "value": {
+        "yes": "Autoriza",
+        "no": "No autoriza",
+        "unknown": "Sin datos"
+      },
+      "date": "Fecha del documento",
+      "ref": "Referencia del documento firmado",
+      "refPlaceholder": "Ej.: hoja firmada, carpeta de inscripciones 2026",
+      "save": "Guardar",
+      "saved": "Autorización de imagen guardada",
+      "error": "No se ha podido guardar",
+      "badge": {
+        "yes": "Imagen: sí",
+        "no": "Imagen: no",
+        "unknown": "Imagen: sin datos"
+      }
     }
   }
 }

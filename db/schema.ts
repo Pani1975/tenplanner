@@ -643,6 +643,14 @@ export const students = pgTable(
     }),
     consentGivenAt: timestamp("consent_given_at", { withTimezone: true }),
     consentVersion: varchar("consent_version", { length: 20 }),
+    // Autorización de imagen (migración 0107): true / false / null = sin datos,
+    // fecha y referencia del documento firmado, y quién la anotó.
+    imageConsent: boolean("image_consent"),
+    imageConsentOn: date("image_consent_on"),
+    imageConsentRef: varchar("image_consent_ref", { length: 200 }),
+    imageConsentBy: uuid("image_consent_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
     // null = particular student. Set when the coach adds this student on
     // behalf of a club they're linked to.
     clubId: uuid("club_id").references(() => clubs.id, {
@@ -2748,6 +2756,11 @@ export const tournamentEntries = pgTable(
       { onDelete: "set null" }
     ),
     partnerConsentByName: varchar("partner_consent_by_name", { length: 120 }),
+    // Externos: autorización de imagen (los alumnos la tienen en su ficha).
+    imageConsentAt: timestamp("image_consent_at", { withTimezone: true }),
+    partnerImageConsentAt: timestamp("partner_image_consent_at", {
+      withTimezone: true,
+    }),
     // Para que quien se inscribe por enlace pueda cancelar desde el correo.
     cancelToken: varchar("cancel_token", { length: 64 }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),

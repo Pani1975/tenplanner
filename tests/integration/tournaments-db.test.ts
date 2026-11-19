@@ -142,12 +142,18 @@ if (!enabled) {
           guardianName: null,
         },
         consentDeclared: false,
+        imageConsent: true,
       });
       expect(ext.entry).toMatchObject({
         status: "waitlist",
         email: "externa@ejemplo.test",
         consentAt: null,
       });
+      expect(ext.entry.imageConsentAt).not.toBeNull();
+      const extShown = (await s.getTournamentDetail(o, t.id)).entries.find(
+        (x) => x.id === ext.entry.id
+      )!;
+      expect(extShown.image).toEqual({ player: "yes", partner: null });
       await expect(
         s.addManualEntry(o, t.id, {
           kind: "manual",
@@ -630,10 +636,37 @@ if (!enabled) {
         ).rejects.toMatchObject({ code: "not_found" });
 
         // Primero el jugador: sigue pendiente; luego la pareja: confirmada.
+        // (con autorización de imagen: se guarda en la ficha del alumno)
+        const [before] = await db
+          .select({
+            imageConsent: schema.students.imageConsent,
+            imageConsentOn: schema.students.imageConsentOn,
+            imageConsentRef: schema.students.imageConsentRef,
+            imageConsentBy: schema.students.imageConsentBy,
+          })
+          .from(schema.students)
+          .where(eq(schema.students.id, a));
         expect(
-          (await fam.familyRespond(user.id, pair1.id, "player", "consent"))
-            .status
+          (
+            await fam.familyRespond(user.id, pair1.id, "player", "consent", {
+              imageConsent: true,
+            })
+          ).status
         ).toBe("pending");
+        const [afterStudent] = await db
+          .select({ imageConsent: schema.students.imageConsent })
+          .from(schema.students)
+          .where(eq(schema.students.id, a));
+        expect(afterStudent.imageConsent).toBe(true);
+        const shown = (await s.getTournamentDetail(o, t.id)).entries.find(
+          (x) => x.id === pair1.id
+        )!;
+        expect(shown.image.player).toBe("yes");
+        // Deja la ficha del alumno de pruebas como estaba.
+        await db
+          .update(schema.students)
+          .set(before)
+          .where(eq(schema.students.id, a));
         expect(
           (await fam.familyRespond(user.id, pair1.id, "partner", "consent"))
             .status

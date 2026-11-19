@@ -337,6 +337,8 @@ export async function registerPublic(
         ...consent.record,
         ...(q ? asPartnerConsent(consent.record) : {}),
         cancelToken,
+        imageConsentAt: input.imageConsent ? now : null,
+        partnerImageConsentAt: input.imageConsent && q ? now : null,
         confirmedAt: status === "confirmed" ? now : null,
       })
       .returning({

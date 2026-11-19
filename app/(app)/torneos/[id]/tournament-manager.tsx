@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Camera,
   CalendarDays,
   EyeOff,
   Loader2,
@@ -84,6 +85,11 @@ export type ManagerEntry = {
   createdAt: string;
   contactsHidden: boolean;
   seed: number | null;
+  // Autorización de imagen del jugador y de la pareja (null si no hay).
+  image: {
+    player: "yes" | "no" | "unknown";
+    partner: "yes" | "no" | "unknown" | null;
+  };
 };
 
 type Level = { code: string; label: string };
@@ -581,6 +587,7 @@ function EntryRow({
               {levelLabel}
             </span>
           )}
+          <ImageBadge image={e.image} hasPartner={!!partner} />
           {e.consentAt && (
             <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
               <ShieldCheck className="size-3.5" />
@@ -652,5 +659,40 @@ function EntryRow({
         </div>
       )}
     </li>
+  );
+}
+
+/** Autorización de imagen (de la ficha del alumno o de la inscripción). */
+function ImageBadge({
+  image,
+  hasPartner,
+}: {
+  image: ManagerEntry["image"];
+  hasPartner: boolean;
+}) {
+  const tr = useTranslations("tournaments.imageConsent");
+  const all = [
+    image.player,
+    ...(hasPartner && image.partner ? [image.partner] : []),
+  ];
+  const state = all.every((x) => x === "yes")
+    ? "yes"
+    : all.some((x) => x === "no")
+      ? "no"
+      : "unknown";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold",
+        state === "yes"
+          ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
+          : state === "no"
+            ? "bg-red-600/10 text-red-700 dark:text-red-400"
+            : "bg-foreground/5 text-foreground/70"
+      )}
+    >
+      <Camera className="size-3.5" />
+      {tr(`badge.${state}`)}
+    </span>
   );
 }

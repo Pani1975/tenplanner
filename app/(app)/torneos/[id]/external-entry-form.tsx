@@ -69,6 +69,7 @@ export function ExternalEntryForm({
   const [partner, setPartner] = useState<Person>(empty);
   const [levelCode, setLevelCode] = useState("");
   const [consent, setConsent] = useState(false);
+  const [imageConsent, setImageConsent] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const valid = personValid(player) && (!doubles || personValid(partner));
@@ -86,6 +87,7 @@ export function ExternalEntryForm({
         partner: doubles ? toBody(partner) : null,
         levelCode: levelCode || null,
         consentDeclared: consent,
+        imageConsent,
       }),
     });
     setSaving(false);
@@ -154,6 +156,15 @@ export function ExternalEntryForm({
           className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
         />
         <span>{t("consent")}</span>
+      </label>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={imageConsent}
+          onChange={(e) => setImageConsent(e.target.checked)}
+          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+        />
+        <span>{t("imageConsent")}</span>
       </label>
       <p className="text-xs text-foreground/65">{t("privacy")}</p>
 

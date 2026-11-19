@@ -20,6 +20,7 @@ import {
   tournaments,
 } from "@/db/schema";
 import { getActiveWorkClubId, getOwnedClub } from "@/lib/clubs";
+import { imageConsentStatus } from "./image-consent";
 import { canSeeContacts, redactEntry } from "./privacy";
 import { getActiveSport } from "@/lib/sports";
 import { scaleSportFor } from "@/lib/skill-levels";
@@ -319,9 +320,45 @@ export async function getTournamentDetail(o: Organizer, id: string) {
           .then((r) => r[0] ?? null)
       : Promise.resolve(null),
   ]);
+  // Autorización de imagen de los alumnos inscritos (está en su ficha).
+  const studentIds = [
+    ...new Set(
+      entries.flatMap((e) =>
+        [e.studentId, e.partnerStudentId].filter((x): x is string => !!x)
+      )
+    ),
+  ];
+  const imageByStudent = new Map(
+    studentIds.length
+      ? (
+          await db
+            .select({ id: students.id, consent: students.imageConsent })
+            .from(students)
+            .where(inArray(students.id, studentIds))
+        ).map((r) => [r.id, r.consent] as const)
+      : []
+  );
   return {
     tournament: { ...t, effectiveStatus: statusOf(t), circuit },
-    entries: entries.map((e) => redactEntry(e, o.canSeeContacts)),
+    entries: entries.map((e) => ({
+      ...redactEntry(e, o.canSeeContacts),
+      image: {
+        player: imageConsentStatus({
+          isStudent: !!e.studentId,
+          studentConsent: e.studentId ? imageByStudent.get(e.studentId) : null,
+          entryConsentAt: e.imageConsentAt,
+        }),
+        partner: e.partnerFirstName
+          ? imageConsentStatus({
+              isStudent: !!e.partnerStudentId,
+              studentConsent: e.partnerStudentId
+                ? imageByStudent.get(e.partnerStudentId)
+                : null,
+              entryConsentAt: e.partnerImageConsentAt,
+            })
+          : null,
+      },
+    })),
     matches,
   };
 }
@@ -1019,6 +1056,8 @@ export async function addManualEntry(
       .values({
         tournamentId: id,
         source: "manual",
+        imageConsentAt: input.imageConsent ? new Date() : null,
+        partnerImageConsentAt: input.imageConsent && q ? new Date() : null,
         firstName: p.firstName,
         lastName: p.lastName,
         ...pc,

@@ -70,6 +70,7 @@ export function RegistrationForm({
   const [partner, setPartner] = useState<Person>(empty);
   const [levelCode, setLevelCode] = useState("");
   const [consent, setConsent] = useState(false);
+  const [imageConsent, setImageConsent] = useState(false);
   const [website, setWebsite] = useState(""); // trampa para robots
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export function RegistrationForm({
         partner: doubles ? body(partner) : null,
         levelCode: levelCode || null,
         consent: true,
+        imageConsent,
         website,
       }),
     });
@@ -205,6 +207,15 @@ export function RegistrationForm({
             {t("privacyLink")}
           </Link>
         </span>
+      </label>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          checked={imageConsent}
+          onChange={(e) => setImageConsent(e.target.checked)}
+          className="mt-0.5 size-5 shrink-0 accent-[#1a6db5]"
+        />
+        <span>{t("imageConsent")}</span>
       </label>
       <p className="text-xs text-foreground/65">{t("publicNote")}</p>
 

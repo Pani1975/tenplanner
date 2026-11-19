@@ -225,7 +225,8 @@ export async function familyRespond(
   userId: string,
   entryId: string,
   side: "player" | "partner",
-  action: "consent" | "decline"
+  action: "consent" | "decline",
+  opts: { imageConsent?: boolean } = {}
 ) {
   return db.transaction(async (tx) => {
     const [e] = await tx
@@ -302,6 +303,21 @@ export async function familyRespond(
         side === "partner" ? r.record.consentAt : e.partnerConsentAt,
     };
     const confirm = e.status === "pending" && isConsentComplete(after);
+    // Autorización de imagen: se guarda en la ficha del alumno (vale para todo).
+    if (opts.imageConsent) {
+      await tx
+        .update(students)
+        .set({
+          imageConsent: true,
+          imageConsentOn: new Date().toISOString().slice(0, 10),
+          imageConsentRef: `Dada por ${guardian.name} desde su cuenta`.slice(
+            0,
+            200
+          ),
+          imageConsentBy: userId,
+        })
+        .where(eq(students.id, studentId));
+    }
     await tx
       .update(tournamentEntries)
       .set({

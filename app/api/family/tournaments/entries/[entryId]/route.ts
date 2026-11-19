@@ -12,6 +12,7 @@ const UUID =
 const bodySchema = z.object({
   side: z.enum(["player", "partner"]),
   action: z.enum(["consent", "decline"]),
+  imageConsent: z.boolean().optional(),
 });
 
 // La familia (o el jugador adulto) da su consentimiento o dice que no
@@ -37,7 +38,8 @@ export async function POST(request: Request, ctx: Ctx) {
       user.id,
       entryId,
       parsed.data.side,
-      parsed.data.action
+      parsed.data.action,
+      { imageConsent: parsed.data.imageConsent }
     );
     return NextResponse.json(
       { data: { status: r.status } },

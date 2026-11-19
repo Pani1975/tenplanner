@@ -4147,7 +4147,8 @@
         "pending": "Player added: waiting for consent.",
         "waitlist": "Player added to the waiting list.",
         "cancelled": "Player added."
-      }
+      },
+      "imageConsent": "I have their image consent (or their parents' or guardians') for the tournament photos."
     },
     "errors": {
       "generic": "It couldn't be done. Please try again.",
@@ -4258,7 +4259,8 @@
       "cancelDoneText": "The entry in “{tournament}” is cancelled.",
       "cancelInvalid": "Invalid link",
       "cancelInvalidText": "This cancel link doesn't exist or has expired. Contact the organiser.",
-      "backToTournament": "See the tournament"
+      "backToTournament": "See the tournament",
+      "imageConsent": "Optional: I allow appearing in the tournament photos the organiser publishes (me, or my child if under 18)."
     },
     "circuit": {
       "kicker": "Circuit",
@@ -4360,7 +4362,28 @@
       "declineTitle": "{player} won't take part?",
       "declineText": "The entry is cancelled and, if there is a waiting list, the next one gets in.",
       "given": "Consent recorded. Thank you!",
-      "declined": "Entry cancelled."
+      "declined": "Entry cancelled.",
+      "imageConsent": "I also allow {player}'s image to be used in the club's photos and videos (saved in their profile; it applies to everything)."
+    },
+    "imageConsent": {
+      "title": "Image consent",
+      "help": "Whether the student (or their family, if under 18) allows their image to be used in the club's photos and videos. It applies to everything, not just tournaments.",
+      "value": {
+        "yes": "Allows",
+        "no": "Doesn't allow",
+        "unknown": "Unknown"
+      },
+      "date": "Document date",
+      "ref": "Reference to the signed document",
+      "refPlaceholder": "E.g. signed sheet, 2026 enrolment folder",
+      "save": "Save",
+      "saved": "Image consent saved",
+      "error": "It couldn't be saved",
+      "badge": {
+        "yes": "Image: yes",
+        "no": "Image: no",
+        "unknown": "Image: unknown"
+      }
     }
   }
 }
