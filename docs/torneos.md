@@ -8,6 +8,8 @@ Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/t
 - **Nombre en la página pública (David, 2026-11-19):** nombre e iniciales de los apellidos para todos, de la escuela o externos, también menores («Lucía García López» → «Lucía G. L.»). Nunca correo ni teléfono.
 - **Origen de los jugadores:** alumnos de la escuela (`school`), jugador externo añadido a mano por el organizador (`manual`) o inscripción por el enlace público (`link`, fase 4).
 - **Quién gestiona un torneo de club:** cualquier miembro activo del club en modo club, igual que alumnos y grupos (que ya se comparten así). En modo particular, solo el monitor.
+- **Datos de contacto en torneos de club (David, 2026-11-19):** solo los ve el administrador del club (la cuenta dueña). El resto de monitores gestiona el torneo sin verlos (`lib/tournaments/privacy.ts`). En modo particular los ve el monitor. El token de cancelación no se devuelve nunca.
+- **Estilo de las pantallas de torneos (David, 2026-11-19):** azul `#1a6db5` como color principal, títulos en Fraunces y texto en DM Sans, tarjetas con fondo de color sólido. Ojo: el resto de la app usa lima y Plus Jakarta Sans; DM Sans no está aún en `app/fonts`.
 - Una inscripción sin consentimiento queda `pending` y ocupa plaza; no puede pasar a `confirmed` (lo impide también la base). Al generar el cuadro avisa si hay pendientes; se puede generar dejándolas fuera.
 - Duplicados: los alumnos se distinguen por su ficha (dos hermanos pueden compartir correo); los externos, por correo o teléfono normalizados.
 - Menor sin datos: su contacto es el del padre, madre o tutor (primero activo en «Familias» con correo o teléfono); nunca el del propio menor. Alumno sin fecha de nacimiento = menor (regla de `lib/age.ts`).
@@ -18,9 +20,7 @@ Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/t
 
 ## Pendiente de decidir (David)
 
-- Estilo: lima actual de la app o azul `#1a6db5` con DM Sans.
 - Texto exacto del consentimiento `torneo-v1` (revisión legal).
-- Torneos de club: ¿solo el administrador del club ve los datos de contacto, o todos los monitores del club (como hoy con los alumnos)?
 
 ## Pendiente de hacer
 

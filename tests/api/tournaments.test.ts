@@ -24,6 +24,7 @@ vi.mock("@/lib/tournaments/server", async () => {
       userId,
       clubId: null,
       sport: "tenis",
+      canSeeContacts: true,
     })),
     listTournaments: vi.fn(async () => []),
     createTournament: vi.fn(async () => ({ id: "t1" })),

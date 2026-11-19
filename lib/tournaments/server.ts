@@ -18,7 +18,8 @@ import {
   tournamentMatches,
   tournaments,
 } from "@/db/schema";
-import { getActiveWorkClubId } from "@/lib/clubs";
+import { getActiveWorkClubId, getOwnedClub } from "@/lib/clubs";
+import { canSeeContacts, redactEntry } from "./privacy";
 import { getActiveSport } from "@/lib/sports";
 import type { Sport } from "@/lib/sports";
 import {
@@ -67,7 +68,13 @@ export class TournamentError extends Error {
   }
 }
 
-export type Organizer = { userId: string; clubId: string | null; sport: Sport };
+export type Organizer = {
+  userId: string;
+  clubId: string | null;
+  sport: Sport;
+  // Datos de contacto de los inscritos: en club, solo su administrador.
+  canSeeContacts: boolean;
+};
 
 export type TournamentRow = typeof tournaments.$inferSelect;
 export type EntryRow = typeof tournamentEntries.$inferSelect;
@@ -78,11 +85,17 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const ROUND_ROBIN_MAX = 16;
 
 export async function getOrganizer(userId: string): Promise<Organizer> {
-  const [clubId, sport] = await Promise.all([
+  const [clubId, sport, owned] = await Promise.all([
     getActiveWorkClubId(userId),
     getActiveSport(userId),
+    getOwnedClub(userId),
   ]);
-  return { userId, clubId, sport };
+  return {
+    userId,
+    clubId,
+    sport,
+    canSeeContacts: canSeeContacts({ clubId, ownedClubId: owned?.id ?? null }),
+  };
 }
 
 function ownerWhere(o: Organizer): SQL {
@@ -196,7 +209,7 @@ export async function getTournamentDetail(o: Organizer, id: string) {
   ]);
   return {
     tournament: { ...t, effectiveStatus: statusOf(t) },
-    entries,
+    entries: entries.map((e) => redactEntry(e, o.canSeeContacts)),
     matches,
   };
 }
@@ -878,7 +891,7 @@ export async function addManualEntry(
         confirmedAt: status === "confirmed" ? now : null,
       })
       .returning();
-    return { entry: row };
+    return { entry: redactEntry(row, o.canSeeContacts) };
   });
 }
 

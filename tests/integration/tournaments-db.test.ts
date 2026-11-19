@@ -32,6 +32,7 @@ if (!enabled) {
       userId: user.id,
       clubId: null,
       sport: "tenis",
+      canSeeContacts: true,
     };
     const created: string[] = [];
 
@@ -159,8 +160,25 @@ if (!enabled) {
         })
       ).rejects.toMatchObject({ code: "duplicate" });
 
+      // Sin permiso de contactos (monitor de club que no es su
+      // administrador): ve la inscripción, pero no el correo.
+      const hidden = await s.getTournamentDetail(
+        { ...o, canSeeContacts: false },
+        t.id
+      );
+      const extHidden = hidden.entries.find((e) => e.id === ext.entry.id)!;
+      expect(extHidden).toMatchObject({
+        firstName: "Externa",
+        email: null,
+        contactsHidden: true,
+        cancelToken: null,
+      });
+
       // Cancelar un confirmado: sube el primero de la lista de espera.
       const before = await s.getTournamentDetail(o, t.id);
+      expect(before.entries.find((e) => e.id === ext.entry.id)!.email).toBe(
+        "externa@ejemplo.test"
+      );
       const firstConfirmed = before.entries.find(
         (e) => e.status === "confirmed"
       )!;
