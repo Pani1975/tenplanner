@@ -1008,6 +1008,7 @@ function SidebarNavInner({
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            <LanguageSwitcher compact />
             <ThemeToggle compact />
             <button
               ref={triggerRef}

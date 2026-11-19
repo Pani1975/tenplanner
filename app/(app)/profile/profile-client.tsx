@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -559,6 +560,7 @@ export function ProfileClient({ user, stats }: ProfileClientProps) {
                 </span>
               </button>
               <ThemeToggle />
+              <LanguageSwitcher />
             </div>
           </div>
         </div>
