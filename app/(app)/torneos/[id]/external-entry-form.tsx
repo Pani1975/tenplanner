@@ -215,7 +215,7 @@ function PersonFields({
   return (
     <fieldset className="space-y-3">
       {legend && (
-        <legend className="mb-2 text-sm font-bold text-[#1a6db5]">
+        <legend className="mb-2 text-sm font-bold text-[var(--brand-ink)]">
           {legend}
         </legend>
       )}

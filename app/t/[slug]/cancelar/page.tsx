@@ -56,7 +56,7 @@ export default async function CancelPage({ params, searchParams }: Props) {
         )}
         <Link
           href={`/t/${slug}`}
-          className="inline-block text-sm font-semibold text-[#1a6db5] underline"
+          className="inline-block text-sm font-semibold text-[var(--brand-ink)] underline"
         >
           {t("backToTournament")}
         </Link>

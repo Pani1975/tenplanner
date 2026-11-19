@@ -31,7 +31,7 @@ Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/t
 
 ## Pendiente de hacer
 
-- Hechas las fases 1 a 4. Falta en la ficha: editar los datos del torneo y fijar cabezas de serie (la API ya lo admite). Fase 5: generar el cuadro y meter resultados desde la ficha. Fase 6: revisión completa en móvil.
+- Hechas las fases 1 a 6 (revisión en móvil: crear torneo, alumnos sueltos y por grupo, inscripción por enlace, lista de espera, cabezas de serie, cuadro con pases directos, resultados normal / no presentado / retirada, campeón y página pública; también modo oscuro). Pendiente: probar con una cuenta de club (administrador y monitor), una liguilla completa en pantalla y un correo real de Resend.
 - Enlace de consentimiento para tutores (`guardian_link`).
 - Correo de confirmación: en Vercel faltan `RESEND_API_KEY` y `EMAIL_FROM`.
 

@@ -48,7 +48,7 @@ export default async function TorneosPage() {
 
       {rows.length === 0 ? (
         <div className="tp-card-soft p-8 text-center">
-          <Trophy className="mx-auto mb-3 size-8 text-[#1a6db5]" />
+          <Trophy className="mx-auto mb-3 size-8 text-[var(--brand-ink)]" />
           <p className="tp-title text-xl">{t("list.emptyTitle")}</p>
           <p className="mt-1 text-sm text-foreground/70">
             {t("list.emptyText")}
@@ -80,7 +80,7 @@ export default async function TorneosPage() {
                     {formatDateRange(r.startDate, r.endDate, locale)}
                   </p>
                   {r.circuit && (
-                    <p className="text-xs font-bold uppercase text-[#1a6db5]">
+                    <p className="text-xs font-bold uppercase text-[var(--brand-ink)]">
                       {r.circuit.season
                         ? `${r.circuit.name} · ${r.circuit.season}`
                         : r.circuit.name}
@@ -91,7 +91,7 @@ export default async function TorneosPage() {
                   </p>
                   <div className="mt-auto flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 font-semibold">
-                      <Users className="size-4 text-[#1a6db5]" />
+                      <Users className="size-4 text-[var(--brand-ink)]" />
                       {r.maxEntries
                         ? t("list.spots", {
                             taken: r.spotsTaken,

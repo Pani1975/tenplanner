@@ -253,7 +253,7 @@ export function DrawPanel({
                             className={cn(
                               "truncate",
                               won
-                                ? "font-bold text-[#1a6db5]"
+                                ? "font-bold text-[var(--brand-ink)]"
                                 : "text-foreground/85",
                               !id && "italic text-foreground/40"
                             )}

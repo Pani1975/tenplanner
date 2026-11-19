@@ -105,7 +105,7 @@ export default async function PublicCircuitPage({ params }: Props) {
                           {p ?? "–"}
                         </td>
                       ))}
-                      <td className="tp-title px-4 py-2 text-right text-lg text-[#1a6db5]">
+                      <td className="tp-title px-4 py-2 text-right text-lg text-[var(--brand-ink)]">
                         {r.points}
                       </td>
                     </tr>

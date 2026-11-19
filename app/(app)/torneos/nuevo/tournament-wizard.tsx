@@ -607,7 +607,7 @@ function Field({
     <label className="block space-y-1.5">
       <span className="text-xs font-bold uppercase text-foreground/60">
         {label}
-        {required && <span className="text-[#1a6db5]"> *</span>}
+        {required && <span className="text-[var(--brand-ink)]"> *</span>}
         {hint && (
           <span className="ml-1 font-normal normal-case text-foreground/45">
             {hint}

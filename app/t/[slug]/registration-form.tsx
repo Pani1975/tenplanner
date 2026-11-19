@@ -116,7 +116,7 @@ export function RegistrationForm({
     return (
       <section className="tp-card-soft space-y-2 p-5" role="status">
         <p className="tp-title flex items-center gap-2 text-xl">
-          <CheckCircle2 className="size-6 text-[#1a6db5]" />
+          <CheckCircle2 className="size-6 text-[var(--brand-ink)]" />
           {done.status === "waitlist" ? t("doneWaitlist") : t("doneTitle")}
         </p>
         <p className="text-sm">
@@ -136,7 +136,7 @@ export function RegistrationForm({
       <div>
         <h2 className="tp-title text-2xl">{t("formTitle")}</h2>
         {full && (
-          <p className="mt-1 text-sm font-semibold text-[#1a6db5]">
+          <p className="mt-1 text-sm font-semibold text-[var(--brand-ink)]">
             {t("fullNote")}
           </p>
         )}
@@ -260,7 +260,7 @@ function Fields({
   return (
     <fieldset className="space-y-3">
       {legend && (
-        <legend className="mb-2 text-sm font-bold text-[#1a6db5]">
+        <legend className="mb-2 text-sm font-bold text-[var(--brand-ink)]">
           {legend}
         </legend>
       )}

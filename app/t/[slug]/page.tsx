@@ -115,7 +115,7 @@ export default async function PublicTournamentPage({ params }: Props) {
             }
           />
           <Stat label={tr("public.waitlist")} value={String(t.waitlistCount)} />
-          {t.registrationDeadline && (
+          {t.registrationDeadline && t.status === "open" && (
             <Stat
               label={tr("public.deadline")}
               value={new Intl.DateTimeFormat(locale, {
@@ -164,7 +164,7 @@ export default async function PublicTournamentPage({ params }: Props) {
 
         <section className="space-y-3">
           <h2 className="tp-title flex items-center gap-2 text-2xl">
-            <Users className="size-5 text-[#1a6db5]" />
+            <Users className="size-5 text-[var(--brand-ink)]" />
             {tr("public.entrantsTitle")}
           </h2>
           {t.entrants.length === 0 ? (
@@ -191,7 +191,7 @@ export default async function PublicTournamentPage({ params }: Props) {
               <ol className="tp-card divide-y divide-foreground/10">
                 {t.waitlist.map((name, i) => (
                   <li key={`${name}-${i}`} className="flex gap-3 px-4 py-2.5">
-                    <span className="w-6 text-right text-sm font-bold text-[#1a6db5]">
+                    <span className="w-6 text-right text-sm font-bold text-[var(--brand-ink)]">
                       #{i + 1}
                     </span>
                     <span>{name}</span>

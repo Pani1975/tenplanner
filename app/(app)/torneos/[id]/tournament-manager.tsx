@@ -124,6 +124,9 @@ export function TournamentManager({
   const [editingData, setEditingData] = useState(false);
   const matchCount = matches.length;
   const anyPlayed = matches.some((m) => m.status === "played");
+  const allPlayed =
+    matchCount > 0 &&
+    matches.every((m) => m.status === "played" || m.status === "bye");
   const names = useMemo(
     () =>
       Object.fromEntries(
@@ -214,7 +217,9 @@ export function TournamentManager({
       canTransition(statusInput, a.to) &&
       // "En curso" solo se alcanza generando el cuadro (fase de resultados).
       !(a.to === "in_progress" && matchCount === 0) &&
-      !(status === "closed" && a.to === "in_progress")
+      !(status === "closed" && a.to === "in_progress") &&
+      // Finalizar solo cuando se han jugado todos los partidos.
+      !(a.to === "finished" && !allPlayed)
   );
 
   return (
@@ -545,7 +550,7 @@ function EntryRow({
       <div className="min-w-0 space-y-1">
         <p className="font-semibold">
           {position !== null && (
-            <span className="mr-2 text-[#1a6db5]">#{position}</span>
+            <span className="mr-2 text-[var(--brand-ink)]">#{position}</span>
           )}
           {name}
           {partner && <span className="text-foreground/60"> / {partner}</span>}

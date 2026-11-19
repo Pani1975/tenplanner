@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Trophy } from "lucide-react";
 import { roundLabelKey } from "@/lib/tournaments/bracket";
 import type { PublicMatch } from "@/lib/tournaments/public";
 import { computeStandings } from "@/lib/tournaments/round-robin";
@@ -42,6 +43,14 @@ export function PublicDraw({
     (a, b) => a - b
   );
   const total = rounds.length ? Math.max(...rounds) : 0;
+  const final =
+    format === "knockout" ? matches.find((m) => m.round === total) : null;
+  const champion =
+    final?.status === "played" && final.winner
+      ? final.winner === "a"
+        ? final.a
+        : final.b
+      : null;
 
   const roundTitle = (r: number) => {
     if (format === "round_robin") return t("public.matchday", { n: r });
@@ -101,6 +110,18 @@ export function PublicDraw({
           ? t("public.drawTitle")
           : t("public.standingsTitle")}
       </h2>
+
+      {champion && (
+        <p className="tp-card-blue flex items-center gap-3 p-4">
+          <Trophy className="size-6 shrink-0" />
+          <span>
+            <span className="block text-xs font-bold uppercase text-white/80">
+              {t("draw.champion")}
+            </span>
+            <span className="tp-title text-xl">{champion}</span>
+          </span>
+        </p>
+      )}
 
       {format === "round_robin" && (
         <div className="tp-card overflow-x-auto">
@@ -192,7 +213,7 @@ function Side({
     <p
       className={cn(
         "truncate",
-        won ? "font-bold text-[#1a6db5]" : "text-foreground/85",
+        won ? "font-bold text-[var(--brand-ink)]" : "text-foreground/85",
         !name && "italic text-foreground/40"
       )}
     >
