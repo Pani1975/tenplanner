@@ -67,8 +67,8 @@ export function DrawButton({
         className={cn(
           "inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold disabled:opacity-50",
           variant === "primary"
-            ? "bg-black text-[#d6f04a]"
-            : "bg-black/10 text-black hover:bg-black/15"
+            ? "bg-[#d6f04a] text-black"
+            : "bg-white/15 text-white hover:bg-white/25"
         )}
       >
         {busy ? (

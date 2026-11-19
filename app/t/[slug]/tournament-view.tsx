@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 import { dmSans } from "@/app/fonts/dm-sans";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
-import { formatDateRange, STATUS_BADGE } from "@/lib/tournaments/labels";
+import {
+  formatDateRange,
+  STATUS_BADGE_ON_DARK,
+} from "@/lib/tournaments/labels";
 import { levelOptions } from "@/lib/tournaments/levels";
 import type { PublicTournament } from "@/lib/tournaments/public";
 import type { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
@@ -57,22 +60,20 @@ export async function TournamentView({
     <div
       className={`${dmSans.variable} tp-torneos min-h-[100dvh] bg-background text-foreground`}
     >
-      <header className="bg-[#d6f04a] px-5 pb-10 pt-6 text-black">
+      <header className="border-b border-white/10 bg-[#050505] px-5 pb-10 pt-6 text-white">
         <div className="mx-auto max-w-3xl space-y-3">
           {top}
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
                 "rounded-full px-2.5 py-1 text-[11px] font-bold",
-                t.status === "open"
-                  ? "bg-black text-[#d6f04a]"
-                  : STATUS_BADGE[t.status]
+                STATUS_BADGE_ON_DARK[t.status]
               )}
             >
               {tr(`status.${t.status}`)}
             </span>
             {t.visibility === "private" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold">
                 <Lock className="size-3.5" />
                 {tr("visibility.private")}
               </span>
@@ -80,7 +81,7 @@ export async function TournamentView({
             {t.circuit && (
               <Link
                 href={`/t/c/${t.circuit.slug}`}
-                className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold hover:bg-black/15"
+                className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold hover:bg-white/25"
               >
                 <Trophy className="size-3.5" />
                 {t.circuit.season
@@ -93,11 +94,11 @@ export async function TournamentView({
             {t.name}
           </h1>
           {t.organizer && (
-            <p className="text-sm text-black/85">
+            <p className="text-sm text-white/85">
               {tr("public.organizer", { name: t.organizer })}
             </p>
           )}
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-black/90">
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/90">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="size-4" />
               {formatDateRange(t.startDate, t.endDate, locale)}
@@ -109,7 +110,7 @@ export async function TournamentView({
               </span>
             )}
           </div>
-          <p className="text-sm text-black/90">
+          <p className="text-sm text-white/90">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
             {level && ` · ${level.label}`}
           </p>

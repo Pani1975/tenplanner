@@ -61,7 +61,7 @@ export default async function FamilyTournamentPage({ params }: Props) {
       top={
         <Link
           href="/mi-familia/torneos"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-black/75 hover:text-black"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/75 hover:text-white"
         >
           <ArrowLeft className="size-4" />
           {tr("list.title")}

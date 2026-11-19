@@ -290,10 +290,13 @@
     background: var(--card);
     border: 1px solid color-mix(in oklab, var(--foreground) 9%, var(--card));
   }
+  /* Cabeceras de torneos: negro con letras blancas y detalles en lima,
+     como la cabecera del panel (decisión de David, 2026-11-19). */
   .tp-torneos .tp-card-blue {
     border-radius: calc(var(--radius) * 1.6);
-    background: #d6f04a;
-    color: #0b0d05;
+    background: #050505;
+    color: #ffffff;
+    border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
   }
   .tp-torneos .tp-card-soft {
     border-radius: calc(var(--radius) * 1.6);

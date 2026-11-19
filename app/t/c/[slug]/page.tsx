@@ -39,16 +39,16 @@ export default async function PublicCircuitPage({ params }: Props) {
     <div
       className={`${dmSans.variable} tp-torneos min-h-[100dvh] bg-background text-foreground`}
     >
-      <header className="bg-[#d6f04a] px-5 pb-10 pt-6 text-black">
+      <header className="border-b border-white/10 bg-[#050505] px-5 pb-10 pt-6 text-white">
         <div className="mx-auto max-w-3xl space-y-2">
-          <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-black/85">
+          <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/85">
             <Trophy className="size-4" />
             {t("circuit.kicker")}
           </p>
           <h1 className="tp-title text-4xl leading-tight sm:text-5xl">
             {c.name}
           </h1>
-          <p className="text-sm text-black/85">
+          <p className="text-sm text-white/85">
             {[
               c.season,
               c.organizer && t("public.organizer", { name: c.organizer }),

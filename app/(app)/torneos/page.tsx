@@ -44,25 +44,25 @@ export default async function TorneosPage({ searchParams }: Props) {
     <div className="tp-page-pad mx-auto w-full max-w-5xl space-y-6">
       <header className="tp-card-blue flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
         <div>
-          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-black/80">
+          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/80">
             <Trophy className="size-4" />
             {organizer.clubId ? t("list.kickerClub") : t("list.kickerCoach")}
           </p>
           <h1 className="tp-title text-4xl leading-tight sm:text-5xl">
             {t("list.title")}
             {club && (
-              <span className="block text-2xl text-black/75 sm:text-3xl">
+              <span className="block text-2xl text-white/75 sm:text-3xl">
                 {club.name}
               </span>
             )}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-black/85">
+          <p className="mt-2 max-w-xl text-sm text-white/85">
             {t("list.intro")}
           </p>
         </div>
         <Link
           href="/torneos/nuevo"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black transition hover:bg-[#c5df3c]"
         >
           <Plus className="size-4" />
           {t("list.new")}

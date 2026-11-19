@@ -144,7 +144,7 @@ export function PublicDraw({
         <p className="tp-card-blue flex items-center gap-3 p-4">
           <Trophy className="size-6 shrink-0" />
           <span>
-            <span className="block text-xs font-bold uppercase text-black/80">
+            <span className="block text-xs font-bold uppercase text-white/80">
               {t("draw.champion")}
             </span>
             <span className="tp-title text-xl">{champion}</span>

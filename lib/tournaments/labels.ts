@@ -12,6 +12,15 @@ export const STATUS_BADGE: Record<TournamentStatus, string> = {
   finished: "bg-foreground text-background",
 };
 
+/** Etiqueta de estado sobre las cabeceras negras. */
+export const STATUS_BADGE_ON_DARK: Record<TournamentStatus, string> = {
+  draft: "bg-white/15 text-white",
+  open: "bg-[#d6f04a] text-black",
+  closed: "bg-amber-500 text-black",
+  in_progress: "bg-emerald-500 text-black",
+  finished: "bg-white text-black",
+};
+
 export const ENTRY_BADGE: Record<string, string> = {
   confirmed: "bg-emerald-600 text-white",
   pending: "bg-amber-500 text-black",

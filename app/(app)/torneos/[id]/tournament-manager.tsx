@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 import {
   ENTRY_BADGE,
   formatDateRange,
-  STATUS_BADGE,
+  STATUS_BADGE_ON_DARK,
 } from "@/lib/tournaments/labels";
 import {
   canEditEntries,
@@ -273,24 +273,22 @@ export function TournamentManager({
           <span
             className={cn(
               "rounded-full px-2.5 py-1 text-[11px] font-bold",
-              status === "open"
-                ? "bg-black text-[#d6f04a]"
-                : STATUS_BADGE[status]
+              STATUS_BADGE_ON_DARK[status]
             )}
           >
             {tr(`status.${status}`)}
           </span>
           {t.archived && (
-            <span className="rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
+            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold">
               {tr("archive.badge")}
             </span>
           )}
-          <span className="text-xs font-semibold text-black/80">
+          <span className="text-xs font-semibold text-white/80">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
             {t.levelCode && ` · ${levelLabel(t.levelCode)}`}
           </span>
         </div>
-        <p className="text-xs font-bold uppercase tracking-wide text-black/85">
+        <p className="text-xs font-bold uppercase tracking-wide text-white/85">
           {t.circuit
             ? tr("manager.circuit", {
                 name: t.circuit.season
@@ -302,7 +300,7 @@ export function TournamentManager({
         <h1 className="tp-title text-3xl leading-tight sm:text-5xl">
           {t.name}
         </h1>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-black/85">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/85">
           <span className="flex items-center gap-1.5">
             <CalendarDays className="size-4" />
             {formatDateRange(t.startDate, t.endDate, locale)}
@@ -335,8 +333,8 @@ export function TournamentManager({
                 className={cn(
                   "inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold disabled:opacity-50",
                   i === 0
-                    ? "bg-black text-[#d6f04a]"
-                    : "bg-black/10 text-black hover:bg-black/15"
+                    ? "bg-[#d6f04a] text-black"
+                    : "bg-white/15 text-white hover:bg-white/25"
                 )}
               >
                 {busy === a.to && <Loader2 className="size-4 animate-spin" />}
@@ -357,7 +355,7 @@ export function TournamentManager({
               type="button"
               disabled={busy !== null}
               onClick={() => archive(!t.archived)}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-black/10 px-5 text-sm font-bold text-black hover:bg-black/15 disabled:opacity-50"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-white/15 px-5 text-sm font-bold text-white hover:bg-white/25 disabled:opacity-50"
             >
               {busy === "archive" ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -374,14 +372,14 @@ export function TournamentManager({
               type="button"
               onClick={() => setEditingData((v) => !v)}
               aria-expanded={editingData}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-black/10 px-5 text-sm font-bold text-black hover:bg-black/15"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-white/15 px-5 text-sm font-bold text-white hover:bg-white/25"
             >
               {tr("edit.open")}
             </button>
           )}
         </div>
         {status === "closed" && matchCount === 0 && (
-          <p className="text-sm text-black/85">{tr("manager.drawSoon")}</p>
+          <p className="text-sm text-white/85">{tr("manager.drawSoon")}</p>
         )}
       </header>
 
