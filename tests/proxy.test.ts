@@ -32,6 +32,13 @@ describe("proxy auth routing", () => {
     expect(res.headers.get("location")).toBe("https://tenplanner.com/login");
   });
 
+  it("sends logged-out visitors of /torneos to login, but not the public pages", async () => {
+    const res = await proxy(request("/torneos/nuevo"));
+    expect(res.headers.get("location")).toBe("https://tenplanner.com/login");
+    const pub = await proxy(request("/t/torneo-abc123"));
+    expect(pub.headers.get("location")).toBeNull();
+  });
+
   it("lets unknown paths through so the router can return a 404", async () => {
     const res = await proxy(request("/no-existe"));
     expect(res.headers.get("location")).toBeNull();

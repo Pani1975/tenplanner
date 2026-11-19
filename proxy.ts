@@ -47,6 +47,7 @@ const PRIVATE_PAGE_PREFIXES = [
   "/sessions",
   "/setup",
   "/students",
+  "/torneos",
 ];
 const RECOVERABLE_REFRESH_TOKEN_ERRORS = new Set([
   "refresh_token_already_used",
