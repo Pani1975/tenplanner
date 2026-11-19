@@ -31,7 +31,12 @@ import {
   orderForDraw,
   type BracketMatch,
 } from "./bracket";
-import { consentRecord, type ConsentRecord } from "./consent";
+import {
+  asPartnerConsent,
+  consentRecord,
+  isConsentComplete,
+  type ConsentRecord,
+} from "./consent";
 import {
   allocateNew,
   findDuplicates,
@@ -442,6 +447,8 @@ export async function updateTournament(
           status: tournamentEntries.status,
           createdAt: tournamentEntries.createdAt,
           consentAt: tournamentEntries.consentAt,
+          partnerFirstName: tournamentEntries.partnerFirstName,
+          partnerConsentAt: tournamentEntries.partnerConsentAt,
         })
         .from(tournamentEntries)
         .where(eq(tournamentEntries.tournamentId, id)),
@@ -556,13 +563,13 @@ export async function updateTournament(
           id: e.id,
           status: e.status,
           createdAt: e.createdAt,
-          hasConsent: !!e.consentAt,
+          hasConsent: isConsentComplete(e),
         })),
         maxEntries
       );
       await applyPromotions(tx, promoted);
     }
-    return { tournament: row, promoted };
+    return { tournament: row, promoted, previousStatus: t.status };
   });
 }
 
@@ -770,6 +777,8 @@ export async function existingIdentities(tx: Tx, tournamentId: string) {
       partnerPhone: tournamentEntries.partnerPhone,
       createdAt: tournamentEntries.createdAt,
       consentAt: tournamentEntries.consentAt,
+      partnerFirstName: tournamentEntries.partnerFirstName,
+      partnerConsentAt: tournamentEntries.partnerConsentAt,
     })
     .from(tournamentEntries)
     .where(eq(tournamentEntries.tournamentId, tournamentId));
@@ -873,7 +882,8 @@ export async function addSchoolEntries(
     const skipped = input.items
       .filter((_, i) => dupIdx.has(i))
       .map((i) => ({ studentId: i.studentId, reason: "duplicate" as const }));
-    if (!fresh.length) return { added: [], skipped };
+    if (!fresh.length)
+      return { added: [], skipped, isDraft: locked.status === "draft" };
 
     const now = new Date();
     const statuses = allocateNew(
@@ -928,6 +938,7 @@ export async function addSchoolEntries(
         partnerGuardianPhone: q?.guardianPhone ?? null,
         status,
         ...(consent ?? {}),
+        ...(consent && q ? asPartnerConsent(consent) : {}),
         confirmedAt: status === "confirmed" ? now : null,
       };
     });
@@ -936,7 +947,7 @@ export async function addSchoolEntries(
       studentId: tournamentEntries.studentId,
       status: tournamentEntries.status,
     });
-    return { added, skipped };
+    return { added, skipped, isDraft: locked.status === "draft" };
   });
 }
 
@@ -1023,6 +1034,7 @@ export async function addManualEntry(
         partnerGuardianPhone: qc?.guardianPhone ?? null,
         status,
         ...(consent ?? {}),
+        ...(consent && q ? asPartnerConsent(consent) : {}),
         confirmedAt: status === "confirmed" ? now : null,
       })
       .returning();
@@ -1100,6 +1112,8 @@ export async function updateEntry(
         .update(tournamentEntries)
         .set({
           ...r.record,
+          // El monitor declara por toda la inscripción (también la pareja).
+          ...(full.partnerFirstName ? asPartnerConsent(r.record) : {}),
           ...(entry.status === "pending" && {
             status: "confirmed",
             confirmedAt: new Date(),
@@ -1127,7 +1141,7 @@ export async function updateEntry(
         id: e.id,
         status: e.status,
         createdAt: e.createdAt,
-        hasConsent: !!e.consentAt,
+        hasConsent: isConsentComplete(e),
       })),
       t.maxEntries
     );

@@ -3671,7 +3671,7 @@
       "addExternal": "Jugador externo",
       "entriesLocked": "El torneo ya ha empezado: las inscripciones no se pueden cambiar.",
       "noEntries": "Aún no hay inscritos. Añade alumnos de tu escuela o un jugador externo.",
-      "pendingHelp": "Ocupan plaza, pero no entran en el cuadro hasta tener el consentimiento.",
+      "pendingHelp": "Ocupan plaza, pero no entran en el cuadro hasta tener el consentimiento. Las familias con cuenta pueden darlo desde su menú Torneos; también puedes declararlo tú.",
       "cancelTitle": "¿Cancelar la inscripción?",
       "cancelText": "{name} deja de estar inscrito. Si hay lista de espera, entra el primero.",
       "cancelConfirm": "Cancelar inscripción",
@@ -3727,7 +3727,7 @@
       "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}",
       "missingPartner": "falta pareja",
       "consent": "Tengo el consentimiento de estos alumnos (o de sus padres o tutores, si son menores) para que participen en el torneo. Queda registrado con mi nombre y la fecha.",
-      "noConsentNote": "Sin marcarlo, quedan pendientes: ocupan plaza, pero no entran en el cuadro.",
+      "noConsentNote": "Sin marcarlo, quedan pendientes: ocupan plaza, pero no entran en el cuadro. Las familias con cuenta reciben un aviso y pueden darlo desde su menú Torneos.",
       "cancel": "Cancelar",
       "submit": "{count, plural, =0 {Añadir} one {Añadir # alumno} other {Añadir # alumnos}}",
       "submitPairs": "{count, plural, =0 {Añadir} one {Añadir # pareja} other {Añadir # parejas}}",
@@ -3959,6 +3959,19 @@
         "upcoming": "No hay torneos próximos.",
         "past": "Aún no hay torneos pasados."
       }
+    },
+    "familyConsent": {
+      "kicker": "Falta tu consentimiento",
+      "badge": "falta tu consentimiento",
+      "title": "Inscripción de {player}",
+      "text": "{organizer} ha inscrito a {player} en «{tournament}». Para que participe hace falta tu consentimiento como padre, madre o tutor (o el tuyo, si eres el jugador). Sus datos se usan solo para organizar el torneo y en la página del torneo solo aparece su nombre y las iniciales de los apellidos.",
+      "theOrganizer": "El organizador",
+      "consent": "Doy mi consentimiento",
+      "decline": "No participará",
+      "declineTitle": "¿{player} no participará?",
+      "declineText": "Se cancela la inscripción y, si hay lista de espera, entra el siguiente.",
+      "given": "Consentimiento registrado. ¡Gracias!",
+      "declined": "Inscripción cancelada."
     }
   }
 }

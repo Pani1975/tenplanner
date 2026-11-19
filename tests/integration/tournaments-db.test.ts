@@ -110,7 +110,7 @@ if (!enabled) {
         items: [{ studentId: group.studentIds[0] }],
         consentDeclared: true,
       });
-      expect(r2).toEqual({
+      expect(r2).toMatchObject({
         added: [],
         skipped: [{ studentId: group.studentIds[0], reason: "duplicate" }],
       });
@@ -571,6 +571,96 @@ if (!enabled) {
         await db
           .delete(schema.studentGuardians)
           .where(eq(schema.studentGuardians.id, g.id));
+      }
+    });
+
+    it("consentimiento de la familia: dobles, cada uno el suyo; y rechazar", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT consentimiento familia",
+        description: null,
+        startDate: futureDay(35),
+        modality: "doubles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+      const cand = await s.listCandidates(o, t.id);
+      const [a, b, c, d] = cand.students.map((x) => x.id);
+      await s.addSchoolEntries(o, t.id, {
+        kind: "school",
+        items: [
+          { studentId: a, partnerStudentId: b },
+          { studentId: c, partnerStudentId: d },
+        ],
+        consentDeclared: false,
+      });
+      const guardians = await db
+        .insert(schema.studentGuardians)
+        .values(
+          [a, b, c].map((studentId) => ({
+            studentId,
+            userId: user.id,
+            name: "IT tutora",
+            relationship: "madre",
+          }))
+        )
+        .returning({ id: schema.studentGuardians.id });
+      try {
+        await s.updateTournament(o, t.id, { status: "open" });
+        const entries = (await s.getTournamentDetail(o, t.id)).entries;
+        const pair1 = entries.find((e) => e.studentId === a)!;
+        const pair2 = entries.find((e) => e.studentId === c)!;
+        expect(pair1.status).toBe("pending");
+
+        // La familia ve los consentimientos que le tocan.
+        const listed = (
+          await fam.listFamilyTournaments(user.id)
+        ).tournaments.find((x) => x.slug === t.slug)!;
+        expect(listed.mine.filter((m) => m.needsConsent)).toHaveLength(3);
+
+        // Una cuenta sin vínculo: como si no existiera.
+        await expect(
+          fam.familyRespond(crypto.randomUUID(), pair1.id, "player", "consent")
+        ).rejects.toMatchObject({ code: "not_found" });
+        // Sin vínculo con la pareja de la 2.ª inscripción (d).
+        await expect(
+          fam.familyRespond(user.id, pair2.id, "partner", "consent")
+        ).rejects.toMatchObject({ code: "not_found" });
+
+        // Primero el jugador: sigue pendiente; luego la pareja: confirmada.
+        expect(
+          (await fam.familyRespond(user.id, pair1.id, "player", "consent"))
+            .status
+        ).toBe("pending");
+        expect(
+          (await fam.familyRespond(user.id, pair1.id, "partner", "consent"))
+            .status
+        ).toBe("confirmed");
+        const [row] = await db
+          .select()
+          .from(schema.tournamentEntries)
+          .where(eq(schema.tournamentEntries.id, pair1.id));
+        expect(row).toMatchObject({
+          consentMethod: "guardian_link",
+          partnerConsentMethod: "guardian_link",
+          consentByName: "IT tutora",
+          consentByUserId: user.id,
+        });
+
+        // Rechazar: se cancela la inscripción.
+        expect(
+          (await fam.familyRespond(user.id, pair2.id, "player", "decline"))
+            .status
+        ).toBe("cancelled");
+      } finally {
+        await db.delete(schema.studentGuardians).where(
+          inArray(
+            schema.studentGuardians.id,
+            guardians.map((g) => g.id)
+          )
+        );
       }
     });
 

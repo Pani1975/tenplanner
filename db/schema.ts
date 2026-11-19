@@ -2740,6 +2740,14 @@ export const tournamentEntries = pgTable(
       onDelete: "set null",
     }),
     consentByName: varchar("consent_by_name", { length: 120 }),
+    // Consentimiento de la pareja (dobles), por su propio representante.
+    partnerConsentAt: timestamp("partner_consent_at", { withTimezone: true }),
+    partnerConsentMethod: varchar("partner_consent_method", { length: 20 }),
+    partnerConsentByUserId: uuid("partner_consent_by_user_id").references(
+      () => users.id,
+      { onDelete: "set null" }
+    ),
+    partnerConsentByName: varchar("partner_consent_by_name", { length: 120 }),
     // Para que quien se inscribe por enlace pueda cancelar desde el correo.
     cancelToken: varchar("cancel_token", { length: 64 }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),

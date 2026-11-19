@@ -67,3 +67,30 @@ function build(
   ].join("\n");
   return { subject, html, text };
 }
+
+/** A la familia: su jugador está inscrito y falta su consentimiento. */
+export function consentRequestEmail(c: {
+  playerName: string;
+  tournamentName: string;
+  organizer: string | null;
+  url: string;
+}) {
+  const greeting = `Inscripción de ${c.playerName}`;
+  const paragraphs = [
+    `${c.organizer ?? "Su club o monitor"} ha inscrito a ${c.playerName} en el torneo «${c.tournamentName}».`,
+    "Para que participe hace falta su consentimiento. Puede darlo, o indicar que no participará, desde el menú Torneos de su cuenta.",
+  ];
+  const html = renderActionEmailHtml({
+    greeting,
+    paragraphs,
+    buttonLabel: "Revisar la inscripción",
+    buttonUrl: c.url,
+    footnote: "Si no reconoce este torneo, puede ignorar este correo.",
+  });
+  const text = [greeting, "", ...paragraphs, "", c.url].join("\n");
+  return {
+    subject: `Falta su consentimiento · ${c.tournamentName}`,
+    html,
+    text,
+  };
+}

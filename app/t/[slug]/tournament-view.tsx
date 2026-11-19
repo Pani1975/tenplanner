@@ -19,10 +19,13 @@ export async function TournamentView({
   t,
   withRegistration,
   top,
+  notice,
 }: {
   t: PublicTournament;
   withRegistration: boolean;
   top?: React.ReactNode;
+  // Avisos al principio del contenido (p. ej. consentimientos pendientes).
+  notice?: React.ReactNode;
 }) {
   const [tr, locale, levels] = await Promise.all([
     getTranslations("tournaments"),
@@ -98,6 +101,7 @@ export async function TournamentView({
       </header>
 
       <main className="mx-auto -mt-5 max-w-3xl space-y-5 px-4 pb-16">
+        {notice}
         <section className="tp-card grid grid-cols-2 gap-3 p-5 sm:grid-cols-3">
           <Stat
             label={tr("public.registered")}

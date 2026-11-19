@@ -126,7 +126,10 @@ export default async function FamilyTournamentsPage({ searchParams }: Props) {
                               ENTRY_BADGE[m.status]
                             )}
                           >
-                            {m.player}: {t(`entryStatus.${m.status}`)}
+                            {m.player}:{" "}
+                            {m.needsConsent
+                              ? t("familyConsent.badge")
+                              : t(`entryStatus.${m.status}`)}
                           </span>
                         ))}
                         <ChevronRight className="ml-auto size-4 text-foreground/40" />

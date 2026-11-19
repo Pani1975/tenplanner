@@ -13,3 +13,41 @@ DO $$ BEGIN
       CHECK ("visibility" IN ('public', 'private'));
   END IF;
 END $$;
+--> statement-breakpoint
+-- Dobles: el consentimiento de cada jugador lo da su propio representante
+-- legal. Los campos consent_* son del jugador; estos, de la pareja. La
+-- inscripción se confirma cuando están los dos.
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_consent_at" timestamp with time zone;
+--> statement-breakpoint
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_consent_method" varchar(20);
+--> statement-breakpoint
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_consent_by_user_id" uuid;
+--> statement-breakpoint
+ALTER TABLE "tournament_entries" ADD COLUMN IF NOT EXISTS "partner_consent_by_name" varchar(120);
+--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_entries_partner_consent_by_user_id_fk') THEN
+    ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_partner_consent_by_user_id_fk"
+      FOREIGN KEY ("partner_consent_by_user_id") REFERENCES "public"."users"("id") ON DELETE set null;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_entries_partner_consent_method_chk') THEN
+    ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_partner_consent_method_chk"
+      CHECK ("partner_consent_method" IS NULL OR "partner_consent_method" IN ('form', 'coach_declared', 'guardian_link'));
+  END IF;
+END $$;
+--> statement-breakpoint
+-- Inscripciones ya existentes de dobles: el consentimiento que tenían
+-- cubría a la pareja (lo daba el monitor o el formulario).
+UPDATE "tournament_entries"
+  SET "partner_consent_at" = "consent_at",
+      "partner_consent_method" = "consent_method",
+      "partner_consent_by_user_id" = "consent_by_user_id",
+      "partner_consent_by_name" = "consent_by_name"
+  WHERE "partner_first_name" IS NOT NULL AND "consent_at" IS NOT NULL AND "partner_consent_at" IS NULL;
+--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_entries_confirmed_partner_consent_chk') THEN
+    ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_confirmed_partner_consent_chk"
+      CHECK ("status" <> 'confirmed' OR "partner_first_name" IS NULL OR "partner_consent_at" IS NOT NULL);
+  END IF;
+END $$;

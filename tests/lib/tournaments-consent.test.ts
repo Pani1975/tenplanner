@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  asPartnerConsent,
   consentRecord,
+  isConsentComplete,
   isDirectConsent,
   TOURNAMENT_CONSENT_VERSION,
 } from "@/lib/tournaments/consent";
@@ -52,5 +54,44 @@ describe("isDirectConsent", () => {
     expect(isDirectConsent("guardian_link")).toBe(true);
     expect(isDirectConsent("coach_declared")).toBe(false);
     expect(isDirectConsent(null)).toBe(false);
+  });
+});
+
+describe("isConsentComplete / asPartnerConsent", () => {
+  it("individual: basta el del jugador", () => {
+    expect(isConsentComplete({ consentAt: null })).toBe(false);
+    expect(isConsentComplete({ consentAt: new Date() })).toBe(true);
+  });
+
+  it("dobles: hacen falta los dos", () => {
+    const now = new Date();
+    expect(
+      isConsentComplete({
+        consentAt: now,
+        partnerFirstName: "Iván",
+        partnerConsentAt: null,
+      })
+    ).toBe(false);
+    expect(
+      isConsentComplete({
+        consentAt: now,
+        partnerFirstName: "Iván",
+        partnerConsentAt: now,
+      })
+    ).toBe(true);
+  });
+
+  it("copia el consentimiento a los campos de la pareja", () => {
+    const r = consentRecord({
+      method: "form",
+      byName: "Ana",
+      now: new Date("2026-11-19T10:00:00Z"),
+    });
+    expect(r.ok && asPartnerConsent(r.record)).toEqual({
+      partnerConsentAt: new Date("2026-11-19T10:00:00Z"),
+      partnerConsentMethod: "form",
+      partnerConsentByUserId: null,
+      partnerConsentByName: "Ana",
+    });
   });
 });

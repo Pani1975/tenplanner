@@ -4,7 +4,11 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { TournamentView } from "@/app/t/[slug]/tournament-view";
 import { createClient } from "@/lib/supabase/server";
-import { getTournamentForFamily } from "@/lib/tournaments/family";
+import {
+  getTournamentForFamily,
+  listFamilyTournaments,
+} from "@/lib/tournaments/family";
+import { ConsentCard } from "../consent-card";
 import { getPublicTournament } from "@/lib/tournaments/public";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -24,9 +28,12 @@ export default async function FamilyTournamentPage({ params }: Props) {
 
   const allowed = await getTournamentForFamily(user.id, slug);
   if (!allowed) notFound();
-  const [t, tr] = await Promise.all([
+  const [t, tr, mine] = await Promise.all([
     getPublicTournament(slug, { allowPrivate: true }),
     getTranslations("tournaments"),
+    listFamilyTournaments(user.id).then(
+      (r) => r.tournaments.find((x) => x.slug === slug)?.mine ?? []
+    ),
   ]);
   if (!t) notFound();
 
@@ -34,6 +41,18 @@ export default async function FamilyTournamentPage({ params }: Props) {
     <TournamentView
       t={t}
       withRegistration={false}
+      notice={mine
+        .filter((m) => m.needsConsent)
+        .map((m) => (
+          <ConsentCard
+            key={`${m.entryId}-${m.side}`}
+            entryId={m.entryId}
+            side={m.side}
+            player={m.player}
+            tournamentName={t.name}
+            organizer={t.organizer}
+          />
+        ))}
       top={
         <Link
           href="/mi-familia/torneos"

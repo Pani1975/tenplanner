@@ -12,8 +12,16 @@ import {
   tournamentEntries,
   tournaments,
 } from "@/db/schema";
-import { statusOf, type TournamentRow } from "./server";
-import type { TournamentStatus } from "./status";
+import { asPartnerConsent, consentRecord, isConsentComplete } from "./consent";
+import { promoteFromWaitlist } from "./entries";
+import {
+  applyPromotions,
+  existingIdentities,
+  statusOf,
+  TournamentError,
+  type TournamentRow,
+} from "./server";
+import { canEditEntries, type TournamentStatus } from "./status";
 import { timelineTab, todayInMadrid, type TimelineTab } from "./timeline";
 
 type Linked = {
@@ -80,8 +88,17 @@ export type FamilyTournament = {
   format: "knockout" | "round_robin";
   circuit: string | null;
   tab: TimelineTab;
-  // Inscripciones de los alumnos de la familia en este torneo.
-  mine: { player: string; status: string }[];
+  // Inscripciones de los alumnos de la familia en este torneo. needsConsent:
+  // falta el consentimiento de ese jugador y lo puede dar esta cuenta.
+  mine: FamilyEntry[];
+};
+
+export type FamilyEntry = {
+  entryId: string;
+  side: "player" | "partner";
+  player: string;
+  status: string;
+  needsConsent: boolean;
 };
 
 export async function listFamilyTournaments(
@@ -106,10 +123,13 @@ export async function listFamilyTournaments(
   const ids = linked.map((s) => s.id);
   const entries = await db
     .select({
+      id: tournamentEntries.id,
       tournamentId: tournamentEntries.tournamentId,
       studentId: tournamentEntries.studentId,
       partnerStudentId: tournamentEntries.partnerStudentId,
       status: tournamentEntries.status,
+      consentAt: tournamentEntries.consentAt,
+      partnerConsentAt: tournamentEntries.partnerConsentAt,
     })
     .from(tournamentEntries)
     .where(
@@ -149,9 +169,26 @@ export async function listFamilyTournaments(
         mine: entries
           .filter((e) => e.tournamentId === t.id)
           .flatMap((e) =>
-            [e.studentId, e.partnerStudentId]
-              .filter((id): id is string => !!id && firstName.has(id))
-              .map((id) => ({ player: firstName.get(id)!, status: e.status }))
+            (
+              [
+                ["player", e.studentId, e.consentAt],
+                ["partner", e.partnerStudentId, e.partnerConsentAt],
+              ] as const
+            )
+              .filter(([, id]) => !!id && firstName.has(id))
+              .map(([side, id, consentAt]) => ({
+                entryId: e.id,
+                side,
+                player: firstName.get(id!)!,
+                status: e.status,
+                needsConsent:
+                  !consentAt &&
+                  (e.status === "pending" || e.status === "waitlist") &&
+                  canEditEntries({
+                    status: t.status as TournamentStatus,
+                    registrationDeadline: t.registrationDeadline,
+                  }),
+              }))
           ),
       };
     }),
@@ -177,4 +214,104 @@ export async function getTournamentForFamily(userId: string, slug: string) {
     .limit(1);
   if (!t || !(await familyCanView(userId, t))) return null;
   return t;
+}
+
+/**
+ * La familia (o el jugador adulto) da su consentimiento o dice que su
+ * jugador no participa. Solo puede hacerlo un tutor activo del alumno de ese
+ * lado de la inscripción y mientras no haya empezado el torneo.
+ */
+export async function familyRespond(
+  userId: string,
+  entryId: string,
+  side: "player" | "partner",
+  action: "consent" | "decline"
+) {
+  return db.transaction(async (tx) => {
+    const [e] = await tx
+      .select()
+      .from(tournamentEntries)
+      .where(eq(tournamentEntries.id, entryId))
+      .limit(1);
+    if (!e) throw new TournamentError("not_found", 404);
+    const studentId = side === "player" ? e.studentId : e.partnerStudentId;
+    if (!studentId) throw new TournamentError("not_found", 404);
+
+    const [guardian] = await tx
+      .select({ name: studentGuardians.name })
+      .from(studentGuardians)
+      .where(
+        and(
+          eq(studentGuardians.userId, userId),
+          eq(studentGuardians.studentId, studentId),
+          isNull(studentGuardians.revokedAt)
+        )
+      )
+      .limit(1);
+    // Sin vínculo: como si no existiera (no se revela nada).
+    if (!guardian) throw new TournamentError("not_found", 404);
+
+    const [t] = (await tx
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, e.tournamentId))
+      .for("update")
+      .limit(1)) as TournamentRow[];
+    if (
+      !canEditEntries({
+        status: t.status as TournamentStatus,
+        registrationDeadline: t.registrationDeadline,
+      })
+    ) {
+      throw new TournamentError("entries_locked", 409);
+    }
+    if (e.status === "cancelled") {
+      throw new TournamentError("entry_cancelled", 409);
+    }
+
+    if (action === "decline") {
+      await tx
+        .update(tournamentEntries)
+        .set({ status: "cancelled", cancelledAt: new Date() })
+        .where(eq(tournamentEntries.id, entryId));
+      const all = await existingIdentities(tx, t.id);
+      const promoted = promoteFromWaitlist(
+        all.map((x) => ({
+          id: x.id,
+          status: x.status,
+          createdAt: x.createdAt,
+          hasConsent: isConsentComplete(x),
+        })),
+        t.maxEntries
+      );
+      await applyPromotions(tx, promoted);
+      return { status: "cancelled" as const, promoted };
+    }
+
+    const r = consentRecord({
+      method: "guardian_link",
+      byUserId: userId,
+      byName: guardian.name,
+    });
+    if (!r.ok) throw new TournamentError(r.error, 400);
+    const fields = side === "player" ? r.record : asPartnerConsent(r.record);
+    const after = {
+      consentAt: side === "player" ? r.record.consentAt : e.consentAt,
+      partnerFirstName: e.partnerFirstName,
+      partnerConsentAt:
+        side === "partner" ? r.record.consentAt : e.partnerConsentAt,
+    };
+    const confirm = e.status === "pending" && isConsentComplete(after);
+    await tx
+      .update(tournamentEntries)
+      .set({
+        ...fields,
+        ...(confirm && { status: "confirmed", confirmedAt: new Date() }),
+      })
+      .where(eq(tournamentEntries.id, entryId));
+    return {
+      status: (confirm ? "confirmed" : e.status) as string,
+      promoted: [],
+    };
+  });
 }

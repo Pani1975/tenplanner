@@ -22,7 +22,7 @@ import {
   playerKey,
   type CircuitTournament,
 } from "./circuit";
-import { consentRecord } from "./consent";
+import { asPartnerConsent, consentRecord, isConsentComplete } from "./consent";
 import {
   allocateNew,
   findDuplicates,
@@ -125,6 +125,7 @@ export async function getPublicTournament(
         partnerLastName: tournamentEntries.partnerLastName,
         createdAt: tournamentEntries.createdAt,
         consentAt: tournamentEntries.consentAt,
+        partnerConsentAt: tournamentEntries.partnerConsentAt,
       })
       .from(tournamentEntries)
       .where(
@@ -164,7 +165,7 @@ export async function getPublicTournament(
     id: e.id,
     status: e.status as EntryStatus,
     createdAt: e.createdAt,
-    hasConsent: !!e.consentAt,
+    hasConsent: isConsentComplete(e),
   }));
   const names = new Map(entries.map((e) => [e.id, teamName(e)]));
   const inField = entries.filter(
@@ -334,6 +335,7 @@ export async function registerPublic(
         partnerGuardianPhone: qc?.guardianPhone ?? null,
         status,
         ...consent.record,
+        ...(q ? asPartnerConsent(consent.record) : {}),
         cancelToken,
         confirmedAt: status === "confirmed" ? now : null,
       })
@@ -351,7 +353,7 @@ export async function registerPublic(
                 id: e.id,
                 status: e.status,
                 createdAt: e.createdAt,
-                hasConsent: !!e.consentAt,
+                hasConsent: isConsentComplete(e),
               })),
               {
                 id: row.id,
@@ -439,7 +441,7 @@ export async function cancelByToken(token: string) {
         id: e.id,
         status: e.status,
         createdAt: e.createdAt,
-        hasConsent: !!e.consentAt,
+        hasConsent: isConsentComplete(e),
       })),
       t.maxEntries
     );

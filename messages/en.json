@@ -4060,7 +4060,7 @@
       "addExternal": "Outside player",
       "entriesLocked": "The tournament has started: entries can't change.",
       "noEntries": "No entries yet. Add students from your school or an outside player.",
-      "pendingHelp": "They hold a spot but don't enter the draw until there is consent.",
+      "pendingHelp": "They hold a spot but don't enter the draw until there is consent. Families with an account can give it from their Tournaments menu; you can also declare it.",
       "cancelTitle": "Cancel the entry?",
       "cancelText": "{name} will no longer be entered. If there is a waiting list, the first one gets in.",
       "cancelConfirm": "Cancel entry",
@@ -4116,7 +4116,7 @@
       "selected": "{count} selected",
       "missingPartner": "partner missing",
       "consent": "I have consent from these students (or their parents or guardians, if they are minors) to take part in the tournament. It's recorded with my name and the date.",
-      "noConsentNote": "If unticked, they stay pending: they hold a spot but don't enter the draw.",
+      "noConsentNote": "If unticked, they stay pending: they hold a spot but don't enter the draw. Families with an account get a notice and can give it from their Tournaments menu.",
       "cancel": "Cancel",
       "submit": "{count, plural, =0 {Add} one {Add # student} other {Add # students}}",
       "submitPairs": "{count, plural, =0 {Add} one {Add # pair} other {Add # pairs}}",
@@ -4348,6 +4348,19 @@
         "upcoming": "No upcoming tournaments.",
         "past": "No past tournaments yet."
       }
+    },
+    "familyConsent": {
+      "kicker": "Your consent is needed",
+      "badge": "your consent is needed",
+      "title": "{player}'s entry",
+      "text": "{organizer} has entered {player} in “{tournament}”. To take part, your consent as parent or guardian is needed (or yours, if you are the player). The data is only used to run the tournament, and the tournament page only shows the first name and the initials of the surnames.",
+      "theOrganizer": "The organiser",
+      "consent": "I give my consent",
+      "decline": "Won't take part",
+      "declineTitle": "{player} won't take part?",
+      "declineText": "The entry is cancelled and, if there is a waiting list, the next one gets in.",
+      "given": "Consent recorded. Thank you!",
+      "declined": "Entry cancelled."
     }
   }
 }
