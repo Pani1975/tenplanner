@@ -53,6 +53,10 @@ export default async function TorneoPage({ params }: Props) {
         registrationDeadline: t.registrationDeadline?.toISOString() ?? null,
         maxEntries: t.maxEntries,
         isClub: t.clubId !== null,
+        visibility: t.visibility as "public" | "private",
+        photosPublic: t.photosPublic,
+        posterTemplate: t.posterTemplate as "classic" | "court" | "image",
+        hasPosterImage: !!t.posterImagePath,
         circuit: t.circuit,
         description: t.description,
         rules: {
@@ -88,6 +92,7 @@ export default async function TorneoPage({ params }: Props) {
         createdAt: e.createdAt.toISOString(),
         contactsHidden: e.contactsHidden,
         seed: e.seed,
+        image: e.image,
       }))}
       matches={detail.matches.map((m) => ({
         id: m.id,

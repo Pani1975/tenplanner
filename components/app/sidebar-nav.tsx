@@ -255,6 +255,7 @@ function PlatformBadge() {
 const familyNavItems: NavItem[] = [
   { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/mi-familia/jugador", label: "Jugador", icon: UserRound },
+  { href: "/mi-familia/torneos", label: "Torneos", icon: Trophy },
   { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/profile", label: "Perfil", icon: UserCircle },
   { href: "/mi-familia/informes", label: "Informes", icon: FileText },

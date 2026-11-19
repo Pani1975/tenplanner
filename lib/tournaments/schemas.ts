@@ -33,6 +33,9 @@ const tournamentFields = {
   modality: z.enum(["singles", "doubles"]),
   levelCode: z.string().max(32).optional().nullable(),
   format: z.enum(["knockout", "round_robin"]),
+  visibility: z.enum(["public", "private"]).optional(),
+  photosPublic: z.boolean().optional(),
+  posterTemplate: z.enum(["classic", "court", "image"]).optional(),
   ...scoringFields,
   // Independiente (null) o de un circuito: uno existente (circuitId) o uno
   // nuevo que se crea al guardar (newCircuit).
@@ -183,6 +186,8 @@ export const addManualEntrySchema = z
     partner: z.object(person).optional().nullable(),
     levelCode: z.string().max(32).optional().nullable(),
     consentDeclared: z.boolean(),
+    // Autorización de imagen (opcional; aparte del consentimiento).
+    imageConsent: z.boolean().optional(),
   })
   .superRefine((v, ctx) => {
     checkContact(v.player, ctx, ["player"]);
@@ -236,6 +241,8 @@ export const publicRegistrationSchema = z
     partner: z.object(person).optional().nullable(),
     levelCode: z.string().max(32).optional().nullable(),
     consent: z.literal(true),
+    // Autorización de imagen: opcional, aparte del consentimiento.
+    imageConsent: z.boolean().optional(),
     website: z.string().max(0).optional(),
   })
   .superRefine((v, ctx) => {

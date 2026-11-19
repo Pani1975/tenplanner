@@ -20,6 +20,7 @@ import {
   tournaments,
 } from "@/db/schema";
 import { getActiveWorkClubId, getOwnedClub } from "@/lib/clubs";
+import { imageConsentStatus } from "./image-consent";
 import { canSeeContacts, redactEntry } from "./privacy";
 import { getActiveSport } from "@/lib/sports";
 import { scaleSportFor } from "@/lib/skill-levels";
@@ -31,7 +32,12 @@ import {
   orderForDraw,
   type BracketMatch,
 } from "./bracket";
-import { consentRecord, type ConsentRecord } from "./consent";
+import {
+  asPartnerConsent,
+  consentRecord,
+  isConsentComplete,
+  type ConsentRecord,
+} from "./consent";
 import {
   allocateNew,
   findDuplicates,
@@ -314,9 +320,45 @@ export async function getTournamentDetail(o: Organizer, id: string) {
           .then((r) => r[0] ?? null)
       : Promise.resolve(null),
   ]);
+  // Autorización de imagen de los alumnos inscritos (está en su ficha).
+  const studentIds = [
+    ...new Set(
+      entries.flatMap((e) =>
+        [e.studentId, e.partnerStudentId].filter((x): x is string => !!x)
+      )
+    ),
+  ];
+  const imageByStudent = new Map(
+    studentIds.length
+      ? (
+          await db
+            .select({ id: students.id, consent: students.imageConsent })
+            .from(students)
+            .where(inArray(students.id, studentIds))
+        ).map((r) => [r.id, r.consent] as const)
+      : []
+  );
   return {
     tournament: { ...t, effectiveStatus: statusOf(t), circuit },
-    entries: entries.map((e) => redactEntry(e, o.canSeeContacts)),
+    entries: entries.map((e) => ({
+      ...redactEntry(e, o.canSeeContacts),
+      image: {
+        player: imageConsentStatus({
+          isStudent: !!e.studentId,
+          studentConsent: e.studentId ? imageByStudent.get(e.studentId) : null,
+          entryConsentAt: e.imageConsentAt,
+        }),
+        partner: e.partnerFirstName
+          ? imageConsentStatus({
+              isStudent: !!e.partnerStudentId,
+              studentConsent: e.partnerStudentId
+                ? imageByStudent.get(e.partnerStudentId)
+                : null,
+              entryConsentAt: e.partnerImageConsentAt,
+            })
+          : null,
+      },
+    })),
     matches,
   };
 }
@@ -413,6 +455,7 @@ export async function createTournament(
             : null,
           placeIds: input.placeIds ?? null,
           circuitId,
+          visibility: input.visibility ?? "public",
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
           finalSet: input.finalSet,
@@ -441,6 +484,8 @@ export async function updateTournament(
           status: tournamentEntries.status,
           createdAt: tournamentEntries.createdAt,
           consentAt: tournamentEntries.consentAt,
+          partnerFirstName: tournamentEntries.partnerFirstName,
+          partnerConsentAt: tournamentEntries.partnerConsentAt,
         })
         .from(tournamentEntries)
         .where(eq(tournamentEntries.tournamentId, id)),
@@ -536,6 +581,13 @@ export async function updateTournament(
         }),
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
         ...(circuitId !== undefined && { circuitId }),
+        ...(input.visibility !== undefined && { visibility: input.visibility }),
+        ...(input.photosPublic !== undefined && {
+          photosPublic: input.photosPublic,
+        }),
+        ...(input.posterTemplate !== undefined && {
+          posterTemplate: input.posterTemplate,
+        }),
         ...(input.bestOf !== undefined && { bestOf: input.bestOf }),
         ...(input.gamesPerSet !== undefined && {
           gamesPerSet: input.gamesPerSet,
@@ -554,13 +606,13 @@ export async function updateTournament(
           id: e.id,
           status: e.status,
           createdAt: e.createdAt,
-          hasConsent: !!e.consentAt,
+          hasConsent: isConsentComplete(e),
         })),
         maxEntries
       );
       await applyPromotions(tx, promoted);
     }
-    return { tournament: row, promoted };
+    return { tournament: row, promoted, previousStatus: t.status };
   });
 }
 
@@ -768,6 +820,8 @@ export async function existingIdentities(tx: Tx, tournamentId: string) {
       partnerPhone: tournamentEntries.partnerPhone,
       createdAt: tournamentEntries.createdAt,
       consentAt: tournamentEntries.consentAt,
+      partnerFirstName: tournamentEntries.partnerFirstName,
+      partnerConsentAt: tournamentEntries.partnerConsentAt,
     })
     .from(tournamentEntries)
     .where(eq(tournamentEntries.tournamentId, tournamentId));
@@ -871,7 +925,8 @@ export async function addSchoolEntries(
     const skipped = input.items
       .filter((_, i) => dupIdx.has(i))
       .map((i) => ({ studentId: i.studentId, reason: "duplicate" as const }));
-    if (!fresh.length) return { added: [], skipped };
+    if (!fresh.length)
+      return { added: [], skipped, isDraft: locked.status === "draft" };
 
     const now = new Date();
     const statuses = allocateNew(
@@ -926,6 +981,7 @@ export async function addSchoolEntries(
         partnerGuardianPhone: q?.guardianPhone ?? null,
         status,
         ...(consent ?? {}),
+        ...(consent && q ? asPartnerConsent(consent) : {}),
         confirmedAt: status === "confirmed" ? now : null,
       };
     });
@@ -934,7 +990,7 @@ export async function addSchoolEntries(
       studentId: tournamentEntries.studentId,
       status: tournamentEntries.status,
     });
-    return { added, skipped };
+    return { added, skipped, isDraft: locked.status === "draft" };
   });
 }
 
@@ -1006,6 +1062,8 @@ export async function addManualEntry(
       .values({
         tournamentId: id,
         source: "manual",
+        imageConsentAt: input.imageConsent ? new Date() : null,
+        partnerImageConsentAt: input.imageConsent && q ? new Date() : null,
         firstName: p.firstName,
         lastName: p.lastName,
         ...pc,
@@ -1021,6 +1079,7 @@ export async function addManualEntry(
         partnerGuardianPhone: qc?.guardianPhone ?? null,
         status,
         ...(consent ?? {}),
+        ...(consent && q ? asPartnerConsent(consent) : {}),
         confirmedAt: status === "confirmed" ? now : null,
       })
       .returning();
@@ -1098,6 +1157,8 @@ export async function updateEntry(
         .update(tournamentEntries)
         .set({
           ...r.record,
+          // El monitor declara por toda la inscripción (también la pareja).
+          ...(full.partnerFirstName ? asPartnerConsent(r.record) : {}),
           ...(entry.status === "pending" && {
             status: "confirmed",
             confirmedAt: new Date(),
@@ -1125,7 +1186,7 @@ export async function updateEntry(
         id: e.id,
         status: e.status,
         createdAt: e.createdAt,
-        hasConsent: !!e.consentAt,
+        hasConsent: isConsentComplete(e),
       })),
       t.maxEntries
     );

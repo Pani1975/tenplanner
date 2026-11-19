@@ -3671,7 +3671,7 @@
       "addExternal": "Jugador externo",
       "entriesLocked": "El torneo ya ha empezado: las inscripciones no se pueden cambiar.",
       "noEntries": "Aún no hay inscritos. Añade alumnos de tu escuela o un jugador externo.",
-      "pendingHelp": "Ocupan plaza, pero no entran en el cuadro hasta tener el consentimiento.",
+      "pendingHelp": "Ocupan plaza, pero no entran en el cuadro hasta tener el consentimiento. Las familias con cuenta pueden darlo desde su menú Torneos; también puedes declararlo tú.",
       "cancelTitle": "¿Cancelar la inscripción?",
       "cancelText": "{name} deja de estar inscrito. Si hay lista de espera, entra el primero.",
       "cancelConfirm": "Cancelar inscripción",
@@ -3727,7 +3727,7 @@
       "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}",
       "missingPartner": "falta pareja",
       "consent": "Tengo el consentimiento de estos alumnos (o de sus padres o tutores, si son menores) para que participen en el torneo. Queda registrado con mi nombre y la fecha.",
-      "noConsentNote": "Sin marcarlo, quedan pendientes: ocupan plaza, pero no entran en el cuadro.",
+      "noConsentNote": "Sin marcarlo, quedan pendientes: ocupan plaza, pero no entran en el cuadro. Las familias con cuenta reciben un aviso y pueden darlo desde su menú Torneos.",
       "cancel": "Cancelar",
       "submit": "{count, plural, =0 {Añadir} one {Añadir # alumno} other {Añadir # alumnos}}",
       "submitPairs": "{count, plural, =0 {Añadir} one {Añadir # pareja} other {Añadir # parejas}}",
@@ -3758,7 +3758,8 @@
         "pending": "Jugador añadido: pendiente de consentimiento.",
         "waitlist": "Jugador añadido a la lista de espera.",
         "cancelled": "Jugador añadido."
-      }
+      },
+      "imageConsent": "Tengo su autorización de imagen (o la de sus padres o tutores) para las fotos del torneo."
     },
     "errors": {
       "generic": "No se ha podido completar. Inténtalo de nuevo.",
@@ -3807,7 +3808,12 @@
       "super_tiebreak_misplaced": "El super tie-break solo sustituye al set decisivo.",
       "winner_required": "Indica quién gana.",
       "circuit_not_found": "Ese circuito no es tuyo ni de tu club.",
-      "registration_closed": "Las inscripciones están cerradas."
+      "registration_closed": "Las inscripciones están cerradas.",
+      "photo_type": "Formato de imagen no admitido (JPG, PNG o WebP).",
+      "photo_too_big": "La foto pesa demasiado.",
+      "photo_upload_failed": "No se ha podido subir la foto.",
+      "invalid_tags": "Alguna persona etiquetada no está inscrita.",
+      "poster_type": "La imagen del cartel debe ser JPG o PNG."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -3869,7 +3875,8 @@
       "cancelDoneText": "La inscripción en «{tournament}» está cancelada.",
       "cancelInvalid": "Enlace no válido",
       "cancelInvalidText": "Este enlace de cancelación no existe o ha caducado. Contacta con el organizador.",
-      "backToTournament": "Ver el torneo"
+      "backToTournament": "Ver el torneo",
+      "imageConsent": "Opcional: autorizo que aparezcan en las fotos del torneo que publique el organizador (yo, o mi hijo o hija si es menor)."
     },
     "circuit": {
       "kicker": "Circuito",
@@ -3931,6 +3938,157 @@
       "save": "Guardar cambios",
       "saved": "Datos guardados",
       "note": "Si amplías las plazas, entra gente de la lista de espera. Para reabrir un torneo cerrado por plazo, mueve antes la fecha límite."
+    },
+    "visibility": {
+      "title": "Visibilidad",
+      "public": "Público",
+      "private": "Privado",
+      "publicHelp": "Cualquiera con el enlace ve el torneo (sin datos de contacto) y puede inscribirse mientras esté abierto.",
+      "privateHelpClub": "Solo lo ven los jugadores y las familias vinculados al club, desde su menú Torneos. El enlace público no muestra nada y no admite inscripciones.",
+      "privateHelpCoach": "Solo lo ven los jugadores y las familias de tus alumnos, desde su menú Torneos. El enlace público no muestra nada y no admite inscripciones.",
+      "privateHelpShort": "Solo lo ven los jugadores y familias vinculados; sin inscripción por enlace.",
+      "changed": {
+        "public": "El torneo ahora es público",
+        "private": "El torneo ahora es privado"
+      }
+    },
+    "family": {
+      "kicker": "Panel de familias",
+      "intro": "Torneos del club o de tu monitor: inscripciones, cuadros y resultados.",
+      "tabs": "Torneos por fecha",
+      "tab": {
+        "current": "Actuales",
+        "upcoming": "Próximos",
+        "past": "Pasados"
+      },
+      "empty": {
+        "current": "No hay torneos en curso ahora mismo.",
+        "upcoming": "No hay torneos próximos.",
+        "past": "Aún no hay torneos pasados."
+      }
+    },
+    "familyConsent": {
+      "kicker": "Falta tu consentimiento",
+      "badge": "falta tu consentimiento",
+      "title": "Inscripción de {player}",
+      "text": "{organizer} ha inscrito a {player} en «{tournament}». Para que participe hace falta tu consentimiento como padre, madre o tutor (o el tuyo, si eres el jugador). Sus datos se usan solo para organizar el torneo y en la página del torneo solo aparece su nombre y las iniciales de los apellidos.",
+      "theOrganizer": "El organizador",
+      "consent": "Doy mi consentimiento",
+      "decline": "No participará",
+      "declineTitle": "¿{player} no participará?",
+      "declineText": "Se cancela la inscripción y, si hay lista de espera, entra el siguiente.",
+      "given": "Consentimiento registrado. ¡Gracias!",
+      "declined": "Inscripción cancelada.",
+      "imageConsent": "Autorizo también el uso de la imagen de {player} en fotos y vídeos del club (se guarda en su ficha y vale para todo)."
+    },
+    "imageConsent": {
+      "title": "Autorización de imagen",
+      "help": "Si el alumno (o su familia, si es menor) autoriza el uso de su imagen en fotos y vídeos del club. Vale para todo, no solo para torneos.",
+      "value": {
+        "yes": "Autoriza",
+        "no": "No autoriza",
+        "unknown": "Sin datos"
+      },
+      "date": "Fecha del documento",
+      "ref": "Referencia del documento firmado",
+      "refPlaceholder": "Ej.: hoja firmada, carpeta de inscripciones 2026",
+      "save": "Guardar",
+      "saved": "Autorización de imagen guardada",
+      "error": "No se ha podido guardar",
+      "badge": {
+        "yes": "Imagen: sí",
+        "no": "Imagen: no",
+        "unknown": "Imagen: sin datos"
+      }
+    },
+    "media": {
+      "newsTitle": "Noticias",
+      "newsTitlePlaceholder": "Título de la noticia",
+      "newsBodyPlaceholder": "Escribe la noticia (horarios, cambios, resultados…)",
+      "saveDraft": "Guardar borrador",
+      "publish": "Publicar",
+      "unpublish": "Retirar",
+      "published": "Publicada",
+      "draft": "Borrador",
+      "notPublished": "Sin publicar",
+      "delete": "Borrar",
+      "newsPublished": "Noticia publicada",
+      "newsSaved": "Borrador guardado",
+      "newsDeleted": "Noticia borrada",
+      "newsEmpty": "Todavía no hay noticias.",
+      "newsDeleteTitle": "¿Borrar la noticia?",
+      "author": {
+        "organizer": "Por {name}",
+        "club": "Por el club {name}"
+      },
+      "photosTitle": "Fotos",
+      "addPhotos": "Añadir fotos",
+      "uploading": "Subiendo {n}…",
+      "photosUploaded": "Fotos subidas",
+      "photoReadError": "No se ha podido leer una de las fotos.",
+      "photosEmpty": "Todavía no hay fotos. Se publican solo cuando tú lo decidas.",
+      "whoSees": "Quién ve las fotos publicadas",
+      "seesFamilies": "Familias y jugadores",
+      "seesPublic": "También en la página pública",
+      "seesFamiliesHelp": "Solo las ven, con su sesión, las familias y jugadores inscritos.",
+      "seesPublicHelp": "Las ve cualquiera con el enlace del torneo.",
+      "seesPublicButPrivate": "El torneo es privado: aunque esté activado, no hay página pública.",
+      "photosPublicOn": "Las fotos publicadas se verán en la página pública",
+      "photosPublicOff": "Las fotos publicadas solo las verán familias y jugadores",
+      "tag": "Etiquetar",
+      "whoAppears": "Quién sale en la foto",
+      "noPeople": "No hay inscritos para etiquetar.",
+      "captionPlaceholder": "Pie de foto (opcional)",
+      "saveTags": "Guardar",
+      "image": {
+        "no": "No autoriza imagen",
+        "unknown": "Sin autorización"
+      },
+      "missingConsent": "{n, plural, one {# persona etiquetada no tiene} other {# personas etiquetadas no tienen}} autorización de imagen.",
+      "consentWarnTitle": "Hay personas sin autorización de imagen",
+      "consentWarnText": "En esta foto salen {names}, sin autorización de imagen registrada. Puedes publicarla igualmente bajo tu responsabilidad.",
+      "publishAnyway": "Publicar igualmente",
+      "photoDeleteTitle": "¿Borrar la foto?",
+      "photoDeleteText": "Se borra del torneo y del almacenamiento. No se puede deshacer.",
+      "photoDeleted": "Foto borrada",
+      "photoAlt": "Foto del torneo",
+      "publicNewsTitle": "Noticias",
+      "publicPhotosTitle": "Fotos"
+    },
+    "poster": {
+      "title": "Cartel",
+      "help": "PDF en A4 para imprimir o compartir, con un QR a la página del torneo.",
+      "helpPrivate": "PDF en A4. El torneo es privado: el QR lleva al menú Torneos de las familias (piden iniciar sesión).",
+      "template": {
+        "classic": "Clásica",
+        "court": "Pista",
+        "image": "Con tu imagen"
+      },
+      "addImage": "Subir imagen",
+      "changeImage": "Cambiar imagen",
+      "removeImage": "Quitar imagen",
+      "imageSaved": "Imagen del cartel guardada",
+      "imageReadError": "No se ha podido leer la imagen.",
+      "download": "Descargar PDF",
+      "open": "Ver cartel",
+      "kicker": "Torneo",
+      "sport": {
+        "tenis": "Tenis",
+        "padel": "Pádel",
+        "pickleball": "Pickleball",
+        "tenis_playa": "Tenis playa"
+      },
+      "format": "Formato",
+      "level": "Nivel",
+      "place": "Lugar",
+      "deadline": "Inscripción hasta",
+      "spots": "Plazas",
+      "circuit": "Circuito",
+      "ctaRegister": "Inscríbete aquí",
+      "ctaFollow": "Sigue el torneo",
+      "ctaPrivate": "Más información",
+      "organizedBy": "Organiza",
+      "footer": "Organizado con Ten Planner · tenplanner.com"
     }
   }
 }

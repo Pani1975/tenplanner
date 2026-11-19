@@ -4060,7 +4060,7 @@
       "addExternal": "Outside player",
       "entriesLocked": "The tournament has started: entries can't change.",
       "noEntries": "No entries yet. Add students from your school or an outside player.",
-      "pendingHelp": "They hold a spot but don't enter the draw until there is consent.",
+      "pendingHelp": "They hold a spot but don't enter the draw until there is consent. Families with an account can give it from their Tournaments menu; you can also declare it.",
       "cancelTitle": "Cancel the entry?",
       "cancelText": "{name} will no longer be entered. If there is a waiting list, the first one gets in.",
       "cancelConfirm": "Cancel entry",
@@ -4116,7 +4116,7 @@
       "selected": "{count} selected",
       "missingPartner": "partner missing",
       "consent": "I have consent from these students (or their parents or guardians, if they are minors) to take part in the tournament. It's recorded with my name and the date.",
-      "noConsentNote": "If unticked, they stay pending: they hold a spot but don't enter the draw.",
+      "noConsentNote": "If unticked, they stay pending: they hold a spot but don't enter the draw. Families with an account get a notice and can give it from their Tournaments menu.",
       "cancel": "Cancel",
       "submit": "{count, plural, =0 {Add} one {Add # student} other {Add # students}}",
       "submitPairs": "{count, plural, =0 {Add} one {Add # pair} other {Add # pairs}}",
@@ -4147,7 +4147,8 @@
         "pending": "Player added: waiting for consent.",
         "waitlist": "Player added to the waiting list.",
         "cancelled": "Player added."
-      }
+      },
+      "imageConsent": "I have their image consent (or their parents' or guardians') for the tournament photos."
     },
     "errors": {
       "generic": "It couldn't be done. Please try again.",
@@ -4196,7 +4197,12 @@
       "super_tiebreak_misplaced": "The match tie-break only replaces the deciding set.",
       "winner_required": "Say who wins.",
       "circuit_not_found": "That circuit isn't yours or your club's.",
-      "registration_closed": "Registration is closed."
+      "registration_closed": "Registration is closed.",
+      "photo_type": "Unsupported image format (JPG, PNG or WebP).",
+      "photo_too_big": "The photo is too large.",
+      "photo_upload_failed": "The photo could not be uploaded.",
+      "invalid_tags": "Someone tagged is not entered.",
+      "poster_type": "The poster image must be JPG or PNG."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4258,7 +4264,8 @@
       "cancelDoneText": "The entry in “{tournament}” is cancelled.",
       "cancelInvalid": "Invalid link",
       "cancelInvalidText": "This cancel link doesn't exist or has expired. Contact the organiser.",
-      "backToTournament": "See the tournament"
+      "backToTournament": "See the tournament",
+      "imageConsent": "Optional: I allow appearing in the tournament photos the organiser publishes (me, or my child if under 18)."
     },
     "circuit": {
       "kicker": "Circuit",
@@ -4320,6 +4327,157 @@
       "save": "Save changes",
       "saved": "Details saved",
       "note": "If you add spots, people from the waiting list get in. To reopen a tournament closed by its deadline, move the deadline first."
+    },
+    "visibility": {
+      "title": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "publicHelp": "Anyone with the link sees the tournament (no contact details) and can sign up while it's open.",
+      "privateHelpClub": "Only players and families linked to the club see it, from their Tournaments menu. The public link shows nothing and takes no sign-ups.",
+      "privateHelpCoach": "Only your students' players and families see it, from their Tournaments menu. The public link shows nothing and takes no sign-ups.",
+      "privateHelpShort": "Only linked players and families see it; no sign-up by link.",
+      "changed": {
+        "public": "The tournament is now public",
+        "private": "The tournament is now private"
+      }
+    },
+    "family": {
+      "kicker": "Family panel",
+      "intro": "Tournaments from the club or your coach: entries, draws and results.",
+      "tabs": "Tournaments by date",
+      "tab": {
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "past": "Past"
+      },
+      "empty": {
+        "current": "No tournaments in progress right now.",
+        "upcoming": "No upcoming tournaments.",
+        "past": "No past tournaments yet."
+      }
+    },
+    "familyConsent": {
+      "kicker": "Your consent is needed",
+      "badge": "your consent is needed",
+      "title": "{player}'s entry",
+      "text": "{organizer} has entered {player} in “{tournament}”. To take part, your consent as parent or guardian is needed (or yours, if you are the player). The data is only used to run the tournament, and the tournament page only shows the first name and the initials of the surnames.",
+      "theOrganizer": "The organiser",
+      "consent": "I give my consent",
+      "decline": "Won't take part",
+      "declineTitle": "{player} won't take part?",
+      "declineText": "The entry is cancelled and, if there is a waiting list, the next one gets in.",
+      "given": "Consent recorded. Thank you!",
+      "declined": "Entry cancelled.",
+      "imageConsent": "I also allow {player}'s image to be used in the club's photos and videos (saved in their profile; it applies to everything)."
+    },
+    "imageConsent": {
+      "title": "Image consent",
+      "help": "Whether the student (or their family, if under 18) allows their image to be used in the club's photos and videos. It applies to everything, not just tournaments.",
+      "value": {
+        "yes": "Allows",
+        "no": "Doesn't allow",
+        "unknown": "Unknown"
+      },
+      "date": "Document date",
+      "ref": "Reference to the signed document",
+      "refPlaceholder": "E.g. signed sheet, 2026 enrolment folder",
+      "save": "Save",
+      "saved": "Image consent saved",
+      "error": "It couldn't be saved",
+      "badge": {
+        "yes": "Image: yes",
+        "no": "Image: no",
+        "unknown": "Image: unknown"
+      }
+    },
+    "media": {
+      "newsTitle": "News",
+      "newsTitlePlaceholder": "News title",
+      "newsBodyPlaceholder": "Write the news (times, changes, results…)",
+      "saveDraft": "Save draft",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "published": "Published",
+      "draft": "Draft",
+      "notPublished": "Not published",
+      "delete": "Delete",
+      "newsPublished": "News published",
+      "newsSaved": "Draft saved",
+      "newsDeleted": "News deleted",
+      "newsEmpty": "No news yet.",
+      "newsDeleteTitle": "Delete this news?",
+      "author": {
+        "organizer": "By {name}",
+        "club": "By the club {name}"
+      },
+      "photosTitle": "Photos",
+      "addPhotos": "Add photos",
+      "uploading": "Uploading {n}…",
+      "photosUploaded": "Photos uploaded",
+      "photoReadError": "One of the photos could not be read.",
+      "photosEmpty": "No photos yet. They are only published when you decide.",
+      "whoSees": "Who sees published photos",
+      "seesFamilies": "Families and players",
+      "seesPublic": "Also on the public page",
+      "seesFamiliesHelp": "Only signed-in families and entered players see them.",
+      "seesPublicHelp": "Anyone with the tournament link sees them.",
+      "seesPublicButPrivate": "The tournament is private: there is no public page even if enabled.",
+      "photosPublicOn": "Published photos will show on the public page",
+      "photosPublicOff": "Published photos will only be seen by families and players",
+      "tag": "Tag",
+      "whoAppears": "Who is in the photo",
+      "noPeople": "No entries to tag.",
+      "captionPlaceholder": "Caption (optional)",
+      "saveTags": "Save",
+      "image": {
+        "no": "Image not authorised",
+        "unknown": "No authorisation"
+      },
+      "missingConsent": "{n, plural, one {# tagged person has} other {# tagged people have}} no image authorisation.",
+      "consentWarnTitle": "Some people have no image authorisation",
+      "consentWarnText": "This photo shows {names}, with no image authorisation on record. You can still publish it under your responsibility.",
+      "publishAnyway": "Publish anyway",
+      "photoDeleteTitle": "Delete this photo?",
+      "photoDeleteText": "It is removed from the tournament and storage. This cannot be undone.",
+      "photoDeleted": "Photo deleted",
+      "photoAlt": "Tournament photo",
+      "publicNewsTitle": "News",
+      "publicPhotosTitle": "Photos"
+    },
+    "poster": {
+      "title": "Poster",
+      "help": "A4 PDF to print or share, with a QR code to the tournament page.",
+      "helpPrivate": "A4 PDF. The tournament is private: the QR code opens the families' Tournaments menu (sign-in required).",
+      "template": {
+        "classic": "Classic",
+        "court": "Court",
+        "image": "With your image"
+      },
+      "addImage": "Upload image",
+      "changeImage": "Change image",
+      "removeImage": "Remove image",
+      "imageSaved": "Poster image saved",
+      "imageReadError": "The image could not be read.",
+      "download": "Download PDF",
+      "open": "View poster",
+      "kicker": "Tournament",
+      "sport": {
+        "tenis": "Tennis",
+        "padel": "Padel",
+        "pickleball": "Pickleball",
+        "tenis_playa": "Beach tennis"
+      },
+      "format": "Format",
+      "level": "Level",
+      "place": "Venue",
+      "deadline": "Entries until",
+      "spots": "Spots",
+      "circuit": "Circuit",
+      "ctaRegister": "Enter here",
+      "ctaFollow": "Follow the tournament",
+      "ctaPrivate": "More information",
+      "organizedBy": "Organised by",
+      "footer": "Organised with Ten Planner · tenplanner.com"
     }
   }
 }

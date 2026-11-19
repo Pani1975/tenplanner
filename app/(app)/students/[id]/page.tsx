@@ -4,7 +4,15 @@ import { TrainingStatsPanel } from "@/components/app/training-stats-panel";
 import { loadStudentTrainingStats } from "@/lib/stats/load-training-stats";
 import Link from "next/link";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { Pencil, ClipboardList, Clock, Flame, Mail, Video } from "lucide-react";
+import {
+  Camera,
+  Pencil,
+  ClipboardList,
+  Clock,
+  Flame,
+  Mail,
+  Video,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfStudentsLimited } from "@/lib/work-mode";
 import { db } from "@/db";
@@ -22,6 +30,7 @@ import { SessionFeedback } from "./session-feedback";
 import { UpcomingList } from "./upcoming-list";
 import { GenerateProfileLinkButton } from "./generate-profile-link";
 import { GuardiansPanel } from "./guardians-panel";
+import { ImageConsentPanel } from "./image-consent-panel";
 import { listGuardians } from "@/lib/guardians";
 import { isAdult } from "@/lib/age";
 import { howFoundLabel, leftReasonLabel } from "@/lib/students/membership";
@@ -118,6 +127,7 @@ const UPCOMING_RENDER_LIMIT = 120;
 export default async function StudentDetailPage({ params }: PageProps) {
   const term = await getTerm();
   const tx = await getTranslations("ui.s_id_page");
+  const tImage = await getTranslations("tournaments.imageConsent");
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
   const { id } = await params;
 
@@ -590,6 +600,23 @@ export default async function StudentDetailPage({ params }: PageProps) {
             />
           </section>
         )}
+
+        <section className="tp-panel p-5 sm:p-6">
+          <div className="mb-4 grid grid-cols-[auto_1fr] items-baseline gap-3 border-b border-[#050505]/10 pb-3 dark:border-white/10">
+            <Camera className="size-3 text-brand" />
+            <p className="text-[10px] font-black uppercase text-foreground/50">
+              {tImage("title")}
+            </p>
+          </div>
+          <ImageConsentPanel
+            studentId={student.id}
+            initial={{
+              consent: student.imageConsent,
+              on: student.imageConsentOn,
+              ref: student.imageConsentRef,
+            }}
+          />
+        </section>
 
         {/* Fiabilidad + Proyección */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">

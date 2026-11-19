@@ -52,3 +52,34 @@ export function consentRecord(input: {
  */
 export const isDirectConsent = (method: ConsentMethod | null | undefined) =>
   method === "form" || method === "guardian_link";
+
+export type PartnerConsentFields = {
+  partnerConsentAt: Date;
+  partnerConsentMethod: ConsentMethod;
+  partnerConsentByUserId: string | null;
+  partnerConsentByName: string;
+};
+
+/** El mismo consentimiento, guardado para la pareja (dobles). */
+export function asPartnerConsent(r: ConsentRecord): PartnerConsentFields {
+  return {
+    partnerConsentAt: r.consentAt,
+    partnerConsentMethod: r.consentMethod,
+    partnerConsentByUserId: r.consentByUserId,
+    partnerConsentByName: r.consentByName,
+  };
+}
+
+/**
+ * ¿Tiene la inscripción todos los consentimientos? El del jugador y, en
+ * dobles, también el de la pareja.
+ */
+export function isConsentComplete(e: {
+  consentAt: Date | string | null;
+  partnerFirstName?: string | null;
+  partnerConsentAt?: Date | string | null;
+}): boolean {
+  if (!e.consentAt) return false;
+  if (e.partnerFirstName && !e.partnerConsentAt) return false;
+  return true;
+}

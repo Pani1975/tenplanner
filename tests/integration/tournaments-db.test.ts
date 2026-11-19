@@ -23,6 +23,8 @@ if (!enabled) {
     const { and, eq, inArray, ne } = await import("drizzle-orm");
     const s = await import("@/lib/tournaments/server");
     const pub = await import("@/lib/tournaments/public");
+    const fam = await import("@/lib/tournaments/family");
+    const media = await import("@/lib/tournaments/media");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -109,7 +111,7 @@ if (!enabled) {
         items: [{ studentId: group.studentIds[0] }],
         consentDeclared: true,
       });
-      expect(r2).toEqual({
+      expect(r2).toMatchObject({
         added: [],
         skipped: [{ studentId: group.studentIds[0], reason: "duplicate" }],
       });
@@ -141,12 +143,18 @@ if (!enabled) {
           guardianName: null,
         },
         consentDeclared: false,
+        imageConsent: true,
       });
       expect(ext.entry).toMatchObject({
         status: "waitlist",
         email: "externa@ejemplo.test",
         consentAt: null,
       });
+      expect(ext.entry.imageConsentAt).not.toBeNull();
+      const extShown = (await s.getTournamentDetail(o, t.id)).entries.find(
+        (x) => x.id === ext.entry.id
+      )!;
+      expect(extShown.image).toEqual({ player: "yes", partner: null });
       await expect(
         s.addManualEntry(o, t.id, {
           kind: "manual",
@@ -494,6 +502,202 @@ if (!enabled) {
         .where(eq(schema.tournamentCircuits.id, det.tournament.circuitId!));
     });
 
+    it("visibilidad: privado se oculta en público y lo ven las familias vinculadas", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT privado",
+        description: null,
+        startDate: futureDay(30),
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+        visibility: "private",
+      });
+      created.push(t.id);
+      expect(t.visibility).toBe("private");
+      await s.updateTournament(o, t.id, { status: "open" });
+
+      // Privado: ni página pública ni inscripción por enlace.
+      expect(await pub.getPublicTournament(t.slug)).toBeNull();
+      await expect(
+        pub.registerPublic(t.slug, {
+          player: {
+            firstName: "Ext",
+            lastName: "Erno",
+            email: "ext@it.test",
+            isMinor: false,
+            guardianName: null,
+          },
+          consent: true,
+        })
+      ).rejects.toMatchObject({ code: "registration_closed" });
+      const asFamily = await pub.getPublicTournament(t.slug, {
+        allowPrivate: true,
+      });
+      expect(asFamily?.visibility).toBe("private");
+      expect(asFamily?.acceptsRegistrations).toBe(false);
+
+      // Una cuenta vinculada a un alumno del monitor lo ve en su menú.
+      const cand = await s.listCandidates(o, t.id);
+      const student = cand.students[0];
+      const [g] = await db
+        .insert(schema.studentGuardians)
+        .values({
+          studentId: student.id,
+          userId: user.id,
+          name: "IT tutor",
+          relationship: "madre",
+        })
+        .returning({ id: schema.studentGuardians.id });
+      try {
+        await s.addSchoolEntries(o, t.id, {
+          kind: "school",
+          items: [{ studentId: student.id }],
+          consentDeclared: true,
+        });
+        const list = await fam.listFamilyTournaments(user.id);
+        const mine = list.tournaments.find((x) => x.slug === t.slug);
+        expect(mine).toMatchObject({
+          visibility: "private",
+          tab: "upcoming",
+          mine: [{ status: "confirmed" }],
+        });
+        expect(
+          await fam.getTournamentForFamily(user.id, t.slug)
+        ).not.toBeNull();
+        // Una cuenta sin vínculos no lo ve.
+        expect(
+          await fam.getTournamentForFamily(crypto.randomUUID(), t.slug)
+        ).toBeNull();
+
+        // Pasar a público: vuelve a verse con el enlace.
+        await s.updateTournament(o, t.id, { visibility: "public" });
+        expect(await pub.getPublicTournament(t.slug)).not.toBeNull();
+      } finally {
+        await db
+          .delete(schema.studentGuardians)
+          .where(eq(schema.studentGuardians.id, g.id));
+      }
+    });
+
+    it("consentimiento de la familia: dobles, cada uno el suyo; y rechazar", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT consentimiento familia",
+        description: null,
+        startDate: futureDay(35),
+        modality: "doubles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+      const cand = await s.listCandidates(o, t.id);
+      const [a, b, c, d] = cand.students.map((x) => x.id);
+      await s.addSchoolEntries(o, t.id, {
+        kind: "school",
+        items: [
+          { studentId: a, partnerStudentId: b },
+          { studentId: c, partnerStudentId: d },
+        ],
+        consentDeclared: false,
+      });
+      const guardians = await db
+        .insert(schema.studentGuardians)
+        .values(
+          [a, b, c].map((studentId) => ({
+            studentId,
+            userId: user.id,
+            name: "IT tutora",
+            relationship: "madre",
+          }))
+        )
+        .returning({ id: schema.studentGuardians.id });
+      try {
+        await s.updateTournament(o, t.id, { status: "open" });
+        const entries = (await s.getTournamentDetail(o, t.id)).entries;
+        const pair1 = entries.find((e) => e.studentId === a)!;
+        const pair2 = entries.find((e) => e.studentId === c)!;
+        expect(pair1.status).toBe("pending");
+
+        // La familia ve los consentimientos que le tocan.
+        const listed = (
+          await fam.listFamilyTournaments(user.id)
+        ).tournaments.find((x) => x.slug === t.slug)!;
+        expect(listed.mine.filter((m) => m.needsConsent)).toHaveLength(3);
+
+        // Una cuenta sin vínculo: como si no existiera.
+        await expect(
+          fam.familyRespond(crypto.randomUUID(), pair1.id, "player", "consent")
+        ).rejects.toMatchObject({ code: "not_found" });
+        // Sin vínculo con la pareja de la 2.ª inscripción (d).
+        await expect(
+          fam.familyRespond(user.id, pair2.id, "partner", "consent")
+        ).rejects.toMatchObject({ code: "not_found" });
+
+        // Primero el jugador: sigue pendiente; luego la pareja: confirmada.
+        // (con autorización de imagen: se guarda en la ficha del alumno)
+        const [before] = await db
+          .select({
+            imageConsent: schema.students.imageConsent,
+            imageConsentOn: schema.students.imageConsentOn,
+            imageConsentRef: schema.students.imageConsentRef,
+            imageConsentBy: schema.students.imageConsentBy,
+          })
+          .from(schema.students)
+          .where(eq(schema.students.id, a));
+        expect(
+          (
+            await fam.familyRespond(user.id, pair1.id, "player", "consent", {
+              imageConsent: true,
+            })
+          ).status
+        ).toBe("pending");
+        const [afterStudent] = await db
+          .select({ imageConsent: schema.students.imageConsent })
+          .from(schema.students)
+          .where(eq(schema.students.id, a));
+        expect(afterStudent.imageConsent).toBe(true);
+        const shown = (await s.getTournamentDetail(o, t.id)).entries.find(
+          (x) => x.id === pair1.id
+        )!;
+        expect(shown.image.player).toBe("yes");
+        // Deja la ficha del alumno de pruebas como estaba.
+        await db
+          .update(schema.students)
+          .set(before)
+          .where(eq(schema.students.id, a));
+        expect(
+          (await fam.familyRespond(user.id, pair1.id, "partner", "consent"))
+            .status
+        ).toBe("confirmed");
+        const [row] = await db
+          .select()
+          .from(schema.tournamentEntries)
+          .where(eq(schema.tournamentEntries.id, pair1.id));
+        expect(row).toMatchObject({
+          consentMethod: "guardian_link",
+          partnerConsentMethod: "guardian_link",
+          consentByName: "IT tutora",
+          consentByUserId: user.id,
+        });
+
+        // Rechazar: se cancela la inscripción.
+        expect(
+          (await fam.familyRespond(user.id, pair2.id, "player", "decline"))
+            .status
+        ).toBe("cancelled");
+      } finally {
+        await db.delete(schema.studentGuardians).where(
+          inArray(
+            schema.studentGuardians.id,
+            guardians.map((g) => g.id)
+          )
+        );
+      }
+    });
+
     it("liguilla: calendario y resultados", async () => {
       const t = await s.createTournament(o, {
         name: "IT liguilla",
@@ -551,5 +755,111 @@ if (!enabled) {
           )
         );
       expect(row.winnerEntryId).toBe(ms[0].entryAId);
+    });
+
+    it("noticias con autor y fotos: etiquetas y aviso de autorización de imagen", async () => {
+      const t = await s.createTournament(o, {
+        name: "IT fotos",
+        description: null,
+        startDate: futureDay(12),
+        maxEntries: null,
+        modality: "singles",
+        format: "knockout",
+        bestOf: 3,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak",
+      });
+      created.push(t.id);
+
+      // Noticias: borrador no sale fuera; publicada sí, con autor organizador.
+      const draft = await media.createNews(o, t.id, {
+        title: "Borrador",
+        body: "x",
+        publish: false,
+      });
+      const pubNews = await media.createNews(o, t.id, {
+        title: "Horarios",
+        body: "Empezamos a las 9",
+        publish: true,
+      });
+      expect(pubNews.authorType).toBe("organizer");
+      expect((await media.publishedNews(t.id)).map((n) => n.id)).toEqual([
+        pubNews.id,
+      ]);
+      await media.updateNews(o, t.id, draft.id, { published: true });
+      expect(await media.publishedNews(t.id)).toHaveLength(2);
+      await expect(
+        media.listNews({ ...o, userId: crypto.randomUUID() }, t.id)
+      ).rejects.toMatchObject({ code: "not_found" });
+
+      // Dos externos: uno autoriza imagen y otro no.
+      const yes = await s.addManualEntry(o, t.id, {
+        kind: "manual",
+        player: {
+          firstName: "Con",
+          lastName: "Imagen IT",
+          email: "con.imagen@ejemplo.test",
+          isMinor: false,
+          guardianName: null,
+        },
+        consentDeclared: true,
+        imageConsent: true,
+      });
+      const no = await s.addManualEntry(o, t.id, {
+        kind: "manual",
+        player: {
+          firstName: "Sin",
+          lastName: "Imagen IT",
+          email: "sin.imagen@ejemplo.test",
+          isMinor: false,
+          guardianName: null,
+        },
+        consentDeclared: true,
+        imageConsent: false,
+      });
+      const people = await media.taggablePeople(t.id);
+      expect(people.map((p) => p.image)).toEqual(["yes", "unknown"]);
+
+      // Foto sin archivo real (solo la fila): etiquetas y publicación.
+      const [photo] = await db
+        .insert(schema.tournamentPhotos)
+        .values({ tournamentId: t.id, storagePath: `${t.id}/photos/it.webp` })
+        .returning();
+      await expect(
+        media.updatePhoto(o, t.id, photo.id, {
+          tags: [{ entryId: crypto.randomUUID(), side: "player" }],
+        })
+      ).rejects.toMatchObject({ code: "invalid_tags" });
+      await media.updatePhoto(o, t.id, photo.id, {
+        tags: [
+          { entryId: yes.entry.id, side: "player" },
+          { entryId: no.entry.id, side: "player" },
+        ],
+      });
+      // Aviso (no bloquea): 409 con quien no autoriza; con acknowledged, se publica.
+      await expect(
+        media.updatePhoto(o, t.id, photo.id, { published: true })
+      ).rejects.toMatchObject({
+        code: "image_consent_missing",
+        status: 409,
+        detail: { people: [{ name: "Sin Imagen IT", image: "unknown" }] },
+      });
+      await media.updatePhoto(o, t.id, photo.id, {
+        published: true,
+        acknowledged: true,
+      });
+      const [row] = await db
+        .select({ published: schema.tournamentPhotos.published })
+        .from(schema.tournamentPhotos)
+        .where(eq(schema.tournamentPhotos.id, photo.id));
+      expect(row.published).toBe(true);
+
+      // Fuera solo con etiquetas de este torneo y solo publicadas; quitar la
+      // etiqueta de quien no autoriza deja publicar sin aviso.
+      await media.updatePhoto(o, t.id, photo.id, { published: false });
+      await media.updatePhoto(o, t.id, photo.id, {
+        tags: [{ entryId: yes.entry.id, side: "player" }],
+      });
+      await media.updatePhoto(o, t.id, photo.id, { published: true });
     });
   });
