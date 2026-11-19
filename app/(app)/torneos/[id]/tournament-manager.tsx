@@ -19,6 +19,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PublicLinks } from "./public-links";
 import { MediaPanel } from "./media-panel";
+import { PosterPanel } from "./poster-panel";
 import { DrawPanel, type ManagerMatch } from "./draw-panel";
 import { DrawButton } from "./draw-button";
 import { EditTournamentForm } from "./edit-tournament-form";
@@ -55,6 +56,8 @@ export type ManagerTournament = {
   isClub: boolean;
   visibility: "public" | "private";
   photosPublic: boolean;
+  posterTemplate: "classic" | "court" | "image";
+  hasPosterImage: boolean;
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
@@ -495,6 +498,13 @@ export function TournamentManager({
           )
         )}
       </section>
+
+      <PosterPanel
+        tournamentId={t.id}
+        template={t.posterTemplate}
+        hasImage={t.hasPosterImage}
+        isPrivate={t.visibility === "private"}
+      />
 
       {t.status !== "draft" && (
         <MediaPanel

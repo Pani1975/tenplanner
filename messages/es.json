@@ -3812,7 +3812,8 @@
       "photo_type": "Formato de imagen no admitido (JPG, PNG o WebP).",
       "photo_too_big": "La foto pesa demasiado.",
       "photo_upload_failed": "No se ha podido subir la foto.",
-      "invalid_tags": "Alguna persona etiquetada no está inscrita."
+      "invalid_tags": "Alguna persona etiquetada no está inscrita.",
+      "poster_type": "La imagen del cartel debe ser JPG o PNG."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -4053,6 +4054,41 @@
       "photoAlt": "Foto del torneo",
       "publicNewsTitle": "Noticias",
       "publicPhotosTitle": "Fotos"
+    },
+    "poster": {
+      "title": "Cartel",
+      "help": "PDF en A4 para imprimir o compartir, con un QR a la página del torneo.",
+      "helpPrivate": "PDF en A4. El torneo es privado: el QR lleva al menú Torneos de las familias (piden iniciar sesión).",
+      "template": {
+        "classic": "Clásica",
+        "court": "Pista",
+        "image": "Con tu imagen"
+      },
+      "addImage": "Subir imagen",
+      "changeImage": "Cambiar imagen",
+      "removeImage": "Quitar imagen",
+      "imageSaved": "Imagen del cartel guardada",
+      "imageReadError": "No se ha podido leer la imagen.",
+      "download": "Descargar PDF",
+      "open": "Ver cartel",
+      "kicker": "Torneo",
+      "sport": {
+        "tenis": "Tenis",
+        "padel": "Pádel",
+        "pickleball": "Pickleball",
+        "tenis_playa": "Tenis playa"
+      },
+      "format": "Formato",
+      "level": "Nivel",
+      "place": "Lugar",
+      "deadline": "Inscripción hasta",
+      "spots": "Plazas",
+      "circuit": "Circuito",
+      "ctaRegister": "Inscríbete aquí",
+      "ctaFollow": "Sigue el torneo",
+      "ctaPrivate": "Más información",
+      "organizedBy": "Organiza",
+      "footer": "Organizado con Ten Planner · tenplanner.com"
     }
   }
 }

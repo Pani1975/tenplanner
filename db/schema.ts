@@ -2670,6 +2670,10 @@ export const tournaments = pgTable(
     visibility: varchar("visibility", { length: 10 }).default("public").notNull(),
     // Fotos publicadas también en la página pública (si el torneo es público).
     photosPublic: boolean("photos_public").default(false).notNull(),
+    posterTemplate: varchar("poster_template", { length: 10 })
+      .default("classic")
+      .notNull(),
+    posterImagePath: text("poster_image_path"),
     maxEntries: integer("max_entries"),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),

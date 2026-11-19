@@ -174,3 +174,14 @@ DO $$ BEGIN
     ON CONFLICT (id) DO NOTHING;
   END IF;
 END $$;
+
+-- Cartel del torneo: plantilla (clásica, pista o con imagen propia) e imagen
+-- subida por el organizador (JPG o PNG en el bucket privado tournament-media).
+ALTER TABLE "tournaments" ADD COLUMN IF NOT EXISTS "poster_template" varchar(10) DEFAULT 'classic' NOT NULL;
+ALTER TABLE "tournaments" ADD COLUMN IF NOT EXISTS "poster_image_path" text;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournaments_poster_template_chk') THEN
+    ALTER TABLE "tournaments" ADD CONSTRAINT "tournaments_poster_template_chk"
+      CHECK ("poster_template" IN ('classic', 'court', 'image'));
+  END IF;
+END $$;

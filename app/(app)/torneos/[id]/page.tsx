@@ -55,6 +55,8 @@ export default async function TorneoPage({ params }: Props) {
         isClub: t.clubId !== null,
         visibility: t.visibility as "public" | "private",
         photosPublic: t.photosPublic,
+        posterTemplate: t.posterTemplate as "classic" | "court" | "image",
+        hasPosterImage: !!t.posterImagePath,
         circuit: t.circuit,
         description: t.description,
         rules: {

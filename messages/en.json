@@ -4201,7 +4201,8 @@
       "photo_type": "Unsupported image format (JPG, PNG or WebP).",
       "photo_too_big": "The photo is too large.",
       "photo_upload_failed": "The photo could not be uploaded.",
-      "invalid_tags": "Someone tagged is not entered."
+      "invalid_tags": "Someone tagged is not entered.",
+      "poster_type": "The poster image must be JPG or PNG."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4442,6 +4443,41 @@
       "photoAlt": "Tournament photo",
       "publicNewsTitle": "News",
       "publicPhotosTitle": "Photos"
+    },
+    "poster": {
+      "title": "Poster",
+      "help": "A4 PDF to print or share, with a QR code to the tournament page.",
+      "helpPrivate": "A4 PDF. The tournament is private: the QR code opens the families' Tournaments menu (sign-in required).",
+      "template": {
+        "classic": "Classic",
+        "court": "Court",
+        "image": "With your image"
+      },
+      "addImage": "Upload image",
+      "changeImage": "Change image",
+      "removeImage": "Remove image",
+      "imageSaved": "Poster image saved",
+      "imageReadError": "The image could not be read.",
+      "download": "Download PDF",
+      "open": "View poster",
+      "kicker": "Tournament",
+      "sport": {
+        "tenis": "Tennis",
+        "padel": "Padel",
+        "pickleball": "Pickleball",
+        "tenis_playa": "Beach tennis"
+      },
+      "format": "Format",
+      "level": "Level",
+      "place": "Venue",
+      "deadline": "Entries until",
+      "spots": "Spots",
+      "circuit": "Circuit",
+      "ctaRegister": "Enter here",
+      "ctaFollow": "Follow the tournament",
+      "ctaPrivate": "More information",
+      "organizedBy": "Organised by",
+      "footer": "Organised with Ten Planner · tenplanner.com"
     }
   }
 }

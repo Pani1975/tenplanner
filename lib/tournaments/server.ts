@@ -585,6 +585,9 @@ export async function updateTournament(
         ...(input.photosPublic !== undefined && {
           photosPublic: input.photosPublic,
         }),
+        ...(input.posterTemplate !== undefined && {
+          posterTemplate: input.posterTemplate,
+        }),
         ...(input.bestOf !== undefined && { bestOf: input.bestOf }),
         ...(input.gamesPerSet !== undefined && {
           gamesPerSet: input.gamesPerSet,
