@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PublicLinks } from "./public-links";
 import { cn } from "@/lib/utils";
 import {
   ENTRY_BADGE,
@@ -46,7 +47,7 @@ export type ManagerTournament = {
   registrationDeadline: string | null;
   maxEntries: number | null;
   isClub: boolean;
-  circuit: { name: string; season: string | null } | null;
+  circuit: { name: string; season: string | null; slug: string } | null;
 };
 
 export type ManagerEntry = {
@@ -97,12 +98,14 @@ export function TournamentManager({
   matchCount,
   levels,
   canSeeContacts,
+  baseUrl,
 }: {
   tournament: ManagerTournament;
   entries: ManagerEntry[];
   matchCount: number;
   levels: Level[];
   canSeeContacts: boolean;
+  baseUrl: string;
 }) {
   const tr = useTranslations("tournaments");
   const locale = useLocale();
@@ -276,6 +279,13 @@ export function TournamentManager({
           <p className="text-sm text-white/85">{tr("manager.drawSoon")}</p>
         )}
       </header>
+
+      <PublicLinks
+        slug={t.slug}
+        isPublic={t.status !== "draft"}
+        circuitSlug={t.circuit?.slug ?? null}
+        baseUrl={baseUrl}
+      />
 
       {!canSeeContacts && t.isClub && (
         <p className="tp-card-soft flex items-start gap-2 p-4 text-sm">

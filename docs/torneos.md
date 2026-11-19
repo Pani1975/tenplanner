@@ -12,7 +12,9 @@ Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/t
 - **Estilo de las pantallas de torneos (David, 2026-11-19):** azul `#1a6db5` como color principal, títulos en Fraunces y texto en DM Sans, tarjetas con fondo de color sólido. Solo dentro de `.tp-torneos` (`app/(app)/torneos/layout.tsx`); el resto de la app sigue en lima y Plus Jakarta Sans. DM Sans en `app/fonts` (OFL, de `@fontsource-variable/dm-sans`).
 - **Circuito (David, 2026-11-19):** cada torneo es independiente o pertenece a un circuito (`tournament_circuits`: nombre y temporada, del club o del monitor). Se elige en el paso 1 del asistente; un circuito nuevo con el mismo nombre y temporada reutiliza el existente.
 - **Nivel:** la escala de la app (`skill_levels`) mostrada con su bola en tenis: «Bola roja · Descubrimiento», «Bola naranja · Desarrollo», «Bola verde · Consolidación» y las cuatro etapas de bola amarilla.
-- **Página pública (David, 2026-11-19):** mientras las inscripciones estén abiertas muestra el número de inscritos (y las plazas, si hay límite). Se hace en la fase 4.
+- **Página pública `/t/<slug>` (David, 2026-11-19):** muestra el número de inscritos contando la lista de espera, la lista de inscritos y de espera (nombre e iniciales), el formulario de inscripción mientras esté abierto y, cuando hay partidos, el cuadro o la clasificación. Borrador = 404. No se indexa (`noindex`): hay menores.
+- **Inscripción por enlace:** consentimiento RGPD obligatorio, trampa para robots y límite de 8 envíos por IP cada 10 min. Duplicado = mismo correo o teléfono propio (los menores van con el contacto del tutor y no cuentan, para que dos hermanos puedan apuntarse). Correo de confirmación con enlace para cancelar (`/t/<slug>/cancelar?token=…`); al cancelar entra el primero de la lista y, si se inscribió por enlace, recibe un correo.
+- **Circuito con puntos (David, 2026-11-19):** puntos por torneo finalizado según la ronda alcanzada (eliminatoria) o el puesto (liguilla) y clasificación general pública en `/t/c/<slug>`. Mismo jugador en distintos torneos: por su ficha de alumno, si no por correo, teléfono o nombre completo. En dobles puntúa cada jugador. Desempate: mejor resultado y luego más torneos.
 - Una inscripción sin consentimiento queda `pending` y ocupa plaza; no puede pasar a `confirmed` (lo impide también la base). Al generar el cuadro avisa si hay pendientes; se puede generar dejándolas fuera.
 - Duplicados: los alumnos se distinguen por su ficha (dos hermanos pueden compartir correo); los externos, por correo o teléfono normalizados.
 - Menor sin datos: su contacto es el del padre, madre o tutor (primero activo en «Familias» con correo o teléfono); nunca el del propio menor. Alumno sin fecha de nacimiento = menor (regla de `lib/age.ts`).
@@ -24,12 +26,12 @@ Rama `feat/torneos`. Lógica pura en `lib/tournaments/`, capa de datos en `lib/t
 ## Pendiente de decidir (David)
 
 - Texto exacto del consentimiento `torneo-v1` (revisión legal).
-- Circuito: ¿hace falta una clasificación conjunta (puntos por torneo)? Hoy solo agrupa torneos.
-- Página pública: ¿el número de inscritos cuenta también la lista de espera?
+- Texto de consentimiento del formulario público y quién figura como responsable del tratamiento (el club o monitor organizador). Revisión legal antes de abrir torneos reales.
+- Tabla de puntos del circuito: hoy la de por defecto (campeón 100, finalista 70, semis 50, cuartos 35, octavos 20, antes 10; liguilla 100-70-50-40-30-25-20-15-10; mínimo 5). Se guarda por circuito (`points`), pero aún no hay pantalla para cambiarla.
 
 ## Pendiente de hacer
 
-- Fase 3 hecha (lista, asistente en 4 pasos con circuito, ficha con inscritos, selector de alumnos y jugador externo). Falta en la ficha: editar los datos del torneo y cabezas de serie. Fase 4: página pública e inscripción por enlace (con correo). Fase 5: pantalla de resultados. Fase 6: revisión completa en móvil.
+- Hechas las fases 1 a 4. Falta en la ficha: editar los datos del torneo y fijar cabezas de serie (la API ya lo admite). Fase 5: generar el cuadro y meter resultados desde la ficha. Fase 6: revisión completa en móvil.
 - Enlace de consentimiento para tutores (`guardian_link`).
 - Correo de confirmación: en Vercel faltan `RESEND_API_KEY` y `EMAIL_FROM`.
 
