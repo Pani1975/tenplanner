@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import {
-  Camera,
   CalendarDays,
+  Download,
   Lock,
   MapPin,
-  Newspaper,
   Trophy,
-  Users,
 } from "lucide-react";
 import { dmSans } from "@/app/fonts/dm-sans";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
@@ -18,10 +16,15 @@ import {
 import { levelOptions } from "@/lib/tournaments/levels";
 import type { PublicTournament } from "@/lib/tournaments/public";
 import type { publishedNews, publishedPhotos } from "@/lib/tournaments/media";
+import { siteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { PublicDraw } from "./public-draw";
 import { PublicSchedule } from "./public-schedule";
 import { RegistrationForm } from "./registration-form";
+import { PosterCard } from "./poster-card";
+import { TournamentTabs, type TournamentTab } from "./tournament-tabs";
+import { posterData, signedPosterImage } from "@/lib/tournaments/poster";
+import { scheduleByDay } from "@/lib/tournaments/schedule";
 
 /**
  * Vista de solo lectura de un torneo (sin datos de contacto), compartida por
@@ -52,6 +55,17 @@ export async function TournamentView({
     loadSkillLevels().catch(() => []),
   ]);
   const options = levelOptions(levels, t.sport);
+  const poster = await posterData(t, {
+    baseUrl: siteUrl,
+    locale,
+    tr: (k, v) => tr(k as never, v as never),
+  });
+  const posterImage =
+    poster.template === "image"
+      ? await signedPosterImage(t.posterImagePath)
+      : null;
+  const canRegister = withRegistration && t.acceptsRegistrations;
+  const scheduleDays = t.schedulePublished ? scheduleByDay(t.matches) : [];
   const level = t.levelCode
     ? options.find((l) => l.code === t.levelCode)
     : null;
@@ -119,28 +133,65 @@ export async function TournamentView({
 
       <main className="mx-auto -mt-5 max-w-3xl space-y-5 px-4 pb-16">
         {notice}
-        <section className="tp-card grid grid-cols-2 gap-3 p-5 sm:grid-cols-3">
-          <Stat
-            label={tr("public.registered")}
-            value={
-              t.maxEntries
-                ? tr("public.ofSpots", {
-                    count: t.registeredCount,
-                    max: t.maxEntries,
-                  })
-                : String(t.registeredCount)
-            }
-          />
-          <Stat label={tr("public.waitlist")} value={String(t.waitlistCount)} />
-          {t.registrationDeadline && t.status === "open" && (
-            <Stat
-              label={tr("public.deadline")}
-              value={new Intl.DateTimeFormat(locale, {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(t.registrationDeadline))}
+
+        <section className="grid items-start gap-4 sm:grid-cols-[15rem_1fr]">
+          <div className="mx-auto w-full max-w-[15rem] space-y-2">
+            <PosterCard
+              d={poster.data}
+              template={poster.template}
+              imageUrl={posterImage}
             />
-          )}
+            {t.visibility === "public" && (
+              <a
+                href={`/api/public/torneos/${t.slug}/poster`}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground/5 px-4 text-sm font-bold hover:bg-foreground/10"
+              >
+                <Download className="size-4" />
+                {tr("public.downloadPoster")}
+              </a>
+            )}
+          </div>
+          <div className="space-y-3">
+            <section className="tp-card grid grid-cols-2 gap-3 p-5 sm:grid-cols-2">
+              <Stat
+                label={tr("public.registered")}
+                value={
+                  t.maxEntries
+                    ? tr("public.ofSpots", {
+                        count: t.registeredCount,
+                        max: t.maxEntries,
+                      })
+                    : String(t.registeredCount)
+                }
+              />
+              <Stat
+                label={tr("public.waitlist")}
+                value={String(t.waitlistCount)}
+              />
+              {t.registrationDeadline && t.status === "open" && (
+                <Stat
+                  label={tr("public.deadline")}
+                  value={new Intl.DateTimeFormat(locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(t.registrationDeadline))}
+                />
+              )}
+            </section>
+            {withRegistration && !t.acceptsRegistrations && (
+              <p className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-foreground/10 px-5 text-sm font-bold">
+                <Lock className="mr-2 size-4" />
+                {t.status === "finished"
+                  ? tr("public.finishedNote")
+                  : tr("public.registrationClosed")}
+              </p>
+            )}
+            {canRegister && (
+              <p className="text-sm text-foreground/70">
+                {tr("public.registrationOpenHint")}
+              </p>
+            )}
+          </div>
         </section>
 
         {t.description && (
@@ -149,134 +200,174 @@ export async function TournamentView({
           </section>
         )}
 
-        {withRegistration && t.acceptsRegistrations ? (
-          <RegistrationForm
-            slug={t.slug}
-            doubles={t.modality === "doubles"}
-            full={
-              t.maxEntries !== null &&
-              t.registeredCount - t.waitlistCount >= t.maxEntries
-            }
-            organizer={t.organizer}
-            levels={options}
-          />
-        ) : (
-          t.status === "closed" && (
-            <p className="tp-card-soft p-4 text-sm font-semibold">
-              {tr("public.closedNote")}
-            </p>
-          )
-        )}
-
-        {media && media.news.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="tp-title flex items-center gap-2 text-2xl">
-              <Newspaper className="size-5 text-[var(--brand-ink)]" />
-              {tr("media.publicNewsTitle")}
-            </h2>
-            <ul className="space-y-3">
-              {media.news.map((n) => (
-                <li key={n.id} className="tp-card space-y-2 p-5">
-                  <p className="tp-title text-lg">{n.title}</p>
-                  <p className="text-xs text-foreground/60">
-                    {tr(
-                      `media.author.${n.authorType as "organizer" | "club"}`,
-                      {
-                        name: n.authorName,
-                      }
+        <TournamentTabs
+          registerTab={canRegister ? "inscripcion" : null}
+          registerLabel={tr("public.registerCta")}
+          tabs={
+            [
+              ...(t.matches.length > 0
+                ? [
+                    {
+                      id: "cuadro",
+                      label: tr(
+                        t.format === "knockout"
+                          ? "public.tabDraw"
+                          : "public.tabStandings"
+                      ),
+                      content: (
+                        <PublicDraw
+                          format={t.format}
+                          matches={t.matches}
+                          entrants={[...t.entrants]}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+              ...(scheduleDays.length > 0
+                ? [
+                    {
+                      id: "orden-de-juego",
+                      label: tr("schedule.title"),
+                      content: (
+                        <PublicSchedule matches={t.matches} format={t.format} />
+                      ),
+                    },
+                  ]
+                : []),
+              ...(canRegister
+                ? [
+                    {
+                      id: "inscripcion",
+                      label: tr("public.tabRegister"),
+                      content: (
+                        <RegistrationForm
+                          slug={t.slug}
+                          doubles={t.modality === "doubles"}
+                          full={
+                            t.maxEntries !== null &&
+                            t.registeredCount - t.waitlistCount >= t.maxEntries
+                          }
+                          organizer={t.organizer}
+                          levels={options}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+              ...(media && media.news.length > 0
+                ? [
+                    {
+                      id: "noticias",
+                      label: tr("media.publicNewsTitle"),
+                      content: (
+                        <ul className="space-y-3">
+                          {media.news.map((n) => (
+                            <li key={n.id} className="tp-card space-y-2 p-5">
+                              <p className="tp-title text-lg">{n.title}</p>
+                              <p className="text-xs text-foreground/60">
+                                {tr(
+                                  `media.author.${n.authorType as "organizer" | "club"}`,
+                                  {
+                                    name: n.authorName,
+                                  }
+                                )}
+                                {n.publishedAt &&
+                                  ` · ${n.publishedAt.toLocaleDateString(locale, { day: "numeric", month: "long" })}`}
+                              </p>
+                              <p className="whitespace-pre-line text-sm leading-6">
+                                {n.body}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      ),
+                    },
+                  ]
+                : []),
+              ...(media && media.photos.length > 0
+                ? [
+                    {
+                      id: "imagenes",
+                      label: tr("public.tabImages"),
+                      content: (
+                        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          {media.photos.map((p) => (
+                            <li
+                              key={p.id}
+                              className="overflow-hidden rounded-2xl"
+                            >
+                              <a href={p.url!} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={p.url!}
+                                  alt={p.caption ?? tr("media.photoAlt")}
+                                  loading="lazy"
+                                  className="aspect-square w-full bg-foreground/5 object-cover"
+                                />
+                              </a>
+                              {p.caption && (
+                                <p className="px-1 pt-1 text-xs text-foreground/70">
+                                  {p.caption}
+                                </p>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ),
+                    },
+                  ]
+                : []),
+              {
+                id: "inscritos",
+                label: tr("public.entrantsTitle"),
+                content: (
+                  <div className="space-y-3">
+                    {t.entrants.length === 0 ? (
+                      <p className="text-sm text-foreground/65">
+                        {tr("public.noEntrants")}
+                      </p>
+                    ) : (
+                      <ol className="tp-card divide-y divide-foreground/10">
+                        {t.entrants.map((name, i) => (
+                          <li
+                            key={`${name}-${i}`}
+                            className="flex gap-3 px-4 py-2.5"
+                          >
+                            <span className="w-6 text-right text-sm font-bold text-foreground/45">
+                              {i + 1}
+                            </span>
+                            <span className="font-semibold">{name}</span>
+                          </li>
+                        ))}
+                      </ol>
                     )}
-                    {n.publishedAt &&
-                      ` · ${n.publishedAt.toLocaleDateString(locale, { day: "numeric", month: "long" })}`}
-                  </p>
-                  <p className="whitespace-pre-line text-sm leading-6">
-                    {n.body}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {media && media.photos.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="tp-title flex items-center gap-2 text-2xl">
-              <Camera className="size-5 text-[var(--brand-ink)]" />
-              {tr("media.publicPhotosTitle")}
-            </h2>
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {media.photos.map((p) => (
-                <li key={p.id} className="overflow-hidden rounded-2xl">
-                  <a href={p.url!} target="_blank" rel="noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={p.url!}
-                      alt={p.caption ?? tr("media.photoAlt")}
-                      loading="lazy"
-                      className="aspect-square w-full bg-foreground/5 object-cover"
-                    />
-                  </a>
-                  {p.caption && (
-                    <p className="px-1 pt-1 text-xs text-foreground/70">
-                      {p.caption}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {t.schedulePublished && (
-          <PublicSchedule matches={t.matches} format={t.format} />
-        )}
-
-        {t.matches.length > 0 && (
-          <PublicDraw
-            format={t.format}
-            matches={t.matches}
-            entrants={[...t.entrants]}
-          />
-        )}
-
-        <section className="space-y-3">
-          <h2 className="tp-title flex items-center gap-2 text-2xl">
-            <Users className="size-5 text-[var(--brand-ink)]" />
-            {tr("public.entrantsTitle")}
-          </h2>
-          {t.entrants.length === 0 ? (
-            <p className="text-sm text-foreground/65">
-              {tr("public.noEntrants")}
-            </p>
-          ) : (
-            <ol className="tp-card divide-y divide-foreground/10">
-              {t.entrants.map((name, i) => (
-                <li key={`${name}-${i}`} className="flex gap-3 px-4 py-2.5">
-                  <span className="w-6 text-right text-sm font-bold text-foreground/45">
-                    {i + 1}
-                  </span>
-                  <span className="font-semibold">{name}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-          {t.waitlist.length > 0 && (
-            <>
-              <h3 className="pt-2 text-xs font-bold uppercase text-foreground/60">
-                {tr("public.waitlist")} ({t.waitlist.length})
-              </h3>
-              <ol className="tp-card divide-y divide-foreground/10">
-                {t.waitlist.map((name, i) => (
-                  <li key={`${name}-${i}`} className="flex gap-3 px-4 py-2.5">
-                    <span className="w-6 text-right text-sm font-bold text-[var(--brand-ink)]">
-                      #{i + 1}
-                    </span>
-                    <span>{name}</span>
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
-        </section>
+                    {t.waitlist.length > 0 && (
+                      <>
+                        <h3 className="pt-2 text-xs font-bold uppercase text-foreground/60">
+                          {tr("public.waitlist")} ({t.waitlist.length})
+                        </h3>
+                        <ol className="tp-card divide-y divide-foreground/10">
+                          {t.waitlist.map((name, i) => (
+                            <li
+                              key={`${name}-${i}`}
+                              className="flex gap-3 px-4 py-2.5"
+                            >
+                              <span className="w-6 text-right text-sm font-bold text-[var(--brand-ink)]">
+                                #{i + 1}
+                              </span>
+                              <span>{name}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </>
+                    )}
+                  </div>
+                ),
+              },
+            ] satisfies TournamentTab[]
+          }
+        />
 
         <p className="pt-6 text-center text-[11px] text-foreground/45">
           {tr("public.poweredBy")}

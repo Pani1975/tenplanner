@@ -4267,7 +4267,16 @@
       "cancelInvalid": "Invalid link",
       "cancelInvalidText": "This cancel link doesn't exist or has expired. Contact the organiser.",
       "backToTournament": "See the tournament",
-      "imageConsent": "Optional: I allow appearing in the tournament photos the organiser publishes (me, or my child if under 18)."
+      "imageConsent": "Optional: I allow appearing in the tournament photos the organiser publishes (me, or my child if under 18).",
+      "downloadPoster": "Download poster (PDF)",
+      "registrationClosed": "Registration closed",
+      "finishedNote": "Tournament finished",
+      "registrationOpenHint": "Registration open: fill in the form in a minute.",
+      "registerCta": "Enter",
+      "tabDraw": "Draw",
+      "tabStandings": "Standings",
+      "tabRegister": "Registration",
+      "tabImages": "Images"
     },
     "circuit": {
       "kicker": "Circuit",

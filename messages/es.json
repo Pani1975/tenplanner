@@ -3878,7 +3878,16 @@
       "cancelInvalid": "Enlace no válido",
       "cancelInvalidText": "Este enlace de cancelación no existe o ha caducado. Contacta con el organizador.",
       "backToTournament": "Ver el torneo",
-      "imageConsent": "Opcional: autorizo que aparezcan en las fotos del torneo que publique el organizador (yo, o mi hijo o hija si es menor)."
+      "imageConsent": "Opcional: autorizo que aparezcan en las fotos del torneo que publique el organizador (yo, o mi hijo o hija si es menor).",
+      "downloadPoster": "Descargar cartel (PDF)",
+      "registrationClosed": "Inscripción cerrada",
+      "finishedNote": "Torneo finalizado",
+      "registrationOpenHint": "Inscripción abierta: rellena el formulario en un minuto.",
+      "registerCta": "Inscribirme",
+      "tabDraw": "Cuadro",
+      "tabStandings": "Clasificación",
+      "tabRegister": "Inscripción",
+      "tabImages": "Imágenes"
     },
     "circuit": {
       "kicker": "Circuito",

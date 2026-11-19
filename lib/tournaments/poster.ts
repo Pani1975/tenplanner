@@ -11,7 +11,7 @@ import { formatDateRange } from "./labels";
 import { levelOptions } from "./levels";
 import { MEDIA_BUCKET } from "./media";
 import type { PosterData, PosterTemplate } from "./poster-pdf";
-import { getPublicTournament } from "./public";
+import { getPublicTournament, type PublicTournament } from "./public";
 import { getTournament, TournamentError, type Organizer } from "./server";
 
 // react-pdf no lee WebP: el cartel se guarda en JPG o PNG.
@@ -102,7 +102,7 @@ async function loadImage(path: string): Promise<Buffer | null> {
   }
 }
 
-type Tr = (key: string, values?: Record<string, string | number>) => string;
+export type Tr = (key: string, values?: Record<string, string | number>) => string;
 
 /**
  * Datos del cartel. El QR lleva a la página pública si el torneo es público;
@@ -123,6 +123,46 @@ export async function buildPoster(
     allowDraft: true,
   });
   if (!t) throw new TournamentError("not_found", 404);
+  const { data, template } = await posterData(t, opts);
+  const image =
+    template === "image" && t.posterImagePath
+      ? await loadImage(t.posterImagePath)
+      : null;
+  return { data, template, image };
+}
+
+/** URL firmada de la imagen del cartel, sin comprobar organizador (página pública). */
+export async function signedPosterImage(path: string | null) {
+  if (!path) return null;
+  try {
+    const { data } = await createAdminClient()
+      .storage.from(MEDIA_BUCKET)
+      .createSignedUrl(path, 60 * 60);
+    return data?.signedUrl ?? null;
+  } catch (e) {
+    console.error("URL de la imagen del cartel", e);
+    return null;
+  }
+}
+
+/** Cartel en PDF para un torneo ya cargado (página pública). */
+export async function buildPublicPoster(
+  t: PublicTournament,
+  opts: { baseUrl: string; locale: string; tr: Tr }
+) {
+  const { data, template } = await posterData(t, opts);
+  const image =
+    template === "image" && t.posterImagePath
+      ? await loadImage(t.posterImagePath)
+      : null;
+  return { data, template, image };
+}
+
+/** Textos y datos del cartel (comunes al PDF y a la vista en la web). */
+export async function posterData(
+  t: PublicTournament,
+  opts: { baseUrl: string; locale: string; tr: Tr }
+): Promise<{ data: PosterData; template: PosterTemplate }> {
   const { tr, locale } = opts;
 
   const levels = levelOptions(await loadSkillLevels().catch(() => []), t.sport);
@@ -167,15 +207,13 @@ export async function buildPoster(
     });
   }
 
-  const template = row.posterTemplate as PosterTemplate;
-  const image =
-    template === "image" && row.posterImagePath
-      ? await loadImage(row.posterImagePath)
-      : null;
+  const template: PosterTemplate =
+    t.posterTemplate === "image" && !t.posterImagePath
+      ? "classic"
+      : t.posterTemplate;
 
   return {
     template,
-    image,
     data: {
       name: t.name,
       kicker: `${tr("poster.kicker")} · ${tr(`poster.sport.${t.sport}`)}`,

@@ -203,6 +203,9 @@ export async function getPublicTournament(
     status: statusOf(t),
     visibility: t.visibility as "public" | "private",
     photosPublic: t.photosPublic,
+    // Cartel (solo servidor: la ruta del archivo no se manda al navegador).
+    posterTemplate: t.posterTemplate as "classic" | "court" | "image",
+    posterImagePath: t.posterImagePath,
     schedulePublished: !!t.schedulePublishedAt,
     acceptsRegistrations:
       t.visibility === "public" && acceptsRegistrations(statusInput(t)),
