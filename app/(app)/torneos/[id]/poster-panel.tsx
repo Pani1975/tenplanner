@@ -46,18 +46,18 @@ function Thumb({
 }) {
   const qr = (
     <span className="flex items-center gap-1 rounded bg-white p-1">
-      <QrCode className="size-4 text-[#10233a]" />
-      <span className="h-1 w-6 rounded bg-[#1a6db5]" />
+      <QrCode className="size-4 text-black" />
+      <span className="h-1 w-6 rounded bg-[#d6f04a]" />
     </span>
   );
   if (template === "court") {
     return (
-      <div className="relative flex aspect-[1/1.414] flex-col justify-between overflow-hidden rounded-lg bg-[#1a6db5] p-2">
+      <div className="relative flex aspect-[1/1.414] flex-col justify-between overflow-hidden rounded-lg bg-[#050505] p-2">
         <div className="absolute inset-x-3 inset-y-2 border border-white/20" />
         <div className="absolute inset-x-3 top-1/2 border-t border-white/25" />
         <span className="absolute right-2 top-2 size-4 rounded-full bg-[#d6f04a]" />
         <span className="relative h-2 w-3/4 rounded bg-white" />
-        <span className="relative h-5 rounded bg-[#0f4a80]" />
+        <span className="relative h-5 rounded bg-[#1c1f14]" />
         <span className="relative">{qr}</span>
       </div>
     );
@@ -73,7 +73,7 @@ function Thumb({
             <ImagePlus className="m-auto mt-3 size-5 text-foreground/40" />
           )}
         </div>
-        <div className="bg-[#1a6db5] p-1.5">
+        <div className="bg-[#050505] p-1.5">
           <span className="block h-2 w-3/4 rounded bg-white" />
         </div>
         <div className="mt-auto p-1.5">{qr}</div>
@@ -82,7 +82,7 @@ function Thumb({
   }
   return (
     <div className="flex aspect-[1/1.414] flex-col overflow-hidden rounded-lg bg-white ring-1 ring-foreground/10">
-      <div className="relative overflow-hidden bg-[#1a6db5] p-2 pb-4">
+      <div className="relative overflow-hidden bg-[#050505] p-2 pb-4">
         <span className="absolute -right-3 -top-3 size-8 rounded-full bg-[#d6f04a]" />
         <span className="relative block h-2 w-3/4 rounded bg-white" />
       </div>

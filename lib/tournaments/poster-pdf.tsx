@@ -14,10 +14,11 @@ import {
 } from "@react-pdf/renderer";
 import { qrMatrix, qrRuns } from "./qr";
 
-export const POSTER_BLUE = "#1a6db5";
-const BLUE_DARK = "#0f4a80";
+// Estilo de torneos: negro con letras blancas y detalles en lima.
+export const POSTER_DARK = "#050505";
+const DARK_PANEL = "#1c1f14";
 const LIME = "#d6f04a";
-const INK = "#10233a";
+const INK = "#0b0d05";
 
 export type PosterTemplate = "classic" | "court" | "image";
 
@@ -65,8 +66,8 @@ function QrCard({ d, dark }: { d: PosterData; dark?: boolean }) {
         borderRadius: 14,
         padding: 14,
         gap: 16,
-        borderWidth: dark ? 0 : 1,
-        borderColor: "#d9e3ee",
+        borderWidth: dark ? 0 : 2,
+        borderColor: LIME,
       }}
     >
       <Qr text={d.url} size={112} />
@@ -75,7 +76,7 @@ function QrCard({ d, dark }: { d: PosterData; dark?: boolean }) {
           style={{
             fontFamily: "Helvetica-Bold",
             fontSize: 20,
-            color: POSTER_BLUE,
+            color: POSTER_DARK,
           }}
         >
           {d.cta}
@@ -167,8 +168,8 @@ function Title({
           fontFamily: "Helvetica-Bold",
           fontSize: 10,
           letterSpacing: 2,
-          color,
-          opacity: 0.8,
+          color: color === "#ffffff" ? LIME : color,
+          opacity: color === "#ffffff" ? 1 : 0.8,
         }}
       >
         {d.kicker.toUpperCase()}
@@ -198,7 +199,7 @@ function Classic({ d }: { d: PosterData }) {
     >
       <View
         style={{
-          backgroundColor: POSTER_BLUE,
+          backgroundColor: POSTER_DARK,
           paddingHorizontal: 44,
           paddingTop: 84,
           paddingBottom: 56,
@@ -275,7 +276,7 @@ function Court({ d }: { d: PosterData }) {
   return (
     <Page
       size="A4"
-      style={{ backgroundColor: POSTER_BLUE, fontFamily: "Helvetica" }}
+      style={{ backgroundColor: POSTER_DARK, fontFamily: "Helvetica" }}
     >
       <CourtLines />
       <View
@@ -302,7 +303,7 @@ function Court({ d }: { d: PosterData }) {
         </View>
         <View
           style={{
-            backgroundColor: BLUE_DARK,
+            backgroundColor: DARK_PANEL,
             borderRadius: 14,
             padding: 20,
             gap: 14,
@@ -344,7 +345,7 @@ function WithImage({ d, image }: { d: PosterData; image: Buffer }) {
       />
       <View
         style={{
-          backgroundColor: POSTER_BLUE,
+          backgroundColor: POSTER_DARK,
           paddingHorizontal: 44,
           paddingVertical: 24,
         }}
