@@ -456,6 +456,7 @@ export async function createTournament(
           placeIds: input.placeIds ?? null,
           circuitId,
           visibility: input.visibility ?? "public",
+          ...(input.timeZone && { timeZone: input.timeZone }),
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
           finalSet: input.finalSet,
@@ -582,6 +583,7 @@ export async function updateTournament(
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
         ...(circuitId !== undefined && { circuitId }),
         ...(input.visibility !== undefined && { visibility: input.visibility }),
+        ...(input.timeZone !== undefined && { timeZone: input.timeZone }),
         ...(input.photosPublic !== undefined && {
           photosPublic: input.photosPublic,
         }),

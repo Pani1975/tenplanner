@@ -102,7 +102,10 @@ async function loadImage(path: string): Promise<Buffer | null> {
   }
 }
 
-export type Tr = (key: string, values?: Record<string, string | number>) => string;
+export type Tr = (
+  key: string,
+  values?: Record<string, string | number>
+) => string;
 
 /**
  * Datos del cartel. El QR lleva a la página pública si el torneo es público;
@@ -193,7 +196,7 @@ export async function posterData(
         month: "long",
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: "Europe/Madrid",
+        timeZone: t.timeZone,
       }).format(new Date(t.registrationDeadline)),
     });
   }

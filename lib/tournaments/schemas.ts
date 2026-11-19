@@ -1,7 +1,7 @@
 // Validación de lo que llega a la API de gestión de torneos (zod).
 
 import { z } from "zod";
-import { madridParts } from "./schedule";
+import { TOURNAMENT_TIME_ZONES, zonedParts } from "./schedule";
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha no válida");
 const optText = (max: number) =>
@@ -21,6 +21,7 @@ const scoringFields = {
 
 const tournamentFields = {
   name: z.string().trim().min(3).max(160),
+  timeZone: z.enum(TOURNAMENT_TIME_ZONES).optional(),
   description: optText(2000),
   startDate: dateOnly,
   endDate: dateOnly.optional().nullable(),
@@ -69,6 +70,7 @@ type DatesInput = {
   startDate?: string;
   endDate?: string | null;
   registrationDeadline?: string | null;
+  timeZone?: string;
 };
 
 function checkDates(v: DatesInput, ctx: z.RefinementCtx) {
@@ -81,7 +83,10 @@ function checkDates(v: DatesInput, ctx: z.RefinementCtx) {
   }
   if (v.startDate && v.registrationDeadline) {
     // Plazo como mucho el final del día de inicio.
-    const deadlineDay = madridParts(new Date(v.registrationDeadline)).date;
+    const deadlineDay = zonedParts(
+      new Date(v.registrationDeadline),
+      v.timeZone
+    ).date;
     if (deadlineDay > v.startDate) {
       ctx.addIssue({
         code: "custom",

@@ -207,6 +207,7 @@ export async function getPublicTournament(
     posterTemplate: t.posterTemplate as "classic" | "court" | "image",
     posterImagePath: t.posterImagePath,
     schedulePublished: !!t.schedulePublishedAt,
+    timeZone: t.timeZone,
     acceptsRegistrations:
       t.visibility === "public" && acceptsRegistrations(statusInput(t)),
     maxEntries: t.maxEntries,

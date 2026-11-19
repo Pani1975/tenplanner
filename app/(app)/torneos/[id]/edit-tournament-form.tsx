@@ -4,14 +4,19 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
-import { madridParts, madridToIso } from "@/lib/tournaments/schedule";
+import {
+  TOURNAMENT_TIME_ZONES,
+  zonedParts,
+  zonedToIso,
+  type TournamentTimeZone,
+} from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
 
 /** Día "AAAA-MM-DD" y hora "HH:MM" de España de una fecha ISO. */
-function splitLocal(iso: string | null) {
+function splitLocal(iso: string | null, tz: string) {
   if (!iso) return { date: "", time: "23:59" };
-  // En hora de España, sea cual sea la zona del navegador.
-  return madridParts(new Date(iso));
+  // En la zona horaria del torneo, sea cual sea la del navegador.
+  return zonedParts(new Date(iso), tz);
 }
 
 /**
@@ -32,13 +37,14 @@ export function EditTournamentForm({
     endDate: string | null;
     registrationDeadline: string | null;
     maxEntries: number | null;
+    timeZone: TournamentTimeZone;
   };
   onDone: () => void;
   onCancel: () => void;
 }) {
   const tr = useTranslations("tournaments");
   const apiError = useApiError();
-  const dl = splitLocal(t.registrationDeadline);
+  const dl = splitLocal(t.registrationDeadline, t.timeZone);
   const [f, setF] = useState({
     name: t.name,
     description: t.description ?? "",
@@ -46,6 +52,7 @@ export function EditTournamentForm({
     endDate: t.endDate ?? "",
     deadlineDate: dl.date,
     deadlineTime: dl.time,
+    timeZone: t.timeZone as string,
     maxEntries: t.maxEntries ? String(t.maxEntries) : "",
   });
   const [saving, setSaving] = useState(false);
@@ -76,8 +83,9 @@ export function EditTournamentForm({
         startDate: f.startDate,
         endDate: f.endDate || null,
         registrationDeadline: f.deadlineDate
-          ? madridToIso(f.deadlineDate, f.deadlineTime || "23:59")
+          ? zonedToIso(f.deadlineDate, f.deadlineTime || "23:59", f.timeZone)
           : null,
+        timeZone: f.timeZone,
         maxEntries: max,
       }),
     });
@@ -158,6 +166,23 @@ export function EditTournamentForm({
               className="tp-field h-11 w-28 px-3 text-base"
             />
           </div>
+        </label>
+        <label className="block space-y-1.5">
+          <span className={label}>{tr("wizard.timeZone")}</span>
+          <select
+            value={f.timeZone}
+            onChange={(e) => set("timeZone", e.target.value)}
+            aria-label={tr("wizard.timeZone")}
+            className="tp-field h-11 w-full px-3 text-base"
+          >
+            {TOURNAMENT_TIME_ZONES.map((z) => (
+              <option key={z} value={z}>
+                {tr(
+                  `wizard.tz.${z === "Atlantic/Canary" ? "canary" : "peninsula"}`
+                )}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="block space-y-1.5">
           <span className={label}>{tr("wizard.maxEntries")}</span>

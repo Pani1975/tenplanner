@@ -10,15 +10,17 @@ import { cn } from "@/lib/utils";
 export async function PublicSchedule({
   matches,
   format,
+  timeZone,
 }: {
   matches: PublicMatch[];
   format: "knockout" | "round_robin";
+  timeZone: string;
 }) {
   const [t, locale] = await Promise.all([
     getTranslations("tournaments"),
     getLocale(),
   ]);
-  const days = scheduleByDay(matches);
+  const days = scheduleByDay(matches, timeZone);
   if (!days.length) return null;
   const total = Math.max(0, ...matches.map((m) => m.round));
   const knockout = format === "knockout";

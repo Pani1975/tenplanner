@@ -4041,7 +4041,13 @@
       "circuitPlaceholder": "E.g. Winter Schools Circuit",
       "season": "Season",
       "errCircuit": "Pick the circuit or type its name.",
-      "inCircuit": "Part of the “{name}” circuit"
+      "inCircuit": "Part of the “{name}” circuit",
+      "timeZone": "Time zone",
+      "timeZoneHint": "(deadline and order of play)",
+      "tz": {
+        "peninsula": "Mainland Spain and Balearics",
+        "canary": "Canary Islands"
+      }
     },
     "manager": {
       "back": "Tournaments",

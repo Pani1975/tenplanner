@@ -1,12 +1,38 @@
-// Orden de juego: día, hora y pista de cada partido, en hora de España.
-// Funciones puras (sin base de datos), con tests.
+// Horas de un torneo (plazo, orden de juego) en la zona horaria del torneo:
+// península y Baleares o Canarias. Funciones puras (sin base de datos).
 
-const TZ = "Europe/Madrid";
+export const TOURNAMENT_TIME_ZONES = [
+  "Europe/Madrid",
+  "Atlantic/Canary",
+] as const;
+export type TournamentTimeZone = (typeof TOURNAMENT_TIME_ZONES)[number];
+export const DEFAULT_TIME_ZONE: TournamentTimeZone = "Europe/Madrid";
 
-/** Partes de una fecha en hora de España: { date: "AAAA-MM-DD", time: "HH:MM" }. */
-export function madridParts(d: Date): { date: string; time: string } {
+export function asTimeZone(v: string | null | undefined): TournamentTimeZone {
+  return (TOURNAMENT_TIME_ZONES as readonly string[]).includes(v ?? "")
+    ? (v as TournamentTimeZone)
+    : DEFAULT_TIME_ZONE;
+}
+
+/** Zona propuesta según el dispositivo: Canarias si lo está, si no península. */
+export function guessTimeZone(): TournamentTimeZone {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ===
+      "Atlantic/Canary"
+      ? "Atlantic/Canary"
+      : DEFAULT_TIME_ZONE;
+  } catch {
+    return DEFAULT_TIME_ZONE;
+  }
+}
+
+/** Partes de una fecha en la zona dada: { date: "AAAA-MM-DD", time: "HH:MM" }. */
+export function zonedParts(
+  d: Date,
+  tz: string = DEFAULT_TIME_ZONE
+): { date: string; time: string } {
   const f = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TZ,
+    timeZone: tz,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -22,16 +48,20 @@ export function madridParts(d: Date): { date: string; time: string } {
 }
 
 /**
- * Día y hora de España → instante (ISO en UTC). Tiene en cuenta el cambio
- * de hora: prueba el desfase de ese día y lo corrige si hace falta.
+ * Día y hora en la zona dada → instante (ISO en UTC). Tiene en cuenta el
+ * cambio de hora: prueba el desfase de ese día y lo corrige si hace falta.
  */
-export function madridToIso(date: string, time: string): string {
+export function zonedToIso(
+  date: string,
+  time: string,
+  tz: string = DEFAULT_TIME_ZONE
+): string {
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm] = time.split(":").map(Number);
   const asUtc = Date.UTC(y, m - 1, d, hh, mm);
   let guess = asUtc;
   for (let i = 0; i < 2; i++) {
-    const p = madridParts(new Date(guess));
+    const p = zonedParts(new Date(guess), tz);
     const [py, pm, pd] = p.date.split("-").map(Number);
     const [ph, pmin] = p.time.split(":").map(Number);
     const shown = Date.UTC(py, pm - 1, pd, ph, pmin);
@@ -39,6 +69,11 @@ export function madridToIso(date: string, time: string): string {
   }
   return new Date(guess).toISOString();
 }
+
+/** Atajos en hora peninsular. */
+export const madridParts = (d: Date) => zonedParts(d, DEFAULT_TIME_ZONE);
+export const madridToIso = (date: string, time: string) =>
+  zonedToIso(date, time, DEFAULT_TIME_ZONE);
 
 export type ScheduledLike = {
   id: string;
@@ -49,17 +84,18 @@ export type ScheduledLike = {
 };
 
 /**
- * Partidos con día y hora, agrupados por día (en España) y ordenados por
- * hora y pista. Los que no tienen hora no salen.
+ * Partidos con día y hora, agrupados por día (en la zona del torneo) y
+ * ordenados por hora y pista. Los que no tienen hora no salen.
  */
 export function scheduleByDay<T extends ScheduledLike>(
-  matches: T[]
+  matches: T[],
+  tz: string = DEFAULT_TIME_ZONE
 ): { date: string; items: (T & { time: string })[] }[] {
   const withTime = matches
     .filter((m) => m.scheduledAt)
     .map((m) => {
       const at = new Date(m.scheduledAt as string | Date);
-      return { m, at, parts: madridParts(at) };
+      return { m, at, parts: zonedParts(at, tz) };
     })
     .sort(
       (a, b) =>

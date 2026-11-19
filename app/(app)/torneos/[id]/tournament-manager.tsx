@@ -23,6 +23,7 @@ import { PublicLinks } from "./public-links";
 import { MediaPanel } from "./media-panel";
 import { PosterPanel } from "./poster-panel";
 import { SchedulePanel } from "./schedule-panel";
+import type { TournamentTimeZone } from "@/lib/tournaments/schedule";
 import { DrawPanel, type ManagerMatch } from "./draw-panel";
 import { DrawButton } from "./draw-button";
 import { EditTournamentForm } from "./edit-tournament-form";
@@ -65,6 +66,7 @@ export type ManagerTournament = {
   canArchive: boolean;
   schedulePublished: boolean;
   places: string[];
+  timeZone: TournamentTimeZone;
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
@@ -317,7 +319,7 @@ export function TournamentManager({
                 date: new Intl.DateTimeFormat(locale, {
                   dateStyle: "medium",
                   timeStyle: "short",
-                  timeZone: "Europe/Madrid",
+                  timeZone: t.timeZone,
                 }).format(new Date(t.registrationDeadline)),
               })}
             </span>
@@ -394,6 +396,7 @@ export function TournamentManager({
             endDate: t.endDate,
             registrationDeadline: t.registrationDeadline,
             maxEntries: t.maxEntries,
+            timeZone: t.timeZone,
           }}
           onDone={() => {
             setEditingData(false);
@@ -423,6 +426,7 @@ export function TournamentManager({
           rules={t.rules}
           places={t.places}
           published={t.schedulePublished}
+          timeZone={t.timeZone}
           canScore={status === "in_progress"}
         />
       )}

@@ -12,6 +12,7 @@ import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { places } from "@/db/schema";
 import { canArchive } from "@/lib/tournaments/schedule-server";
+import { asTimeZone } from "@/lib/tournaments/schedule";
 import { TournamentManager } from "./tournament-manager";
 
 const UUID =
@@ -77,6 +78,7 @@ export default async function TorneoPage({ params }: Props) {
         }),
         schedulePublished: !!t.schedulePublishedAt,
         places: placeNames,
+        timeZone: asTimeZone(t.timeZone),
         circuit: t.circuit,
         description: t.description,
         rules: {

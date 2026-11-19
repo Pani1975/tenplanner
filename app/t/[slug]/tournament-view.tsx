@@ -59,7 +59,9 @@ export async function TournamentView({
       ? await signedPosterImage(t.posterImagePath)
       : null;
   const canRegister = withRegistration && t.acceptsRegistrations;
-  const scheduleDays = t.schedulePublished ? scheduleByDay(t.matches) : [];
+  const scheduleDays = t.schedulePublished
+    ? scheduleByDay(t.matches, t.timeZone)
+    : [];
   const level = t.levelCode
     ? options.find((l) => l.code === t.levelCode)
     : null;
@@ -168,7 +170,7 @@ export async function TournamentView({
                   value={new Intl.DateTimeFormat(locale, {
                     dateStyle: "medium",
                     timeStyle: "short",
-                    timeZone: "Europe/Madrid",
+                    timeZone: t.timeZone,
                   }).format(new Date(t.registrationDeadline))}
                 />
               )}
@@ -225,7 +227,11 @@ export async function TournamentView({
                       id: "orden-de-juego",
                       label: tr("schedule.title"),
                       content: (
-                        <PublicSchedule matches={t.matches} format={t.format} />
+                        <PublicSchedule
+                          matches={t.matches}
+                          format={t.format}
+                          timeZone={t.timeZone}
+                        />
                       ),
                     },
                   ]

@@ -95,3 +95,26 @@ describe("canArchive", () => {
     ).toBe(false);
   });
 });
+
+describe("zona del torneo", () => {
+  it("Canarias va una hora por detrás de la península", async () => {
+    const { zonedToIso, zonedParts, scheduleByDay } =
+      await import("@/lib/tournaments/schedule");
+    expect(zonedToIso("2026-12-20", "10:00", "Atlantic/Canary")).toBe(
+      "2026-12-20T10:00:00.000Z"
+    );
+    expect(zonedToIso("2026-07-04", "18:00", "Atlantic/Canary")).toBe(
+      "2026-07-04T17:00:00.000Z"
+    );
+    expect(
+      zonedParts(new Date("2026-12-10T23:59:00Z"), "Atlantic/Canary")
+    ).toEqual({ date: "2026-12-10", time: "23:59" });
+    // 23:30 en Canarias del 20 son las 00:30 del 21 en la península.
+    const at = zonedToIso("2026-12-20", "23:30", "Atlantic/Canary");
+    const m = [
+      { id: "a", scheduledAt: at, courtLabel: null, round: 1, position: 0 },
+    ];
+    expect(scheduleByDay(m, "Atlantic/Canary")[0].date).toBe("2026-12-20");
+    expect(scheduleByDay(m)[0].date).toBe("2026-12-21");
+  });
+});

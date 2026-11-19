@@ -3652,7 +3652,13 @@
       "circuitPlaceholder": "Ej.: Circuito Escuelas de Invierno",
       "season": "Temporada",
       "errCircuit": "Elige el circuito o escribe su nombre.",
-      "inCircuit": "Del circuito «{name}»"
+      "inCircuit": "Del circuito «{name}»",
+      "timeZone": "Hora de",
+      "timeZoneHint": "(plazo y orden de juego)",
+      "tz": {
+        "peninsula": "Península y Baleares",
+        "canary": "Canarias"
+      }
     },
     "manager": {
       "back": "Torneos",

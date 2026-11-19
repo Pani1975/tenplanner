@@ -2682,6 +2682,10 @@ export const tournaments = pgTable(
     schedulePublishedAt: timestamp("schedule_published_at", {
       withTimezone: true,
     }),
+    // Zona horaria del torneo (plazo y orden de juego). 0109.
+    timeZone: varchar("time_zone", { length: 40 })
+      .default("Europe/Madrid")
+      .notNull(),
     maxEntries: integer("max_entries"),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),

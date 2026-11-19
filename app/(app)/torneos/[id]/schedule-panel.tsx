@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { roundLabelKey } from "@/lib/tournaments/bracket";
 import {
-  madridParts,
-  madridToIso,
   scheduleByDay,
   scheduleClashes,
+  zonedParts,
+  zonedToIso,
 } from "@/lib/tournaments/schedule";
 import type { ScoringRules } from "@/lib/tournaments/score";
 import { formatScore } from "@/lib/tournaments/score";
@@ -42,6 +42,7 @@ export function SchedulePanel({
   places,
   published,
   canScore,
+  timeZone,
 }: {
   tournamentId: string;
   format: "knockout" | "round_robin";
@@ -51,6 +52,7 @@ export function SchedulePanel({
   places: string[];
   published: boolean;
   canScore: boolean;
+  timeZone: string;
 }) {
   const t = useTranslations("tournaments");
   const locale = useLocale();
@@ -66,7 +68,9 @@ export function SchedulePanel({
   const initial = useMemo(() => {
     const out: Record<string, Row> = {};
     for (const m of playable) {
-      const p = m.scheduledAt ? madridParts(new Date(m.scheduledAt)) : null;
+      const p = m.scheduledAt
+        ? zonedParts(new Date(m.scheduledAt), timeZone)
+        : null;
       out[m.id] = {
         date: p?.date ?? "",
         time: p?.time ?? "",
@@ -74,7 +78,7 @@ export function SchedulePanel({
       };
     }
     return out;
-  }, [playable]);
+  }, [playable, timeZone]);
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -100,12 +104,7 @@ export function SchedulePanel({
     return !!r.date !== !!r.time;
   });
 
-  const scheduled = scheduleByDay(
-    playable.map((m) => ({
-      ...m,
-      scheduledAt: m.scheduledAt,
-    }))
-  );
+  const scheduled = scheduleByDay(playable, timeZone);
   const clashes = scheduleClashes(playable);
 
   async function save() {
@@ -122,7 +121,8 @@ export function SchedulePanel({
           const r = rows[m.id];
           return {
             matchId: m.id,
-            scheduledAt: r.date && r.time ? madridToIso(r.date, r.time) : null,
+            scheduledAt:
+              r.date && r.time ? zonedToIso(r.date, r.time, timeZone) : null,
             courtLabel: r.court.trim() || null,
           };
         }),

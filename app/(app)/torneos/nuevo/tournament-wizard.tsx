@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,7 +13,13 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { madridToIso } from "@/lib/tournaments/schedule";
+import {
+  DEFAULT_TIME_ZONE,
+  guessTimeZone,
+  TOURNAMENT_TIME_ZONES,
+  zonedToIso,
+  type TournamentTimeZone,
+} from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
 
 type Option = { code: string; label: string; color: string | null };
@@ -27,6 +33,7 @@ type Form = {
   endDate: string;
   deadlineDate: string;
   deadlineTime: string;
+  timeZone: TournamentTimeZone;
   maxEntries: string;
   placeIds: string[];
   modality: "singles" | "doubles" | null;
@@ -67,6 +74,7 @@ export function TournamentWizard({
     endDate: "",
     deadlineDate: "",
     deadlineTime: "23:59",
+    timeZone: DEFAULT_TIME_ZONE,
     maxEntries: "",
     placeIds: [],
     modality: null,
@@ -81,6 +89,13 @@ export function TournamentWizard({
     circuitSeason: String(new Date().getFullYear()),
     visibility: "public",
   });
+  // Zona horaria del dispositivo (Canarias o península): solo se conoce en
+  // el navegador, así que se propone al montar. Se puede cambiar.
+  useEffect(() => {
+    const tz = guessTimeZone();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tz !== DEFAULT_TIME_ZONE) setF((p) => ({ ...p, timeZone: tz }));
+  }, []);
   const set = <K extends keyof Form>(k: K, v: Form[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
 
@@ -118,8 +133,8 @@ export function TournamentWizard({
     setSaving(true);
     setError(null);
     const deadline = f.deadlineDate
-      ? // Hora de España, sea cual sea la zona del navegador.
-        madridToIso(f.deadlineDate, f.deadlineTime || "23:59")
+      ? // En la zona horaria elegida para el torneo.
+        zonedToIso(f.deadlineDate, f.deadlineTime || "23:59", f.timeZone)
       : null;
     const res = await fetch("/api/tournaments", {
       method: "POST",
@@ -130,6 +145,7 @@ export function TournamentWizard({
         startDate: f.startDate,
         endDate: f.endDate || null,
         registrationDeadline: deadline,
+        timeZone: f.timeZone,
         maxEntries: max,
         placeIds: f.placeIds.length ? f.placeIds : null,
         circuitId: f.circuitMode === "existing" ? f.circuitId : null,
@@ -376,6 +392,27 @@ export function TournamentWizard({
                     aria-label={t("wizard.deadlineTime")}
                   />
                 </div>
+              </Field>
+              <Field
+                label={t("wizard.timeZone")}
+                hint={t("wizard.timeZoneHint")}
+              >
+                <select
+                  value={f.timeZone}
+                  onChange={(e) =>
+                    set("timeZone", e.target.value as TournamentTimeZone)
+                  }
+                  aria-label={t("wizard.timeZone")}
+                  className="tp-field h-11 w-full px-3 text-base"
+                >
+                  {TOURNAMENT_TIME_ZONES.map((z) => (
+                    <option key={z} value={z}>
+                      {t(
+                        `wizard.tz.${z === "Atlantic/Canary" ? "canary" : "peninsula"}`
+                      )}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label={t("wizard.maxEntries")} hint={t("wizard.maxHint")}>
                 <input

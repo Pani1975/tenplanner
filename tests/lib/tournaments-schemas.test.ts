@@ -241,3 +241,22 @@ describe("plazo de inscripción en hora de España", () => {
     expect(r.success).toBe(false);
   });
 });
+
+describe("plazo en Canarias", () => {
+  it("23:59 del día de inicio en Canarias vale con la zona del torneo", async () => {
+    const { zonedToIso } = await import("@/lib/tournaments/schedule");
+    const { createTournamentSchema } =
+      await import("@/lib/tournaments/schemas");
+    const deadline = zonedToIso("2026-12-10", "23:59", "Atlantic/Canary");
+    expect(deadline).toBe("2026-12-10T23:59:00.000Z");
+    const r = createTournamentSchema.safeParse({
+      name: "Torneo canario",
+      startDate: "2026-12-10",
+      modality: "singles",
+      format: "knockout",
+      timeZone: "Atlantic/Canary",
+      registrationDeadline: deadline,
+    });
+    expect(r.success).toBe(true);
+  });
+});
