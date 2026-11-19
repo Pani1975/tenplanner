@@ -25,6 +25,7 @@ import { relations, sql } from "drizzle-orm";
 import type { StationItemJson } from "@/lib/block-items";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 import type { Availability, ExperienceEntry } from "@/lib/coach-profile";
+import type { MatchScore } from "@/lib/tournaments/score";
 
 // Enums
 export const exerciseCategoryEnum = pgEnum("exercise_category", [
@@ -2584,4 +2585,196 @@ export const textImports = pgTable(
       .notNull(),
   },
   (t) => [index("text_imports_user_created_idx").on(t.userId, t.createdAt)]
+);
+
+// Torneos (migración 0106). Organiza un club (ownerType "club", clubId) o
+// un monitor en modo particular (ownerType "coach", coachId). Estados y
+// reglas en lib/tournaments/. Los datos de contacto de las inscripciones
+// solo los ve el organizador; la página pública usa publicName().
+export const tournaments = pgTable(
+  "tournaments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerType: varchar("owner_type", { length: 10 }).notNull(), // club | coach
+    clubId: uuid("club_id").references(() => clubs.id, { onDelete: "cascade" }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    createdBy: uuid("created_by")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    sport: sportEnum("sport").default("tenis").notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    slug: varchar("slug", { length: 80 }).notNull(),
+    description: text("description"),
+    modality: varchar("modality", { length: 10 }).notNull(), // singles | doubles
+    levelCode: varchar("level_code", { length: 32 }).references(
+      () => skillLevels.code,
+      { onDelete: "set null", onUpdate: "cascade" }
+    ),
+    format: varchar("format", { length: 20 }).notNull(), // knockout | round_robin
+    // draft | open | closed | in_progress | finished. "open" pasado el plazo
+    // se muestra como "closed" (lib/tournaments/status.ts).
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    maxEntries: integer("max_entries"),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    registrationDeadline: timestamp("registration_deadline", {
+      withTimezone: true,
+    }),
+    // Pistas/lugares usados (ids de places).
+    placeIds: jsonb("place_ids").$type<string[]>(),
+    // Reglas del marcador (lib/tournaments/score.ts).
+    bestOf: smallint("best_of").default(3).notNull(),
+    gamesPerSet: smallint("games_per_set").default(6).notNull(),
+    finalSet: varchar("final_set", { length: 20 })
+      .default("super_tiebreak")
+      .notNull(), // full | super_tiebreak
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("tournaments_slug_uniq").on(t.slug),
+    index("tournaments_club_id_idx").on(t.clubId),
+    index("tournaments_coach_id_idx").on(t.coachId),
+  ]
+);
+
+// Una inscripción = un jugador (individual) o una pareja (dobles).
+export const tournamentEntries = pgTable(
+  "tournament_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tournamentId: uuid("tournament_id")
+      .references(() => tournaments.id, { onDelete: "cascade" })
+      .notNull(),
+    source: varchar("source", { length: 10 }).notNull(), // school | link
+    studentId: uuid("student_id").references(() => students.id, {
+      onDelete: "set null",
+    }),
+    groupId: uuid("group_id").references(() => groups.id, {
+      onDelete: "set null",
+    }),
+    firstName: varchar("first_name", { length: 120 }).notNull(),
+    lastName: varchar("last_name", { length: 160 }),
+    email: varchar("email", { length: 255 }), // normalizeEmail
+    phone: varchar("phone", { length: 32 }), // normalizePhone
+    isMinor: boolean("is_minor").default(false).notNull(),
+    guardianName: varchar("guardian_name", { length: 120 }),
+    guardianEmail: varchar("guardian_email", { length: 255 }),
+    guardianPhone: varchar("guardian_phone", { length: 32 }),
+    levelCode: varchar("level_code", { length: 32 }).references(
+      () => skillLevels.code,
+      { onDelete: "set null", onUpdate: "cascade" }
+    ),
+    partnerStudentId: uuid("partner_student_id").references(() => students.id, {
+      onDelete: "set null",
+    }),
+    partnerFirstName: varchar("partner_first_name", { length: 120 }),
+    partnerLastName: varchar("partner_last_name", { length: 160 }),
+    partnerEmail: varchar("partner_email", { length: 255 }),
+    partnerPhone: varchar("partner_phone", { length: 32 }),
+    partnerIsMinor: boolean("partner_is_minor").default(false).notNull(),
+    partnerGuardianName: varchar("partner_guardian_name", { length: 120 }),
+    partnerGuardianEmail: varchar("partner_guardian_email", { length: 255 }),
+    partnerGuardianPhone: varchar("partner_guardian_phone", { length: 32 }),
+    // pending (falta consentimiento; ocupa plaza) | confirmed | waitlist |
+    // cancelled. Confirmada exige consentAt (CHECK en la migración).
+    status: varchar("status", { length: 12 }).default("pending").notNull(),
+    seed: smallint("seed"),
+    consentAt: timestamp("consent_at", { withTimezone: true }),
+    consentVersion: varchar("consent_version", { length: 20 }),
+    // form (enlace público) | coach_declared | guardian_link
+    consentMethod: varchar("consent_method", { length: 20 }),
+    consentByUserId: uuid("consent_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    consentByName: varchar("consent_by_name", { length: 120 }),
+    // Para que quien se inscribe por enlace pueda cancelar desde el correo.
+    cancelToken: varchar("cancel_token", { length: 64 }),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("tournament_entries_tournament_status_idx").on(
+      t.tournamentId,
+      t.status,
+      t.createdAt
+    ),
+    uniqueIndex("tournament_entries_cancel_token_uniq").on(t.cancelToken),
+    uniqueIndex("tournament_entries_student_uniq")
+      .on(t.tournamentId, t.studentId)
+      .where(sql`student_id IS NOT NULL AND status <> 'cancelled'`),
+    uniqueIndex("tournament_entries_partner_student_uniq")
+      .on(t.tournamentId, t.partnerStudentId)
+      .where(sql`partner_student_id IS NOT NULL AND status <> 'cancelled'`),
+    uniqueIndex("tournament_entries_email_uniq")
+      .on(t.tournamentId, sql`lower(${t.email})`)
+      .where(sql`email IS NOT NULL AND status <> 'cancelled'`),
+    uniqueIndex("tournament_entries_phone_uniq")
+      .on(t.tournamentId, t.phone)
+      .where(sql`phone IS NOT NULL AND status <> 'cancelled'`),
+  ]
+);
+
+// Partidos. Eliminatoria: round 1 = primera ronda, position = orden en la
+// ronda; el ganador pasa a nextMatchId por el lado nextSlot. Liguilla:
+// round = jornada. score: MatchScore de lib/tournaments/score.ts.
+export const tournamentMatches = pgTable(
+  "tournament_matches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tournamentId: uuid("tournament_id")
+      .references(() => tournaments.id, { onDelete: "cascade" })
+      .notNull(),
+    round: smallint("round").notNull(),
+    position: smallint("position").notNull(),
+    groupLabel: varchar("group_label", { length: 10 }),
+    entryAId: uuid("entry_a_id").references(() => tournamentEntries.id, {
+      onDelete: "set null",
+    }),
+    entryBId: uuid("entry_b_id").references(() => tournamentEntries.id, {
+      onDelete: "set null",
+    }),
+    score: jsonb("score").$type<MatchScore>(),
+    resultType: varchar("result_type", { length: 12 }), // normal | walkover | retired
+    winnerEntryId: uuid("winner_entry_id").references(
+      () => tournamentEntries.id,
+      { onDelete: "set null" }
+    ),
+    status: varchar("status", { length: 12 }).default("pending").notNull(), // pending | played | bye
+    nextMatchId: uuid("next_match_id").references(
+      (): AnyPgColumn => tournamentMatches.id,
+      { onDelete: "set null" }
+    ),
+    nextSlot: varchar("next_slot", { length: 1 }), // a | b
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    courtLabel: varchar("court_label", { length: 60 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex("tournament_matches_slot_uniq").on(
+      t.tournamentId,
+      t.round,
+      t.position
+    ),
+  ]
 );
