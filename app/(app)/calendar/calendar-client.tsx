@@ -73,6 +73,15 @@ interface CalendarClientProps {
   tasks?: ManagementTaskData[];
   /** Monitores del club, para elegir responsable de una tarea. */
   coaches?: { id: string; name: string }[];
+  /** Torneos que ocupan pistas: un elemento por cada día del torneo. */
+  tournaments?: {
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string | null;
+    draft: boolean;
+    places: string[];
+  }[];
 }
 
 /** Qué calendario se ve en el Modo gestión. */
@@ -113,8 +122,10 @@ const MONTHS = [
   "Diciembre",
 ];
 
-/** Azul: evento del club. Violeta: evento de gestión. Ámbar: tarea. */
+/** Azul: evento del club. Violeta: evento de gestión. Ámbar: tarea. Lima: torneo. */
 function eventColor(event: CalendarEventData) {
+  if (event.tournamentId)
+    return "bg-[#d6f04a]/45 text-[#3d4a00] hover:bg-[#d6f04a] hover:text-black dark:bg-[#d6f04a]/20 dark:text-[#d6f04a] dark:hover:text-black";
   if (event.taskId)
     return "bg-[#b45309]/15 text-[#92400e] hover:bg-[#b45309] hover:text-white dark:text-[#fbbf77]";
   if (event.management)
@@ -179,6 +190,7 @@ export function CalendarClient({
   currentUserId,
   management = false,
   tasks: initialTasks = [],
+  tournaments = [],
   coaches = [],
 }: CalendarClientProps) {
   const tx = useTranslations("ui.s_calendar_calendarclient");
@@ -261,12 +273,38 @@ export function CalendarClient({
         authorName: t.responsibleLabel,
       };
     });
+  // Cada día del torneo, como evento de todo el día (es del club).
+  const tournamentEvents: CalendarEventData[] = tournaments.flatMap((t) => {
+    const out: CalendarEventData[] = [];
+    const cursor = new Date(`${t.startDate}T00:00:00`);
+    const last = new Date(`${t.endDate ?? t.startDate}T00:00:00`);
+    for (let i = 0; i < 60 && cursor <= last; i++) {
+      const at = cursor.toISOString();
+      out.push({
+        id: `tournament-${t.id}-${i}`,
+        tournamentId: t.id,
+        title: `${tx("tournamentPrefix")} · ${t.name}${t.draft ? ` (${tx("tournamentDraft")})` : ""}`,
+        description: t.places.join(", ") || null,
+        startAt: at,
+        endAt: at,
+        userId: currentUserId,
+        authorName: null,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return out;
+  });
   const scopedEvents = [
     ...events.filter((e) => (e.management ? showGestion : showClub)),
     ...(showGestion ? taskEvents : []),
+    ...(showClub ? tournamentEvents : []),
   ];
 
   function openEvent(event: CalendarEventData) {
+    if (event.tournamentId) {
+      router.push(`/torneos/${event.tournamentId}`);
+      return;
+    }
     if (event.taskId) {
       setTaskDialog({ task: tasks.find((t) => t.id === event.taskId) ?? null });
     } else {
@@ -275,8 +313,8 @@ export function CalendarClient({
   }
 
   function requestDeleteEvent(event: CalendarEventData) {
-    // Las tareas se eliminan desde su diálogo.
-    if (event.taskId) openEvent(event);
+    // Las tareas se eliminan desde su diálogo; los torneos, desde su ficha.
+    if (event.taskId || event.tournamentId) openEvent(event);
     else setEventToDelete(event);
   }
 
@@ -821,7 +859,9 @@ export function CalendarClient({
                         type="button"
                         onClick={() => void toggleTaskDone(t)}
                         aria-label={
-                          t.done ? tx("marcarComoPendiente") : tx("marcarComoHecha")
+                          t.done
+                            ? tx("marcarComoPendiente")
+                            : tx("marcarComoHecha")
                         }
                         className="shrink-0 text-[#b45309]"
                       >
@@ -1077,7 +1117,10 @@ export function CalendarClient({
                               ))}
                               {dayHolidays.length > 1 && (
                                 <div className="px-1.5 text-[10px] text-[#be123c] dark:text-[#fda4af]">
-                                  {tx("v1FestivoV2", { v1: dayHolidays.length - 1, v2: dayHolidays.length - 1 !== 1 ? "s" : "" })}
+                                  {tx("v1FestivoV2", {
+                                    v1: dayHolidays.length - 1,
+                                    v2: dayHolidays.length - 1 !== 1 ? "s" : "",
+                                  })}
                                 </div>
                               )}
                               {dayItems.slice(0, 2).map((item) =>
@@ -1163,7 +1206,8 @@ export function CalendarClient({
                               )}
                               {dayItems.length > 2 && (
                                 <div className="text-[10px] text-muted-foreground px-1.5">
-                                  {tx("v1Mas", { v1: dayItems.length - 2 })}</div>
+                                  {tx("v1Mas", { v1: dayItems.length - 2 })}
+                                </div>
                               )}
                             </div>
                           )}
@@ -1486,9 +1530,7 @@ export function CalendarClient({
         }}
         title={tx("eliminarEstaSesion")}
         description={
-          toDelete
-            ? tx("v1SeBorraraCon", { v1: toDelete.title })
-            : undefined
+          toDelete ? tx("v1SeBorraraCon", { v1: toDelete.title }) : undefined
         }
         confirmLabel={tx("eliminar")}
         destructive

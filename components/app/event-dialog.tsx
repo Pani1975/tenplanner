@@ -26,6 +26,8 @@ export interface CalendarEventData {
   management?: boolean;
   /** Si es una tarea de gestión mostrada en el calendario, su id. */
   taskId?: string;
+  /** Si es un día de torneo (con pistas del club), su id: abre la ficha. */
+  tournamentId?: string;
 }
 
 function pad(n: number) {
@@ -112,9 +114,7 @@ export function EventDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{event ? "Editar evento" : "Nuevo evento"}</DialogTitle>
-          <DialogDescription>
-            {tx("losEventosSeMuestran")}
-          </DialogDescription>
+          <DialogDescription>{tx("losEventosSeMuestran")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

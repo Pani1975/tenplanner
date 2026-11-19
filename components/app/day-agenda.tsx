@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Trophy,
 } from "lucide-react";
 import { DayPdfButton } from "@/components/app/day-pdf-dialog";
 import type { CalendarEventData } from "@/components/app/event-dialog";
@@ -223,7 +224,7 @@ export function DayAgenda({
                   )}
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Clock className="size-3" />
-                    {item.session.durationMinutes}{" "}{tx("min")}
+                    {item.session.durationMinutes} {tx("min")}
                   </p>
                 </div>
                 <Link
@@ -265,6 +266,33 @@ export function DayAgenda({
                   )}
                 </button>
               </div>
+            ) : item.event.tournamentId ? (
+              <div
+                key={`e-${item.event.id}`}
+                className="tp-panel flex items-center gap-4 border-[#8aa300]/30 bg-[#d6f04a]/[0.12] p-4"
+              >
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#d6f04a] text-black">
+                  <Trophy className="size-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {item.event.title}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {tx("allDay")}
+                    {item.event.description && ` · ${item.event.description}`}
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#d6f04a] px-3 py-1.5 text-xs font-black text-black">
+                  {tx("tournament")}
+                </span>
+                <Link
+                  href={`/torneos/${item.event.tournamentId}`}
+                  className="inline-flex h-8 shrink-0 items-center rounded-full bg-foreground/5 px-3 text-xs font-bold hover:bg-foreground/10"
+                >
+                  {tx("openTournament")}
+                </Link>
+              </div>
             ) : (
               <div
                 key={`e-${item.event.id}`}
@@ -285,10 +313,13 @@ export function DayAgenda({
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Clock className="size-3" />
-                    {new Date(item.event.startAt).toLocaleTimeString(intlLocale, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(item.event.startAt).toLocaleTimeString(
+                      intlLocale,
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                     {" – "}
                     {new Date(item.event.endAt).toLocaleTimeString(intlLocale, {
                       hour: "2-digit",

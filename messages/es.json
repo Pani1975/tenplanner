@@ -1833,7 +1833,9 @@
       "eliminarEsteEvento": "¿Eliminar este evento?",
       "v1DejaraDeAparecer": "“{v1}” dejará de aparecer en el calendario y las sesiones que marcaba como «no se imparte» volverán a la normalidad.",
       "v1SeBorraraCon": "“{v1}” se borrará con su plan de ejercicios y sus notas. Esta acción no se puede deshacer.",
-      "v1SeEliminaraDel": "“{v1}” se eliminará del calendario. Esta acción no se puede deshacer."
+      "v1SeEliminaraDel": "“{v1}” se eliminará del calendario. Esta acción no se puede deshacer.",
+      "tournamentPrefix": "Torneo",
+      "tournamentDraft": "borrador"
     },
     "s_calendar_page": {
       "calendarioDesactivado": "Calendario desactivado",
@@ -2802,7 +2804,10 @@
       "duplicarSesion": "Duplicar sesión",
       "eliminarSesion": "Eliminar sesión",
       "editarEvento": "Editar evento",
-      "eliminarEvento": "Eliminar evento"
+      "eliminarEvento": "Eliminar evento",
+      "allDay": "Todo el día",
+      "tournament": "Torneo",
+      "openTournament": "Abrir"
     },
     "s_app_daypdfdialog": {
       "noSePudoGenerar": "No se pudo generar el PDF. Inténtalo de nuevo.",

@@ -1933,7 +1933,9 @@
       "eliminarEsteEvento": "Delete this event?",
       "v1DejaraDeAparecer": "“{v1}” will stop appearing in the calendar and the sessions it marked as “not taught” will go back to normal.",
       "v1SeBorraraCon": "“{v1}” will be deleted along with its drill plan and notes. This action cannot be undone.",
-      "v1SeEliminaraDel": "“{v1}” will be removed from the calendar. This action cannot be undone."
+      "v1SeEliminaraDel": "“{v1}” will be removed from the calendar. This action cannot be undone.",
+      "tournamentPrefix": "Tournament",
+      "tournamentDraft": "draft"
     },
     "s_calendar_page": {
       "calendarioDesactivado": "Calendar disabled",
@@ -2801,7 +2803,10 @@
       "duplicarSesion": "Duplicate session",
       "eliminarSesion": "Delete session",
       "editarEvento": "Edit event",
-      "eliminarEvento": "Delete event"
+      "eliminarEvento": "Delete event",
+      "allDay": "All day",
+      "tournament": "Tournament",
+      "openTournament": "Open"
     },
     "s_app_daypdfdialog": {
       "noSePudoGenerar": "The PDF could not be generated. Try again.",

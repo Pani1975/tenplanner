@@ -14,10 +14,12 @@ import {
   calendarHolidays as calendarHolidaysTable,
   groups as groupsTable,
   managementTasks as managementTasksTable,
+  places as placesTable,
+  tournaments as tournamentsTable,
   users as usersTable,
 } from "@/db/schema";
 import { serializeTask } from "@/lib/management-tasks";
-import { and, asc, eq, gte, inArray, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { CalendarClient } from "./calendar-client";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
@@ -260,6 +262,62 @@ export default async function CalendarPage({ searchParams }: PageProps) {
     serializeTask(r.task, r.coachName ?? null, clubName)
   );
 
+  // Torneos que ocupan pistas (del club en modo club; los propios en modo
+  // particular): salen en el calendario como una categoría más, cada día
+  // del torneo. Se ven todos los del club aunque se filtre por monitor.
+  const tournamentClubId = managementClubId ?? activeClubId;
+  const tournamentRows = await db
+    .select({
+      id: tournamentsTable.id,
+      name: tournamentsTable.name,
+      startDate: tournamentsTable.startDate,
+      endDate: tournamentsTable.endDate,
+      status: tournamentsTable.status,
+      placeIds: tournamentsTable.placeIds,
+    })
+    .from(tournamentsTable)
+    .where(
+      and(
+        tournamentClubId
+          ? eq(tournamentsTable.clubId, tournamentClubId)
+          : and(
+              eq(tournamentsTable.coachId, user.id),
+              isNull(tournamentsTable.clubId)
+            ),
+        sql`jsonb_array_length(coalesce(${tournamentsTable.placeIds}, '[]'::jsonb)) > 0`,
+        lte(tournamentsTable.startDate, toDateStr(windowEnd)),
+        gte(
+          sql`coalesce(${tournamentsTable.endDate}, ${tournamentsTable.startDate})`,
+          toDateStr(windowStart)
+        )
+      )
+    )
+    .orderBy(asc(tournamentsTable.startDate))
+    .limit(200);
+  const tournamentPlaceIds = [
+    ...new Set(tournamentRows.flatMap((t) => t.placeIds ?? [])),
+  ];
+  const placeNames = new Map(
+    tournamentPlaceIds.length
+      ? (
+          await db
+            .select({ id: placesTable.id, name: placesTable.name })
+            .from(placesTable)
+            .where(inArray(placesTable.id, tournamentPlaceIds))
+        ).map((p) => [p.id, p.name] as const)
+      : []
+  );
+  const calendarTournaments = tournamentRows.map((t) => ({
+    id: t.id,
+    name: t.name,
+    startDate: t.startDate,
+    endDate: t.endDate,
+    draft: t.status === "draft",
+    places: (t.placeIds ?? [])
+      .map((id) => placeNames.get(id))
+      .filter((n): n is string => !!n),
+  }));
+
   const total = serialized.length;
   const totalEvents = serializedEvents.length;
 
@@ -273,13 +331,20 @@ export default async function CalendarPage({ searchParams }: PageProps) {
               {tx("agendaOperativa")}
             </div>
             <h1 className="break-words text-4xl font-black leading-tight sm:text-5xl">
-              {personalTitle("Calendario", await getWorkMode(user.id), await getLocale())}
+              {personalTitle(
+                "Calendario",
+                await getWorkMode(user.id),
+                await getLocale()
+              )}
             </h1>
             <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
               {tx("sessionsPlanned", { n: total })}
               {totalEvents > 0 && (
                 <>
-                  {tx("yV1EventoV2", { v1: totalEvents, v2: totalEvents !== 1 ? "s" : "" })}
+                  {tx("yV1EventoV2", {
+                    v1: totalEvents,
+                    v2: totalEvents !== 1 ? "s" : "",
+                  })}
                 </>
               )}{" "}
               {tx("withinWindow")}
@@ -343,6 +408,7 @@ export default async function CalendarPage({ searchParams }: PageProps) {
           currentUserId={user.id}
           management={!!managementClubId}
           tasks={tasks}
+          tournaments={calendarTournaments}
           coaches={taskCoaches.filter((m) => m.id !== user.id)}
         />
       </div>
