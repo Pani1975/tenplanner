@@ -262,6 +262,57 @@ if (!enabled) {
       await s.updateTournament(o, t.id, { status: "finished" });
     });
 
+    it("circuito: nuevo, reutilizado sin duplicar y solo del organizador", async () => {
+      const name = `IT circuito ${crypto.randomUUID().slice(0, 6)}`;
+      const base = {
+        description: null,
+        startDate: futureDay(15),
+        modality: "singles" as const,
+        format: "knockout" as const,
+        bestOf: 3 as const,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak" as const,
+      };
+      const a = await s.createTournament(o, {
+        ...base,
+        name: "IT etapa 1",
+        newCircuit: { name, season: "2026" },
+      });
+      created.push(a.id);
+      expect(a.circuitId).not.toBeNull();
+      // Mismo nombre con otras mayúsculas: reutiliza el circuito.
+      const b = await s.createTournament(o, {
+        ...base,
+        name: "IT etapa 2",
+        newCircuit: { name: name.toUpperCase(), season: "2026" },
+      });
+      created.push(b.id);
+      expect(b.circuitId).toBe(a.circuitId);
+
+      const circuits = await s.listCircuits(o);
+      const mine = circuits.find((c) => c.id === a.circuitId)!;
+      expect(mine).toMatchObject({ name, season: "2026", tournaments: 2 });
+
+      const detail = await s.getTournamentDetail(o, b.id);
+      expect(detail.tournament.circuit).toMatchObject({ name });
+
+      // Otro monitor no puede meter un torneo en ese circuito.
+      await expect(
+        s.createTournament(
+          { ...o, userId: crypto.randomUUID() },
+          { ...base, name: "IT ajeno", circuitId: a.circuitId }
+        )
+      ).rejects.toMatchObject({ code: "circuit_not_found" });
+
+      // Pasar a independiente.
+      const u = await s.updateTournament(o, b.id, { circuitId: null });
+      expect(u.tournament.circuitId).toBeNull();
+
+      await db
+        .delete(schema.tournamentCircuits)
+        .where(eq(schema.tournamentCircuits.id, a.circuitId!));
+    });
+
     it("liguilla: calendario y resultados", async () => {
       const t = await s.createTournament(o, {
         name: "IT liguilla",

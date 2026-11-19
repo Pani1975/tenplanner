@@ -2587,6 +2587,37 @@ export const textImports = pgTable(
   (t) => [index("text_imports_user_created_idx").on(t.userId, t.createdAt)]
 );
 
+// Circuitos de torneos (migración 0106): agrupan torneos del mismo
+// organizador. Un torneo sin circuito es independiente.
+export const tournamentCircuits = pgTable(
+  "tournament_circuits",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ownerType: varchar("owner_type", { length: 10 }).notNull(), // club | coach
+    clubId: uuid("club_id").references(() => clubs.id, { onDelete: "cascade" }),
+    coachId: uuid("coach_id").references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    createdBy: uuid("created_by")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    sport: sportEnum("sport").default("tenis").notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    season: varchar("season", { length: 20 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("tournament_circuits_club_id_idx").on(t.clubId),
+    index("tournament_circuits_coach_id_idx").on(t.coachId),
+  ]
+);
+
 // Torneos (migración 0106). Organiza un club (ownerType "club", clubId) o
 // un monitor en modo particular (ownerType "coach", coachId). Estados y
 // reglas en lib/tournaments/. Los datos de contacto de las inscripciones
@@ -2606,6 +2637,10 @@ export const tournaments = pgTable(
     sport: sportEnum("sport").default("tenis").notNull(),
     name: varchar("name", { length: 160 }).notNull(),
     slug: varchar("slug", { length: 80 }).notNull(),
+    // null = torneo independiente; si no, el circuito al que pertenece.
+    circuitId: uuid("circuit_id").references(() => tournamentCircuits.id, {
+      onDelete: "set null",
+    }),
     description: text("description"),
     modality: varchar("modality", { length: 10 }).notNull(), // singles | doubles
     levelCode: varchar("level_code", { length: 32 }).references(
@@ -2642,6 +2677,7 @@ export const tournaments = pgTable(
     uniqueIndex("tournaments_slug_uniq").on(t.slug),
     index("tournaments_club_id_idx").on(t.clubId),
     index("tournaments_coach_id_idx").on(t.coachId),
+    index("tournaments_circuit_id_idx").on(t.circuitId),
   ]
 );
 

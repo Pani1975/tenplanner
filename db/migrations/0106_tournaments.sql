@@ -251,3 +251,54 @@ ALTER TABLE "tournaments" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "tournament_entries" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 ALTER TABLE "tournament_matches" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+-- Circuitos: un torneo es independiente (circuit_id nulo) o pertenece a un
+-- circuito del mismo organizador (decisión de David, 2026-11-19). La
+-- clasificación conjunta del circuito queda para más adelante.
+CREATE TABLE IF NOT EXISTS "tournament_circuits" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "owner_type" varchar(10) NOT NULL,
+  "club_id" uuid,
+  "coach_id" uuid,
+  "created_by" uuid NOT NULL,
+  "sport" "sport" DEFAULT 'tenis' NOT NULL,
+  "name" varchar(160) NOT NULL,
+  "season" varchar(20),
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "tournaments" ADD COLUMN IF NOT EXISTS "circuit_id" uuid;
+--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_circuits_club_id_fk') THEN
+    ALTER TABLE "tournament_circuits" ADD CONSTRAINT "tournament_circuits_club_id_fk"
+      FOREIGN KEY ("club_id") REFERENCES "public"."clubs"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_circuits_coach_id_fk') THEN
+    ALTER TABLE "tournament_circuits" ADD CONSTRAINT "tournament_circuits_coach_id_fk"
+      FOREIGN KEY ("coach_id") REFERENCES "public"."users"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_circuits_created_by_fk') THEN
+    ALTER TABLE "tournament_circuits" ADD CONSTRAINT "tournament_circuits_created_by_fk"
+      FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE cascade;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournament_circuits_owner_chk') THEN
+    ALTER TABLE "tournament_circuits" ADD CONSTRAINT "tournament_circuits_owner_chk" CHECK (
+      ("owner_type" = 'club' AND "club_id" IS NOT NULL)
+      OR ("owner_type" = 'coach' AND "coach_id" IS NOT NULL AND "club_id" IS NULL)
+    );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tournaments_circuit_id_fk') THEN
+    ALTER TABLE "tournaments" ADD CONSTRAINT "tournaments_circuit_id_fk"
+      FOREIGN KEY ("circuit_id") REFERENCES "public"."tournament_circuits"("id") ON DELETE set null;
+  END IF;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tournament_circuits_club_id_idx" ON "tournament_circuits" USING btree ("club_id");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tournament_circuits_coach_id_idx" ON "tournament_circuits" USING btree ("coach_id");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tournaments_circuit_id_idx" ON "tournaments" USING btree ("circuit_id");
+--> statement-breakpoint
+ALTER TABLE "tournament_circuits" ENABLE ROW LEVEL SECURITY;

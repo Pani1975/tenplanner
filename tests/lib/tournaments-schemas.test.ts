@@ -72,6 +72,32 @@ describe("updateTournamentSchema", () => {
   });
 });
 
+describe("circuito", () => {
+  it("independiente, existente o nuevo; no los dos a la vez", () => {
+    expect(createTournamentSchema.safeParse(base).success).toBe(true);
+    expect(
+      createTournamentSchema.safeParse({
+        ...base,
+        newCircuit: { name: "Circuito de invierno", season: "2026" },
+      }).success
+    ).toBe(true);
+    expect(
+      createTournamentSchema.safeParse({
+        ...base,
+        circuitId: "00000000-0000-4000-8000-000000000001",
+        newCircuit: { name: "Otro" },
+      }).success
+    ).toBe(false);
+    expect(
+      createTournamentSchema.safeParse({ ...base, newCircuit: { name: "x" } })
+        .success
+    ).toBe(false);
+    expect(updateTournamentSchema.parse({ circuitId: null })).toEqual({
+      circuitId: null,
+    });
+  });
+});
+
 const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
 
 describe("addEntriesSchema", () => {

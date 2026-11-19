@@ -16,11 +16,13 @@ import {
   students,
   tournamentEntries,
   tournamentMatches,
+  tournamentCircuits,
   tournaments,
 } from "@/db/schema";
 import { getActiveWorkClubId, getOwnedClub } from "@/lib/clubs";
 import { canSeeContacts, redactEntry } from "./privacy";
 import { getActiveSport } from "@/lib/sports";
+import { scaleSportFor } from "@/lib/skill-levels";
 import type { Sport } from "@/lib/sports";
 import {
   applyWinner,
@@ -151,21 +153,112 @@ export async function listTournaments(o: Organizer) {
         sql<number>`count(${tournamentEntries.id}) filter (where ${tournamentEntries.status} = 'waitlist')`.mapWith(
           Number
         ),
+      circuitName: tournamentCircuits.name,
+      circuitSeason: tournamentCircuits.season,
     })
     .from(tournaments)
     .leftJoin(
       tournamentEntries,
       eq(tournamentEntries.tournamentId, tournaments.id)
     )
+    .leftJoin(
+      tournamentCircuits,
+      eq(tournamentCircuits.id, tournaments.circuitId)
+    )
     .where(and(ownerWhere(o), eq(tournaments.sport, o.sport)))
-    .groupBy(tournaments.id)
+    .groupBy(tournaments.id, tournamentCircuits.id)
     .orderBy(sql`${tournaments.startDate} desc`);
   return rows.map((r) => ({
     ...r.t,
     effectiveStatus: statusOf(r.t),
     spotsTaken: r.taken,
     waitlistCount: r.waitlist,
+    circuit: r.circuitName
+      ? { name: r.circuitName, season: r.circuitSeason }
+      : null,
   }));
+}
+
+// ── Circuitos ──────────────────────────────────────────────────────────
+
+function circuitWhere(o: Organizer): SQL {
+  return o.clubId
+    ? eq(tournamentCircuits.clubId, o.clubId)
+    : and(
+        eq(tournamentCircuits.coachId, o.userId),
+        isNull(tournamentCircuits.clubId)
+      )!;
+}
+
+/** Circuitos del organizador (deporte activo), con cuántos torneos tienen. */
+export async function listCircuits(o: Organizer) {
+  return db
+    .select({
+      id: tournamentCircuits.id,
+      name: tournamentCircuits.name,
+      season: tournamentCircuits.season,
+      tournaments: sql<number>`count(${tournaments.id})`.mapWith(Number),
+    })
+    .from(tournamentCircuits)
+    .leftJoin(tournaments, eq(tournaments.circuitId, tournamentCircuits.id))
+    .where(and(circuitWhere(o), eq(tournamentCircuits.sport, o.sport)))
+    .groupBy(tournamentCircuits.id)
+    .orderBy(asc(tournamentCircuits.name));
+}
+
+/**
+ * Circuito del torneo: undefined = no cambia; null = independiente. Un
+ * circuito nuevo con el mismo nombre y temporada que uno existente reutiliza
+ * ese (sin distinguir mayúsculas), para no duplicarlos por error.
+ */
+async function resolveCircuit(
+  o: Organizer,
+  input: {
+    circuitId?: string | null;
+    newCircuit?: { name: string; season: string | null } | null;
+  }
+): Promise<string | null | undefined> {
+  if (input.newCircuit) {
+    const name = input.newCircuit.name.trim();
+    const season = input.newCircuit.season?.trim() || null;
+    const [existing] = await db
+      .select({ id: tournamentCircuits.id })
+      .from(tournamentCircuits)
+      .where(
+        and(
+          circuitWhere(o),
+          eq(tournamentCircuits.sport, o.sport),
+          sql`lower(${tournamentCircuits.name}) = lower(${name})`,
+          season
+            ? sql`lower(${tournamentCircuits.season}) = lower(${season})`
+            : isNull(tournamentCircuits.season)
+        )
+      )
+      .limit(1);
+    if (existing) return existing.id;
+    const [row] = await db
+      .insert(tournamentCircuits)
+      .values({
+        ownerType: o.clubId ? "club" : "coach",
+        clubId: o.clubId,
+        coachId: o.clubId ? null : o.userId,
+        createdBy: o.userId,
+        sport: o.sport,
+        name,
+        season,
+      })
+      .returning({ id: tournamentCircuits.id });
+    return row.id;
+  }
+  if (input.circuitId === undefined) return undefined;
+  if (input.circuitId === null) return null;
+  const [row] = await db
+    .select({ id: tournamentCircuits.id })
+    .from(tournamentCircuits)
+    .where(and(eq(tournamentCircuits.id, input.circuitId), circuitWhere(o)))
+    .limit(1);
+  if (!row) throw new TournamentError("circuit_not_found", 400);
+  return row.id;
 }
 
 export async function getTournament(
@@ -195,7 +288,7 @@ async function lockTournament(tx: Tx, o: Organizer, id: string) {
 
 export async function getTournamentDetail(o: Organizer, id: string) {
   const t = await getTournament(o, id);
-  const [entries, matches] = await Promise.all([
+  const [entries, matches, circuit] = await Promise.all([
     db
       .select()
       .from(tournamentEntries)
@@ -206,9 +299,21 @@ export async function getTournamentDetail(o: Organizer, id: string) {
       .from(tournamentMatches)
       .where(eq(tournamentMatches.tournamentId, id))
       .orderBy(asc(tournamentMatches.round), asc(tournamentMatches.position)),
+    t.circuitId
+      ? db
+          .select({
+            id: tournamentCircuits.id,
+            name: tournamentCircuits.name,
+            season: tournamentCircuits.season,
+          })
+          .from(tournamentCircuits)
+          .where(eq(tournamentCircuits.id, t.circuitId))
+          .limit(1)
+          .then((r) => r[0] ?? null)
+      : Promise.resolve(null),
   ]);
   return {
-    tournament: { ...t, effectiveStatus: statusOf(t) },
+    tournament: { ...t, effectiveStatus: statusOf(t), circuit },
     entries: entries.map((e) => redactEntry(e, o.canSeeContacts)),
     matches,
   };
@@ -219,14 +324,18 @@ async function checkLevel(code: string | null | undefined, sport: Sport) {
   const [row] = await db
     .select({ code: skillLevels.code })
     .from(skillLevels)
-    .where(and(eq(skillLevels.code, code), eq(skillLevels.sport, sport)))
+    .where(
+      and(
+        eq(skillLevels.code, code),
+        eq(skillLevels.sport, scaleSportFor(sport))
+      )
+    )
     .limit(1);
   if (!row) throw new TournamentError("invalid_level", 400);
 }
 
-/** Pistas del monitor o, en modo club, también las de la cuenta del club. */
-async function checkPlaces(o: Organizer, ids: string[] | null | undefined) {
-  if (!ids?.length) return;
+/** Dueños de las pistas: el monitor y, en modo club, la cuenta del club. */
+async function placeOwners(o: Organizer): Promise<string[]> {
   const owners = [o.userId];
   if (o.clubId) {
     const [club] = await db
@@ -234,8 +343,23 @@ async function checkPlaces(o: Organizer, ids: string[] | null | undefined) {
       .from(clubs)
       .where(eq(clubs.id, o.clubId))
       .limit(1);
-    if (club) owners.push(club.ownerId);
+    if (club && club.ownerId !== o.userId) owners.push(club.ownerId);
   }
+  return owners;
+}
+
+/** Pistas que puede usar el organizador (para el asistente). */
+export async function listPlaces(o: Organizer) {
+  return db
+    .select({ id: places.id, name: places.name })
+    .from(places)
+    .where(inArray(places.coachId, await placeOwners(o)))
+    .orderBy(asc(places.name));
+}
+
+async function checkPlaces(o: Organizer, ids: string[] | null | undefined) {
+  if (!ids?.length) return;
+  const owners = await placeOwners(o);
   const rows = await db
     .select({ id: places.id })
     .from(places)
@@ -259,6 +383,7 @@ export async function createTournament(
     checkLevel(input.levelCode, o.sport),
     checkPlaces(o, input.placeIds),
   ]);
+  const circuitId = (await resolveCircuit(o, input)) ?? null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const [row] = await db
@@ -282,6 +407,7 @@ export async function createTournament(
             ? new Date(input.registrationDeadline)
             : null,
           placeIds: input.placeIds ?? null,
+          circuitId,
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
           finalSet: input.finalSet,
@@ -385,6 +511,7 @@ export async function updateTournament(
         : null,
       input.placeIds !== undefined ? checkPlaces(o, input.placeIds) : null,
     ]);
+    const circuitId = await resolveCircuit(o, input);
 
     const [row] = await tx
       .update(tournaments)
@@ -403,6 +530,7 @@ export async function updateTournament(
           registrationDeadline: deadline,
         }),
         ...(input.placeIds !== undefined && { placeIds: input.placeIds }),
+        ...(circuitId !== undefined && { circuitId }),
         ...(input.bestOf !== undefined && { bestOf: input.bestOf }),
         ...(input.gamesPerSet !== undefined && {
           gamesPerSet: input.gamesPerSet,

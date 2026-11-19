@@ -34,7 +34,32 @@ const tournamentFields = {
   levelCode: z.string().max(32).optional().nullable(),
   format: z.enum(["knockout", "round_robin"]),
   ...scoringFields,
+  // Independiente (null) o de un circuito: uno existente (circuitId) o uno
+  // nuevo que se crea al guardar (newCircuit).
+  circuitId: z.string().uuid().optional().nullable(),
+  newCircuit: z
+    .object({
+      name: z.string().trim().min(2).max(160),
+      season: optText(20),
+    })
+    .optional()
+    .nullable(),
 };
+
+type CircuitInput = {
+  circuitId?: string | null;
+  newCircuit?: { name: string } | null;
+};
+
+function checkCircuit(v: CircuitInput, ctx: z.RefinementCtx) {
+  if (v.circuitId && v.newCircuit) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["newCircuit"],
+      message: "Elige un circuito existente o uno nuevo, no los dos",
+    });
+  }
+}
 
 type DatesInput = {
   startDate?: string;
@@ -70,7 +95,10 @@ export const createTournamentSchema = z
     gamesPerSet: scoringFields.gamesPerSet.default(6),
     finalSet: scoringFields.finalSet.default("super_tiebreak"),
   })
-  .superRefine(checkDates);
+  .superRefine((v, ctx) => {
+    checkDates(v, ctx);
+    checkCircuit(v, ctx);
+  });
 
 export type CreateTournamentInput = z.infer<typeof createTournamentSchema>;
 
@@ -82,7 +110,10 @@ export const updateTournamentSchema = z
       .enum(["draft", "open", "closed", "in_progress", "finished"])
       .optional(),
   })
-  .superRefine(checkDates);
+  .superRefine((v, ctx) => {
+    checkDates(v, ctx);
+    checkCircuit(v, ctx);
+  });
 
 export type UpdateTournamentInput = z.infer<typeof updateTournamentSchema>;
 
