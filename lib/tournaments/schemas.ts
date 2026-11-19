@@ -226,3 +226,21 @@ export const matchResultSchema = z.object({
 });
 
 export type MatchResultBody = z.infer<typeof matchResultSchema>;
+
+// Inscripción pública por enlace (sin cuenta). El consentimiento RGPD es
+// obligatorio; "website" es una trampa para robots: una persona no la ve
+// y debe llegar vacía.
+export const publicRegistrationSchema = z
+  .object({
+    player: z.object(person),
+    partner: z.object(person).optional().nullable(),
+    levelCode: z.string().max(32).optional().nullable(),
+    consent: z.literal(true),
+    website: z.string().max(0).optional(),
+  })
+  .superRefine((v, ctx) => {
+    checkContact(v.player, ctx, ["player"]);
+    if (v.partner) checkContact(v.partner, ctx, ["partner"]);
+  });
+
+export type PublicRegistrationInput = z.infer<typeof publicRegistrationSchema>;

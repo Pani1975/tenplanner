@@ -22,6 +22,7 @@ if (!enabled) {
     const schema = await import("@/db/schema");
     const { and, eq, inArray, ne } = await import("drizzle-orm");
     const s = await import("@/lib/tournaments/server");
+    const pub = await import("@/lib/tournaments/public");
 
     const [user] = await db
       .select({ id: schema.users.id })
@@ -311,6 +312,186 @@ if (!enabled) {
       await db
         .delete(schema.tournamentCircuits)
         .where(eq(schema.tournamentCircuits.id, a.circuitId!));
+    });
+
+    it("público: inscripción por enlace, lista de espera, cancelar y privacidad", async () => {
+      const base = {
+        description: null,
+        startDate: futureDay(20),
+        modality: "singles" as const,
+        format: "knockout" as const,
+        bestOf: 3 as const,
+        gamesPerSet: 6,
+        finalSet: "super_tiebreak" as const,
+      };
+      const t = await s.createTournament(o, {
+        ...base,
+        name: "IT público",
+        maxEntries: 2,
+      });
+      created.push(t.id);
+      const reg = (first: string, last: string, email: string) =>
+        pub.registerPublic(t.slug, {
+          player: {
+            firstName: first,
+            lastName: last,
+            email,
+            isMinor: false,
+            guardianName: null,
+          },
+          consent: true,
+        });
+
+      // En borrador no es público ni admite inscripciones.
+      expect(await pub.getPublicTournament(t.slug)).toBeNull();
+      await expect(reg("Ana", "Ruiz", "ana@it.test")).rejects.toMatchObject({
+        code: "not_found",
+      });
+      await s.updateTournament(o, t.id, { status: "open" });
+
+      const a = await reg("Ana", "Ruiz López", "ana@it.test");
+      const b = await reg("Bea", "Sanz", "bea@it.test");
+      const c = await reg("Carla", "Díaz", "carla@it.test");
+      expect([a.status, b.status, c.status]).toEqual([
+        "confirmed",
+        "confirmed",
+        "waitlist",
+      ]);
+      expect(c.waitlistPosition).toBe(1);
+      await expect(reg("Otra", "Ana", "ANA@it.test")).rejects.toMatchObject({
+        code: "duplicate",
+      });
+      // Menor: con el contacto del tutor (dos hermanos pueden compartirlo).
+      const kid = (first: string) =>
+        pub.registerPublic(t.slug, {
+          player: {
+            firstName: first,
+            lastName: "Peña",
+            isMinor: true,
+            guardianName: "Marta Peña",
+            guardianEmail: "marta@it.test",
+          },
+          consent: true,
+        });
+      expect((await kid("Leo")).status).toBe("waitlist");
+      expect((await kid("Noa")).status).toBe("waitlist");
+
+      // Página pública: cuenta la lista de espera y no hay contactos.
+      const p = (await pub.getPublicTournament(t.slug))!;
+      expect(p.registeredCount).toBe(5);
+      expect(p.waitlistCount).toBe(3);
+      expect(p.entrants).toEqual(["Ana R. L.", "Bea S."]);
+      expect(p.waitlist).toEqual(["Carla D.", "Leo P.", "Noa P."]);
+      const json = JSON.stringify(p);
+      expect(json).not.toMatch(/@it\.test|marta|Ruiz López/i);
+
+      // Cancelar con el enlace del correo: entra Carla (primera en espera).
+      const r = await pub.cancelByToken(a.cancelToken);
+      expect(r.alreadyCancelled).toBe(false);
+      expect(r.promoted).toEqual([
+        expect.objectContaining({
+          email: "carla@it.test",
+          playerName: "Carla D.",
+        }),
+      ]);
+      const after = (await pub.getPublicTournament(t.slug))!;
+      expect(after.entrants).toEqual(["Bea S.", "Carla D."]);
+      expect((await pub.cancelByToken(a.cancelToken)).alreadyCancelled).toBe(
+        true
+      );
+      expect(await pub.findByCancelToken("x".repeat(30))).toBeNull();
+
+      // Cerrado: ya no admite inscripciones.
+      await s.updateTournament(o, t.id, { status: "closed" });
+      await expect(reg("Dani", "Gil", "dani@it.test")).rejects.toMatchObject({
+        code: "registration_closed",
+      });
+    });
+
+    it("circuito: puntos y clasificación general con torneos finalizados", async () => {
+      const name = `IT ranking ${crypto.randomUUID().slice(0, 6)}`;
+      const base = {
+        description: null,
+        startDate: futureDay(25),
+        modality: "singles" as const,
+        format: "knockout" as const,
+        bestOf: 1 as const,
+        gamesPerSet: 6,
+        finalSet: "full" as const,
+      };
+      const cand = await s.listCandidates(
+        o,
+        (
+          await s
+            .createTournament(o, {
+              ...base,
+              name: "IT tmp",
+            })
+            .then((x) => {
+              created.push(x.id);
+              return x;
+            })
+        ).id
+      );
+      const four = cand.students.slice(0, 4).map((x) => x.id);
+
+      async function play(label: string, order: string[]) {
+        const t = await s.createTournament(o, {
+          ...base,
+          name: label,
+          newCircuit: { name, season: null },
+        });
+        created.push(t.id);
+        await s.addSchoolEntries(o, t.id, {
+          kind: "school",
+          items: order.map((id) => ({ studentId: id })),
+          consentDeclared: true,
+        });
+        const d = await s.getTournamentDetail(o, t.id);
+        // Cabezas de serie en el orden dado: gana siempre la mejor.
+        for (const [i, id] of order.entries()) {
+          const e = d.entries.find((x) => x.studentId === id)!;
+          await s.updateEntry(o, t.id, e.id, { action: "seed", seed: i + 1 });
+        }
+        await s.updateTournament(o, t.id, { status: "open" });
+        await s.updateTournament(o, t.id, { status: "closed" });
+        let ms = await s.generateDraw(o, t.id, { excludePending: false });
+        const seedOf = new Map(
+          d.entries.map((e) => [e.id, order.indexOf(e.studentId!)])
+        );
+        for (let round = 1; round <= 2; round++) {
+          for (const m of ms.filter((x) => x.round === round)) {
+            const fresh = (await s.getTournamentDetail(o, t.id)).matches.find(
+              (x) => x.id === m.id
+            )!;
+            const aWins =
+              seedOf.get(fresh.entryAId!)! < seedOf.get(fresh.entryBId!)!;
+            await s.recordResult(o, t.id, m.id, {
+              resultType: "normal",
+              score: { sets: [aWins ? { a: 6, b: 2 } : { a: 2, b: 6 }] },
+              courtLabel: null,
+            });
+          }
+          ms = (await s.getTournamentDetail(o, t.id)).matches;
+        }
+        await s.updateTournament(o, t.id, { status: "finished" });
+        return t;
+      }
+
+      const t1 = await play("IT etapa A", four);
+      await play("IT etapa B", [four[1], four[0], four[2], four[3]]);
+      const det = await s.getTournamentDetail(o, t1.id);
+      const circuit = await pub.getPublicCircuit(det.tournament.circuit!.slug);
+      expect(circuit).not.toBeNull();
+      const top = circuit!.standings.slice(0, 2);
+      // Cada uno gana un torneo y es finalista en el otro: 170 puntos.
+      expect(top.map((r) => r.points)).toEqual([170, 170]);
+      expect(top.every((r) => r.tournaments === 2)).toBe(true);
+      expect(JSON.stringify(circuit)).not.toMatch(/@|s:|e:/);
+
+      await db
+        .delete(schema.tournamentCircuits)
+        .where(eq(schema.tournamentCircuits.id, det.tournament.circuitId!));
     });
 
     it("liguilla: calendario y resultados", async () => {

@@ -81,7 +81,7 @@ export type Organizer = {
 export type TournamentRow = typeof tournaments.$inferSelect;
 export type EntryRow = typeof tournamentEntries.$inferSelect;
 export type MatchRow = typeof tournamentMatches.$inferSelect;
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 // Liguilla: con más, demasiados partidos para un torneo de escuela.
 export const ROUND_ROBIN_MAX = 16;
@@ -128,13 +128,13 @@ export const rulesOf = (t: TournamentRow): ScoringRules => ({
   finalSet: t.finalSet as ScoringRules["finalSet"],
 });
 
-const statusOf = (t: TournamentRow) =>
+export const statusOf = (t: TournamentRow) =>
   effectiveStatus({
     status: t.status as TournamentStatus,
     registrationDeadline: t.registrationDeadline,
   });
 
-const statusInput = (t: TournamentRow) => ({
+export const statusInput = (t: TournamentRow) => ({
   status: t.status as TournamentStatus,
   registrationDeadline: t.registrationDeadline,
 });
@@ -246,6 +246,7 @@ async function resolveCircuit(
         sport: o.sport,
         name,
         season,
+        slug: tournamentSlug(season ? `${name} ${season}` : name),
       })
       .returning({ id: tournamentCircuits.id });
     return row.id;
@@ -305,6 +306,7 @@ export async function getTournamentDetail(o: Organizer, id: string) {
             id: tournamentCircuits.id,
             name: tournamentCircuits.name,
             season: tournamentCircuits.season,
+            slug: tournamentCircuits.slug,
           })
           .from(tournamentCircuits)
           .where(eq(tournamentCircuits.id, t.circuitId))
@@ -319,7 +321,10 @@ export async function getTournamentDetail(o: Organizer, id: string) {
   };
 }
 
-async function checkLevel(code: string | null | undefined, sport: Sport) {
+export async function checkLevel(
+  code: string | null | undefined,
+  sport: Sport
+) {
   if (!code) return;
   const [row] = await db
     .select({ code: skillLevels.code })
@@ -559,7 +564,7 @@ export async function updateTournament(
   });
 }
 
-async function applyPromotions(
+export async function applyPromotions(
   tx: Tx,
   promoted: { id: string; status: "confirmed" | "pending" }[]
 ) {
@@ -749,7 +754,7 @@ async function loadStudentContacts(
   return out;
 }
 
-async function existingIdentities(tx: Tx, tournamentId: string) {
+export async function existingIdentities(tx: Tx, tournamentId: string) {
   const rows = await tx
     .select({
       id: tournamentEntries.id,
@@ -770,7 +775,7 @@ async function existingIdentities(tx: Tx, tournamentId: string) {
 }
 
 /** Identidad para duplicados: alumnos por su ficha; externos por contacto. */
-function identityOf(r: {
+export function identityOf(r: {
   source: string;
   status?: EntryStatus;
   studentId?: string | null;

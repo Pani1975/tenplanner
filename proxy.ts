@@ -25,6 +25,8 @@ const PUBLIC_PREFIXES = [
   "/api/public/sport",
   "/api/public/reservas/",
   "/reservar/",
+  "/t/",
+  "/api/public/torneos/",
 ];
 const PUBLIC_EXACT = new Set(["/"]);
 // Logged-out visitors are sent to /login only for these app pages. Any other
