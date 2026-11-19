@@ -79,6 +79,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
       hasCafeteria: d.hasCafeteria,
       hasParking: d.hasParking,
       foundedYear: d.foundedYear,
+      ...(d.timeZone && { timeZone: d.timeZone }),
     })
     .where(eq(clubs.id, id));
 

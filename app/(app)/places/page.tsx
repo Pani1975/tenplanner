@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { courtBookings, places, sessions, users } from "@/db/schema";
 import { PlacesClient } from "./places-client";
 import { BookingsPanel } from "./bookings-panel";
+import { timeZoneForOwner } from "@/lib/bookings/places";
 
 export default async function PlacesPage() {
   const supabase = await createClient();
@@ -91,6 +92,7 @@ export default async function PlacesPage() {
           }))}
           bookingPath={owner?.token ? `/reservar/${owner.token}` : null}
           origin={`${proto}://${host}`}
+          timeZone={await timeZoneForOwner(user.id)}
         />
         <PlacesClient initialPlaces={rows} />
       </div>

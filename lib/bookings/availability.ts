@@ -4,7 +4,10 @@
  * (pintar la rejilla de horas).
  */
 
-/** Zona horaria de los clubes (de momento, todos en Canarias). */
+/**
+ * Zona horaria por defecto de las reservas (monitores sin club). Los clubes
+ * usan la suya (clubs.time_zone, «Mi club»): ver timeZoneForOwner.
+ */
 export const BOOKING_TIME_ZONE = "Atlantic/Canary";
 /** Duraciones que se pueden reservar, en minutos. */
 export const BOOKING_DURATIONS = [60, 90, 120] as const;
@@ -95,8 +98,12 @@ export function localMinutesOf(date: Date, timeZone = BOOKING_TIME_ZONE) {
 }
 
 /** Los próximos días (fechas locales) que se pueden reservar. */
-export function bookingDays(now: Date, count = BOOKING_DAYS_AHEAD) {
-  const today = localDateOf(now);
+export function bookingDays(
+  now: Date,
+  count = BOOKING_DAYS_AHEAD,
+  timeZone = BOOKING_TIME_ZONE
+) {
+  const today = localDateOf(now, timeZone);
   const [y, m, d] = today.split("-").map(Number);
   return Array.from({ length: count }, (_, i) => {
     const day = new Date(Date.UTC(y, m - 1, d + i));
@@ -120,11 +127,12 @@ export function isPlaceFree(
   dateStr: string,
   startMinute: number,
   duration: number,
-  now: Date
+  now: Date,
+  timeZone = BOOKING_TIME_ZONE
 ) {
   if (startMinute < place.openMinute) return false;
   if (startMinute + duration > place.closeMinute) return false;
-  const start = localToUtc(dateStr, startMinute);
+  const start = localToUtc(dateStr, startMinute, timeZone);
   if (start <= now) return false;
   const slot = { start, end: new Date(start.getTime() + duration * 60_000) };
   return !place.busy.some((b) => overlaps(slot, b));
@@ -138,7 +146,8 @@ export function availabilityGrid(
   places: BookablePlace[],
   dateStr: string,
   duration: number,
-  now: Date
+  now: Date,
+  timeZone = BOOKING_TIME_ZONE
 ) {
   if (places.length === 0) return [];
   const open = Math.min(...places.map((p) => p.openMinute));
@@ -153,7 +162,9 @@ export function availabilityGrid(
       minute,
       label: minutesLabel(minute),
       freePlaceIds: places
-        .filter((p) => isPlaceFree(p, dateStr, minute, duration, now))
+        .filter((p) =>
+          isPlaceFree(p, dateStr, minute, duration, now, timeZone)
+        )
         .map((p) => p.id),
     });
   }

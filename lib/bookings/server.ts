@@ -14,6 +14,7 @@ import {
   BOOKING_DAYS_AHEAD,
   BOOKING_DURATIONS,
   BOOKING_STEP_MINUTES,
+  BOOKING_TIME_ZONE,
   bookingDays,
   isPlaceFree,
   localDateOf,
@@ -33,11 +34,16 @@ export async function getBookingOwner(token: string) {
   if (!owner) return null;
   // Si es la cuenta de un club, se muestra el nombre del club.
   const [club] = await db
-    .select({ name: clubs.name })
+    .select({ name: clubs.name, timeZone: clubs.timeZone })
     .from(clubs)
     .where(eq(clubs.ownerId, owner.id))
     .limit(1);
-  return { id: owner.id, displayName: club?.name ?? owner.name };
+  return {
+    id: owner.id,
+    displayName: club?.name ?? owner.name,
+    // Hora del club («Mi club»); sin club, la de siempre.
+    timeZone: club?.timeZone ?? BOOKING_TIME_ZONE,
+  };
 }
 
 /** Token del enlace público del usuario; lo crea la primera vez. */
@@ -234,6 +240,7 @@ export async function createCourtBooking({
   durationMinutes,
   fullName,
   now = new Date(),
+  timeZone = BOOKING_TIME_ZONE,
 }: {
   ownerId: string;
   placeId: string;
@@ -241,18 +248,19 @@ export async function createCourtBooking({
   durationMinutes: number;
   fullName: string;
   now?: Date;
+  timeZone?: string;
 }): Promise<
   { ok: true; id: string } | { ok: false; error: CreateBookingError }
 > {
   if (!(BOOKING_DURATIONS as readonly number[]).includes(durationMinutes)) {
     return { ok: false, error: "invalid_time" };
   }
-  const dateStr = localDateOf(start);
-  const minute = localMinutesOf(start);
+  const dateStr = localDateOf(start, timeZone);
+  const minute = localMinutesOf(start, timeZone);
   if (
     minute % BOOKING_STEP_MINUTES !== 0 ||
-    localToUtc(dateStr, minute).getTime() !== start.getTime() ||
-    !bookingDays(now, BOOKING_DAYS_AHEAD).includes(dateStr)
+    localToUtc(dateStr, minute, timeZone).getTime() !== start.getTime() ||
+    !bookingDays(now, BOOKING_DAYS_AHEAD, timeZone).includes(dateStr)
   ) {
     return { ok: false, error: "invalid_time" };
   }
@@ -268,7 +276,9 @@ export async function createCourtBooking({
       end
     );
     if (!place) return { ok: false as const, error: "not_found" as const };
-    if (!isPlaceFree(place, dateStr, minute, durationMinutes, now)) {
+    if (
+      !isPlaceFree(place, dateStr, minute, durationMinutes, now, timeZone)
+    ) {
       return { ok: false as const, error: "taken" as const };
     }
     const [created] = await tx

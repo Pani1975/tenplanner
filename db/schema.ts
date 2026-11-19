@@ -2127,6 +2127,11 @@ export const clubs = pgTable(
     padelCourts: integer("padel_courts"),
     hasCafeteria: boolean("has_cafeteria"),
     hasParking: boolean("has_parking"),
+    // Zona horaria del club: Reservas de pistas, reserva pública y torneos
+    // (Europe/Madrid | Atlantic/Canary). Migración 0111.
+    timeZone: varchar("time_zone", { length: 40 })
+      .default("Europe/Madrid")
+      .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

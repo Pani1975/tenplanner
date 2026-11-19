@@ -434,6 +434,16 @@ export async function createTournament(
     checkPlaces(o, input.placeIds),
   ]);
   const circuitId = (await resolveCircuit(o, input)) ?? null;
+  // Sin zona elegida, un torneo de club usa la hora del club.
+  let timeZone = input.timeZone;
+  if (!timeZone && o.clubId) {
+    const [club] = await db
+      .select({ timeZone: clubs.timeZone })
+      .from(clubs)
+      .where(eq(clubs.id, o.clubId))
+      .limit(1);
+    timeZone = club?.timeZone as typeof input.timeZone;
+  }
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const [row] = await db
@@ -463,7 +473,7 @@ export async function createTournament(
               : null,
           circuitId,
           visibility: input.visibility ?? "public",
-          ...(input.timeZone && { timeZone: input.timeZone }),
+          ...(timeZone && { timeZone }),
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
           finalSet: input.finalSet,

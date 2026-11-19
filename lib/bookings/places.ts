@@ -2,6 +2,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { clubs, places } from "@/db/schema";
 import { getActiveWorkClubId } from "@/lib/clubs";
+import { BOOKING_TIME_ZONE } from "./availability";
 
 /**
  * Dueños de las pistas que puede usar el usuario al montar una sesión: él
@@ -54,4 +55,17 @@ export async function listUsablePlaces(
     id: r.id,
     name: mixed && r.ownerId === userId ? `${r.name} (mía)` : r.name,
   }));
+}
+
+/**
+ * Zona horaria de las pistas de un dueño: la de su club si es la cuenta de
+ * un club («Mi club»); si no, la de siempre (BOOKING_TIME_ZONE).
+ */
+export async function timeZoneForOwner(ownerId: string): Promise<string> {
+  const [club] = await db
+    .select({ timeZone: clubs.timeZone })
+    .from(clubs)
+    .where(eq(clubs.ownerId, ownerId))
+    .limit(1);
+  return club?.timeZone ?? BOOKING_TIME_ZONE;
 }

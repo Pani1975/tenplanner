@@ -66,10 +66,13 @@ export function TournamentWizard({
   levels,
   places,
   circuits,
+  clubTimeZone,
 }: {
   levels: Option[];
   places: Place[];
   circuits: Circuit[];
+  /** Hora del club; si la hay, manda sobre la del dispositivo. */
+  clubTimeZone: TournamentTimeZone | null;
 }) {
   const t = useTranslations("tournaments");
   const tc = useTranslations("tournaments.courts");
@@ -87,7 +90,7 @@ export function TournamentWizard({
     endDate: "",
     deadlineDate: "",
     deadlineTime: "23:59",
-    timeZone: DEFAULT_TIME_ZONE,
+    timeZone: clubTimeZone ?? DEFAULT_TIME_ZONE,
     maxEntries: "",
     placeIds: [],
     playHours: { mode: "all_day" },
@@ -106,10 +109,11 @@ export function TournamentWizard({
   // Zona horaria del dispositivo (Canarias o península): solo se conoce en
   // el navegador, así que se propone al montar. Se puede cambiar.
   useEffect(() => {
+    if (clubTimeZone) return;
     const tz = guessTimeZone();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tz !== DEFAULT_TIME_ZONE) setF((p) => ({ ...p, timeZone: tz }));
-  }, []);
+  }, [clubTimeZone]);
   const set = <K extends keyof Form>(k: K, v: Form[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
 

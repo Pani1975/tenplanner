@@ -35,16 +35,17 @@ export type UpcomingBooking = {
 };
 
 const HALF_HOURS = Array.from({ length: 49 }, (_, i) => i * 30);
-const DATE_FMT = (loc: string) => new Intl.DateTimeFormat(loc, {
+// En la hora del club (o la de siempre si no hay club).
+const DATE_FMT = (loc: string, timeZone: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   day: "numeric",
   month: "short",
-  timeZone: "Atlantic/Canary",
+  timeZone,
 });
-const TIME_FMT = (loc: string) => new Intl.DateTimeFormat(loc, {
+const TIME_FMT = (loc: string, timeZone: string) => new Intl.DateTimeFormat(loc, {
   hour: "2-digit",
   minute: "2-digit",
-  timeZone: "Atlantic/Canary",
+  timeZone,
 });
 
 /**
@@ -56,7 +57,9 @@ export function BookingsPanel({
   bookings,
   bookingPath: initialPath,
   origin,
+  timeZone,
 }: {
+  timeZone: string;
   places: BookingPlace[];
   bookings: UpcomingBooking[];
   bookingPath: string | null;
@@ -307,8 +310,8 @@ export function BookingsPanel({
                       {b.fullName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {b.placeName} · {DATE_FMT(intlLocale).format(start)} ·{" "}
-                      {TIME_FMT(intlLocale).format(start)}–{TIME_FMT(intlLocale).format(end)}
+                      {b.placeName} · {DATE_FMT(intlLocale, timeZone).format(start)} ·{" "}
+                      {TIME_FMT(intlLocale, timeZone).format(start)}–{TIME_FMT(intlLocale, timeZone).format(end)}
                     </p>
                   </div>
                   <button

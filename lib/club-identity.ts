@@ -34,6 +34,8 @@ export type ClubIdentity = {
   hasCafeteria: boolean | null;
   hasParking: boolean | null;
   foundedYear: number | null;
+  /** Zona horaria del club (Reservas de pistas, torneos). */
+  timeZone: "Europe/Madrid" | "Atlantic/Canary";
 };
 
 const courtCount = z.number().int().min(0).max(999);
@@ -71,6 +73,7 @@ export const clubIdentitySchema = z.object({
     .min(1800)
     .max(new Date().getFullYear())
     .nullable(),
+  timeZone: z.enum(["Europe/Madrid", "Atlantic/Canary"]).optional(),
 });
 
 export type ClubIdentityInput = z.infer<typeof clubIdentitySchema>;

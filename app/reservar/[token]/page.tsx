@@ -52,7 +52,11 @@ export default async function BookingPage({ params }: PageProps) {
             {tx("ahoraMismoNoHay")}
           </p>
         ) : (
-          <BookingClient token={token} days={bookingDays(new Date())} />
+          <BookingClient
+            token={token}
+            days={bookingDays(new Date(), undefined, owner.timeZone)}
+            timeZone={owner.timeZone}
+          />
         )}
         <p className="mt-10 text-center text-[11px] text-[#050505]/45 dark:text-white/40">
           {tx("reservasConTen")}<span className="font-bold">{tx("planner")}</span>

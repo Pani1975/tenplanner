@@ -32,10 +32,8 @@ export async function generateMetadata() {
 }
 export const dynamic = "force-dynamic";
 
-const TZ = "Europe/Madrid";
-
-/** Año, mes (1-12) y día de una fecha vista en España. */
-function madridYmd(date: Date) {
+/** Año, mes (1-12) y día de una fecha vista en la hora del club. */
+function madridYmd(date: Date, TZ: string) {
   const [y, m, d] = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",
@@ -48,8 +46,8 @@ function madridYmd(date: Date) {
   return { y, m, d };
 }
 
-/** Inicio (00:00 en España) del día y+m+d, con d fuera de rango permitido. */
-function startOfDay(y: number, m: number, d: number) {
+/** Inicio (00:00, hora del club) del día y+m+d; d fuera de rango permitido. */
+function startOfDay(y: number, m: number, d: number, TZ: string) {
   const base = new Date(Date.UTC(y, m - 1, d));
   return zonedTimeToUtc(
     base.getUTCFullYear(),
@@ -61,12 +59,12 @@ function startOfDay(y: number, m: number, d: number) {
   );
 }
 
-const timeFmt = (loc: string) => new Intl.DateTimeFormat(loc, {
+const timeFmt = (loc: string, TZ: string) => new Intl.DateTimeFormat(loc, {
   hour: "2-digit",
   minute: "2-digit",
   timeZone: TZ,
 });
-const dayFmt = (loc: string) => new Intl.DateTimeFormat(loc, {
+const dayFmt = (loc: string, TZ: string) => new Intl.DateTimeFormat(loc, {
   weekday: "short",
   day: "numeric",
   month: "short",
@@ -131,16 +129,24 @@ export default async function PanelPage() {
   const clubId = await getClubAccountClubId(user.id);
   if (!clubId) notFound();
 
+  // Hora del club («Mi club»).
+  const [tzRow] = await db
+    .select({ timeZone: clubs.timeZone })
+    .from(clubs)
+    .where(eq(clubs.id, clubId))
+    .limit(1);
+  const TZ = tzRow?.timeZone ?? "Europe/Madrid";
+
   const now = new Date();
-  const { y, m, d } = madridYmd(now);
-  const dayStart = startOfDay(y, m, d);
-  const dayEnd = startOfDay(y, m, d + 1);
+  const { y, m, d } = madridYmd(now, TZ);
+  const dayStart = startOfDay(y, m, d, TZ);
+  const dayEnd = startOfDay(y, m, d + 1, TZ);
   // Semana de lunes a domingo.
   const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7;
-  const weekStart = startOfDay(y, m, d - weekday);
-  const weekEnd = startOfDay(y, m, d - weekday + 7);
-  const monthStart = startOfDay(y, m, 1);
-  const monthEnd = startOfDay(y, m + 1, 1);
+  const weekStart = startOfDay(y, m, d - weekday, TZ);
+  const weekEnd = startOfDay(y, m, d - weekday + 7, TZ);
+  const monthStart = startOfDay(y, m, 1, TZ);
+  const monthEnd = startOfDay(y, m + 1, 1, TZ);
 
   const eventsVisibility = calendarEventsVisibility(user.id, clubId, true);
   const clubSessions = and(
@@ -249,7 +255,7 @@ export default async function PanelPage() {
             {tx("panel")}
           </h1>
           <p className="mt-3 text-sm font-semibold leading-6 text-white/62">
-            {club?.name ?? "Tu club"} · {dayFmt(intlLocale).format(now)}
+            {club?.name ?? "Tu club"} · {dayFmt(intlLocale, TZ).format(now)}
           </p>
         </header>
 
@@ -297,7 +303,7 @@ export default async function PanelPage() {
                     className="inline-flex items-center gap-2 rounded-full bg-brand/20 px-3.5 py-2 text-sm font-bold text-foreground transition-colors hover:bg-brand hover:text-brand-foreground"
                   >
                     <span className="tabular-nums">
-                      {timeFmt(intlLocale).format(s.scheduledAt)}
+                      {timeFmt(intlLocale, TZ).format(s.scheduledAt)}
                     </span>
                     {s.title}
                   </Link>
@@ -321,7 +327,7 @@ export default async function PanelPage() {
                       <p className="text-xs font-bold text-foreground/55">
                         {i === 0
                           ? "Hoy"
-                          : dayFmt(intlLocale).format(new Date(`${day.date}T12:00:00Z`))}
+                          : dayFmt(intlLocale, TZ).format(new Date(`${day.date}T12:00:00Z`))}
                       </p>
                       <p className="text-2xl" aria-hidden>
                         {day.icon}
@@ -373,7 +379,7 @@ export default async function PanelPage() {
                       </p>
                       <p className="truncate text-xs text-foreground/55">
                         {msg.sentByMe ? "Enviado" : msg.authorName} ·{" "}
-                        {msg.targetLabel} · {dayFmt(intlLocale).format(msg.createdAt)}
+                        {msg.targetLabel} · {dayFmt(intlLocale, TZ).format(msg.createdAt)}
                       </p>
                     </Link>
                   </li>
@@ -398,7 +404,7 @@ export default async function PanelPage() {
                 {weekEvents.map((e) => (
                   <li key={e.id} className="text-sm">
                     <span className="mr-2 tabular-nums text-foreground/55">
-                      {dayFmt(intlLocale).format(e.startAt)}
+                      {dayFmt(intlLocale, TZ).format(e.startAt)}
                     </span>
                     {e.title}
                   </li>
@@ -415,7 +421,7 @@ export default async function PanelPage() {
                 {monthEvents.map((e) => (
                   <li key={e.id} className="text-sm">
                     <span className="mr-2 tabular-nums text-foreground/55">
-                      {dayFmt(intlLocale).format(e.startAt)}
+                      {dayFmt(intlLocale, TZ).format(e.startAt)}
                     </span>
                     {e.title}
                   </li>

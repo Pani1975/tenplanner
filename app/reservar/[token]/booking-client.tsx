@@ -42,9 +42,12 @@ function dayDate(dateStr: string) {
 export function BookingClient({
   token,
   days,
+  timeZone,
 }: {
   token: string;
   days: string[];
+  /** Hora del club: en ella se muestran y se piden las horas. */
+  timeZone: string;
 }) {
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_token_bookingclient");
@@ -99,13 +102,15 @@ export function BookingClient({
   }, [date, load]);
 
   const grid = useMemo(
-    () => (places ? availabilityGrid(places, date, duration, now) : []),
-    [places, date, duration, now]
+    () => (places ? availabilityGrid(places, date, duration, now, timeZone) : []),
+    [places, date, duration, now, timeZone]
   );
   const freePlaces = useMemo(() => {
     if (!places || minute === null) return [];
-    return places.filter((p) => isPlaceFree(p, date, minute, duration, now));
-  }, [places, minute, date, duration, now]);
+    return places.filter((p) =>
+      isPlaceFree(p, date, minute, duration, now, timeZone)
+    );
+  }, [places, minute, date, duration, now, timeZone]);
 
   // Si la hora o la pista elegidas dejan de estar libres al cambiar algo.
   const selectedMinute =
@@ -132,7 +137,7 @@ export function BookingClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           placeId: selectedPlace.id,
-          start: localToUtc(date, selectedMinute).toISOString(),
+          start: localToUtc(date, selectedMinute, timeZone).toISOString(),
           durationMinutes: duration,
           fullName,
           website,

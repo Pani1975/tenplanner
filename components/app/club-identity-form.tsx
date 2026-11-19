@@ -114,6 +114,7 @@ export function ClubIdentityForm({
   const [phone, setPhone] = useState(initial.phone ?? "");
   const [website, setWebsite] = useState(initial.website ?? "");
   const [address, setAddress] = useState(initial.address ?? "");
+  const [timeZone, setTimeZone] = useState(initial.timeZone);
   const [foundedYear, setFoundedYear] = useState(
     initial.foundedYear ? String(initial.foundedYear) : ""
   );
@@ -276,6 +277,7 @@ export function ClubIdentityForm({
           hasCafeteria,
           hasParking,
           foundedYear: year,
+          timeZone,
         }),
       });
       if (!res.ok) {
@@ -467,6 +469,25 @@ export function ClubIdentityForm({
             placeholder={tx("calleNumeroCodigoPostal")}
             className={inputClass}
           />
+        </label>
+        <label className="space-y-1.5 sm:col-span-2">
+          <span className="block text-sm font-semibold text-foreground">
+            {tx("horaDelClub")}
+          </span>
+          <select
+            value={timeZone}
+            onChange={(e) =>
+              setTimeZone(e.target.value as typeof initial.timeZone)
+            }
+            disabled={disabled}
+            className={inputClass}
+          >
+            <option value="Europe/Madrid">{tx("horaPeninsula")}</option>
+            <option value="Atlantic/Canary">{tx("horaCanarias")}</option>
+          </select>
+          <span className="block text-xs text-foreground/60">
+            {tx("horaDelClubHint")}
+          </span>
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-semibold text-foreground">

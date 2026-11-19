@@ -27,11 +27,12 @@ export async function GET(request: Request, ctx: Ctx) {
   if (!owner) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const date = new URL(request.url).searchParams.get("date") ?? "";
-  if (!bookingDays(new Date()).includes(date)) {
+  const tz = owner.timeZone;
+  if (!bookingDays(new Date(), undefined, tz).includes(date)) {
     return NextResponse.json({ error: "Fecha no válida" }, { status: 400 });
   }
-  const from = localToUtc(date, 0);
-  const to = localToUtc(date, 24 * 60);
+  const from = localToUtc(date, 0, tz);
+  const to = localToUtc(date, 24 * 60, tz);
   const placesForDay = await loadBookablePlaces(owner.id, from, to);
 
   return NextResponse.json(
@@ -101,6 +102,7 @@ export async function POST(request: Request, ctx: Ctx) {
     start: new Date(parsed.data.start),
     durationMinutes: parsed.data.durationMinutes,
     fullName: parsed.data.fullName,
+    timeZone: owner.timeZone,
   });
   if (!result.ok) {
     const message =

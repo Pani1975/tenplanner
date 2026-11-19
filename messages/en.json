@@ -1585,7 +1585,11 @@
       "elNombreDelClub2": "The club name is the one shown in the headers of the club's space.",
       "soloElPropietarioDel": "Only the club owner can change this information.",
       "maximoV1Fotos": "Maximum {v1} photos.",
-      "maximoV1Videos": "Maximum {v1} videos."
+      "maximoV1Videos": "Maximum {v1} videos.",
+      "horaDelClub": "Club time zone",
+      "horaPeninsula": "Mainland Spain and Balearics",
+      "horaCanarias": "Canary Islands",
+      "horaDelClubHint": "Used for Court bookings, the booking link and the club tournaments."
     },
     "s_objetivos_page": {
       "miClub": "My club",

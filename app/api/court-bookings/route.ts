@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { localToUtc } from "@/lib/bookings/availability";
+import { timeZoneForOwner } from "@/lib/bookings/places";
 import { createClubBooking } from "@/lib/bookings/server";
 
 const schema = z.object({
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   const result = await createClubBooking({
     ownerId: user.id,
     placeId: v.placeId,
-    start: localToUtc(v.date, v.startMinute),
+    start: localToUtc(v.date, v.startMinute, await timeZoneForOwner(user.id)),
     durationMinutes: v.durationMinutes,
     purpose: v.purpose,
   });

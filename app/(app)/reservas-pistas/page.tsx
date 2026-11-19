@@ -17,6 +17,7 @@ import {
   minutesLabel,
 } from "@/lib/bookings/availability";
 import { loadTournamentBusy, sessionAtPlaces } from "@/lib/bookings/server";
+import { timeZoneForOwner } from "@/lib/bookings/places";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { ClubBookingButton } from "./club-booking-button";
@@ -78,15 +79,17 @@ export default async function CourtBookingsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Hora del club («Mi club»); sin club, la de siempre.
+  const tz = await timeZoneForOwner(user.id);
 
-  const today = localDateOf(new Date());
+  const today = localDateOf(new Date(), tz);
   const { dia } = await searchParams;
   const date =
     dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) && !isNaN(Date.parse(dia))
       ? dia
       : today;
-  const dayStart = localToUtc(date, 0);
-  const dayEnd = localToUtc(date, 24 * 60);
+  const dayStart = localToUtc(date, 0, tz);
+  const dayEnd = localToUtc(date, 24 * 60, tz);
 
   const placeRows = await db
     .select({
@@ -158,8 +161,9 @@ export default async function CourtBookingsPage({
   ): { startMinute: number; endMinute: number } | null => {
     const end = new Date(start.getTime() + minutes * 60_000);
     if (end <= dayStart || start >= dayEnd) return null;
-    const startMinute = start < dayStart ? 0 : localMinutesOf(start);
-    const endMinute = end >= dayEnd ? 24 * 60 : localMinutesOf(end) || 24 * 60;
+    const startMinute = start < dayStart ? 0 : localMinutesOf(start, tz);
+    const endMinute =
+      end >= dayEnd ? 24 * 60 : localMinutesOf(end, tz) || 24 * 60;
     return { startMinute, endMinute };
   };
 

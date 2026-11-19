@@ -1699,7 +1699,11 @@
       "elNombreDelClub2": "El nombre del club es el que aparece en las cabeceras del espacio del club.",
       "soloElPropietarioDel": "Solo el propietario del club puede cambiar estos datos.",
       "maximoV1Fotos": "Máximo {v1} fotos.",
-      "maximoV1Videos": "Máximo {v1} vídeos."
+      "maximoV1Videos": "Máximo {v1} vídeos.",
+      "horaDelClub": "Hora del club",
+      "horaPeninsula": "Península y Baleares",
+      "horaCanarias": "Canarias",
+      "horaDelClubHint": "Es la hora de las Reservas de pistas, de la reserva por enlace y de los torneos del club."
     },
     "s_gestion_reportdialog": {
       "generarInforme": "Generar informe",

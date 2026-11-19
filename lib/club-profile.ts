@@ -26,6 +26,8 @@ export function clubIdentityFromRow(
     hasCafeteria: club.hasCafeteria,
     hasParking: club.hasParking,
     foundedYear: club.foundedYear,
+    timeZone:
+      club.timeZone === "Atlantic/Canary" ? "Atlantic/Canary" : "Europe/Madrid",
   };
 }
 
