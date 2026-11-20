@@ -171,9 +171,6 @@ export async function GET(request: Request) {
   const sport = user
     ? await getActiveSport(user.id)
     : await getPublicSportCookie();
-  if (!sport) {
-    return NextResponse.json({ error: "No sport selected" }, { status: 400 });
-  }
 
   const activeCategory = (
     CATEGORIES.includes(params.category as never) ? params.category : "all"

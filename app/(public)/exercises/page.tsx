@@ -39,8 +39,6 @@ import {
 } from "@/lib/exercise-access";
 import { getActiveSport } from "@/lib/sports";
 import { getPublicSportCookie } from "@/lib/public-sport";
-import { SportGate } from "@/components/public/sport-gate";
-import { SportChangePill } from "@/components/public/sport-change-pill";
 import {
   exerciseNavQueryString,
   exerciseOrderBy,
@@ -202,9 +200,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     ? await getActiveSport(user.id)
     : await getPublicSportCookie();
 
-  if (!sport) {
-    return <SportGate />;
-  }
 
   const params = await searchParams;
 
@@ -762,7 +757,6 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
                 <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-[#D6FF38]">
                   {heading.kicker}
                 </p>
-                {!user && <SportChangePill sport={sport} />}
               </div>
               <h1 className="mt-3 break-words font-heading text-4xl font-semibold leading-none tracking-normal text-white sm:text-5xl">
                 {heading.title}
