@@ -147,7 +147,8 @@
     },
     "hero": {
       "sessionSaved": "✓ Session saved ✓",
-      "ready": "⚡ Lesson ready in 90 sec"
+      "ready": "⚡ Lesson ready in 90 sec",
+      "tryTournaments": "Try tournaments without signing up"
     },
     "problemEyebrow": "The problem",
     "how": {
@@ -179,7 +180,8 @@
       "legalNotice": "Legal notice",
       "terms": "Terms",
       "privacy": "Privacy",
-      "cookies": "Cookies"
+      "cookies": "Cookies",
+      "tryTournaments": "Try tournaments"
     },
     "nav": {
       "labelHow": "How it works",

@@ -147,7 +147,8 @@
     },
     "hero": {
       "sessionSaved": "✓ Sesión guardada ✓",
-      "ready": "⚡ Clase lista en 90 seg"
+      "ready": "⚡ Clase lista en 90 seg",
+      "tryTournaments": "Prueba los torneos sin registrarte"
     },
     "problemEyebrow": "El problema",
     "how": {
@@ -179,7 +180,8 @@
       "legalNotice": "Aviso legal",
       "terms": "Términos",
       "privacy": "Privacidad",
-      "cookies": "Cookies"
+      "cookies": "Cookies",
+      "tryTournaments": "Probar torneos"
     },
     "nav": {
       "labelHow": "Cómo funciona",
