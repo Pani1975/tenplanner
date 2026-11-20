@@ -12,9 +12,11 @@ import {
 import { updateTournamentSchema } from "@/lib/tournaments/schemas";
 import { cancelConflictingSessions } from "@/lib/tournaments/court-conflicts";
 import {
+  deleteTournament,
   getTournamentDetail,
   updateTournament,
 } from "@/lib/tournaments/server";
+import { clearGuestCookie } from "@/lib/tournaments/guest-server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -56,5 +58,17 @@ export async function PATCH(request: Request, ctx: Ctx) {
         });
     }
     return json({ ...result, familiesNotified, sessionsCancelled });
+  });
+}
+
+// Borrar un torneo: modo prueba (con su enlace) o, con cuenta, el monitor
+// en particular y, en club, el administrador o quien lo creó.
+export async function DELETE(_request: Request, ctx: Ctx) {
+  const { id } = await ctx.params;
+  return withOrganizer(async (o) => {
+    checkIds(id);
+    await deleteTournament(o, id);
+    if (o.guest) await clearGuestCookie(id);
+    return json({ ok: true });
   });
 }

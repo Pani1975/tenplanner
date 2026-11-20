@@ -40,7 +40,10 @@ export async function setArchived(o: Organizer, id: string, archived: boolean) {
 
 async function scheduleTournament(o: Organizer, id: string) {
   const t = await getTournament(o, id);
-  if (!t.clubId) throw new TournamentError("schedule_club_only", 403);
+  // Torneos de club y de prueba (sin cuenta); los de monitor, de momento no.
+  if (!t.clubId && t.ownerType !== "guest") {
+    throw new TournamentError("schedule_club_only", 403);
+  }
   if (statusOf(t) === "draft") throw new TournamentError("draw_required", 409);
   return t;
 }

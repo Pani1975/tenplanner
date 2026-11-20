@@ -19,6 +19,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type News = {
   id: string;
@@ -44,8 +45,14 @@ type Photo = {
 
 const key = (p: { entryId: string; side: string }) => `${p.entryId}:${p.side}`;
 
-async function getData<T>(url: string): Promise<T | null> {
-  const res = await fetch(url);
+/** Modo prueba (sin cuenta): fotos y noticias por torneo. */
+const GUEST_LIMIT = 5;
+
+async function getData<T>(
+  doFetch: (input: string) => Promise<Response>,
+  url: string
+): Promise<T | null> {
+  const res = await doFetch(url);
   return res.ok ? ((await res.json()).data as T) : null;
 }
 
@@ -96,6 +103,7 @@ export function MediaPanel({
 function NewsSection({ tournamentId }: { tournamentId: string }) {
   const t = useTranslations("tournaments.media");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [items, setItems] = useState<News[] | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -103,8 +111,8 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
   const [toDelete, setToDelete] = useState<News | null>(null);
 
   const fetchNews = useCallback(
-    () => getData<News[]>(`/api/tournaments/${tournamentId}/news`),
-    [tournamentId]
+    () => getData<News[]>(api.fetch, `/api/tournaments/${tournamentId}/news`),
+    [tournamentId, api]
   );
   const load = async () => {
     const d = await fetchNews();
@@ -120,7 +128,7 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
 
   async function create(publish: boolean) {
     setBusy(publish ? "publish" : "draft");
-    const res = await fetch(`/api/tournaments/${tournamentId}/news`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/news`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, body, publish }),
@@ -135,32 +143,50 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
 
   async function patch(n: News, published: boolean) {
     setBusy(n.id);
-    const res = await fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ published }),
-    });
+    const res = await api.fetch(
+      `/api/tournaments/${tournamentId}/news/${n.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published }),
+      }
+    );
     setBusy(null);
     if (!res.ok) return toast.error(await apiError(res));
     load();
   }
 
   async function remove(n: News) {
-    const res = await fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
-      method: "DELETE",
-    });
+    const res = await api.fetch(
+      `/api/tournaments/${tournamentId}/news/${n.id}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!res.ok) return toast.error(await apiError(res));
     toast.success(t("newsDeleted"));
     load();
   }
 
-  const canSend = title.trim() && body.trim() && !busy;
+  // Modo prueba: como mucho 5 noticias.
+  const atLimit = api.guest && (items?.length ?? 0) >= GUEST_LIMIT;
+  const canSend = title.trim() && body.trim() && !busy && !atLimit;
   return (
     <section className="space-y-3">
       <h2 className="tp-title flex items-center gap-2 text-2xl">
         <Newspaper className="size-5" />
         {t("newsTitle")}
+        {api.guest && (
+          <span className="text-sm font-normal text-foreground/60">
+            ({items?.length ?? 0}/{GUEST_LIMIT})
+          </span>
+        )}
       </h2>
+      {atLimit && (
+        <p className="text-sm text-foreground/70">
+          {t("guestNewsLimit", { max: GUEST_LIMIT })}
+        </p>
+      )}
       <div className="tp-card-soft space-y-3 p-4">
         <input
           value={title}
@@ -279,6 +305,7 @@ function PhotosSection({
 }) {
   const t = useTranslations("tournaments.media");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [data, setData] = useState<{
     people: Person[];
     photos: Photo[];
@@ -295,9 +322,10 @@ function PhotosSection({
   const fetchPhotos = useCallback(
     () =>
       getData<{ people: Person[]; photos: Photo[] }>(
+        api.fetch,
         `/api/tournaments/${tournamentId}/photos`
       ),
-    [tournamentId]
+    [tournamentId, api]
   );
   const load = async () => {
     const d = await fetchPhotos();
@@ -311,8 +339,20 @@ function PhotosSection({
     };
   }, [fetchPhotos]);
 
+  // Modo prueba: como mucho 5 fotos.
+  const photoCount = data?.photos.length ?? 0;
+  const photoFull = api.guest && photoCount >= GUEST_LIMIT;
+
   async function upload(files: FileList) {
-    const list = [...files];
+    let list = [...files];
+    if (api.guest) {
+      const room = Math.max(0, GUEST_LIMIT - photoCount);
+      if (list.length > room) {
+        toast.error(t("guestPhotoLimit", { max: GUEST_LIMIT }));
+        list = list.slice(0, room);
+      }
+      if (!list.length) return;
+    }
     setUploading(list.length);
     let failed = 0;
     for (const f of list) {
@@ -322,7 +362,7 @@ function PhotosSection({
         form.append("file", new File([blob], "foto.webp", { type: blob.type }));
         form.append("width", String(width));
         form.append("height", String(height));
-        const res = await fetch(`/api/tournaments/${tournamentId}/photos`, {
+        const res = await api.fetch(`/api/tournaments/${tournamentId}/photos`, {
           method: "POST",
           body: form,
         });
@@ -341,7 +381,7 @@ function PhotosSection({
   }
 
   async function patch(photo: Photo, body: object) {
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/photos/${photo.id}`,
       {
         method: "PATCH",
@@ -365,7 +405,7 @@ function PhotosSection({
   }
 
   async function togglePublic(v: boolean) {
-    const res = await fetch(`/api/tournaments/${tournamentId}`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ photosPublic: v }),
@@ -376,7 +416,7 @@ function PhotosSection({
   }
 
   async function remove(photo: Photo) {
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/photos/${photo.id}`,
       { method: "DELETE" }
     );
@@ -391,11 +431,19 @@ function PhotosSection({
         <h2 className="tp-title flex items-center gap-2 text-2xl">
           <Camera className="size-5" />
           {t("photosTitle")}
+          {api.guest && (
+            <span className="text-sm font-normal text-foreground/60">
+              ({photoCount}/{GUEST_LIMIT})
+            </span>
+          )}
         </h2>
         <button
           type="button"
           onClick={() => input.current?.click()}
-          disabled={uploading > 0}
+          disabled={uploading > 0 || photoFull}
+          title={
+            photoFull ? t("guestPhotoLimit", { max: GUEST_LIMIT }) : undefined
+          }
           className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
         >
           {uploading > 0 ? (

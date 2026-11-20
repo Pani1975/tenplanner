@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { checkIds, json, parseBody, withOrganizer } from "@/lib/tournaments/api";
+import {
+  checkIds,
+  json,
+  parseBody,
+  withOrganizer,
+} from "@/lib/tournaments/api";
 import { setArchived } from "@/lib/tournaments/schedule-server";
 
 type Ctx = { params: Promise<{ id: string }> };

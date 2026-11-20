@@ -20,6 +20,8 @@ import {
   Search,
   Signal,
   Star,
+  ArrowRight,
+  Trophy,
   Users,
   Wifi,
   type LucideIcon,
@@ -246,6 +248,15 @@ function HeroSection({ content }: { content: LandingContent }) {
               {content.home_hero_cta_secondary} <ArrowDown className="size-4" />
             </Link>
           </div>
+          {/* Torneos sin registro (datos en el navegador): /probar-torneos. */}
+          <Link
+            href="/probar-torneos"
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#050505]/12 bg-white px-4 py-2.5 text-sm font-semibold text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+          >
+            <Trophy className="size-4 text-[#5f7000]" />
+            {t("tryTournaments")}
+            <ArrowRight className="size-4" />
+          </Link>
           <div className="mt-14 flex items-center gap-3 text-sm text-[#66665d]">
             <div className="flex -space-x-2">
               {["M", "A", "L"].map((item, index) => (
@@ -540,6 +551,7 @@ function Footer({ content }: { content: LandingContent }) {
               <Link href="#como-funciona">{t("howItWorks")}</Link>
               <Link href="/exercises">{t("exerciseLibrary")}</Link>
               <Link href="/classes">{t("classLibrary")}</Link>
+              <Link href="/probar-torneos">{t("tryTournaments")}</Link>
             </div>
           </div>
           <div>

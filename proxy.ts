@@ -27,6 +27,8 @@ const PUBLIC_PREFIXES = [
   "/reservar/",
   "/t/",
   "/api/public/torneos/",
+  // Torneos de prueba sin registro (datos en el navegador).
+  "/probar-torneos",
 ];
 const PUBLIC_EXACT = new Set(["/"]);
 // Logged-out visitors are sent to /login only for these app pages. Any other
@@ -238,9 +240,15 @@ export async function proxy(request: NextRequest) {
     request.method === "GET" && pathname.startsWith("/api/classes");
   const isProfileBootstrapApi =
     pathname === "/api/users" && request.method === "POST" && hasBearerToken;
+  // Torneos de prueba sin cuenta: la API de torneos deja pasar a quien trae
+  // el enlace de edición (cookie tpg_<id>); la ruta comprueba el enlace.
+  const isGuestTournamentApi =
+    pathname.startsWith("/api/tournaments/") &&
+    request.cookies.getAll().some((c) => c.name.startsWith("tpg_"));
   const isPublic =
     PUBLIC_EXACT.has(pathname) ||
     PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p)) ||
+    isGuestTournamentApi ||
     isExercisesReadApi ||
     isClassesReadApi ||
     isProfileBootstrapApi;

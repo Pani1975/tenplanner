@@ -77,10 +77,27 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   publicAccess?: boolean;
+  /** Sin sesión: enlace abierto a esta ruta (p. ej. torneos de prueba). */
+  guestHref?: string;
   feature?: FeatureKey;
   submenu?: SubItem[];
   /** Etiqueta usada para el primer item auto-generado del submenu (default "Ver todas") */
   allLabel?: string;
+}
+
+/**
+ * Menú para visitantes (sin sesión): lo que tiene guestHref queda abierto
+ * (p. ej. Torneos de prueba) y se coloca justo después de Clases, junto a
+ * lo que se puede ver sin cuenta.
+ */
+function visitorItems(items: NavItem[]): NavItem[] {
+  const open = items
+    .filter((i) => i.guestHref)
+    .map((i) => ({ ...i, href: i.guestHref!, publicAccess: true }));
+  const rest = items.filter((i) => !i.guestHref);
+  const at = rest.findIndex((i) => i.href === "/classes");
+  if (at < 0) return [...rest, ...open];
+  return [...rest.slice(0, at + 1), ...open, ...rest.slice(at + 1)];
 }
 
 const navItems: NavItem[] = [
@@ -141,7 +158,12 @@ const navItems: NavItem[] = [
     icon: CalendarDays,
     feature: "calendar",
   },
-  { href: "/torneos", label: "Torneos", icon: Trophy },
+  {
+    href: "/torneos",
+    label: "Torneos",
+    icon: Trophy,
+    guestHref: "/probar-torneos",
+  },
   {
     href: "/students",
     label: "Alumnos",
@@ -528,7 +550,7 @@ function NavContent({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {items.map(
+          {(user ? items : visitorItems(items)).map(
             ({
               href,
               label,

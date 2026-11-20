@@ -108,6 +108,11 @@ export async function TournamentView({
               {tr("public.organizer", { name: t.organizer })}
             </p>
           )}
+          {t.isGuest && (
+            <p className="rounded-xl bg-white/10 px-3 py-2 text-xs text-white/85">
+              {tr("guest.publicNotice")}
+            </p>
+          )}
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-white/90">
             <span className="flex items-center gap-1.5">
               <CalendarDays className="size-4" />
@@ -122,7 +127,7 @@ export async function TournamentView({
           </div>
           <p className="text-sm text-white/90">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
-            {level && ` · ${level.label}`}
+            {t.category ? ` · ${t.category}` : level && ` · ${level.label}`}
           </p>
         </div>
       </header>
@@ -250,7 +255,7 @@ export async function TournamentView({
                             t.registeredCount - t.waitlistCount >= t.maxEntries
                           }
                           organizer={t.organizer}
-                          levels={options}
+                          levels={[]}
                         />
                       ),
                     },

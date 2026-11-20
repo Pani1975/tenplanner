@@ -114,7 +114,9 @@ export function CourtHoursPicker({
           <input
             type="time"
             value={toHm(value.start)}
-            onChange={(e) => onChange({ ...value, start: fromHm(e.target.value) })}
+            onChange={(e) =>
+              onChange({ ...value, start: fromHm(e.target.value) })
+            }
             aria-label={t("from")}
             className="tp-field h-11 w-28 px-3 text-base"
           />
@@ -122,7 +124,9 @@ export function CourtHoursPicker({
           <input
             type="time"
             value={toHm(value.end)}
-            onChange={(e) => onChange({ ...value, end: fromHm(e.target.value) })}
+            onChange={(e) =>
+              onChange({ ...value, end: fromHm(e.target.value) })
+            }
             aria-label={t("to")}
             className="tp-field h-11 w-28 px-3 text-base"
           />
@@ -166,7 +170,9 @@ export function CourtHoursPicker({
                     <input
                       type="time"
                       value={toHm(d.start)}
-                      onChange={(e) => update({ start: fromHm(e.target.value) })}
+                      onChange={(e) =>
+                        update({ start: fromHm(e.target.value) })
+                      }
                       aria-label={t("from")}
                       className="tp-field h-11 w-28 px-3 text-base"
                     />
@@ -180,7 +186,9 @@ export function CourtHoursPicker({
                     />
                   </>
                 ) : (
-                  <span className="text-sm text-foreground/50">{t("noPlay")}</span>
+                  <span className="text-sm text-foreground/50">
+                    {t("noPlay")}
+                  </span>
                 )}
               </li>
             );
@@ -217,15 +225,18 @@ export type CourtConflicts = {
 };
 
 /** Consulta qué ocupa ya las pistas del torneo. null si no hay pistas. */
-export async function fetchCourtConflicts(plan: {
-  placeIds: string[];
-  startDate: string;
-  endDate: string | null;
-  playHours: TournamentHours;
-  timeZone: string;
-}): Promise<CourtConflicts | null> {
+export async function fetchCourtConflicts(
+  doFetch: (input: string, init?: RequestInit) => Promise<Response>,
+  plan: {
+    placeIds: string[];
+    startDate: string;
+    endDate: string | null;
+    playHours: TournamentHours;
+    timeZone: string;
+  }
+): Promise<CourtConflicts | null> {
   if (!plan.placeIds.length || !plan.startDate) return null;
-  const res = await fetch("/api/tournaments/court-conflicts", {
+  const res = await doFetch("/api/tournaments/court-conflicts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(plan),
@@ -312,7 +323,9 @@ export function CourtConflictsDialog({
                       onClick={() => toggle(s.id, false)}
                       className={cn(
                         "min-h-10 flex-1 rounded-full px-3 text-sm font-semibold",
-                        !off ? "bg-foreground text-background" : "bg-foreground/5"
+                        !off
+                          ? "bg-foreground text-background"
+                          : "bg-foreground/5"
                       )}
                     >
                       {t("keep")}
@@ -345,7 +358,8 @@ export function CourtConflictsDialog({
             <ul className="space-y-1 text-xs text-foreground/75">
               {conflicts.bookings.map((b) => (
                 <li key={b.id}>
-                  {b.label} · {when(b.startAt, b.durationMinutes)} · {b.placeName}
+                  {b.label} · {when(b.startAt, b.durationMinutes)} ·{" "}
+                  {b.placeName}
                 </li>
               ))}
             </ul>

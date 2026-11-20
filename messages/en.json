@@ -147,7 +147,8 @@
     },
     "hero": {
       "sessionSaved": "✓ Session saved ✓",
-      "ready": "⚡ Lesson ready in 90 sec"
+      "ready": "⚡ Lesson ready in 90 sec",
+      "tryTournaments": "Try tournaments without signing up"
     },
     "problemEyebrow": "The problem",
     "how": {
@@ -179,7 +180,8 @@
       "legalNotice": "Legal notice",
       "terms": "Terms",
       "privacy": "Privacy",
-      "cookies": "Cookies"
+      "cookies": "Cookies",
+      "tryTournaments": "Try tournaments"
     },
     "nav": {
       "labelHow": "How it works",
@@ -188,7 +190,8 @@
       "ig": "TenPlanner on Instagram (opens in a new tab)",
       "login": "Log in or sign up",
       "close": "Close menu",
-      "open": "Open menu"
+      "open": "Open menu",
+      "tor": "Tournaments"
     },
     "stats": {
       "eyebrow": "Ten Planner in numbers",
@@ -4061,7 +4064,7 @@
       "step": {
         "basics": "Details",
         "modality": "Type",
-        "level": "Level",
+        "level": "Category",
         "format": "Format"
       },
       "name": "Name",
@@ -4118,7 +4121,12 @@
       "tz": {
         "peninsula": "Mainland Spain and Balearics",
         "canary": "Canary Islands"
-      }
+      },
+      "categoryText": "Which category is the tournament for? Pick one or write another.",
+      "noCategory": "No category",
+      "otherCategory": "Other",
+      "otherCategoryPlaceholder": "e.g. Mixed, Women +40, U-12…",
+      "category": "Category"
     },
     "manager": {
       "back": "Tournaments",
@@ -4281,7 +4289,12 @@
       "invalid_tags": "Someone tagged is not entered.",
       "poster_type": "The poster image must be JPG or PNG.",
       "not_past": "Only finished tournaments can be archived.",
-      "schedule_club_only": "For now, the order of play is only for club tournaments."
+      "schedule_club_only": "For now, the order of play is only for club tournaments.",
+      "guest_no_students": "You need an account to add your students.",
+      "guest_not_available": "This needs an account.",
+      "guest_news_limit": "Trial mode allows 5 news posts per tournament.",
+      "guest_photo_limit": "Trial mode allows 5 photos per tournament.",
+      "delete_not_allowed": "Only the club admin or whoever created the tournament can delete it."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4353,7 +4366,8 @@
       "tabDraw": "Draw",
       "tabStandings": "Standings",
       "tabRegister": "Registration",
-      "tabImages": "Images"
+      "tabImages": "Images",
+      "guestNoEmail": "Keep this page: if you cannot play, tell the tournament organizer."
     },
     "circuit": {
       "kicker": "Circuit",
@@ -4530,7 +4544,9 @@
       "photoDeleted": "Photo deleted",
       "photoAlt": "Tournament photo",
       "publicNewsTitle": "News",
-      "publicPhotosTitle": "Photos"
+      "publicPhotosTitle": "Photos",
+      "guestNewsLimit": "Trial mode allows {max} news posts. Delete one to write another, or create a free account.",
+      "guestPhotoLimit": "Trial mode allows {max} photos per tournament."
     },
     "poster": {
       "title": "Poster",
@@ -4565,7 +4581,8 @@
       "ctaFollow": "Follow the tournament",
       "ctaPrivate": "More information",
       "organizedBy": "Organised by",
-      "footer": "Organised with Ten Planner · tenplanner.com"
+      "footer": "Organised with Ten Planner · tenplanner.com",
+      "category": "Category"
     },
     "archive": {
       "archive": "Archive",
@@ -4625,6 +4642,85 @@
       "save": "Save tournament",
       "saveAndCancel": "Save and cancel {count, plural, one {# session} other {# sessions}}",
       "cancelledToast": "{count, plural, one {# session cancelled} other {# sessions cancelled}}"
+    },
+    "guest": {
+      "kicker": "Try without signing up",
+      "intro": "Create a tournament, add players, make the draw and keep the results. No account needed.",
+      "bannerTitle": "You are in trial mode",
+      "bannerText": "Create a tournament without an account: you get an edit link (keep it) and a public registration link to share. With an account you can also add your students, book courts and see it in the calendar.",
+      "register": "Create a free account",
+      "keep": "Trial tournaments are deleted 30 days after they end; with an account you keep them.",
+      "storageError": "This browser does not allow saving data (private mode?). Try another browser or create an account.",
+      "emptyTitle": "You have not created any trial tournament yet",
+      "emptyText": "Tap “New tournament” to start.",
+      "delete": "Delete trial tournament",
+      "deleteTitle": "Delete this tournament?",
+      "deleteText": "«{name}» will be deleted with its entries, draw, results, news and photos. This cannot be undone.",
+      "notFound": "This tournament is not in this browser. Trial tournaments only exist in the browser where they were created.",
+      "backToList": "Back to my trial tournaments",
+      "metaTitle": "Try Ten Planner tournaments",
+      "metaDescription": "Run a tennis tournament without signing up: registration link, draw, round robin, order of play, results and poster.",
+      "importTitle": "You have {count, plural, one {# trial tournament} other {# trial tournaments}} in this browser",
+      "importText": "Move them to your account so you do not lose them. Players, draw, results, news and photos are copied.",
+      "importButton": "Move to my account",
+      "importDiscard": "Discard",
+      "importDone": "{count, plural, one {Tournament moved to your account} other {# tournaments moved to your account}}",
+      "importError": "A tournament could not be moved. It is still in this browser; try again.",
+      "importDiscardTitle": "Discard the trial tournaments?",
+      "importDiscardText": "They will be deleted from this browser. This cannot be undone.",
+      "addPlayer": "Add player",
+      "noEntries": "No entries yet. Add players with their first and last name.",
+      "publicNotice": "Tournament created with the Ten Planner free trial. It is run by its creator, not by Ten Planner.",
+      "linkExpired": "That edit link is not valid.",
+      "organizerName": "Organizer",
+      "organizerPlaceholder": "e.g. Las Palmas Tennis Club",
+      "accept": "I agree that the tournament and its entries are deleted 30 days after it ends. I am responsible for the player data I add.",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "linkTitle": "Registration link",
+      "legacyTitle": "{count, plural, one {You have # trial tournament from the previous version} other {You have # trial tournaments from the previous version}} in this browser",
+      "legacyText": "Trial tournaments are now saved in Ten Planner, with an edit link and a public registration link. Move them to keep them.",
+      "legacyButton": "Move them",
+      "legacyDone": "{count, plural, one {Tournament moved} other {# tournaments moved}}",
+      "claimText": "Move them to your account to keep them: they no longer expire.",
+      "linksTitle": "Your tournament will have two links",
+      "linksHelp": "A secret edit link to manage it from any device (keep it: if you lose it, it cannot be recovered), and a public link for people to register.",
+      "editLinkTitle": "Your edit link (keep it)",
+      "editLinkHelp": "With this link you can edit the tournament from any phone or computer. Do not share it: anyone with it can edit. If you lose it, it cannot be recovered. The public registration link is below.",
+      "editLinkCopy": "Copy edit link",
+      "editLinkCopied": "Edit link copied",
+      "copyFailed": "Could not copy. Select it and copy it by hand.",
+      "lostNote": "To open a trial tournament on another device, use its edit link. Without it, it cannot be recovered: to keep it, create a free account and move it to your account.",
+      "circuitTournaments": "Circuit tournaments",
+      "circuitTournamentsHelp": "The first one is the one above. Add the rest with their name and date; complete each one later from its page.",
+      "circuitTournamentName": "Tournament {n}",
+      "removeRow": "Remove",
+      "addTournament": "Add tournament",
+      "errCircuitTournaments": "Give each circuit tournament a name (3+ letters) and a date.",
+      "emailOptional": "Also email me the edit link (optional; we do not keep the email)",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "emailNotSent": "The email could not be sent. Copy the edit link from the tournament page.",
+      "deleteTournament": "Delete tournament",
+      "deleted": "Tournament deleted"
+    },
+    "circuitPoints": {
+      "title": "Circuit points",
+      "help": "Points each player earns in each circuit tournament depending on how far they get. They apply to every tournament in the circuit.",
+      "standings": "Circuit standings",
+      "stage": {
+        "winner": "Champion",
+        "final": "Final",
+        "semifinal": "Semifinals",
+        "quarterfinal": "Quarterfinals",
+        "round_of_16": "Round of 16",
+        "earlier": "Earlier rounds"
+      },
+      "roundRobin": "Round robin: points per place (1st, 2nd, 3rd…), comma separated",
+      "participation": "For taking part",
+      "invalid": "Check the points: whole numbers from 0 to 10,000.",
+      "save": "Save points",
+      "saved": "Points saved"
     }
   }
 }

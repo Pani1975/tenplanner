@@ -2667,6 +2667,8 @@ export const tournaments = pgTable(
       () => skillLevels.code,
       { onDelete: "set null", onUpdate: "cascade" }
     ),
+    // Categoría (Benjamín… +60 u otra libre); sustituye al nivel. 0114.
+    category: varchar("category", { length: 60 }),
     format: varchar("format", { length: 20 }).notNull(), // knockout | round_robin
     // draft | open | closed | in_progress | finished. "open" pasado el plazo
     // se muestra como "closed" (lib/tournaments/status.ts).
@@ -2702,6 +2704,13 @@ export const tournaments = pgTable(
     placeIds: jsonb("place_ids").$type<string[]>(),
     // Horario en que ocupa esas pistas; null = todo el día. 0110.
     playHours: jsonb("play_hours").$type<TournamentHours>(),
+    // Torneo de prueba sin cuenta (owner_type = guest). 0112.
+    guestEmail: varchar("guest_email", { length: 255 }),
+    guestName: varchar("guest_name", { length: 120 }),
+    guestTokenHash: varchar("guest_token_hash", { length: 64 }),
+    guestVerifiedAt: timestamp("guest_verified_at", { withTimezone: true }),
+    guestExpiresAt: timestamp("guest_expires_at", { withTimezone: true }),
+    guestWarnedAt: timestamp("guest_warned_at", { withTimezone: true }),
     // Reglas del marcador (lib/tournaments/score.ts).
     bestOf: smallint("best_of").default(3).notNull(),
     gamesPerSet: smallint("games_per_set").default(6).notNull(),

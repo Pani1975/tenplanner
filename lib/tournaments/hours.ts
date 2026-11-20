@@ -18,7 +18,11 @@ export type TournamentHours =
       days: { date: string; start: number; end: number }[];
     };
 
-const minute = z.number().int().min(0).max(24 * 60);
+const minute = z
+  .number()
+  .int()
+  .min(0)
+  .max(24 * 60);
 const range = z
   .object({ start: minute, end: minute })
   .refine((r) => r.end > r.start, {
@@ -36,9 +40,7 @@ export const tournamentHoursSchema = z.union([
     mode: z.literal("by_day"),
     days: z
       .array(
-        z
-          .object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
-          .and(range)
+        z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).and(range)
       )
       .max(60),
   }),

@@ -5,19 +5,25 @@ import { NextResponse } from "next/server";
 import { ZodError, type ZodType, type output } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getOrganizer, TournamentError, type Organizer } from "./server";
+import { guestOrganizer } from "./guest-server";
 
 export async function withOrganizer(
-  handler: (o: Organizer) => Promise<Response>
+  handler: (o: Organizer) => Promise<Response>,
+  opts: { guest?: boolean } = { guest: true }
 ): Promise<Response> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
+  // Sin sesión: modo prueba, solo con los torneos cuyo enlace de edición
+  // tiene este navegador (lib/tournaments/guest-server.ts).
+  let organizer: Organizer | null = user ? null : await guestOrganizer();
+  if (!user && (!opts.guest || !organizer?.guest?.tournamentIds.length)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    return await handler(await getOrganizer(user.id));
+    organizer ??= await getOrganizer(user!.id);
+    return await handler(organizer);
   } catch (e) {
     if (e instanceof TournamentError) {
       return NextResponse.json(
@@ -64,3 +70,8 @@ export const json = (data: unknown, status = 200) =>
     { data },
     { status, headers: { "Cache-Control": "no-store" } }
   );
+
+/** Solo con cuenta (alumnos, pistas, circuitos, orden de juego, importar). */
+export const withAccountOrganizer = (
+  handler: (o: Organizer) => Promise<Response>
+) => withOrganizer(handler, { guest: false });

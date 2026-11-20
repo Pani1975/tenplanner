@@ -38,6 +38,7 @@ const tournamentFields = {
   cancelSessionIds: z.array(z.string().uuid()).max(200).optional(),
   modality: z.enum(["singles", "doubles"]),
   levelCode: z.string().max(32).optional().nullable(),
+  category: optText(60),
   format: z.enum(["knockout", "round_robin"]),
   visibility: z.enum(["public", "private"]).optional(),
   photosPublic: z.boolean().optional(),

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type Template = "classic" | "court" | "image";
 
@@ -112,7 +112,7 @@ export function PosterPanel({
 }) {
   const t = useTranslations("tournaments.poster");
   const apiError = useApiError();
-  const router = useRouter();
+  const api = useTournamentApi();
   const [template, setTemplate] = useState<Template>(initial);
   const [image, setImage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -122,13 +122,14 @@ export function PosterPanel({
   useEffect(() => {
     if (!hasImage) return;
     let on = true;
-    fetch(`${base}/poster-image`)
+    api
+      .fetch(`${base}/poster-image`)
       .then((r) => (r.ok ? r.json() : null))
       .then((b) => on && b?.data?.url && setImage(b.data.url));
     return () => {
       on = false;
     };
-  }, [base, hasImage]);
+  }, [base, hasImage, api]);
 
   async function choose(v: Template) {
     if (v === template) return;
@@ -137,7 +138,7 @@ export function PosterPanel({
       return;
     }
     setBusy(v);
-    const res = await fetch(base, {
+    const res = await api.fetch(base, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ posterTemplate: v }),
@@ -156,7 +157,7 @@ export function PosterPanel({
         "file",
         new File([blob], "cartel.jpg", { type: "image/jpeg" })
       );
-      const res = await fetch(`${base}/poster-image`, {
+      const res = await api.fetch(`${base}/poster-image`, {
         method: "POST",
         body: form,
       });
@@ -167,7 +168,7 @@ export function PosterPanel({
       setImage((await res.json()).data.url);
       setTemplate("image");
       toast.success(t("imageSaved"));
-      router.refresh();
+      api.refresh();
     } catch {
       toast.error(t("imageReadError"));
     } finally {
@@ -177,12 +178,12 @@ export function PosterPanel({
 
   async function removeImage() {
     setBusy("remove");
-    const res = await fetch(`${base}/poster-image`, { method: "DELETE" });
+    const res = await api.fetch(`${base}/poster-image`, { method: "DELETE" });
     setBusy(null);
     if (!res.ok) return toast.error(await apiError(res));
     setImage(null);
     if (template === "image") setTemplate("classic");
-    router.refresh();
+    api.refresh();
   }
 
   return (

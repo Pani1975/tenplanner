@@ -147,7 +147,8 @@
     },
     "hero": {
       "sessionSaved": "✓ Sesión guardada ✓",
-      "ready": "⚡ Clase lista en 90 seg"
+      "ready": "⚡ Clase lista en 90 seg",
+      "tryTournaments": "Prueba los torneos sin registrarte"
     },
     "problemEyebrow": "El problema",
     "how": {
@@ -179,7 +180,8 @@
       "legalNotice": "Aviso legal",
       "terms": "Términos",
       "privacy": "Privacidad",
-      "cookies": "Cookies"
+      "cookies": "Cookies",
+      "tryTournaments": "Probar torneos"
     },
     "nav": {
       "labelHow": "Cómo funciona",
@@ -188,7 +190,8 @@
       "ig": "Instagram de TenPlanner (se abre en una pestaña nueva)",
       "login": "Iniciar sesión o registrarte",
       "close": "Cerrar menú",
-      "open": "Abrir menú"
+      "open": "Abrir menú",
+      "tor": "Torneos"
     },
     "stats": {
       "eyebrow": "Ten Planner en cifras",
@@ -3672,7 +3675,7 @@
       "step": {
         "basics": "Datos",
         "modality": "Modalidad",
-        "level": "Nivel",
+        "level": "Categoría",
         "format": "Formato"
       },
       "name": "Nombre",
@@ -3729,7 +3732,12 @@
       "tz": {
         "peninsula": "Península y Baleares",
         "canary": "Canarias"
-      }
+      },
+      "categoryText": "¿Para qué categoría es el torneo? Elige una o escribe otra.",
+      "noCategory": "Sin categoría",
+      "otherCategory": "Otro",
+      "otherCategoryPlaceholder": "Ej.: Mixto, Femenino +40, Sub-12…",
+      "category": "Categoría"
     },
     "manager": {
       "back": "Torneos",
@@ -3892,7 +3900,12 @@
       "invalid_tags": "Alguna persona etiquetada no está inscrita.",
       "poster_type": "La imagen del cartel debe ser JPG o PNG.",
       "not_past": "Solo se pueden archivar torneos ya terminados.",
-      "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club."
+      "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club.",
+      "guest_no_students": "Para añadir a tus alumnos necesitas una cuenta.",
+      "guest_not_available": "Esto necesita una cuenta.",
+      "guest_news_limit": "En el modo prueba caben 5 noticias por torneo.",
+      "guest_photo_limit": "En el modo prueba caben 5 fotos por torneo.",
+      "delete_not_allowed": "Solo el administrador del club o quien creó el torneo puede eliminarlo."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -3964,7 +3977,8 @@
       "tabDraw": "Cuadro",
       "tabStandings": "Clasificación",
       "tabRegister": "Inscripción",
-      "tabImages": "Imágenes"
+      "tabImages": "Imágenes",
+      "guestNoEmail": "Guarda esta página: si no puedes jugar, avisa a quien organiza el torneo."
     },
     "circuit": {
       "kicker": "Circuito",
@@ -4141,7 +4155,9 @@
       "photoDeleted": "Foto borrada",
       "photoAlt": "Foto del torneo",
       "publicNewsTitle": "Noticias",
-      "publicPhotosTitle": "Fotos"
+      "publicPhotosTitle": "Fotos",
+      "guestNewsLimit": "En el modo prueba caben {max} noticias. Borra una para escribir otra, o crea una cuenta gratis.",
+      "guestPhotoLimit": "En el modo prueba caben {max} fotos por torneo."
     },
     "poster": {
       "title": "Cartel",
@@ -4176,7 +4192,8 @@
       "ctaFollow": "Sigue el torneo",
       "ctaPrivate": "Más información",
       "organizedBy": "Organiza",
-      "footer": "Organizado con Ten Planner · tenplanner.com"
+      "footer": "Organizado con Ten Planner · tenplanner.com",
+      "category": "Categoría"
     },
     "archive": {
       "archive": "Archivar",
@@ -4236,6 +4253,85 @@
       "save": "Guardar el torneo",
       "saveAndCancel": "Guardar y cancelar {count, plural, one {# sesión} other {# sesiones}}",
       "cancelledToast": "{count, plural, one {# sesión cancelada} other {# sesiones canceladas}}"
+    },
+    "guest": {
+      "kicker": "Prueba sin registro",
+      "intro": "Crea un torneo, apunta jugadores, sortea el cuadro y lleva los resultados. Sin crear cuenta.",
+      "bannerTitle": "Estás en modo prueba",
+      "bannerText": "Crea un torneo sin cuenta: tendrás un enlace de edición (guárdalo) y un enlace público de inscripción para compartir. Con una cuenta, además, cargas a tus alumnos, reservas las pistas y lo ves en el calendario.",
+      "register": "Crear cuenta gratis",
+      "keep": "Los torneos de prueba se borran 30 días después de terminar; con una cuenta los conservas.",
+      "storageError": "Este navegador no permite guardar datos (¿modo incógnito?). Prueba con otro navegador o crea una cuenta.",
+      "emptyTitle": "Aún no has creado ningún torneo de prueba",
+      "emptyText": "Pulsa «Nuevo torneo» para empezar.",
+      "delete": "Borrar torneo de prueba",
+      "deleteTitle": "¿Eliminar este torneo?",
+      "deleteText": "Se borrará «{name}» con sus inscritos, cuadro, resultados, noticias y fotos. No se puede deshacer.",
+      "notFound": "Este torneo no está en este navegador. Los torneos de prueba solo se ven en el navegador donde se crearon.",
+      "backToList": "Volver a mis torneos de prueba",
+      "metaTitle": "Prueba los torneos de Ten Planner",
+      "metaDescription": "Organiza un torneo de tenis sin registrarte: enlace de inscripción, cuadro, liguilla, orden de juego, resultados y cartel.",
+      "importTitle": "Tienes {count, plural, one {# torneo de prueba} other {# torneos de prueba}} en este navegador",
+      "importText": "Pásalos a tu cuenta para no perderlos. Se copian con sus jugadores, cuadro, resultados, noticias y fotos.",
+      "importButton": "Pasar a mi cuenta",
+      "importDiscard": "Descartar",
+      "importDone": "{count, plural, one {Torneo pasado a tu cuenta} other {# torneos pasados a tu cuenta}}",
+      "importError": "No se pudo pasar algún torneo. Sigue guardado en este navegador; inténtalo de nuevo.",
+      "importDiscardTitle": "¿Descartar los torneos de prueba?",
+      "importDiscardText": "Se borrarán de este navegador. No se puede deshacer.",
+      "addPlayer": "Añadir jugador",
+      "noEntries": "Aún no hay inscritos. Añade jugadores con su nombre y apellidos.",
+      "publicNotice": "Torneo creado con la prueba gratuita de Ten Planner. Lo organiza quien lo ha creado, no Ten Planner.",
+      "linkExpired": "Ese enlace de edición no vale.",
+      "organizerName": "Quién organiza",
+      "organizerPlaceholder": "Ej.: Club de Tenis Las Palmas",
+      "accept": "Acepto que el torneo y sus inscritos se borren 30 días después de terminar. Soy responsable de los datos de los jugadores que añada.",
+      "terms": "Términos",
+      "privacy": "Privacidad",
+      "linkTitle": "Enlace de inscripción",
+      "legacyTitle": "{count, plural, one {Tienes # torneo de prueba de la versión anterior} other {Tienes # torneos de prueba de la versión anterior}} en este navegador",
+      "legacyText": "Ahora los torneos de prueba se guardan en Ten Planner, con enlace de edición y enlace público de inscripción. Pásalos para conservarlos.",
+      "legacyButton": "Pasarlos",
+      "legacyDone": "{count, plural, one {Torneo pasado} other {# torneos pasados}}",
+      "claimText": "Pásalos a tu cuenta para conservarlos: dejan de caducar.",
+      "linksTitle": "Tu torneo tendrá dos enlaces",
+      "linksHelp": "Uno de edición, secreto, para gestionarlo desde cualquier dispositivo (guárdalo: si lo pierdes no se puede recuperar), y uno público para que la gente se inscriba.",
+      "editLinkTitle": "Tu enlace de edición (guárdalo)",
+      "editLinkHelp": "Con este enlace editas el torneo desde cualquier móvil u ordenador. No lo compartas: quien lo tenga puede editarlo. Si lo pierdes, no se puede recuperar. El enlace público de inscripción está más abajo.",
+      "editLinkCopy": "Copiar enlace de edición",
+      "editLinkCopied": "Enlace de edición copiado",
+      "copyFailed": "No se pudo copiar. Selecciónalo y cópialo a mano.",
+      "lostNote": "Para abrir un torneo de prueba en otro dispositivo, usa su enlace de edición. Sin él no se puede recuperar: si quieres conservarlo, crea una cuenta gratis y pásalo a tu cuenta.",
+      "circuitTournaments": "Torneos del circuito",
+      "circuitTournamentsHelp": "El primero es el de arriba. Añade el resto con su nombre y fecha; cada uno se completa después desde su ficha.",
+      "circuitTournamentName": "Torneo {n}",
+      "removeRow": "Quitar",
+      "addTournament": "Añadir torneo",
+      "errCircuitTournaments": "Pon nombre (3 letras o más) y fecha a cada torneo del circuito.",
+      "emailOptional": "Enviarme también el enlace de edición por correo (opcional; no guardamos el correo)",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@correo.com",
+      "emailNotSent": "No se pudo enviar el correo. Copia el enlace de edición de la ficha del torneo.",
+      "deleteTournament": "Eliminar torneo",
+      "deleted": "Torneo eliminado"
+    },
+    "circuitPoints": {
+      "title": "Puntuación del circuito",
+      "help": "Puntos que suma cada jugador en cada torneo del circuito según hasta dónde llega. Valen para todos los torneos del circuito.",
+      "standings": "Clasificación del circuito",
+      "stage": {
+        "winner": "Campeón",
+        "final": "Final",
+        "semifinal": "Semifinales",
+        "quarterfinal": "Cuartos",
+        "round_of_16": "Octavos",
+        "earlier": "Rondas anteriores"
+      },
+      "roundRobin": "Liguilla: puntos por puesto (1.º, 2.º, 3.º…), separados por comas",
+      "participation": "Por participar",
+      "invalid": "Revisa los puntos: números enteros de 0 a 10.000.",
+      "save": "Guardar puntuación",
+      "saved": "Puntuación guardada"
     }
   }
 }

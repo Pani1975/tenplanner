@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTournamentApi } from "../tournament-api";
 import { useTranslations } from "next-intl";
 import { Pencil, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,7 +47,7 @@ export function DrawPanel({
   canEdit: boolean;
 }) {
   const t = useTranslations("tournaments");
-  const router = useRouter();
+  const api = useTournamentApi();
   const [editing, setEditing] = useState<EditableMatch | null>(null);
 
   const rounds = [...new Set(matches.map((m) => m.round))].sort(
@@ -284,7 +284,7 @@ export function DrawPanel({
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
-            router.refresh();
+            api.refresh();
           }}
         />
       )}

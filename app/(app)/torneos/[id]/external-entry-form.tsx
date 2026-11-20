@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type Person = {
   firstName: string;
@@ -65,6 +66,7 @@ export function ExternalEntryForm({
 }) {
   const t = useTranslations("tournaments.external");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [player, setPlayer] = useState<Person>(empty);
   const [partner, setPartner] = useState<Person>(empty);
   const [levelCode, setLevelCode] = useState("");
@@ -78,7 +80,7 @@ export function ExternalEntryForm({
     e.preventDefault();
     if (!valid) return;
     setSaving(true);
-    const res = await fetch(`/api/tournaments/${tournamentId}/entries`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/entries`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

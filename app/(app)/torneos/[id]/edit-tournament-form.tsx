@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
-  TOURNAMENT_TIME_ZONES,
   zonedParts,
   zonedToIso,
   type TournamentTimeZone,
 } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
+import { TOURNAMENT_CATEGORIES } from "@/lib/tournaments/categories";
+import { useTournamentApi } from "../tournament-api";
 import {
   CourtConflictsDialog,
   CourtHoursPicker,
@@ -45,6 +46,7 @@ export function EditTournamentForm({
     endDate: string | null;
     registrationDeadline: string | null;
     maxEntries: number | null;
+    category: string | null;
     timeZone: TournamentTimeZone;
     placeIds: string[];
     playHours: TournamentHours;
@@ -54,6 +56,7 @@ export function EditTournamentForm({
 }) {
   const tr = useTranslations("tournaments");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const dl = splitLocal(t.registrationDeadline, t.timeZone);
   const [f, setF] = useState({
     name: t.name,
@@ -64,6 +67,7 @@ export function EditTournamentForm({
     deadlineTime: dl.time,
     timeZone: t.timeZone as string,
     maxEntries: t.maxEntries ? String(t.maxEntries) : "",
+    category: t.category ?? "",
   });
   const [playHours, setPlayHours] = useState<TournamentHours>(t.playHours);
   const [conflicts, setConflicts] = useState<CourtConflicts | null>(null);
@@ -98,7 +102,7 @@ export function EditTournamentForm({
       f.timeZone !== t.timeZone ||
       JSON.stringify(playHours) !== JSON.stringify(t.playHours);
     if (!cancelSessionIds && courtsChanged) {
-      const found = await fetchCourtConflicts({
+      const found = await fetchCourtConflicts(api.fetch, {
         placeIds: t.placeIds,
         startDate: f.startDate,
         endDate: f.endDate || null,
@@ -111,7 +115,7 @@ export function EditTournamentForm({
         return;
       }
     }
-    const res = await fetch(`/api/tournaments/${t.id}`, {
+    const res = await api.fetch(`/api/tournaments/${t.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -124,6 +128,7 @@ export function EditTournamentForm({
           : null,
         timeZone: f.timeZone,
         maxEntries: max,
+        category: f.category.trim() || null,
         playHours,
         cancelSessionIds: cancelSessionIds ?? [],
       }),
@@ -213,23 +218,6 @@ export function EditTournamentForm({
           </div>
         </label>
         <label className="block space-y-1.5">
-          <span className={label}>{tr("wizard.timeZone")}</span>
-          <select
-            value={f.timeZone}
-            onChange={(e) => set("timeZone", e.target.value)}
-            aria-label={tr("wizard.timeZone")}
-            className="tp-field h-11 w-full px-3 text-base"
-          >
-            {TOURNAMENT_TIME_ZONES.map((z) => (
-              <option key={z} value={z}>
-                {tr(
-                  `wizard.tz.${z === "Atlantic/Canary" ? "canary" : "peninsula"}`
-                )}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-1.5">
           <span className={label}>{tr("wizard.maxEntries")}</span>
           <input
             type="number"
@@ -241,6 +229,23 @@ export function EditTournamentForm({
             onChange={(e) => set("maxEntries", e.target.value)}
             className="tp-field h-11 w-full px-4 text-base"
           />
+        </label>
+        <label className="block space-y-1.5">
+          <span className={label}>{tr("wizard.category")}</span>
+          {/* Lista (Benjamín… +60) o lo que se escriba. */}
+          <input
+            value={f.category}
+            onChange={(e) => set("category", e.target.value)}
+            list={`categories-${t.id}`}
+            maxLength={60}
+            placeholder={tr("wizard.noCategory")}
+            className="tp-field h-11 w-full px-4 text-base"
+          />
+          <datalist id={`categories-${t.id}`}>
+            {TOURNAMENT_CATEGORIES.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </label>
       </div>
       {t.placeIds.length > 0 && (

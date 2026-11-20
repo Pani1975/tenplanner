@@ -28,6 +28,7 @@ import {
   type SetRow,
 } from "@/lib/tournaments/score-form";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 export type EditableMatch = {
   id: string;
@@ -58,6 +59,7 @@ export function ScoreEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const api = useTournamentApi();
   const t = useTranslations("tournaments.score");
   const te = useTranslations("tournaments.errors");
   const apiError = useApiError();
@@ -104,7 +106,7 @@ export function ScoreEditor({
   async function save() {
     if (!result.ok) return;
     setSaving(true);
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/matches/${match.id}`,
       {
         method: "PATCH",
@@ -128,7 +130,7 @@ export function ScoreEditor({
 
   async function clear() {
     setSaving(true);
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/matches/${match.id}`,
       { method: "DELETE" }
     );

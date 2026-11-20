@@ -14,6 +14,8 @@ const navItems = [
   { key: "labelHow", href: "#como-funciona" },
   { key: "ex", href: "/exercises" },
   { key: "cl", href: "/classes" },
+  // Torneos de prueba sin registro.
+  { key: "tor", href: "/probar-torneos" },
 ] as const;
 
 export function LandingNav() {
@@ -30,11 +32,11 @@ export function LandingNav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#050505]/10 bg-[#f4f4f1]/94 px-5 py-5 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-[#050505]/10 bg-[#f4f4f1]/94 px-3 py-5 backdrop-blur sm:px-5">
       <div className="mx-auto flex max-w-[1710px] items-center justify-between gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2.5 font-heading text-[22px] font-bold text-[#050505]"
+          className="flex shrink-0 items-center gap-2 font-heading text-[19px] font-bold text-[#050505] sm:gap-2.5 sm:text-[22px]"
           onClick={() => setOpen(false)}
         >
           <TenPlannerMark className="size-9 rounded-[10px] shadow-sm" />
@@ -51,7 +53,7 @@ export function LandingNav() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <LanguageSwitcher />
           <InstallAppButton className="hidden md:inline-flex" />
           <a
@@ -59,14 +61,15 @@ export function LandingNav() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("ig")}
-            className="grid size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000]"
+            // En móvil va dentro del menú: si no, el botón del menú no cabe.
+            className="hidden size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] hover:text-[#5f7000] sm:grid"
           >
             <InstagramIcon className="size-5" />
           </a>
           <Link
             href="/login"
             aria-label={t("login")}
-            className="grid size-11 place-items-center rounded-full bg-[#d6ff38] text-[#050505] transition hover:bg-[#050505] hover:text-[#d6ff38]"
+            className="grid size-10 sm:size-11 place-items-center rounded-full bg-[#d6ff38] text-[#050505] transition hover:bg-[#050505] hover:text-[#d6ff38]"
           >
             <UserRound className="size-5" />
           </Link>
@@ -76,7 +79,7 @@ export function LandingNav() {
             aria-label={open ? t("close") : t("open")}
             aria-expanded={open}
             aria-controls="landing-mobile-nav"
-            className="grid size-11 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] md:hidden"
+            className="grid size-10 place-items-center rounded-full border border-[#050505]/12 bg-white text-[#050505] transition hover:border-[#5f7000] sm:size-11 md:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -104,6 +107,16 @@ export function LandingNav() {
                 {t(item.key)}
               </Link>
             ))}
+            <a
+              href="https://www.instagram.com/tenplanner/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-[#050505] transition hover:bg-[#f4f4f1] sm:hidden"
+            >
+              <InstagramIcon className="size-4" />
+              <span aria-hidden>Instagram</span>
+              <span className="sr-only">{t("ig")}</span>
+            </a>
             <InstallAppButton className="mt-1 w-full justify-center" />
           </div>
         </div>

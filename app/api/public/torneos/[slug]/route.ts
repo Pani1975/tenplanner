@@ -39,7 +39,9 @@ export async function POST(request: Request, ctx: Ctx) {
     const r = await registerPublic(slug, input);
 
     let emailSent = false;
-    if (r.notifyEmail) {
+    // Torneo de prueba (sin cuenta): sin correos; basta la confirmación en
+    // pantalla (y nadie puede usarlo para enviar correos en nuestro nombre).
+    if (r.notifyEmail && !r.tournament.isGuest) {
       const site = getSiteUrl(request.url);
       const mail = registrationEmail({
         tournamentName: r.tournament.name,
@@ -58,6 +60,7 @@ export async function POST(request: Request, ctx: Ctx) {
           status: r.status,
           waitlistPosition: r.waitlistPosition,
           emailSent,
+          isGuest: r.tournament.isGuest,
         },
       },
       { status: 201, headers: { "Cache-Control": "no-store" } }
