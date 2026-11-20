@@ -19,6 +19,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type News = {
   id: string;
@@ -44,8 +45,11 @@ type Photo = {
 
 const key = (p: { entryId: string; side: string }) => `${p.entryId}:${p.side}`;
 
-async function getData<T>(url: string): Promise<T | null> {
-  const res = await fetch(url);
+async function getData<T>(
+  doFetch: (input: string) => Promise<Response>,
+  url: string
+): Promise<T | null> {
+  const res = await doFetch(url);
   return res.ok ? ((await res.json()).data as T) : null;
 }
 
@@ -96,6 +100,7 @@ export function MediaPanel({
 function NewsSection({ tournamentId }: { tournamentId: string }) {
   const t = useTranslations("tournaments.media");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [items, setItems] = useState<News[] | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -103,8 +108,8 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
   const [toDelete, setToDelete] = useState<News | null>(null);
 
   const fetchNews = useCallback(
-    () => getData<News[]>(`/api/tournaments/${tournamentId}/news`),
-    [tournamentId]
+    () => getData<News[]>(api.fetch, `/api/tournaments/${tournamentId}/news`),
+    [tournamentId, api]
   );
   const load = async () => {
     const d = await fetchNews();
@@ -120,7 +125,7 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
 
   async function create(publish: boolean) {
     setBusy(publish ? "publish" : "draft");
-    const res = await fetch(`/api/tournaments/${tournamentId}/news`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/news`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, body, publish }),
@@ -135,7 +140,7 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
 
   async function patch(n: News, published: boolean) {
     setBusy(n.id);
-    const res = await fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ published }),
@@ -146,7 +151,7 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
   }
 
   async function remove(n: News) {
-    const res = await fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
       method: "DELETE",
     });
     if (!res.ok) return toast.error(await apiError(res));
@@ -279,6 +284,7 @@ function PhotosSection({
 }) {
   const t = useTranslations("tournaments.media");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [data, setData] = useState<{
     people: Person[];
     photos: Photo[];
@@ -295,9 +301,10 @@ function PhotosSection({
   const fetchPhotos = useCallback(
     () =>
       getData<{ people: Person[]; photos: Photo[] }>(
+        api.fetch,
         `/api/tournaments/${tournamentId}/photos`
       ),
-    [tournamentId]
+    [tournamentId, api]
   );
   const load = async () => {
     const d = await fetchPhotos();
@@ -322,7 +329,7 @@ function PhotosSection({
         form.append("file", new File([blob], "foto.webp", { type: blob.type }));
         form.append("width", String(width));
         form.append("height", String(height));
-        const res = await fetch(`/api/tournaments/${tournamentId}/photos`, {
+        const res = await api.fetch(`/api/tournaments/${tournamentId}/photos`, {
           method: "POST",
           body: form,
         });
@@ -341,7 +348,7 @@ function PhotosSection({
   }
 
   async function patch(photo: Photo, body: object) {
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/photos/${photo.id}`,
       {
         method: "PATCH",
@@ -365,7 +372,7 @@ function PhotosSection({
   }
 
   async function togglePublic(v: boolean) {
-    const res = await fetch(`/api/tournaments/${tournamentId}`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ photosPublic: v }),
@@ -376,7 +383,7 @@ function PhotosSection({
   }
 
   async function remove(photo: Photo) {
-    const res = await fetch(
+    const res = await api.fetch(
       `/api/tournaments/${tournamentId}/photos/${photo.id}`,
       { method: "DELETE" }
     );

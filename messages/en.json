@@ -4230,7 +4230,9 @@
       "invalid_tags": "Someone tagged is not entered.",
       "poster_type": "The poster image must be JPG or PNG.",
       "not_past": "Only finished tournaments can be archived.",
-      "schedule_club_only": "For now, the order of play is only for club tournaments."
+      "schedule_club_only": "For now, the order of play is only for club tournaments.",
+      "guest_no_students": "You need an account to add your students.",
+      "guest_not_available": "This needs an account."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4574,6 +4576,34 @@
       "save": "Save tournament",
       "saveAndCancel": "Save and cancel {count, plural, one {# session} other {# sessions}}",
       "cancelledToast": "{count, plural, one {# session cancelled} other {# sessions cancelled}}"
+    },
+    "guest": {
+      "kicker": "Try without signing up",
+      "intro": "Create a tournament, add players, make the draw and keep the results. No account needed.",
+      "bannerTitle": "You are in trial mode",
+      "bannerText": "Your tournaments are saved only in this browser (not in Ten Planner). With an account you can also add your students, book courts, see the tournament in the calendar and share a public page.",
+      "register": "Create a free account",
+      "keep": "If you sign up in this browser you can move these tournaments to your account.",
+      "storageError": "This browser does not allow saving data (private mode?). Try another browser or create an account.",
+      "emptyTitle": "You have not created any trial tournament yet",
+      "emptyText": "Tap “New tournament” to start.",
+      "delete": "Delete trial tournament",
+      "deleteTitle": "Delete this trial tournament?",
+      "deleteText": "“{name}” will be deleted from this browser. This cannot be undone.",
+      "notFound": "This tournament is not in this browser. Trial tournaments only exist in the browser where they were created.",
+      "backToList": "Back to my trial tournaments",
+      "metaTitle": "Try Ten Planner tournaments",
+      "metaDescription": "Run a tennis tournament without signing up: entries, draw, round robin, results and poster.",
+      "importTitle": "You have {count, plural, one {# trial tournament} other {# trial tournaments}} in this browser",
+      "importText": "Move them to your account so you do not lose them. Players, draw, results, news and photos are copied.",
+      "importButton": "Move to my account",
+      "importDiscard": "Discard",
+      "importDone": "{count, plural, one {Tournament moved to your account} other {# tournaments moved to your account}}",
+      "importError": "A tournament could not be moved. It is still in this browser; try again.",
+      "importDiscardTitle": "Discard the trial tournaments?",
+      "importDiscardText": "They will be deleted from this browser. This cannot be undone.",
+      "addPlayer": "Add player",
+      "noEntries": "No entries yet. Add players with their first and last name."
     }
   }
 }

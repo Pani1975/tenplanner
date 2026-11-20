@@ -11,6 +11,7 @@ import {
   type TournamentTimeZone,
 } from "@/lib/tournaments/schedule";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 import {
   CourtConflictsDialog,
   CourtHoursPicker,
@@ -54,6 +55,7 @@ export function EditTournamentForm({
 }) {
   const tr = useTranslations("tournaments");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const dl = splitLocal(t.registrationDeadline, t.timeZone);
   const [f, setF] = useState({
     name: t.name,
@@ -98,7 +100,7 @@ export function EditTournamentForm({
       f.timeZone !== t.timeZone ||
       JSON.stringify(playHours) !== JSON.stringify(t.playHours);
     if (!cancelSessionIds && courtsChanged) {
-      const found = await fetchCourtConflicts({
+      const found = await fetchCourtConflicts(api.fetch, {
         placeIds: t.placeIds,
         startDate: f.startDate,
         endDate: f.endDate || null,
@@ -111,7 +113,7 @@ export function EditTournamentForm({
         return;
       }
     }
-    const res = await fetch(`/api/tournaments/${t.id}`, {
+    const res = await api.fetch(`/api/tournaments/${t.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

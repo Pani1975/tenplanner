@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTournamentApi } from "../tournament-api";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { LayoutGrid, Loader2 } from "lucide-react";
@@ -24,14 +24,14 @@ export function DrawButton({
 }) {
   const t = useTranslations("tournaments.draw");
   const apiError = useApiError();
-  const router = useRouter();
+  const api = useTournamentApi();
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<number | null>(null);
   const [confirmRedraw, setConfirmRedraw] = useState(false);
 
   async function run(excludePending: boolean) {
     setBusy(true);
-    const res = await fetch(`/api/tournaments/${tournamentId}/draw`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/draw`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ excludePending }),
@@ -55,7 +55,7 @@ export function DrawButton({
       return;
     }
     toast.success(redraw ? t("redrawn") : t("generated"));
-    router.refresh();
+    api.refresh();
   }
 
   return (

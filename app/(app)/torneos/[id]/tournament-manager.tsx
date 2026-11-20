@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTournamentApi } from "../tournament-api";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -140,7 +140,7 @@ export function TournamentManager({
 }) {
   const tr = useTranslations("tournaments");
   const locale = useLocale();
-  const router = useRouter();
+  const api = useTournamentApi();
   const apiError = useApiError();
   const [panel, setPanel] = useState<"none" | "students" | "external">("none");
   const [busy, setBusy] = useState<string | null>(null);
@@ -199,7 +199,7 @@ export function TournamentManager({
 
   async function archive(archived: boolean) {
     setBusy("archive");
-    const res = await fetch(`/api/tournaments/${t.id}/archive`, {
+    const res = await api.fetch(`/api/tournaments/${t.id}/archive`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ archived }),
@@ -210,13 +210,13 @@ export function TournamentManager({
       return;
     }
     toast.success(tr(archived ? "archive.done" : "archive.restored"));
-    if (archived) router.push("/torneos");
-    else router.refresh();
+    if (archived) window.location.assign(api.paths.list);
+    else api.refresh();
   }
 
   async function patchTournament(body: object, key: string) {
     setBusy(key);
-    const res = await fetch(`/api/tournaments/${t.id}`, {
+    const res = await api.fetch(`/api/tournaments/${t.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -230,12 +230,12 @@ export function TournamentManager({
     if (data?.promoted?.length) {
       toast.success(tr("manager.promoted", { count: data.promoted.length }));
     }
-    router.refresh();
+    api.refresh();
   }
 
   async function patchEntry(entryId: string, body: object) {
     setBusy(entryId);
-    const res = await fetch(`/api/tournaments/${t.id}/entries/${entryId}`, {
+    const res = await api.fetch(`/api/tournaments/${t.id}/entries/${entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -249,7 +249,7 @@ export function TournamentManager({
     if (data?.promoted?.length) {
       toast.success(tr("manager.promoted", { count: data.promoted.length }));
     }
-    router.refresh();
+    api.refresh();
     return true;
   }
 
@@ -266,7 +266,7 @@ export function TournamentManager({
   return (
     <div className="tp-page-pad mx-auto w-full max-w-5xl space-y-5">
       <Link
-        href="/torneos"
+        href={api.paths.list}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground/60 hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
@@ -405,7 +405,7 @@ export function TournamentManager({
           }}
           onDone={() => {
             setEditingData(false);
-            router.refresh();
+            api.refresh();
           }}
           onCancel={() => setEditingData(false)}
         />
@@ -436,6 +436,7 @@ export function TournamentManager({
         />
       )}
 
+      {!api.guest && (
       <PublicLinks
         tournamentId={t.id}
         slug={t.slug}
@@ -445,6 +446,7 @@ export function TournamentManager({
         circuitSlug={t.circuit?.slug ?? null}
         baseUrl={baseUrl}
       />
+      )}
 
       {!canSeeContacts && t.isClub && (
         <p className="tp-card-soft flex items-start gap-2 p-4 text-sm">
@@ -458,6 +460,7 @@ export function TournamentManager({
           <h2 className="tp-title text-2xl">{tr("manager.entriesTitle")}</h2>
           {editable && (
             <div className="flex flex-wrap gap-2">
+              {!api.guest && (
               <button
                 type="button"
                 onClick={() =>
@@ -469,6 +472,7 @@ export function TournamentManager({
                 <Users className="size-4" />
                 {tr("manager.addStudents")}
               </button>
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -478,7 +482,7 @@ export function TournamentManager({
                 className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-muted)] px-5 text-sm font-bold text-foreground"
               >
                 <UserPlus className="size-4" />
-                {tr("manager.addExternal")}
+                {api.guest ? tr("guest.addPlayer") : tr("manager.addExternal")}
               </button>
             </div>
           )}
@@ -497,7 +501,7 @@ export function TournamentManager({
             levels={levels}
             onDone={() => {
               setPanel("none");
-              router.refresh();
+              api.refresh();
             }}
             onCancel={() => setPanel("none")}
           />
@@ -509,7 +513,7 @@ export function TournamentManager({
             levels={levels}
             onDone={() => {
               setPanel("none");
-              router.refresh();
+              api.refresh();
             }}
             onCancel={() => setPanel("none")}
           />
@@ -517,7 +521,7 @@ export function TournamentManager({
 
         {entries.length === 0 ? (
           <div className="tp-card-soft p-6 text-sm">
-            {tr("manager.noEntries")}
+            {api.guest ? tr("guest.noEntries") : tr("manager.noEntries")}
           </div>
         ) : (
           (["confirmed", "pending", "waitlist", "cancelled"] as const).map(

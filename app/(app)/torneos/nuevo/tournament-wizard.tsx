@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTournamentApi } from "../tournament-api";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
@@ -77,6 +78,7 @@ export function TournamentWizard({
   const t = useTranslations("tournaments");
   const tc = useTranslations("tournaments.courts");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -155,7 +157,7 @@ export function TournamentWizard({
     setError(null);
     // Primera vez: ¿hay sesiones o reservas en esas pistas y horas?
     if (!cancelSessionIds) {
-      const found = await fetchCourtConflicts({
+      const found = await fetchCourtConflicts(api.fetch, {
         placeIds: f.placeIds,
         startDate: f.startDate,
         endDate: f.endDate || null,
@@ -172,7 +174,7 @@ export function TournamentWizard({
       ? // En la zona horaria elegida para el torneo.
         zonedToIso(f.deadlineDate, f.deadlineTime || "23:59", f.timeZone)
       : null;
-    const res = await fetch("/api/tournaments", {
+    const res = await api.fetch("/api/tournaments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -214,14 +216,17 @@ export function TournamentWizard({
         tc("cancelledToast", { count: data.sessionsCancelled.cancelled })
       );
     }
-    router.push(`/torneos/${data.id}`);
-    router.refresh();
+    if (api.guest) window.location.assign(api.paths.detail(data.id));
+    else {
+      router.push(api.paths.detail(data.id));
+      router.refresh();
+    }
   }
 
   return (
     <div className="tp-page-pad mx-auto w-full max-w-2xl space-y-5">
       <Link
-        href="/torneos"
+        href={api.paths.list}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground/60 hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
@@ -271,6 +276,9 @@ export function TournamentWizard({
                 autoFocus
               />
             </Field>
+            {/* Sin cuenta: ni circuitos ni página pública. */}
+            {!api.guest && (
+            <>
             <fieldset className="space-y-2">
               <legend className="mb-1.5 text-xs font-bold uppercase text-foreground/60">
                 {t("wizard.circuitType")}
@@ -395,6 +403,8 @@ export function TournamentWizard({
                   : t("visibility.privateHelpShort")}
               </p>
             </fieldset>
+            </>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("wizard.startDate")} required>
                 <input
@@ -470,6 +480,8 @@ export function TournamentWizard({
                 />
               </Field>
             </div>
+            {!api.guest && (
+            <>
             <Field label={t("wizard.places")} hint={t("wizard.optional")}>
               {places.length === 0 ? (
                 <p className="text-sm text-foreground/60">
@@ -517,6 +529,8 @@ export function TournamentWizard({
                 endDate={f.endDate}
               />
             </Field>
+            </>
+            )}
             <Field label={t("wizard.description")} hint={t("wizard.optional")}>
               <textarea
                 value={f.description}

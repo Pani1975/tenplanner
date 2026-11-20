@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuestImportCard } from "./guest-import";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CalendarDays, ChevronRight, Plus, Trophy, Users } from "lucide-react";
@@ -68,6 +69,8 @@ export default async function TorneosPage({ searchParams }: Props) {
           {t("list.new")}
         </Link>
       </header>
+
+      <GuestImportCard />
 
       <nav
         className="grid grid-cols-2 gap-1 rounded-full bg-foreground/5 p-1"

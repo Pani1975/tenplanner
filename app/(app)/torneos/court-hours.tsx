@@ -217,15 +217,18 @@ export type CourtConflicts = {
 };
 
 /** Consulta qué ocupa ya las pistas del torneo. null si no hay pistas. */
-export async function fetchCourtConflicts(plan: {
+export async function fetchCourtConflicts(
+  doFetch: (input: string, init?: RequestInit) => Promise<Response>,
+  plan: {
   placeIds: string[];
   startDate: string;
   endDate: string | null;
   playHours: TournamentHours;
   timeZone: string;
-}): Promise<CourtConflicts | null> {
+  }
+): Promise<CourtConflicts | null> {
   if (!plan.placeIds.length || !plan.startDate) return null;
-  const res = await fetch("/api/tournaments/court-conflicts", {
+  const res = await doFetch("/api/tournaments/court-conflicts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(plan),

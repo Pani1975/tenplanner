@@ -77,6 +77,8 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   publicAccess?: boolean;
+  /** Sin sesión: enlace abierto a esta ruta (p. ej. torneos de prueba). */
+  guestHref?: string;
   feature?: FeatureKey;
   submenu?: SubItem[];
   /** Etiqueta usada para el primer item auto-generado del submenu (default "Ver todas") */
@@ -141,7 +143,12 @@ const navItems: NavItem[] = [
     icon: CalendarDays,
     feature: "calendar",
   },
-  { href: "/torneos", label: "Torneos", icon: Trophy },
+  {
+    href: "/torneos",
+    label: "Torneos",
+    icon: Trophy,
+    guestHref: "/probar-torneos",
+  },
   {
     href: "/students",
     label: "Alumnos",
@@ -528,7 +535,14 @@ function NavContent({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {items.map(
+          {(user
+            ? items
+            : items.map((i) =>
+                i.guestHref
+                  ? { ...i, href: i.guestHref, publicAccess: true }
+                  : i
+              )
+          ).map(
             ({
               href,
               label,

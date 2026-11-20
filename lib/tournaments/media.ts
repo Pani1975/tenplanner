@@ -26,7 +26,7 @@ export const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 // ── Noticias ───────────────────────────────────────────────────────────
 
 /** Autor: el club si escribe su cuenta (administrador), si no el monitor. */
-async function newsAuthor(o: Organizer) {
+export async function newsAuthor(o: Organizer) {
   if (o.clubId && o.canSeeContacts) {
     const [c] = await db
       .select({ name: clubs.name })

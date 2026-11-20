@@ -27,6 +27,8 @@ const PUBLIC_PREFIXES = [
   "/reservar/",
   "/t/",
   "/api/public/torneos/",
+  // Torneos de prueba sin registro (datos en el navegador).
+  "/probar-torneos",
 ];
 const PUBLIC_EXACT = new Set(["/"]);
 // Logged-out visitors are sent to /login only for these app pages. Any other

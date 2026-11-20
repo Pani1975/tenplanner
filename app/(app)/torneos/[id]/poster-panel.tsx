@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type Template = "classic" | "court" | "image";
 
@@ -112,7 +112,7 @@ export function PosterPanel({
 }) {
   const t = useTranslations("tournaments.poster");
   const apiError = useApiError();
-  const router = useRouter();
+  const api = useTournamentApi();
   const [template, setTemplate] = useState<Template>(initial);
   const [image, setImage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -122,13 +122,14 @@ export function PosterPanel({
   useEffect(() => {
     if (!hasImage) return;
     let on = true;
-    fetch(`${base}/poster-image`)
+    api
+      .fetch(`${base}/poster-image`)
       .then((r) => (r.ok ? r.json() : null))
       .then((b) => on && b?.data?.url && setImage(b.data.url));
     return () => {
       on = false;
     };
-  }, [base, hasImage]);
+  }, [base, hasImage, api]);
 
   async function choose(v: Template) {
     if (v === template) return;
@@ -137,7 +138,7 @@ export function PosterPanel({
       return;
     }
     setBusy(v);
-    const res = await fetch(base, {
+    const res = await api.fetch(base, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ posterTemplate: v }),
@@ -156,7 +157,7 @@ export function PosterPanel({
         "file",
         new File([blob], "cartel.jpg", { type: "image/jpeg" })
       );
-      const res = await fetch(`${base}/poster-image`, {
+      const res = await api.fetch(`${base}/poster-image`, {
         method: "POST",
         body: form,
       });
@@ -167,7 +168,7 @@ export function PosterPanel({
       setImage((await res.json()).data.url);
       setTemplate("image");
       toast.success(t("imageSaved"));
-      router.refresh();
+      api.refresh();
     } catch {
       toast.error(t("imageReadError"));
     } finally {
@@ -175,14 +176,39 @@ export function PosterPanel({
     }
   }
 
+  /** Modo prueba: el PDF llega en memoria y se descarga o se abre. */
+  async function openPdf(inline: boolean) {
+    setBusy("pdf");
+    const tab = inline ? window.open("", "_blank") : null;
+    try {
+      const res = await api.fetch(`${base}/poster${inline ? "?inline=1" : ""}`);
+      if (!res.ok) {
+        tab?.close();
+        toast.error(await apiError(res));
+        return;
+      }
+      const url = URL.createObjectURL(await res.blob());
+      if (tab) tab.location.href = url;
+      else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cartel-torneo.pdf";
+        a.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function removeImage() {
     setBusy("remove");
-    const res = await fetch(`${base}/poster-image`, { method: "DELETE" });
+    const res = await api.fetch(`${base}/poster-image`, { method: "DELETE" });
     setBusy(null);
     if (!res.ok) return toast.error(await apiError(res));
     setImage(null);
     if (template === "image") setTemplate("classic");
-    router.refresh();
+    api.refresh();
   }
 
   return (
@@ -267,6 +293,32 @@ export function PosterPanel({
         />
       </div>
 
+      {api.guest ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={() => openPdf(false)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
+          >
+            {busy === "pdf" ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
+            {t("download")}
+          </button>
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={() => openPdf(true)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-background px-4 text-sm font-bold disabled:opacity-60"
+          >
+            <ExternalLink className="size-4" />
+            {t("open")}
+          </button>
+        </div>
+      ) : (
       <div className="flex flex-wrap gap-2">
         <a
           href={`${base}/poster`}
@@ -285,6 +337,7 @@ export function PosterPanel({
           {t("open")}
         </a>
       </div>
+      )}
     </section>
   );
 }

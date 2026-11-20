@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import { useApiError } from "../use-api-error";
+import { useTournamentApi } from "../tournament-api";
 
 type Person = {
   firstName: string;
@@ -28,13 +29,15 @@ const empty: Person = {
   guardianPhone: "",
 };
 
-const personValid = (p: Person) =>
+// En modo prueba (sin cuenta) basta con el nombre: es solo para probar.
+const personValid = (p: Person, guest = false) =>
   p.firstName.trim() !== "" &&
   p.lastName.trim() !== "" &&
-  (p.isMinor
-    ? p.guardianName.trim() !== "" &&
-      (p.guardianEmail.trim() !== "" || p.guardianPhone.trim() !== "")
-    : p.email.trim() !== "" || p.phone.trim() !== "");
+  (guest ||
+    (p.isMinor
+      ? p.guardianName.trim() !== "" &&
+        (p.guardianEmail.trim() !== "" || p.guardianPhone.trim() !== "")
+      : p.email.trim() !== "" || p.phone.trim() !== ""));
 
 const toBody = (p: Person) => ({
   firstName: p.firstName.trim(),
@@ -65,6 +68,7 @@ export function ExternalEntryForm({
 }) {
   const t = useTranslations("tournaments.external");
   const apiError = useApiError();
+  const api = useTournamentApi();
   const [player, setPlayer] = useState<Person>(empty);
   const [partner, setPartner] = useState<Person>(empty);
   const [levelCode, setLevelCode] = useState("");
@@ -72,13 +76,15 @@ export function ExternalEntryForm({
   const [imageConsent, setImageConsent] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const valid = personValid(player) && (!doubles || personValid(partner));
+  const valid =
+    personValid(player, api.guest) &&
+    (!doubles || personValid(partner, api.guest));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid) return;
     setSaving(true);
-    const res = await fetch(`/api/tournaments/${tournamentId}/entries`, {
+    const res = await api.fetch(`/api/tournaments/${tournamentId}/entries`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

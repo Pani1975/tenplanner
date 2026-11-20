@@ -3841,7 +3841,9 @@
       "invalid_tags": "Alguna persona etiquetada no está inscrita.",
       "poster_type": "La imagen del cartel debe ser JPG o PNG.",
       "not_past": "Solo se pueden archivar torneos ya terminados.",
-      "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club."
+      "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club.",
+      "guest_no_students": "Para añadir a tus alumnos necesitas una cuenta.",
+      "guest_not_available": "Esto necesita una cuenta."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -4185,6 +4187,34 @@
       "save": "Guardar el torneo",
       "saveAndCancel": "Guardar y cancelar {count, plural, one {# sesión} other {# sesiones}}",
       "cancelledToast": "{count, plural, one {# sesión cancelada} other {# sesiones canceladas}}"
+    },
+    "guest": {
+      "kicker": "Prueba sin registro",
+      "intro": "Crea un torneo, apunta jugadores, sortea el cuadro y lleva los resultados. Sin crear cuenta.",
+      "bannerTitle": "Estás en modo prueba",
+      "bannerText": "Tus torneos se guardan solo en este navegador (no en Ten Planner). Con una cuenta, además, cargas a tus alumnos, reservas las pistas, el torneo sale en el calendario y tiene página pública para compartir.",
+      "register": "Crear cuenta gratis",
+      "keep": "Al registrarte en este navegador podrás pasar estos torneos a tu cuenta.",
+      "storageError": "Este navegador no permite guardar datos (¿modo incógnito?). Prueba con otro navegador o crea una cuenta.",
+      "emptyTitle": "Aún no has creado ningún torneo de prueba",
+      "emptyText": "Pulsa «Nuevo torneo» para empezar.",
+      "delete": "Borrar torneo de prueba",
+      "deleteTitle": "¿Borrar este torneo de prueba?",
+      "deleteText": "Se borrará «{name}» de este navegador. No se puede deshacer.",
+      "notFound": "Este torneo no está en este navegador. Los torneos de prueba solo se ven en el navegador donde se crearon.",
+      "backToList": "Volver a mis torneos de prueba",
+      "metaTitle": "Prueba los torneos de Ten Planner",
+      "metaDescription": "Organiza un torneo de tenis sin registrarte: inscritos, cuadro, liguilla, resultados y cartel.",
+      "importTitle": "Tienes {count, plural, one {# torneo de prueba} other {# torneos de prueba}} en este navegador",
+      "importText": "Pásalos a tu cuenta para no perderlos. Se copian con sus jugadores, cuadro, resultados, noticias y fotos.",
+      "importButton": "Pasar a mi cuenta",
+      "importDiscard": "Descartar",
+      "importDone": "{count, plural, one {Torneo pasado a tu cuenta} other {# torneos pasados a tu cuenta}}",
+      "importError": "No se pudo pasar algún torneo. Sigue guardado en este navegador; inténtalo de nuevo.",
+      "importDiscardTitle": "¿Descartar los torneos de prueba?",
+      "importDiscardText": "Se borrarán de este navegador. No se puede deshacer.",
+      "addPlayer": "Añadir jugador",
+      "noEntries": "Aún no hay inscritos. Añade jugadores con su nombre y apellidos."
     }
   }
 }
