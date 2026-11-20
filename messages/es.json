@@ -237,6 +237,57 @@
       "allLevels": "Todos",
       "group": "Grupo",
       "studentsCount": "{n} alumnos"
+    },
+    "audiences": {
+      "eyebrow": "Para quién",
+      "title": "Para clubes, monitores\ny jugadores",
+      "cards": {
+        "clubs": {
+          "title": "Clubes y academias",
+          "text": "Planificación coherente de clases, registro del trabajo, seguimiento de alumnos, calendario y reserva de pistas."
+        },
+        "coaches": {
+          "title": "Monitores",
+          "text": "Biblioteca de ejercicios y clases de tenis por nivel, y planificación de sesiones."
+        },
+        "players": {
+          "title": "Jugadores y familias",
+          "text": "Calendario, asistencia, objetivos por nivel e informes."
+        }
+      }
+    },
+    "tournaments": {
+      "eyebrow": "Gestor de torneos",
+      "title": "Organiza torneos\nde principio a fin.",
+      "intro": "Crea torneos de tenis para tu club o tus alumnos, con inscripción, cuadro, resultados y cartel.",
+      "cards": {
+        "t1": {
+          "title": "Crea un torneo en pocos pasos",
+          "text": "Individual o dobles, eliminatoria o liguilla. Elige formato y modalidad."
+        },
+        "t2": {
+          "title": "Inscripción por enlace",
+          "text": "Comparte un enlace para apuntarse y gestiona la lista de espera."
+        },
+        "t3": {
+          "title": "Ficha y cartel en PDF",
+          "text": "Descarga la ficha y el cartel con plantillas o con tu propia imagen."
+        },
+        "t4": {
+          "title": "Cuadro y resultados",
+          "text": "Anota el marcador y el cuadro avanza al ganador."
+        },
+        "t5": {
+          "title": "Públicos o privados",
+          "text": "Públicos para cualquiera con el enlace; privados solo para jugadores del club."
+        },
+        "t6": {
+          "title": "Las familias ven los torneos de sus hijos",
+          "text": "Siguen la participación de sus hijos en los torneos del club."
+        }
+      },
+      "ctaPrimary": "Prueba los torneos sin registrarte",
+      "ctaSecondary": "Crear una cuenta"
     }
   },
   "cookieBanner": {

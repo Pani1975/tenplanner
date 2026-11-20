@@ -30,6 +30,8 @@ import { splitTitle, type LandingContent } from "@/lib/landing-content";
 import type { LandingStats } from "@/lib/landing-stats";
 import { LandingNav } from "./landing-nav";
 import { StatsSection } from "./stats-section";
+import { AudiencesSection } from "./audiences-section";
+import { TournamentsSection } from "./tournaments-section";
 import { Reveal, RevealItem, RevealStagger } from "./landing-reveal";
 import { TenPlannerMark } from "./ten-planner-mark";
 import {
@@ -618,6 +620,7 @@ export function TenPlannerLanding({
       <LandingNav />
       <main id="main">
         <HeroSection content={content} />
+        <AudiencesSection />
         <StatsSection stats={stats} />
         <ProblemSection content={content} />
         <HowSection content={content} />
@@ -632,6 +635,7 @@ export function TenPlannerLanding({
           cards={academyFeatureCards}
           group="academy"
         />
+        <TournamentsSection />
         <LibrarySection exerciseCards={exerciseCards} classCards={classCards} />
         <FinalCtaSection content={content} />
       </main>

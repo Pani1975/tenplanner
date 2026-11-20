@@ -237,6 +237,57 @@
       "allLevels": "All",
       "group": "Group",
       "studentsCount": "{n} students"
+    },
+    "audiences": {
+      "eyebrow": "Who it's for",
+      "title": "For clubs, coaches\nand players",
+      "cards": {
+        "clubs": {
+          "title": "Clubs and academies",
+          "text": "Consistent class planning, a record of the work, student follow-up, calendar and court booking."
+        },
+        "coaches": {
+          "title": "Coaches",
+          "text": "A library of exercises and tennis classes by level, plus session planning."
+        },
+        "players": {
+          "title": "Players and families",
+          "text": "Calendar, attendance, level-based goals and reports."
+        }
+      }
+    },
+    "tournaments": {
+      "eyebrow": "Tournament manager",
+      "title": "Run tournaments\nfrom start to finish.",
+      "intro": "Create tennis tournaments for your club or your students, with sign-up, draw, results and poster.",
+      "cards": {
+        "t1": {
+          "title": "Create a tournament in a few steps",
+          "text": "Singles or doubles, knockout or round robin. Pick the format and the event type."
+        },
+        "t2": {
+          "title": "Sign-up by link",
+          "text": "Share a link to sign up and manage the waiting list."
+        },
+        "t3": {
+          "title": "Fact sheet and poster in PDF",
+          "text": "Download the fact sheet and poster with templates or your own image."
+        },
+        "t4": {
+          "title": "Draw and results",
+          "text": "Enter the score and the draw moves the winner forward."
+        },
+        "t5": {
+          "title": "Public or private",
+          "text": "Public for anyone with the link; private only for club players."
+        },
+        "t6": {
+          "title": "Families see their children's tournaments",
+          "text": "They follow their children's participation in club tournaments."
+        }
+      },
+      "ctaPrimary": "Try tournaments without signing up",
+      "ctaSecondary": "Create an account"
     }
   },
   "cookieBanner": {
