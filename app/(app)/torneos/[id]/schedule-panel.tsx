@@ -80,6 +80,10 @@ export function SchedulePanel({
     return out;
   }, [playable, timeZone]);
   const [rows, setRows] = useState(initial);
+  // Fila de un partido: lo editado o, si es un partido nuevo (p. ej. tras
+  // rehacer el cuadro), lo que trae el partido. Nunca undefined.
+  const rowOf = (id: string): Row =>
+    rows[id] ?? initial[id] ?? { date: "", time: "", court: "" };
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [scoring, setScoring] = useState<EditableMatch | null>(null);
@@ -95,12 +99,12 @@ export function SchedulePanel({
   const name = (id: string | null) =>
     id ? (names[id] ?? t("public.tbd")) : t("public.tbd");
   const dirty = playable.some((m) => {
-    const a = rows[m.id];
-    const b = initial[m.id];
+    const a = rowOf(m.id);
+    const b = initial[m.id] ?? a;
     return a.date !== b.date || a.time !== b.time || a.court !== b.court;
   });
   const incomplete = playable.filter((m) => {
-    const r = rows[m.id];
+    const r = rowOf(m.id);
     return !!r.date !== !!r.time;
   });
 
@@ -118,7 +122,7 @@ export function SchedulePanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items: playable.map((m) => {
-          const r = rows[m.id];
+          const r = rowOf(m.id);
           return {
             matchId: m.id,
             scheduledAt:
@@ -227,7 +231,7 @@ export function SchedulePanel({
                 {playable
                   .filter((m) => m.round === r)
                   .map((m) => {
-                    const row = rows[m.id];
+                    const row = rowOf(m.id);
                     const set = (patch: Partial<Row>) =>
                       setRows({ ...rows, [m.id]: { ...row, ...patch } });
                     return (

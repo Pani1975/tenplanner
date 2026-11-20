@@ -465,6 +465,8 @@ export function TournamentManager({
 
       {matchCount > 0 && (t.isClub || api.guest) && (
         <SchedulePanel
+          // Partidos nuevos (rehacer el cuadro): el panel empieza de cero.
+          key={matches.map((m) => m.id).join(",")}
           tournamentId={t.id}
           format={t.format}
           matches={matches}
