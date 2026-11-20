@@ -1,20 +1,16 @@
-// Torneos de prueba sin cuenta, guardados en el servidor (migración 0112).
-//
-// - Al crear se pide un correo. Se genera un enlace secreto de edición; en
-//   la base solo queda su hash (sha256). Quien lo crea lo tiene ya en este
-//   navegador (cookie) y lo recibe por correo para abrirlo en otro sitio.
-// - Hasta abrir el enlace del correo (confirmar el correo) no hay página
-//   pública ni inscripción por enlace: frena el spam y los correos falsos.
-// - Se borran 30 días después del torneo (aviso una semana antes), salvo
-//   que pasen a una cuenta.
+// Torneos de prueba sin cuenta, guardados en el servidor (migraciones 0112
+// y 0113). Sin correos:
+// - Al crear se generan dos enlaces: uno secreto de edición (en la base solo
+//   queda su hash) y el público de inscripción (/t/<slug>). El de edición
+//   queda en este navegador (cookie) y se muestra en la ficha para copiarlo
+//   y abrirlo en otro dispositivo. Si se pierde, no se puede recuperar.
+// - Se borran 30 días después del torneo, salvo que pasen a una cuenta.
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { and, eq, inArray, isNotNull, isNull, lt, lte } from "drizzle-orm";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { tournamentPhotos, tournaments } from "@/db/schema";
-import { sendEmail } from "@/lib/email";
-import { renderActionEmailHtml } from "@/lib/email-layout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { MEDIA_BUCKET } from "./media";
@@ -110,58 +106,17 @@ export async function clearGuestCookie(id: string) {
   jar.delete(`${GUEST_COOKIE_PREFIX}${id}`);
 }
 
-// ── Correos ────────────────────────────────────────────────────────────
-
-const editUrl = (baseUrl: string, id: string, token: string) =>
+/** Enlace de edición de un torneo (para mostrarlo y copiarlo). */
+export const guestEditUrl = (baseUrl: string, id: string, token: string) =>
   `${baseUrl}/probar-torneos/editar/${id}/${token}`;
 
-export async function sendEditLink(opts: {
-  baseUrl: string;
-  email: string;
-  tournaments: { id: string; name: string; token: string }[];
-}) {
-  const { baseUrl, email } = opts;
-  const list = opts.tournaments;
-  if (!list.length) return { sent: false };
-  const first = list[0];
-  const subject =
-    list.length === 1
-      ? `Enlace para editar «${first.name}»`
-      : `Enlaces para editar tus ${list.length} torneos de prueba`;
-  const lines = list.map(
-    (t) => `${t.name}: ${editUrl(baseUrl, t.id, t.token)}`
-  );
-  const paragraphs = [
-    list.length === 1
-      ? `Con este enlace puedes editar el torneo «${first.name}» desde cualquier móvil u ordenador, sin crear cuenta. Al abrirlo se activa también la página de inscripción para compartir.`
-      : "Con estos enlaces puedes editar tus torneos de prueba desde cualquier móvil u ordenador, sin crear cuenta.",
-    ...(list.length > 1 ? lines : []),
-    "No lo compartas: quien tenga el enlace puede editar el torneo. Si creas una cuenta gratis, podrás pasar el torneo a tu cuenta.",
-    "El torneo de prueba se borra 30 días después de que termine.",
-  ];
-  const res = await sendEmail({
-    to: email,
-    subject,
-    html: renderActionEmailHtml({
-      greeting: "Tu torneo en Ten Planner",
-      paragraphs,
-      buttonLabel: list.length === 1 ? "Editar el torneo" : "Ver mis torneos",
-      buttonUrl:
-        list.length === 1
-          ? editUrl(baseUrl, first.id, first.token)
-          : `${baseUrl}/probar-torneos`,
-      footnote:
-        "Si no has creado este torneo, ignora este correo: sin abrir el enlace no se publica nada.",
-    }),
-    text: [...paragraphs, "", ...lines].join("\n"),
-  });
-  return { sent: res.sent };
+/** Enlace de edición que guarda este navegador para ese torneo. */
+export async function guestEditToken(id: string): Promise<string | null> {
+  const pair = (await cookieTokens()).find((p) => p.id === id);
+  return pair?.token ?? null;
 }
 
-/**
- * Abre el enlace de edición: comprueba el enlace, confirma el correo (activa
- * la página pública) y deja el torneo en este navegador.
- */
+/** Abre el enlace de edición: lo comprueba y deja el torneo en este navegador. */
 export async function openEditLink(id: string, token: string) {
   if (!UUID.test(id)) return false;
   const [t] = await db
@@ -181,34 +136,6 @@ export async function openEditLink(id: string, token: string) {
   }
   await setGuestCookie(id, token);
   return true;
-}
-
-/**
- * Reenvía los enlaces de los torneos de prueba de un correo. Se generan
- * enlaces nuevos (solo guardamos el hash): los anteriores dejan de valer.
- */
-export async function resendEditLinks(email: string, baseUrl: string) {
-  const rows = await db
-    .select({ id: tournaments.id, name: tournaments.name })
-    .from(tournaments)
-    .where(
-      and(
-        eq(tournaments.ownerType, "guest"),
-        eq(tournaments.guestEmail, email.trim().toLowerCase())
-      )
-    )
-    .limit(20);
-  if (!rows.length) return;
-  const list = [];
-  for (const r of rows) {
-    const token = newGuestToken();
-    await db
-      .update(tournaments)
-      .set({ guestTokenHash: sha(token) })
-      .where(eq(tournaments.id, r.id));
-    list.push({ ...r, token });
-  }
-  await sendEditLink({ baseUrl, email, tournaments: list });
 }
 
 export const hashGuestToken = sha;
@@ -248,62 +175,9 @@ export async function claimGuestTournaments(userId: string) {
 
 // ── Caducidad (cron diario) ────────────────────────────────────────────
 
-/** Aviso una semana antes de borrar y borrado de los caducados. */
-export async function expireGuestTournaments(
-  baseUrl: string,
-  now = new Date()
-) {
-  const inAWeek = new Date(now.getTime() + 7 * 86400_000);
-  const toWarn = await db
-    .select({
-      id: tournaments.id,
-      name: tournaments.name,
-      email: tournaments.guestEmail,
-      expiresAt: tournaments.guestExpiresAt,
-    })
-    .from(tournaments)
-    .where(
-      and(
-        eq(tournaments.ownerType, "guest"),
-        isNotNull(tournaments.guestVerifiedAt),
-        isNull(tournaments.guestWarnedAt),
-        lte(tournaments.guestExpiresAt, inAWeek)
-      )
-    );
-  let warned = 0;
-  for (const t of toWarn) {
-    if (!t.email || !t.expiresAt) continue;
-    const date = new Intl.DateTimeFormat("es-ES", {
-      day: "numeric",
-      month: "long",
-      timeZone: "Europe/Madrid",
-    }).format(t.expiresAt);
-    const paragraphs = [
-      `El torneo de prueba «${t.name}» se borrará el ${date}, junto con sus inscritos, resultados y fotos.`,
-      "Si quieres conservarlo, crea una cuenta gratis en el mismo navegador donde lo editas y pásalo a tu cuenta desde «Torneos».",
-    ];
-    await sendEmail({
-      to: t.email,
-      subject: `Tu torneo de prueba «${t.name}» se borrará pronto`,
-      html: renderActionEmailHtml({
-        greeting: "Aviso",
-        paragraphs,
-        buttonLabel: "Crear cuenta gratis",
-        buttonUrl: `${baseUrl}/register`,
-        footnote:
-          "Te escribimos porque creaste este torneo sin cuenta en Ten Planner.",
-      }),
-      text: [...paragraphs, "", `${baseUrl}/register`].join("\n"),
-    });
-    await db
-      .update(tournaments)
-      .set({ guestWarnedAt: now })
-      .where(eq(tournaments.id, t.id));
-    warned++;
-  }
-
-  // Borrado: también los que nunca se confirmaron (7 días después de crear).
-  const expired = await db
+/** Borra los torneos de prueba caducados (30 días después del torneo). */
+export async function expireGuestTournaments(now = new Date()) {
+  const doomed = await db
     .select({ id: tournaments.id, poster: tournaments.posterImagePath })
     .from(tournaments)
     .where(
@@ -312,18 +186,7 @@ export async function expireGuestTournaments(
         lt(tournaments.guestExpiresAt, now)
       )
     );
-  const stale = await db
-    .select({ id: tournaments.id, poster: tournaments.posterImagePath })
-    .from(tournaments)
-    .where(
-      and(
-        eq(tournaments.ownerType, "guest"),
-        isNull(tournaments.guestVerifiedAt),
-        lt(tournaments.createdAt, new Date(now.getTime() - 7 * 86400_000))
-      )
-    );
-  const doomed = [...expired, ...stale];
-  if (!doomed.length) return { warned, deleted: 0 };
+  if (!doomed.length) return { deleted: 0 };
   const ids = [...new Set(doomed.map((d) => d.id))];
   const photos = await db
     .select({ path: tournamentPhotos.storagePath })
@@ -342,5 +205,5 @@ export async function expireGuestTournaments(
   }
   // Inscritos, partidos, noticias y fotos se borran en cascada.
   await db.delete(tournaments).where(inArray(tournaments.id, ids));
-  return { warned, deleted: ids.length };
+  return { deleted: ids.length };
 }

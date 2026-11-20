@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db";
-import { tournaments } from "@/db/schema";
 import { getSiteUrl } from "@/lib/email";
 import {
   getClientIp,
@@ -13,7 +10,7 @@ import {
   guestOrganizer,
   hashGuestToken,
   newGuestToken,
-  sendEditLink,
+  guestEditUrl,
   setGuestCookie,
 } from "@/lib/tournaments/guest-server";
 import {
@@ -23,11 +20,7 @@ import {
 import { createTournamentSchema } from "@/lib/tournaments/schemas";
 import { createTournament, TournamentError } from "@/lib/tournaments/server";
 
-/** Torneos de prueba activos por correo, como mucho. */
-const MAX_PER_EMAIL = 5;
-
 const bodySchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(255),
   organizerName: z.string().trim().max(120).optional().nullable(),
   // Aceptación de las condiciones del modo prueba.
   accept: z.literal(true),
@@ -36,9 +29,8 @@ const bodySchema = z.object({
   legacy: z.unknown().optional(),
 });
 
-// Crear un torneo de prueba sin cuenta. Queda en este navegador (cookie con
-// el enlace de edición) y el enlace llega por correo; sin abrirlo no hay
-// página de inscripción.
+// Crear un torneo de prueba sin cuenta. Devuelve el enlace de edición (queda
+// también en este navegador) y el público de inscripción. Sin correos.
 export async function POST(request: Request) {
   const ip = getClientIp(request.headers);
   const limit = await rateLimit(`guest-tournament:${ip}`, 10, 24 * 3600_000);
@@ -57,45 +49,36 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  const { email, organizerName, tournament, legacy } = parsed.data;
-
-  const [{ n }] = await db
-    .select({ n: count() })
-    .from(tournaments)
-    .where(
-      and(eq(tournaments.ownerType, "guest"), eq(tournaments.guestEmail, email))
-    );
-  if (n >= MAX_PER_EMAIL) {
-    return NextResponse.json({ error: "guest_limit" }, { status: 409 });
-  }
+  const { organizerName, tournament, legacy } = parsed.data;
 
   const token = newGuestToken();
   const o = await guestOrganizer({
-    email,
     name: organizerName || null,
     tokenHash: hashGuestToken(token),
   });
   try {
     let id: string;
-    let name: string;
+    let slug: string;
     if (legacy) {
       const input = importGuestSchema.parse(legacy);
       id = (await importGuestTournament(o, input)).id;
-      name = input.tournament.name;
+      slug = "";
     } else {
       const input = createTournamentSchema.parse(tournament);
       const row = await createTournament(o, input);
       id = row.id;
-      name = row.name;
+      slug = row.slug;
     }
     await setGuestCookie(id, token);
-    const mail = await sendEditLink({
-      baseUrl: getSiteUrl(request.url),
-      email,
-      tournaments: [{ id, name, token }],
-    });
+    const base = getSiteUrl(request.url);
     return NextResponse.json(
-      { data: { id, emailSent: mail.sent } },
+      {
+        data: {
+          id,
+          editUrl: guestEditUrl(base, id, token),
+          publicUrl: slug ? `${base}/t/${slug}` : null,
+        },
+      },
       { status: 201 }
     );
   } catch (e) {

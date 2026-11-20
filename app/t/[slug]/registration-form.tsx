@@ -78,6 +78,7 @@ export function RegistrationForm({
     status: string;
     waitlistPosition: number | null;
     emailSent: boolean;
+    isGuest?: boolean;
   } | null>(null);
 
   const ok = valid(player) && (!doubles || valid(partner)) && consent;
@@ -127,7 +128,11 @@ export function RegistrationForm({
             : t("doneText")}
         </p>
         <p className="text-sm text-foreground/70">
-          {done.emailSent ? t("emailSent") : t("emailNotSent")}
+          {done.isGuest
+            ? t("guestNoEmail")
+            : done.emailSent
+              ? t("emailSent")
+              : t("emailNotSent")}
         </p>
       </section>
     );

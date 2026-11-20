@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  CalendarDays,
-  ChevronRight,
-  Mail,
-  Plus,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { CalendarDays, ChevronRight, Plus, Trophy, Users } from "lucide-react";
 import { guestOrganizer } from "@/lib/tournaments/guest-server";
 import { listTournaments } from "@/lib/tournaments/server";
 import { formatDateRange, STATUS_BADGE } from "@/lib/tournaments/labels";
@@ -16,7 +9,7 @@ import { cn } from "@/lib/utils";
 import {
   GuestBanner,
   LegacyGuestTournaments,
-  LostLinkForm,
+  LostLinkNote,
 } from "./guest-client";
 
 export async function generateMetadata() {
@@ -95,12 +88,6 @@ export default async function ProbarTorneosPage({
                     <CalendarDays className="size-4" />
                     {formatDateRange(r.startDate, r.endDate, locale)}
                   </p>
-                  {!r.guestVerifiedAt && (
-                    <p className="flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                      <Mail className="size-3.5" />
-                      {tg("pendingShort")}
-                    </p>
-                  )}
                   <div className="mt-auto flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 font-semibold">
                       <Users className="size-4 text-[var(--brand-ink)]" />
@@ -120,7 +107,7 @@ export default async function ProbarTorneosPage({
         </ul>
       )}
 
-      <LostLinkForm expired={enlace === "caducado"} />
+      <LostLinkNote expired={enlace === "caducado"} />
     </div>
   );
 }

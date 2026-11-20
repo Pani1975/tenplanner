@@ -86,13 +86,10 @@ export function TournamentWizard({
   const [error, setError] = useState<string | null>(null);
   // Sesiones/reservas que ya ocupan las pistas: se pregunta antes de crear.
   const [conflicts, setConflicts] = useState<CourtConflicts | null>(null);
-  // Modo prueba: correo (para el enlace de edición), nombre y condiciones.
-  const [guestEmail, setGuestEmail] = useState("");
+  // Modo prueba: quién organiza y condiciones (sin correo).
   const [guestName, setGuestName] = useState("");
   const [guestAccept, setGuestAccept] = useState(false);
-  const guestReady =
-    !api.guest ||
-    (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim()) && guestAccept);
+  const guestReady = !api.guest || guestAccept;
   const [f, setF] = useState<Form>({
     name: "",
     description: "",
@@ -216,7 +213,6 @@ export function TournamentWizard({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: guestEmail.trim(),
             organizerName: guestName.trim() || null,
             accept: guestAccept,
             tournament,
@@ -688,19 +684,9 @@ export function TournamentWizard({
             </div>
             {api.guest && (
               <div className="tp-card space-y-3 p-4">
-                <p className="text-sm font-semibold">{tg("emailTitle")}</p>
-                <p className="text-xs text-foreground/70">{tg("emailHelp")}</p>
+                <p className="text-sm font-semibold">{tg("linksTitle")}</p>
+                <p className="text-xs text-foreground/70">{tg("linksHelp")}</p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label={tg("email")} required>
-                    <input
-                      type="email"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      placeholder={tg("emailPlaceholder")}
-                      maxLength={255}
-                      className="tp-field h-11 w-full px-4 text-base"
-                    />
-                  </Field>
                   <Field
                     label={tg("organizerName")}
                     hint={t("wizard.optional")}

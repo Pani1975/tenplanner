@@ -73,7 +73,7 @@ export type ManagerTournament = {
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
-  /** Modo prueba: correo confirmado (hay página de inscripción). */
+  /** Modo prueba: tiene página pública de inscripción. */
   guestVerified?: boolean;
 };
 

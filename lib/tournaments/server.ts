@@ -90,7 +90,6 @@ export type Organizer = {
   guest?: {
     tournamentIds: string[];
     create?: {
-      email: string;
       name: string | null;
       tokenHash: string;
     };
@@ -491,7 +490,9 @@ export async function createTournament(
                 ownerType: "guest",
                 clubId: null,
                 coachId: null,
-                guestEmail: o.guest.create.email,
+                guestEmail: null,
+                // Sin correo: el enlace público funciona desde el principio.
+                guestVerifiedAt: new Date(),
                 guestName: o.guest.create.name,
                 guestTokenHash: o.guest.create.tokenHash,
                 guestExpiresAt: guestExpiry(

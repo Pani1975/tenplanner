@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Info, Loader2, Mail, MailCheck } from "lucide-react";
+import { Copy, Info, KeyRound, Loader2 } from "lucide-react";
 import {
   GUEST_PATHS,
   TournamentApiProvider,
@@ -54,102 +54,48 @@ export function GuestBanner() {
   );
 }
 
-/** Estado del correo: pendiente de confirmar o enlace de inscripción listo. */
-export function GuestEmailStatus({
-  verified,
-  email,
-  justConfirmed,
-}: {
-  verified: boolean;
-  email: string;
-  justConfirmed: boolean;
-}) {
+/** Enlace secreto de edición: para guardarlo y abrir el torneo en otro sitio. */
+export function GuestEditLink({ url }: { url: string }) {
   const t = useTranslations("tournaments.guest");
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (justConfirmed) toast.success(t("confirmedToast"));
-  }, [justConfirmed, t]);
-  if (verified) return null;
-  async function resend() {
-    setBusy(true);
-    await fetch("/api/public/torneos/prueba/reenviar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setBusy(false);
-    toast.success(t("resentToast"));
-  }
   return (
-    <div className="tp-card flex flex-col gap-3 border-amber-500/40 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-      <p className="flex items-start gap-2">
-        <Mail className="mt-0.5 size-4 shrink-0 text-amber-600" />
-        <span>{t("pendingEmail", { email })}</span>
+    <div className="tp-card space-y-2 border-amber-500/40 p-4 text-sm">
+      <p className="flex items-center gap-2 font-semibold">
+        <KeyRound className="size-4 text-amber-600" />
+        {t("editLinkTitle")}
+      </p>
+      <p className="text-foreground/75">{t("editLinkHelp")}</p>
+      <p className="break-all rounded-lg bg-foreground/5 px-3 py-2 font-mono text-xs">
+        {url}
       </p>
       <button
         type="button"
-        onClick={resend}
-        disabled={busy}
-        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-foreground/5 px-4 text-sm font-semibold disabled:opacity-50"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            toast.success(t("editLinkCopied"));
+          } catch {
+            toast.error(t("copyFailed"));
+          }
+        }}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-4 text-sm font-bold text-black"
       >
-        {busy && <Loader2 className="size-4 animate-spin" />}
-        {t("resend")}
+        <Copy className="size-4" />
+        {t("editLinkCopy")}
       </button>
     </div>
   );
 }
 
-/** «¿Has perdido el enlace?»: lo reenvía al correo. */
-export function LostLinkForm({ expired }: { expired: boolean }) {
+/** Sin correos: si se pierde el enlace de edición no se puede recuperar. */
+export function LostLinkNote({ expired }: { expired: boolean }) {
   const t = useTranslations("tournaments.guest");
-  const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const res = await fetch("/api/public/torneos/prueba/reenviar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setBusy(false);
-    if (res.ok) setSent(true);
-    else toast.error(t("resendError"));
-  }
   return (
-    <form onSubmit={submit} className="tp-card-soft space-y-3 p-4 text-sm">
+    <div className="tp-card-soft space-y-1 p-4 text-sm">
       {expired && (
         <p className="font-semibold text-red-600">{t("linkExpired")}</p>
       )}
-      <p className="font-semibold">{t("lostTitle")}</p>
-      {sent ? (
-        <p className="flex items-center gap-2 text-foreground/75">
-          <MailCheck className="size-4 text-emerald-600" />
-          {t("lostSent")}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("emailPlaceholder")}
-            aria-label={t("email")}
-            className="tp-field h-11 min-w-0 flex-1 px-4 text-base"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-muted)] px-5 text-sm font-bold disabled:opacity-50"
-          >
-            {busy && <Loader2 className="size-4 animate-spin" />}
-            {t("lostButton")}
-          </button>
-        </div>
-      )}
-    </form>
+      <p className="text-foreground/75">{t("lostNote")}</p>
+    </div>
   );
 }
 
@@ -161,7 +107,6 @@ export function LegacyGuestTournaments() {
   const t = useTranslations("tournaments.guest");
   const router = useRouter();
   const [names, setNames] = useState<string[]>([]);
-  const [email, setEmail] = useState("");
   const [accept, setAccept] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -182,7 +127,6 @@ export function LegacyGuestTournaments() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
           accept,
           legacy: {
             tournament: {
@@ -245,15 +189,6 @@ export function LegacyGuestTournaments() {
       </p>
       <p className="text-foreground/70">{t("legacyText")}</p>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t("emailPlaceholder")}
-          aria-label={t("email")}
-          className="tp-field h-11 min-w-0 flex-1 px-4 text-base"
-        />
         <button
           type="submit"
           disabled={busy || !accept}

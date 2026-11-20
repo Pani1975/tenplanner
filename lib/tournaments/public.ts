@@ -408,7 +408,12 @@ export async function registerPublic(
       cancelToken,
       notifyEmail: pc.email ?? pc.guardianEmail,
       playerName: publicName({ firstName: p.firstName, lastName: p.lastName }),
-      tournament: { name: t.name, slug: t.slug, startDate: t.startDate },
+      tournament: {
+        name: t.name,
+        slug: t.slug,
+        startDate: t.startDate,
+        isGuest: t.ownerType === "guest",
+      },
     };
   });
 }

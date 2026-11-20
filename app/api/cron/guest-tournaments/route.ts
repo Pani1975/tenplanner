@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { getSiteUrl } from "@/lib/email";
 import { expireGuestTournaments } from "@/lib/tournaments/guest-server";
 
-// Torneos de prueba sin cuenta: aviso por correo una semana antes de
-// borrarlos y borrado de los caducados (30 días tras el torneo) y de los que
-// nunca confirmaron el correo (7 días).
+// Torneos de prueba sin cuenta: borra los caducados (30 días tras el torneo).
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
@@ -16,6 +13,6 @@ export async function GET(request: Request) {
   if (request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const result = await expireGuestTournaments(getSiteUrl(request.url));
+  const result = await expireGuestTournaments();
   return NextResponse.json({ data: result });
 }

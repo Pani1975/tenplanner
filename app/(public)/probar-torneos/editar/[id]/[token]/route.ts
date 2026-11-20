@@ -9,9 +9,7 @@ export async function GET(request: Request, ctx: Ctx) {
   const { id, token } = await ctx.params;
   const ok = await openEditLink(id, token);
   const url = new URL(
-    ok
-      ? `/probar-torneos/${id}?confirmado=1`
-      : "/probar-torneos?enlace=caducado",
+    ok ? `/probar-torneos/${id}` : "/probar-torneos?enlace=caducado",
     request.url
   );
   return NextResponse.redirect(url, {
