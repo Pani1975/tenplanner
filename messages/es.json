@@ -7,14 +7,14 @@
   },
   "landing": {
     "content": {
-      "home_meta_title": "TenPlanner - Planificación de clases deportivas",
-      "home_meta_description": "Planifica clases deportivas con biblioteca de ejercicios, alumnos, grupos y calendario. Para monitores, clubes y academias.",
-      "home_hero_badge": "Planificación de clases para monitores deportivos",
+      "home_meta_title": "TenPlanner - Planificación de clases de tenis",
+      "home_meta_description": "Planifica clases de tenis con biblioteca de ejercicios, alumnos, grupos y calendario. Para monitores, clubes y academias.",
+      "home_hero_badge": "Planificación de clases para monitores de tenis",
       "home_hero_title": "La clase la piensas tú.\nTen Planner te ayuda.",
       "home_hero_subtitle": "Explora ejercicios y clases etiquetados, construye desde cero con la biblioteca o recupera lo que ya funcionó. Clases en grupo o individuales, siempre tu criterio.",
       "home_hero_cta_primary": "Regístrate",
       "home_hero_cta_secondary": "Ver cómo funciona",
-      "home_hero_proof": "Para monitores, clubes y academias de cualquier deporte",
+      "home_hero_proof": "Para monitores, clubes y academias de tenis",
       "home_problem_title": "¿Te suena esto?\nA todos los monitores les pasa.",
       "home_how_title": "Tú decides.\nEn minutos.",
       "home_prep_title": "Tú piensas la clase.\nTres formas de prepararla.",
@@ -23,10 +23,10 @@
       "home_sports_title": "Un espacio por deporte.\nTodos en una cuenta.",
       "home_sports_text": "Al registrarte eliges tu deporte y entras directamente a tu espacio. Cuando quieras, añade otros deportes y trabaja cada uno en su propia zona.",
       "home_final_title": "La próxima clase,\nlista en minutos.",
-      "home_final_text": "Crea tu cuenta, elige tu deporte y empieza a planificar.",
+      "home_final_text": "Crea tu cuenta y empieza a planificar tus clases de tenis.",
       "home_final_cta": "Regístrate",
-      "home_final_note": "Elige tu deporte al registrarte",
-      "home_footer_tagline": "Planificación profesional para monitores y clubes deportivos."
+      "home_final_note": "Para monitores, clubes y jugadores de tenis",
+      "home_footer_tagline": "Planificación profesional para monitores y clubes de tenis."
     },
     "pain": {
       "p1": {

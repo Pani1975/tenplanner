@@ -7,14 +7,14 @@
   },
   "landing": {
     "content": {
-      "home_meta_title": "TenPlanner - Sports lesson planning",
-      "home_meta_description": "Plan sports lessons with a drill library, students, groups and a calendar. For coaches, clubs and academies.",
-      "home_hero_badge": "Lesson planning for sports coaches",
+      "home_meta_title": "TenPlanner - Tennis lesson planning",
+      "home_meta_description": "Plan tennis lessons with a library of exercises, students, groups and a calendar. For coaches, clubs and academies.",
+      "home_hero_badge": "Lesson planning for tennis coaches",
       "home_hero_title": "You design the lesson.\nTen Planner helps.",
       "home_hero_subtitle": "Browse tagged drills and lessons, build from scratch with the library, or bring back what already worked. Group or private lessons, always your call.",
       "home_hero_cta_primary": "Sign up",
       "home_hero_cta_secondary": "See how it works",
-      "home_hero_proof": "For coaches, clubs and academies in any sport",
+      "home_hero_proof": "For tennis coaches, clubs and academies",
       "home_problem_title": "Sound familiar?\nIt happens to every coach.",
       "home_how_title": "You decide.\nIn minutes.",
       "home_prep_title": "You design the lesson.\nThree ways to prepare it.",
@@ -23,10 +23,10 @@
       "home_sports_title": "One space per sport.\nAll in one account.",
       "home_sports_text": "When you sign up you pick your sport and go straight to your space. Whenever you like, add other sports and work on each in its own area.",
       "home_final_title": "Your next lesson,\nready in minutes.",
-      "home_final_text": "Create your account, pick your sport and start planning.",
+      "home_final_text": "Create your account and start planning your tennis lessons.",
       "home_final_cta": "Sign up",
-      "home_final_note": "Pick your sport when you sign up",
-      "home_footer_tagline": "Professional planning for coaches and sports clubs."
+      "home_final_note": "For tennis coaches, clubs and players",
+      "home_footer_tagline": "Professional planning for tennis coaches and clubs."
     },
     "pain": {
       "p1": {
