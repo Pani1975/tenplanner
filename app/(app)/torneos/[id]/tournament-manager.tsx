@@ -84,6 +84,8 @@ export type ManagerTournament = {
   } | null;
   /** Categoría (Benjamín… +60 u otra); sustituye al nivel. */
   category: string | null;
+  /** Puede eliminar el torneo (prueba, particular, o admin/creador en club). */
+  canDelete?: boolean;
   /** Modo prueba: tiene página pública de inscripción. */
   guestVerified?: boolean;
 };
@@ -401,7 +403,7 @@ export function TournamentManager({
               {t.archived ? tr("archive.restore") : tr("archive.archive")}
             </button>
           )}
-          {api.guest && (
+          {(api.guest || t.canDelete) && (
             <button
               type="button"
               onClick={() => setDeleting(true)}
@@ -411,7 +413,7 @@ export function TournamentManager({
               {tr("guest.deleteTournament")}
             </button>
           )}
-          {status !== "finished" && (
+          {
             <button
               type="button"
               onClick={() => setEditingData((v) => !v)}
@@ -420,7 +422,7 @@ export function TournamentManager({
             >
               {tr("edit.open")}
             </button>
-          )}
+          }
         </div>
         {status === "closed" && matchCount === 0 && (
           <p className="text-sm text-white/85">{tr("manager.drawSoon")}</p>

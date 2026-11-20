@@ -12,7 +12,7 @@ import {
 import { updateTournamentSchema } from "@/lib/tournaments/schemas";
 import { cancelConflictingSessions } from "@/lib/tournaments/court-conflicts";
 import {
-  deleteGuestTournament,
+  deleteTournament,
   getTournamentDetail,
   updateTournament,
 } from "@/lib/tournaments/server";
@@ -61,13 +61,14 @@ export async function PATCH(request: Request, ctx: Ctx) {
   });
 }
 
-// Borrar un torneo de prueba (sin cuenta). Con cuenta no se borran torneos.
+// Borrar un torneo: modo prueba (con su enlace) o, con cuenta, el monitor
+// en particular y, en club, el administrador o quien lo creó.
 export async function DELETE(_request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
   return withOrganizer(async (o) => {
     checkIds(id);
-    await deleteGuestTournament(o, id);
-    await clearGuestCookie(id);
+    await deleteTournament(o, id);
+    if (o.guest) await clearGuestCookie(id);
     return json({ ok: true });
   });
 }

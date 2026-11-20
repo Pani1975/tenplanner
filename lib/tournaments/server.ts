@@ -1555,16 +1555,32 @@ export async function updateCircuitPoints(
   return row;
 }
 
-// ── Borrar un torneo de prueba ─────────────────────────────────────────
+// ── Borrar un torneo ───────────────────────────────────────────────────
 
 /**
- * Solo en modo prueba (sin cuenta): borra el torneo con sus inscritos,
- * partidos, noticias y fotos. Si era el último de su circuito, también el
- * circuito. Con cuenta no se borran torneos.
+ * ¿Puede borrar el torneo? Modo prueba: sí (tiene su enlace). Con cuenta:
+ * en particular, el monitor; en club, el administrador del club o quien lo
+ * creó (decisión de David, 2026-11-21).
  */
-export async function deleteGuestTournament(o: Organizer, id: string) {
-  if (!o.guest) throw new TournamentError("guest_only", 403);
+export function canDeleteTournament(
+  o: Organizer,
+  t: { clubId: string | null; createdBy: string }
+) {
+  if (o.guest) return true;
+  if (!t.clubId) return true;
+  return o.canSeeContacts || t.createdBy === o.userId;
+}
+
+/**
+ * Borra el torneo con sus inscritos, partidos, noticias y fotos (en
+ * cascada) y sus archivos. Un circuito de prueba que se queda sin torneos
+ * se borra también; los circuitos de cuenta se conservan.
+ */
+export async function deleteTournament(o: Organizer, id: string) {
   const t = await getTournament(o, id);
+  if (!canDeleteTournament(o, t)) {
+    throw new TournamentError("delete_not_allowed", 403);
+  }
   const photos = await db
     .select({ path: tournamentPhotos.storagePath })
     .from(tournamentPhotos)
@@ -1588,7 +1604,7 @@ export async function deleteGuestTournament(o: Organizer, id: string) {
       .from(tournaments)
       .where(eq(tournaments.circuitId, t.circuitId))
       .limit(1);
-    if (!left) {
+    if (!left && t.ownerType === "guest") {
       await db
         .delete(tournamentCircuits)
         .where(

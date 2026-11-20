@@ -4242,7 +4242,8 @@
       "guest_no_students": "You need an account to add your students.",
       "guest_not_available": "This needs an account.",
       "guest_news_limit": "Trial mode allows 5 news posts per tournament.",
-      "guest_photo_limit": "Trial mode allows 5 photos per tournament."
+      "guest_photo_limit": "Trial mode allows 5 photos per tournament.",
+      "delete_not_allowed": "Only the club admin or whoever created the tournament can delete it."
     },
     "public": {
       "organizer": "Organised by {name}",

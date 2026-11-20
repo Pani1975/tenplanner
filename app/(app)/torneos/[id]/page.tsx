@@ -5,6 +5,7 @@ import { loadSkillLevels } from "@/lib/skill-levels-repo";
 import { levelOptions } from "@/lib/tournaments/levels";
 import {
   getOrganizer,
+  canDeleteTournament,
   getTournamentDetail,
   TournamentError,
 } from "@/lib/tournaments/server";
@@ -39,7 +40,10 @@ export default async function TorneoPage({ params }: Props) {
   const data = await managerData(detail);
   return (
     <TournamentManager
-      tournament={data.tournament}
+      tournament={{
+        ...data.tournament,
+        canDelete: canDeleteTournament(organizer, detail.tournament),
+      }}
       entries={data.entries}
       matches={data.matches}
       levels={levels}

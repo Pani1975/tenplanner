@@ -3853,7 +3853,8 @@
       "guest_no_students": "Para añadir a tus alumnos necesitas una cuenta.",
       "guest_not_available": "Esto necesita una cuenta.",
       "guest_news_limit": "En el modo prueba caben 5 noticias por torneo.",
-      "guest_photo_limit": "En el modo prueba caben 5 fotos por torneo."
+      "guest_photo_limit": "En el modo prueba caben 5 fotos por torneo.",
+      "delete_not_allowed": "Solo el administrador del club o quien creó el torneo puede eliminarlo."
     },
     "public": {
       "organizer": "Organiza: {name}",
