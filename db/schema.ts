@@ -2667,6 +2667,8 @@ export const tournaments = pgTable(
       () => skillLevels.code,
       { onDelete: "set null", onUpdate: "cascade" }
     ),
+    // Categoría (Benjamín… +60 u otra libre); sustituye al nivel. 0114.
+    category: varchar("category", { length: 60 }),
     format: varchar("format", { length: 20 }).notNull(), // knockout | round_robin
     // draft | open | closed | in_progress | finished. "open" pasado el plazo
     // se muestra como "closed" (lib/tournaments/status.ts).

@@ -4013,7 +4013,7 @@
       "step": {
         "basics": "Details",
         "modality": "Type",
-        "level": "Level",
+        "level": "Category",
         "format": "Format"
       },
       "name": "Name",
@@ -4070,7 +4070,12 @@
       "tz": {
         "peninsula": "Mainland Spain and Balearics",
         "canary": "Canary Islands"
-      }
+      },
+      "categoryText": "Which category is the tournament for? Pick one or write another.",
+      "noCategory": "No category",
+      "otherCategory": "Other",
+      "otherCategoryPlaceholder": "e.g. Mixed, Women +40, U-12…",
+      "category": "Category"
     },
     "manager": {
       "back": "Tournaments",
@@ -4524,7 +4529,8 @@
       "ctaFollow": "Follow the tournament",
       "ctaPrivate": "More information",
       "organizedBy": "Organised by",
-      "footer": "Organised with Ten Planner · tenplanner.com"
+      "footer": "Organised with Ten Planner · tenplanner.com",
+      "category": "Category"
     },
     "archive": {
       "archive": "Archive",
@@ -4596,8 +4602,8 @@
       "emptyTitle": "You have not created any trial tournament yet",
       "emptyText": "Tap “New tournament” to start.",
       "delete": "Delete trial tournament",
-      "deleteTitle": "Delete this trial tournament?",
-      "deleteText": "“{name}” will be deleted from this browser. This cannot be undone.",
+      "deleteTitle": "Delete this tournament?",
+      "deleteText": "«{name}» will be deleted with its entries, draw, results, news and photos. This cannot be undone.",
       "notFound": "This tournament is not in this browser. Trial tournaments only exist in the browser where they were created.",
       "backToList": "Back to my trial tournaments",
       "metaTitle": "Try Ten Planner tournaments",
@@ -4632,7 +4638,37 @@
       "editLinkCopy": "Copy edit link",
       "editLinkCopied": "Edit link copied",
       "copyFailed": "Could not copy. Select it and copy it by hand.",
-      "lostNote": "To open a trial tournament on another device, use its edit link. Without it, it cannot be recovered: to keep it, create a free account and move it to your account."
+      "lostNote": "To open a trial tournament on another device, use its edit link. Without it, it cannot be recovered: to keep it, create a free account and move it to your account.",
+      "circuitTournaments": "Circuit tournaments",
+      "circuitTournamentsHelp": "The first one is the one above. Add the rest with their name and date; complete each one later from its page.",
+      "circuitTournamentName": "Tournament {n}",
+      "removeRow": "Remove",
+      "addTournament": "Add tournament",
+      "errCircuitTournaments": "Give each circuit tournament a name (3+ letters) and a date.",
+      "emailOptional": "Also email me the edit link (optional; we do not keep the email)",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "emailNotSent": "The email could not be sent. Copy the edit link from the tournament page.",
+      "deleteTournament": "Delete tournament",
+      "deleted": "Tournament deleted"
+    },
+    "circuitPoints": {
+      "title": "Circuit points",
+      "help": "Points each player earns in each circuit tournament depending on how far they get. They apply to every tournament in the circuit.",
+      "standings": "Circuit standings",
+      "stage": {
+        "winner": "Champion",
+        "final": "Final",
+        "semifinal": "Semifinals",
+        "quarterfinal": "Quarterfinals",
+        "round_of_16": "Round of 16",
+        "earlier": "Earlier rounds"
+      },
+      "roundRobin": "Round robin: points per place (1st, 2nd, 3rd…), comma separated",
+      "participation": "For taking part",
+      "invalid": "Check the points: whole numbers from 0 to 10,000.",
+      "save": "Save points",
+      "saved": "Points saved"
     }
   }
 }

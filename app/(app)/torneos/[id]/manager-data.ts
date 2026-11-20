@@ -30,6 +30,7 @@ export async function managerData(detail: Detail) {
       modality: t.modality as "singles" | "doubles",
       format: t.format as "knockout" | "round_robin",
       levelCode: t.levelCode,
+      category: t.category,
       startDate: t.startDate,
       endDate: t.endDate,
       registrationDeadline: t.registrationDeadline?.toISOString() ?? null,

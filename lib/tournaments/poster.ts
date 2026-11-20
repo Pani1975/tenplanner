@@ -184,7 +184,12 @@ export async function posterData(
       value: `${tr(`modality.${t.modality}`)} · ${tr(`format.${t.format}`)}`,
     },
   ];
-  if (level) facts.push({ label: tr("poster.level"), value: level });
+  // Categoría (sustituye al nivel); los torneos antiguos, su nivel.
+  if (t.category) {
+    facts.push({ label: tr("poster.category"), value: t.category });
+  } else if (level) {
+    facts.push({ label: tr("poster.level"), value: level });
+  }
   if (t.places.length) {
     facts.push({ label: tr("poster.place"), value: t.places.join(", ") });
   }

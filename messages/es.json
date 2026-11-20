@@ -3624,7 +3624,7 @@
       "step": {
         "basics": "Datos",
         "modality": "Modalidad",
-        "level": "Nivel",
+        "level": "Categoría",
         "format": "Formato"
       },
       "name": "Nombre",
@@ -3681,7 +3681,12 @@
       "tz": {
         "peninsula": "Península y Baleares",
         "canary": "Canarias"
-      }
+      },
+      "categoryText": "¿Para qué categoría es el torneo? Elige una o escribe otra.",
+      "noCategory": "Sin categoría",
+      "otherCategory": "Otro",
+      "otherCategoryPlaceholder": "Ej.: Mixto, Femenino +40, Sub-12…",
+      "category": "Categoría"
     },
     "manager": {
       "back": "Torneos",
@@ -4135,7 +4140,8 @@
       "ctaFollow": "Sigue el torneo",
       "ctaPrivate": "Más información",
       "organizedBy": "Organiza",
-      "footer": "Organizado con Ten Planner · tenplanner.com"
+      "footer": "Organizado con Ten Planner · tenplanner.com",
+      "category": "Categoría"
     },
     "archive": {
       "archive": "Archivar",
@@ -4207,8 +4213,8 @@
       "emptyTitle": "Aún no has creado ningún torneo de prueba",
       "emptyText": "Pulsa «Nuevo torneo» para empezar.",
       "delete": "Borrar torneo de prueba",
-      "deleteTitle": "¿Borrar este torneo de prueba?",
-      "deleteText": "Se borrará «{name}» de este navegador. No se puede deshacer.",
+      "deleteTitle": "¿Eliminar este torneo?",
+      "deleteText": "Se borrará «{name}» con sus inscritos, cuadro, resultados, noticias y fotos. No se puede deshacer.",
       "notFound": "Este torneo no está en este navegador. Los torneos de prueba solo se ven en el navegador donde se crearon.",
       "backToList": "Volver a mis torneos de prueba",
       "metaTitle": "Prueba los torneos de Ten Planner",
@@ -4243,7 +4249,37 @@
       "editLinkCopy": "Copiar enlace de edición",
       "editLinkCopied": "Enlace de edición copiado",
       "copyFailed": "No se pudo copiar. Selecciónalo y cópialo a mano.",
-      "lostNote": "Para abrir un torneo de prueba en otro dispositivo, usa su enlace de edición. Sin él no se puede recuperar: si quieres conservarlo, crea una cuenta gratis y pásalo a tu cuenta."
+      "lostNote": "Para abrir un torneo de prueba en otro dispositivo, usa su enlace de edición. Sin él no se puede recuperar: si quieres conservarlo, crea una cuenta gratis y pásalo a tu cuenta.",
+      "circuitTournaments": "Torneos del circuito",
+      "circuitTournamentsHelp": "El primero es el de arriba. Añade el resto con su nombre y fecha; cada uno se completa después desde su ficha.",
+      "circuitTournamentName": "Torneo {n}",
+      "removeRow": "Quitar",
+      "addTournament": "Añadir torneo",
+      "errCircuitTournaments": "Pon nombre (3 letras o más) y fecha a cada torneo del circuito.",
+      "emailOptional": "Enviarme también el enlace de edición por correo (opcional; no guardamos el correo)",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@correo.com",
+      "emailNotSent": "No se pudo enviar el correo. Copia el enlace de edición de la ficha del torneo.",
+      "deleteTournament": "Eliminar torneo",
+      "deleted": "Torneo eliminado"
+    },
+    "circuitPoints": {
+      "title": "Puntuación del circuito",
+      "help": "Puntos que suma cada jugador en cada torneo del circuito según hasta dónde llega. Valen para todos los torneos del circuito.",
+      "standings": "Clasificación del circuito",
+      "stage": {
+        "winner": "Campeón",
+        "final": "Final",
+        "semifinal": "Semifinales",
+        "quarterfinal": "Cuartos",
+        "round_of_16": "Octavos",
+        "earlier": "Rondas anteriores"
+      },
+      "roundRobin": "Liguilla: puntos por puesto (1.º, 2.º, 3.º…), separados por comas",
+      "participation": "Por participar",
+      "invalid": "Revisa los puntos: números enteros de 0 a 10.000.",
+      "save": "Guardar puntuación",
+      "saved": "Puntuación guardada"
     }
   }
 }

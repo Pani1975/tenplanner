@@ -441,7 +441,9 @@ function PhotosSection({
           type="button"
           onClick={() => input.current?.click()}
           disabled={uploading > 0 || photoFull}
-          title={photoFull ? t("guestPhotoLimit", { max: GUEST_LIMIT }) : undefined}
+          title={
+            photoFull ? t("guestPhotoLimit", { max: GUEST_LIMIT }) : undefined
+          }
           className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
         >
           {uploading > 0 ? (

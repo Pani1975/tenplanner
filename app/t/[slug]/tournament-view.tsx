@@ -127,7 +127,7 @@ export async function TournamentView({
           </div>
           <p className="text-sm text-white/90">
             {tr(`modality.${t.modality}`)} · {tr(`format.${t.format}`)}
-            {level && ` · ${level.label}`}
+            {t.category ? ` · ${t.category}` : level && ` · ${level.label}`}
           </p>
         </div>
       </header>
@@ -255,7 +255,7 @@ export async function TournamentView({
                             t.registeredCount - t.waitlistCount >= t.maxEntries
                           }
                           organizer={t.organizer}
-                          levels={options}
+                          levels={[]}
                         />
                       ),
                     },

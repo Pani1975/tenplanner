@@ -17,8 +17,11 @@ import {
   tournamentEntries,
   tournamentMatches,
   tournamentCircuits,
+  tournamentPhotos,
   tournaments,
 } from "@/db/schema";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { PointsTable } from "./circuit";
 import { getActiveWorkClubId, getOwnedClub } from "@/lib/clubs";
 import { imageConsentStatus } from "./image-consent";
 import { canSeeContacts, redactEntry } from "./privacy";
@@ -217,6 +220,21 @@ export async function listTournaments(o: Organizer) {
 // ── Circuitos ──────────────────────────────────────────────────────────
 
 function circuitWhere(o: Organizer): SQL {
+  // Modo prueba: los circuitos de sus torneos.
+  if (o.guest) {
+    return o.guest.tournamentIds.length
+      ? and(
+          eq(tournamentCircuits.ownerType, "guest"),
+          inArray(
+            tournamentCircuits.id,
+            db
+              .select({ id: tournaments.circuitId })
+              .from(tournaments)
+              .where(inArray(tournaments.id, o.guest.tournamentIds))
+          )
+        )!
+      : sql`false`;
+  }
   return o.clubId
     ? eq(tournamentCircuits.clubId, o.clubId)
     : and(
@@ -253,8 +271,28 @@ async function resolveCircuit(
     newCircuit?: { name: string; season: string | null } | null;
   }
 ): Promise<string | null | undefined> {
-  if (o.guest && (input.newCircuit || input.circuitId)) {
+  // Modo prueba: el circuito se crea al crear sus torneos (create) y luego
+  // solo se usa el suyo.
+  if (o.guest && input.newCircuit && !o.guest.create) {
     throw new TournamentError("guest_not_available", 403);
+  }
+  if (o.guest && input.newCircuit) {
+    const name = input.newCircuit.name.trim();
+    const season = input.newCircuit.season?.trim() || null;
+    const [row] = await db
+      .insert(tournamentCircuits)
+      .values({
+        ownerType: "guest",
+        clubId: null,
+        coachId: null,
+        createdBy: o.userId,
+        sport: o.sport,
+        name,
+        season,
+        slug: tournamentSlug(season ? `${name} ${season}` : name),
+      })
+      .returning({ id: tournamentCircuits.id });
+    return row.id;
   }
   if (input.newCircuit) {
     const name = input.newCircuit.name.trim();
@@ -345,6 +383,7 @@ export async function getTournamentDetail(o: Organizer, id: string) {
             name: tournamentCircuits.name,
             season: tournamentCircuits.season,
             slug: tournamentCircuits.slug,
+            points: tournamentCircuits.points,
           })
           .from(tournamentCircuits)
           .where(eq(tournamentCircuits.id, t.circuitId))
@@ -512,6 +551,7 @@ export async function createTournament(
           description: input.description,
           modality: input.modality,
           levelCode: input.levelCode ?? null,
+          category: input.category ?? null,
           format: input.format,
           maxEntries: input.maxEntries ?? null,
           startDate: input.startDate,
@@ -644,6 +684,7 @@ export async function updateTournament(
         }),
         ...(input.modality !== undefined && { modality: input.modality }),
         ...(input.levelCode !== undefined && { levelCode: input.levelCode }),
+        ...(input.category !== undefined && { category: input.category }),
         ...(input.format !== undefined && { format: input.format }),
         ...(input.maxEntries !== undefined && { maxEntries }),
         ...(input.startDate !== undefined && { startDate }),
@@ -1491,4 +1532,71 @@ export async function clearMatchResult(
       })
       .where(eq(tournamentMatches.id, matchId));
   });
+}
+
+// ── Circuito: puntos por ronda ─────────────────────────────────────────
+
+/**
+ * Cambia la tabla de puntos del circuito (la define el organizador). Con
+ * cuenta, los circuitos del club o propios; en modo prueba, el de sus
+ * torneos.
+ */
+export async function updateCircuitPoints(
+  o: Organizer,
+  circuitId: string,
+  points: PointsTable
+) {
+  const [row] = await db
+    .update(tournamentCircuits)
+    .set({ points, updatedAt: new Date() })
+    .where(and(eq(tournamentCircuits.id, circuitId), circuitWhere(o)))
+    .returning({ id: tournamentCircuits.id });
+  if (!row) throw new TournamentError("not_found", 404);
+  return row;
+}
+
+// ── Borrar un torneo de prueba ─────────────────────────────────────────
+
+/**
+ * Solo en modo prueba (sin cuenta): borra el torneo con sus inscritos,
+ * partidos, noticias y fotos. Si era el último de su circuito, también el
+ * circuito. Con cuenta no se borran torneos.
+ */
+export async function deleteGuestTournament(o: Organizer, id: string) {
+  if (!o.guest) throw new TournamentError("guest_only", 403);
+  const t = await getTournament(o, id);
+  const photos = await db
+    .select({ path: tournamentPhotos.storagePath })
+    .from(tournamentPhotos)
+    .where(eq(tournamentPhotos.tournamentId, id));
+  const paths = [
+    ...photos.map((p) => p.path),
+    ...(t.posterImagePath ? [t.posterImagePath] : []),
+  ];
+  if (paths.length) {
+    try {
+      // Mismo bucket que lib/tournaments/media.ts (que importa este módulo).
+      await createAdminClient().storage.from("tournament-media").remove(paths);
+    } catch (e) {
+      console.error("[torneos de prueba] borrar archivos", e);
+    }
+  }
+  await db.delete(tournaments).where(eq(tournaments.id, id));
+  if (t.circuitId) {
+    const [left] = await db
+      .select({ id: tournaments.id })
+      .from(tournaments)
+      .where(eq(tournaments.circuitId, t.circuitId))
+      .limit(1);
+    if (!left) {
+      await db
+        .delete(tournamentCircuits)
+        .where(
+          and(
+            eq(tournamentCircuits.id, t.circuitId),
+            eq(tournamentCircuits.ownerType, "guest")
+          )
+        );
+    }
+  }
 }

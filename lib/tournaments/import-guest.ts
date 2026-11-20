@@ -171,8 +171,8 @@ export async function importGuestTournament(
               clubId: null,
               coachId: null,
               guestEmail: null,
-                // Sin correo: el enlace público funciona desde el principio.
-                guestVerifiedAt: new Date(),
+              // Sin correo: el enlace público funciona desde el principio.
+              guestVerifiedAt: new Date(),
               guestName: o.guest.create.name,
               guestTokenHash: o.guest.create.tokenHash,
               guestExpiresAt: guestExpiry(t.startDate, t.endDate),

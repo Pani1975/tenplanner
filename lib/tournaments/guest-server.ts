@@ -11,6 +11,8 @@ import { and, eq, inArray, lt } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { tournamentPhotos, tournaments } from "@/db/schema";
+import { sendEmail } from "@/lib/email";
+import { renderActionEmailHtml } from "@/lib/email-layout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveWorkClubId } from "@/lib/clubs";
 import { MEDIA_BUCKET } from "./media";
@@ -134,11 +136,61 @@ export async function openEditLink(id: string, token: string) {
       .set({ guestVerifiedAt: new Date() })
       .where(eq(tournaments.id, id));
   }
-  await setGuestCookie(id, token);
+  // Un circuito comparte enlace: se abren todos sus torneos.
+  const same = await db
+    .select({ id: tournaments.id })
+    .from(tournaments)
+    .where(
+      and(
+        eq(tournaments.ownerType, "guest"),
+        eq(tournaments.guestTokenHash, t.hash)
+      )
+    )
+    .limit(30);
+  for (const s of same) await setGuestCookie(s.id, token);
   return true;
 }
 
 export const hashGuestToken = sha;
+
+/**
+ * Envío opcional del enlace de edición por correo (casilla al crear). El
+ * correo no se guarda. Devuelve si el servicio de correo lo aceptó.
+ */
+export async function sendEditLinkEmail(opts: {
+  to: string;
+  name: string;
+  editUrl: string;
+  publicUrl: string | null;
+  circuitUrl: string | null;
+}) {
+  const paragraphs = [
+    `Este es el enlace para editar «${opts.name}» desde cualquier móvil u ordenador, sin crear cuenta:`,
+    opts.editUrl,
+    "No lo compartas: quien lo tenga puede editar el torneo. Si lo pierdes, no se puede recuperar.",
+    ...(opts.publicUrl
+      ? [`Enlace público de inscripción: ${opts.publicUrl}`]
+      : []),
+    ...(opts.circuitUrl
+      ? [`Clasificación del circuito: ${opts.circuitUrl}`]
+      : []),
+    "Los torneos de prueba se borran 30 días después de terminar.",
+  ];
+  const res = await sendEmail({
+    to: opts.to,
+    subject: `Enlace de edición de «${opts.name}»`,
+    html: renderActionEmailHtml({
+      greeting: "Tu torneo en Ten Planner",
+      paragraphs,
+      buttonLabel: "Editar el torneo",
+      buttonUrl: opts.editUrl,
+      footnote:
+        "Te llega porque marcaste «Enviarme el enlace por correo» al crear el torneo.",
+    }),
+    text: paragraphs.join("\n\n"),
+  });
+  return res.sent;
+}
 
 // ── Pasar a una cuenta ─────────────────────────────────────────────────
 

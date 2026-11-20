@@ -21,7 +21,11 @@ export async function sendEmail(
   message: EmailMessage
 ): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return { sent: false, reason: "not_configured" };
+  if (!apiKey) {
+    // Visible en los registros de Vercel: sin clave no se envía nada.
+    console.warn("[email] RESEND_API_KEY no está configurada: no se envía");
+    return { sent: false, reason: "not_configured" };
+  }
 
   try {
     const res = await fetch("https://api.resend.com/emails", {

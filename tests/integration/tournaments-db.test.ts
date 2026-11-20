@@ -56,6 +56,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT eliminatoria",
         description: null,
+        category: null,
         startDate: futureDay(10),
         maxEntries: 4,
         modality: "singles",
@@ -277,6 +278,7 @@ if (!enabled) {
       const name = `IT circuito ${crypto.randomUUID().slice(0, 6)}`;
       const base = {
         description: null,
+        category: null,
         startDate: futureDay(15),
         modality: "singles" as const,
         format: "knockout" as const,
@@ -327,6 +329,7 @@ if (!enabled) {
     it("público: inscripción por enlace, lista de espera, cancelar y privacidad", async () => {
       const base = {
         description: null,
+        category: null,
         startDate: futureDay(20),
         modality: "singles" as const,
         format: "knockout" as const,
@@ -422,6 +425,7 @@ if (!enabled) {
       const name = `IT ranking ${crypto.randomUUID().slice(0, 6)}`;
       const base = {
         description: null,
+        category: null,
         startDate: futureDay(25),
         modality: "singles" as const,
         format: "knockout" as const,
@@ -508,6 +512,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT privado",
         description: null,
+        category: null,
         startDate: futureDay(30),
         modality: "singles",
         format: "knockout",
@@ -587,6 +592,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT consentimiento familia",
         description: null,
+        category: null,
         startDate: futureDay(35),
         modality: "doubles",
         format: "knockout",
@@ -704,6 +710,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT liguilla",
         description: null,
+        category: null,
         startDate: futureDay(12),
         modality: "singles",
         format: "round_robin",
@@ -763,6 +770,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT fotos",
         description: null,
+        category: null,
         startDate: futureDay(12),
         maxEntries: null,
         modality: "singles",
@@ -869,6 +877,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT cartel borrador",
         description: null,
+        category: null,
         startDate: futureDay(15),
         maxEntries: 8,
         modality: "singles",
@@ -903,6 +912,7 @@ if (!enabled) {
       const t = await s.createTournament(o, {
         name: "IT archivar",
         description: null,
+        category: null,
         startDate: futureDay(5),
         maxEntries: null,
         modality: "singles",

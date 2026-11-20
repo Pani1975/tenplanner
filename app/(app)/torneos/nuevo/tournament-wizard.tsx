@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTournamentApi } from "../tournament-api";
+import { TOURNAMENT_CATEGORIES } from "@/lib/tournaments/categories";
 import { AcceptTerms } from "@/app/(public)/probar-torneos/accept-terms";
 import { useTranslations } from "next-intl";
 import {
@@ -11,7 +12,9 @@ import {
   ArrowRight,
   Check,
   Loader2,
+  Plus,
   User,
+  X,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -49,6 +52,9 @@ type Form = {
   playHours: TournamentHours;
   modality: "singles" | "doubles" | null;
   levelCode: string | null;
+  // Categoría (Benjamín… +60) u otra escrita a mano («Otro»).
+  category: string | null;
+  categoryOther: boolean;
   format: "knockout" | "round_robin" | null;
   bestOf: 1 | 3 | 5;
   gamesPerSet: number;
@@ -63,8 +69,8 @@ type Form = {
 
 const STEPS = ["basics", "modality", "level", "format"] as const;
 
+// `levels` ya no se usa: el paso 3 es la categoría (se mantiene en las props).
 export function TournamentWizard({
-  levels,
   places,
   circuits,
   clubTimeZone,
@@ -86,10 +92,18 @@ export function TournamentWizard({
   const [error, setError] = useState<string | null>(null);
   // Sesiones/reservas que ya ocupan las pistas: se pregunta antes de crear.
   const [conflicts, setConflicts] = useState<CourtConflicts | null>(null);
-  // Modo prueba: quién organiza y condiciones (sin correo).
+  // Modo prueba: quién organiza, condiciones y, si quiere, recibir el
+  // enlace de edición por correo (no se guarda la dirección).
   const [guestName, setGuestName] = useState("");
   const [guestAccept, setGuestAccept] = useState(false);
-  const guestReady = !api.guest || guestAccept;
+  const [wantEmail, setWantEmail] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTo.trim());
+  const guestReady = !api.guest || (guestAccept && (!wantEmail || emailOk));
+  // Modo prueba: los demás torneos del circuito (nombre y fecha).
+  const [extra, setExtra] = useState<{ name: string; startDate: string }[]>([
+    { name: "", startDate: "" },
+  ]);
   const [f, setF] = useState<Form>({
     name: "",
     description: "",
@@ -103,6 +117,8 @@ export function TournamentWizard({
     playHours: { mode: "all_day" },
     modality: null,
     levelCode: null,
+    category: null,
+    categoryOther: false,
     format: null,
     bestOf: 3,
     gamesPerSet: 6,
@@ -146,6 +162,13 @@ export function TournamentWizard({
   }
   if (max !== null && (!Number.isInteger(max) || max < 2 || max > 256)) {
     basicsErrors.push(t("wizard.errMax"));
+  }
+  const guestCircuit = api.guest && f.circuitMode === "new";
+  if (
+    guestCircuit &&
+    extra.some((r) => r.name.trim().length < 3 || !r.startDate)
+  ) {
+    basicsErrors.push(tg("errCircuitTournaments"));
   }
 
   const canNext =
@@ -201,6 +224,7 @@ export function TournamentWizard({
           : null,
       modality: f.modality,
       levelCode: f.levelCode,
+      category: f.category?.trim() || null,
       format: f.format,
       bestOf: f.bestOf,
       gamesPerSet: f.gamesPerSet,
@@ -216,6 +240,20 @@ export function TournamentWizard({
             organizerName: guestName.trim() || null,
             accept: guestAccept,
             tournament,
+            emailTo: wantEmail ? emailTo.trim() : null,
+            circuit: guestCircuit
+              ? {
+                  name: f.circuitName.trim(),
+                  season: f.circuitSeason.trim() || null,
+                  tournaments: [
+                    { name: f.name.trim(), startDate: f.startDate },
+                    ...extra.map((r) => ({
+                      name: r.name.trim(),
+                      startDate: r.startDate,
+                    })),
+                  ],
+                }
+              : null,
           }),
         })
       : await api.fetch("/api/tournaments", {
@@ -234,8 +272,12 @@ export function TournamentWizard({
         tc("cancelledToast", { count: data.sessionsCancelled.cancelled })
       );
     }
-    if (api.guest) window.location.assign(api.paths.detail(data.id));
-    else {
+    if (api.guest) {
+      if (wantEmail && data.emailSent === false) {
+        toast.error(tg("emailNotSent"));
+      }
+      window.location.assign(api.paths.detail(data.id));
+    } else {
       router.push(api.paths.detail(data.id));
       router.refresh();
     }
@@ -294,113 +336,179 @@ export function TournamentWizard({
                 autoFocus
               />
             </Field>
-            {/* Sin cuenta: ni circuitos ni página pública. */}
-            {!api.guest && (
-              <>
-                <fieldset className="space-y-2">
-                  <legend className="mb-1.5 text-xs font-bold uppercase text-foreground/60">
-                    {t("wizard.circuitType")}
-                  </legend>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["independent", "circuit"] as const).map((k) => {
-                      const on =
-                        k === "independent"
-                          ? f.circuitMode === "independent"
-                          : f.circuitMode !== "independent";
-                      return (
-                        <button
-                          key={k}
-                          type="button"
-                          aria-pressed={on}
-                          onClick={() =>
-                            set(
-                              "circuitMode",
-                              k === "independent"
-                                ? "independent"
-                                : circuits.length
-                                  ? "existing"
-                                  : "new"
-                            )
-                          }
-                          className={cn(
-                            "min-h-11 rounded-xl px-3 text-sm font-semibold",
-                            on
-                              ? "bg-[#d6f04a] text-black"
-                              : "bg-foreground/5 text-foreground"
-                          )}
-                        >
-                          {t(`wizard.${k}`)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {f.circuitMode !== "independent" && (
-                    <div className="tp-card-soft space-y-3 p-3">
-                      {circuits.length > 0 && (
-                        <label className="block space-y-1.5">
-                          <span className="text-xs font-bold uppercase text-foreground/60">
-                            {t("wizard.circuit")}
-                          </span>
-                          <select
-                            value={
-                              f.circuitMode === "new" ? "__new" : f.circuitId
-                            }
-                            onChange={(e) =>
-                              e.target.value === "__new"
-                                ? set("circuitMode", "new")
-                                : setF((prev) => ({
-                                    ...prev,
-                                    circuitMode: "existing",
-                                    circuitId: e.target.value,
-                                  }))
-                            }
-                            className="tp-field h-11 w-full px-3 text-base"
-                          >
-                            {circuits.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.season ? `${c.name} · ${c.season}` : c.name}
-                              </option>
-                            ))}
-                            <option value="__new">
-                              {t("wizard.newCircuit")}
-                            </option>
-                          </select>
-                        </label>
+            <fieldset className="space-y-2">
+              <legend className="mb-1.5 text-xs font-bold uppercase text-foreground/60">
+                {t("wizard.circuitType")}
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(["independent", "circuit"] as const).map((k) => {
+                  const on =
+                    k === "independent"
+                      ? f.circuitMode === "independent"
+                      : f.circuitMode !== "independent";
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        set(
+                          "circuitMode",
+                          k === "independent"
+                            ? "independent"
+                            : circuits.length
+                              ? "existing"
+                              : "new"
+                        )
+                      }
+                      className={cn(
+                        "min-h-11 rounded-xl px-3 text-sm font-semibold",
+                        on
+                          ? "bg-[#d6f04a] text-black"
+                          : "bg-foreground/5 text-foreground"
                       )}
-                      {f.circuitMode === "new" && (
-                        <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
-                          <label className="block space-y-1.5">
-                            <span className="text-xs font-bold uppercase text-foreground/60">
-                              {t("wizard.circuitName")}
-                            </span>
-                            <input
-                              value={f.circuitName}
-                              onChange={(e) =>
-                                set("circuitName", e.target.value)
-                              }
-                              placeholder={t("wizard.circuitPlaceholder")}
-                              maxLength={160}
-                              className="tp-field h-11 w-full px-4 text-base"
-                            />
-                          </label>
-                          <label className="block space-y-1.5">
-                            <span className="text-xs font-bold uppercase text-foreground/60">
-                              {t("wizard.season")}
-                            </span>
-                            <input
-                              value={f.circuitSeason}
-                              onChange={(e) =>
-                                set("circuitSeason", e.target.value)
-                              }
-                              maxLength={20}
-                              className="tp-field h-11 w-full px-4 text-base"
-                            />
-                          </label>
+                    >
+                      {t(`wizard.${k}`)}
+                    </button>
+                  );
+                })}
+              </div>
+              {f.circuitMode !== "independent" && (
+                <div className="tp-card-soft space-y-3 p-3">
+                  {circuits.length > 0 && (
+                    <label className="block space-y-1.5">
+                      <span className="text-xs font-bold uppercase text-foreground/60">
+                        {t("wizard.circuit")}
+                      </span>
+                      <select
+                        value={f.circuitMode === "new" ? "__new" : f.circuitId}
+                        onChange={(e) =>
+                          e.target.value === "__new"
+                            ? set("circuitMode", "new")
+                            : setF((prev) => ({
+                                ...prev,
+                                circuitMode: "existing",
+                                circuitId: e.target.value,
+                              }))
+                        }
+                        className="tp-field h-11 w-full px-3 text-base"
+                      >
+                        {circuits.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.season ? `${c.name} · ${c.season}` : c.name}
+                          </option>
+                        ))}
+                        <option value="__new">{t("wizard.newCircuit")}</option>
+                      </select>
+                    </label>
+                  )}
+                  {f.circuitMode === "new" && (
+                    <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
+                      <label className="block space-y-1.5">
+                        <span className="text-xs font-bold uppercase text-foreground/60">
+                          {t("wizard.circuitName")}
+                        </span>
+                        <input
+                          value={f.circuitName}
+                          onChange={(e) => set("circuitName", e.target.value)}
+                          placeholder={t("wizard.circuitPlaceholder")}
+                          maxLength={160}
+                          className="tp-field h-11 w-full px-4 text-base"
+                        />
+                      </label>
+                      <label className="block space-y-1.5">
+                        <span className="text-xs font-bold uppercase text-foreground/60">
+                          {t("wizard.season")}
+                        </span>
+                        <input
+                          value={f.circuitSeason}
+                          onChange={(e) => set("circuitSeason", e.target.value)}
+                          maxLength={20}
+                          className="tp-field h-11 w-full px-4 text-base"
+                        />
+                      </label>
+                    </div>
+                  )}
+                  {/* Modo prueba: los demás torneos del circuito (el
+                          primero es el de arriba). Cada uno se edita luego. */}
+                  {api.guest && f.circuitMode === "new" && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold uppercase text-foreground/60">
+                        {tg("circuitTournaments")}
+                      </p>
+                      <p className="text-xs text-foreground/65">
+                        {tg("circuitTournamentsHelp")}
+                      </p>
+                      {extra.map((row, i) => (
+                        <div
+                          key={i}
+                          className="grid grid-cols-[1fr_9.5rem_auto] gap-2"
+                        >
+                          <input
+                            value={row.name}
+                            onChange={(e) =>
+                              setExtra((p) =>
+                                p.map((r, j) =>
+                                  j === i ? { ...r, name: e.target.value } : r
+                                )
+                              )
+                            }
+                            placeholder={tg("circuitTournamentName", {
+                              n: i + 2,
+                            })}
+                            aria-label={tg("circuitTournamentName", {
+                              n: i + 2,
+                            })}
+                            maxLength={160}
+                            className="tp-field h-11 min-w-0 px-3 text-base"
+                          />
+                          <input
+                            type="date"
+                            value={row.startDate}
+                            onChange={(e) =>
+                              setExtra((p) =>
+                                p.map((r, j) =>
+                                  j === i
+                                    ? { ...r, startDate: e.target.value }
+                                    : r
+                                )
+                              )
+                            }
+                            aria-label={t("wizard.startDate")}
+                            className="tp-field h-11 px-2 text-base"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExtra((p) => p.filter((_, j) => j !== i))
+                            }
+                            aria-label={tg("removeRow")}
+                            className="inline-flex size-11 items-center justify-center rounded-full hover:bg-foreground/5"
+                          >
+                            <X className="size-4" />
+                          </button>
                         </div>
+                      ))}
+                      {extra.length < 11 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExtra((p) => [...p, { name: "", startDate: "" }])
+                          }
+                          className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-foreground/5 px-4 text-sm font-semibold"
+                        >
+                          <Plus className="size-4" />
+                          {tg("addTournament")}
+                        </button>
                       )}
                     </div>
                   )}
-                </fieldset>
+                </div>
+              )}
+            </fieldset>
+            {/* Sin cuenta: la página es siempre pública. */}
+            {!api.guest && (
+              <>
                 <fieldset className="space-y-2">
                   <legend className="mb-1.5 text-xs font-bold uppercase text-foreground/60">
                     {t("visibility.title")}
@@ -578,24 +686,45 @@ export function TournamentWizard({
         {step === 2 && (
           <div className="space-y-3">
             <p className="text-sm text-foreground/70">
-              {t("wizard.levelText")}
+              {t("wizard.categoryText")}
             </p>
             <div className="flex flex-wrap gap-2">
               <LevelChip
-                selected={f.levelCode === null}
-                onClick={() => set("levelCode", null)}
-                label={t("wizard.anyLevel")}
+                selected={f.category === null && !f.categoryOther}
+                onClick={() =>
+                  setF((p) => ({ ...p, category: null, categoryOther: false }))
+                }
+                label={t("wizard.noCategory")}
               />
-              {levels.map((l) => (
+              {TOURNAMENT_CATEGORIES.map((c) => (
                 <LevelChip
-                  key={l.code}
-                  selected={f.levelCode === l.code}
-                  onClick={() => set("levelCode", l.code)}
-                  label={l.label}
-                  color={l.color}
+                  key={c}
+                  selected={!f.categoryOther && f.category === c}
+                  onClick={() =>
+                    setF((p) => ({ ...p, category: c, categoryOther: false }))
+                  }
+                  label={c}
                 />
               ))}
+              <LevelChip
+                selected={f.categoryOther}
+                onClick={() =>
+                  setF((p) => ({ ...p, category: "", categoryOther: true }))
+                }
+                label={t("wizard.otherCategory")}
+              />
             </div>
+            {f.categoryOther && (
+              <input
+                value={f.category ?? ""}
+                onChange={(e) => set("category", e.target.value)}
+                placeholder={t("wizard.otherCategoryPlaceholder")}
+                aria-label={t("wizard.otherCategory")}
+                maxLength={60}
+                className="tp-field h-11 w-full px-4 text-base"
+                autoFocus
+              />
+            )}
           </div>
         )}
 
@@ -672,9 +801,7 @@ export function TournamentWizard({
               <p>
                 {f.modality && t(`modality.${f.modality}`)}
                 {" · "}
-                {f.levelCode
-                  ? levels.find((l) => l.code === f.levelCode)?.label
-                  : t("wizard.anyLevel")}
+                {f.category?.trim() || t("wizard.noCategory")}
                 {f.format && ` · ${t(`format.${f.format}`)}`}
               </p>
               <p>
@@ -700,6 +827,26 @@ export function TournamentWizard({
                     />
                   </Field>
                 </div>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={wantEmail}
+                    onChange={(e) => setWantEmail(e.target.checked)}
+                    className="mt-0.5 size-4 shrink-0"
+                  />
+                  <span>{tg("emailOptional")}</span>
+                </label>
+                {wantEmail && (
+                  <input
+                    type="email"
+                    value={emailTo}
+                    onChange={(e) => setEmailTo(e.target.value)}
+                    placeholder={tg("emailPlaceholder")}
+                    aria-label={tg("email")}
+                    maxLength={255}
+                    className="tp-field h-11 w-full px-4 text-base"
+                  />
+                )}
                 <AcceptTerms checked={guestAccept} onChange={setGuestAccept} />
               </div>
             )}
