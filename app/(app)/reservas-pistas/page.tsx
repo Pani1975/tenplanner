@@ -20,6 +20,15 @@ import { loadTournamentBusy, sessionAtPlaces } from "@/lib/bookings/server";
 import { timeZoneForOwner } from "@/lib/bookings/places";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
+import { loadOccupancy } from "@/lib/bookings/occupancy";
+import {
+  MonthView,
+  WeekView,
+  YearLegend,
+  YearView,
+  mondayOf,
+  shiftDay,
+} from "./range-views";
 import { ClubBookingButton } from "./club-booking-button";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "next-intl/server";
@@ -46,10 +55,8 @@ type Block = {
   span?: 2 | "split";
 };
 
-function shiftDay(dateStr: string, days: number) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
+const VIEWS = ["dia", "semana", "mes", "anio"] as const;
+type View = (typeof VIEWS)[number];
 
 const DAY_LONG = (loc: string) => new Intl.DateTimeFormat(loc, {
   weekday: "long",
@@ -69,7 +76,7 @@ const DAY_SHORT = (loc: string) => new Intl.DateTimeFormat(loc, {
 export default async function CourtBookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string }>;
+  searchParams: Promise<{ dia?: string; vista?: string }>;
 }) {
   const term = await getTerm();
   const intlLocale = (await getLocale()) === "en" ? "en-GB" : "es-ES";
@@ -83,11 +90,46 @@ export default async function CourtBookingsPage({
   const tz = await timeZoneForOwner(user.id);
 
   const today = localDateOf(new Date(), tz);
-  const { dia } = await searchParams;
+  const { dia, vista: vistaParam } = await searchParams;
   const date =
     dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) && !isNaN(Date.parse(dia))
       ? dia
       : today;
+  // Vista como en el calendario: día (rejilla por horas), semana, mes, año.
+  const vista: View = (VIEWS as readonly string[]).includes(vistaParam ?? "")
+    ? (vistaParam as View)
+    : "dia";
+  const [yy, mm] = date.split("-").map(Number);
+  const monthStart = `${date.slice(0, 7)}-01`;
+  const nextMonth = new Date(Date.UTC(yy, mm, 1)).toISOString().slice(0, 10);
+  const prevMonth = new Date(Date.UTC(yy, mm - 2, 1))
+    .toISOString()
+    .slice(0, 10);
+  const range =
+    vista === "semana"
+      ? { start: mondayOf(date), end: shiftDay(mondayOf(date), 7) }
+      : vista === "mes"
+        ? { start: monthStart, end: nextMonth }
+        : vista === "anio"
+          ? { start: `${yy}-01-01`, end: `${yy + 1}-01-01` }
+          : { start: date, end: shiftDay(date, 1) };
+  const prevDate =
+    vista === "semana"
+      ? shiftDay(date, -7)
+      : vista === "mes"
+        ? prevMonth
+        : vista === "anio"
+          ? `${yy - 1}-01-01`
+          : shiftDay(date, -1);
+  const nextDate =
+    vista === "semana"
+      ? shiftDay(date, 7)
+      : vista === "mes"
+        ? nextMonth
+        : vista === "anio"
+          ? `${yy + 1}-01-01`
+          : shiftDay(date, 1);
+  const href = (v: View, d: string) => `/reservas-pistas?vista=${v}&dia=${d}`;
   const dayStart = localToUtc(date, 0, tz);
   const dayEnd = localToUtc(date, 24 * 60, tz);
 
@@ -104,8 +146,19 @@ export default async function CourtBookingsPage({
     .orderBy(places.name);
   const placeIds = placeRows.map((p) => p.id);
 
+  // Semana, mes y año: ocupación del periodo (la vista Día carga lo suyo).
+  const rangeItems =
+    vista === "dia"
+      ? []
+      : await loadOccupancy(
+          placeIds,
+          localToUtc(range.start, 0, tz),
+          localToUtc(range.end, 0, tz),
+          tz
+        );
+
   const [sessionRows, bookingRows, tournamentRows] =
-    placeIds.length === 0
+    placeIds.length === 0 || vista !== "dia"
       ? [[], [], []]
       : await Promise.all([
           db
@@ -257,7 +310,40 @@ export default async function CourtBookingsPage({
 
   const week = Array.from({ length: 7 }, (_, i) => shiftDay(date, i - 3));
   const dayDate = (d: string) => new Date(`${d}T00:00:00Z`);
-  const sessionCount = sessionRows.filter((s) => s.placeId).length;
+  // Recuento de la leyenda (del día o del periodo).
+  const counts =
+    vista === "dia"
+      ? {
+          session: sessionRows.filter((s) => s.placeId).length,
+          booking: bookingRows.filter((b) => b.bookingKind !== "club").length,
+          club: bookingRows.filter((b) => b.bookingKind === "club").length,
+          tournament: new Set(tournamentRows.map((t) => t.id)).size,
+        }
+      : {
+          session: new Set(
+            rangeItems.filter((i) => i.kind === "session").map((i) => i.id)
+          ).size,
+          booking: rangeItems.filter((i) => i.kind === "booking").length,
+          club: rangeItems.filter((i) => i.kind === "club").length,
+          tournament: new Set(
+            rangeItems.filter((i) => i.kind === "tournament").map((i) => i.id)
+          ).size,
+        };
+  const titleFmt = (opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" });
+  const rangeTitleRaw =
+    vista === "dia"
+      ? DAY_LONG(intlLocale).format(dayDate(date))
+      : vista === "semana"
+        ? `${titleFmt({ day: "numeric", month: "short" }).format(dayDate(range.start))} – ${titleFmt({ day: "numeric", month: "short", year: "numeric" }).format(dayDate(shiftDay(range.end, -1)))}`
+        : vista === "mes"
+          ? titleFmt({ month: "long", year: "numeric" }).format(dayDate(monthStart))
+          : String(yy);
+  // Solo la primera letra en mayúscula («Noviembre de 2026»).
+  const rangeTitle =
+    rangeTitleRaw.charAt(0).toUpperCase() + rangeTitleRaw.slice(1);
+  const isCurrent = today >= range.start && today < range.end;
+  const term1 = (s: string) => term(s);
 
   return (
     <div className="tp-page">
@@ -287,7 +373,58 @@ export default async function CourtBookingsPage({
           </div>
         </header>
 
-        {/* Navegación por días */}
+        {/* Periodo y vista, como en el calendario */}
+        <div className="tp-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between gap-3 sm:justify-start">
+            <Link
+              href={href(vista, prevDate)}
+              aria-label={tx("anterior")}
+              className="grid size-10 shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
+            >
+              <ChevronLeft className="size-4" />
+            </Link>
+            <h2 className="min-w-0 flex-1 text-center text-lg font-black text-foreground sm:min-w-[220px] sm:flex-none">
+              {rangeTitle}
+            </h2>
+            <Link
+              href={href(vista, nextDate)}
+              aria-label={tx("siguiente")}
+              className="grid size-10 shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
+            >
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <div className="inline-flex rounded-full border border-border bg-muted/50 p-1">
+              {VIEWS.map((v) => (
+                <Link
+                  key={v}
+                  href={href(v, date)}
+                  aria-current={vista === v ? "page" : undefined}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-black transition-colors",
+                    vista === v
+                      ? "bg-brand text-brand-foreground"
+                      : "text-foreground/60 hover:text-foreground"
+                  )}
+                >
+                  {tx(`vista_${v}`)}
+                </Link>
+              ))}
+            </div>
+            {!isCurrent && (
+              <Link
+                href={href(vista, today)}
+                className="grid h-10 place-items-center rounded-full border border-border px-4 text-sm font-black text-foreground/70 hover:bg-muted"
+              >
+                {tx("hoy")}
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Vista Día: tira de la semana para saltar de día */}
+        {vista === "dia" && (
         <nav aria-label={tx("dia")} className="flex items-center gap-2">
           <Link
             href={`/reservas-pistas?dia=${shiftDay(date, -1)}`}
@@ -327,32 +464,28 @@ export default async function CourtBookingsPage({
             <ChevronRight className="size-4" />
           </Link>
         </nav>
+        )}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="font-semibold capitalize text-foreground">
-            {DAY_LONG(intlLocale).format(dayDate(date))}
-          </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-sm bg-brand" />{" "}{tx("sesiones")}
-            {sessionCount})
+            {counts.session})
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded-sm bg-amber-400" />{" "}{tx("reservasDeClientes")}
-            {bookingRows.filter((b) => b.bookingKind !== "club").length})
+            {counts.booking})
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-violet-500" />{" "}{tx("reservasDelClub")}{bookingRows.filter((b) => b.bookingKind === "club").length})
+            <span className="size-2.5 rounded-sm bg-violet-500" />{" "}{tx("reservasDelClub")}{counts.club})
           </span>
-          {tournamentRows.length > 0 && (
+          {counts.tournament > 0 && (
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2.5 rounded-sm bg-[#d6f04a]" />{" "}
-              {tx("torneos")} ({new Set(tournamentRows.map((t) => t.id)).size})
+              {tx("torneos")} ({counts.tournament})
             </span>
           )}
-          {date !== today && (
-            <Link href="/reservas-pistas" className="font-semibold underline">
-              {tx("hoy")}
-            </Link>
+          {vista === "anio" && (
+            <YearLegend less={tx("menos")} more={tx("mas")} />
           )}
         </div>
 
@@ -364,6 +497,40 @@ export default async function CourtBookingsPage({
             </Link>
             .
           </p>
+        ) : vista === "semana" ? (
+          <WeekView
+            weekStart={range.start}
+            today={today}
+            places={placeRows}
+            items={rangeItems}
+            locale={intlLocale}
+            moreLabel={(n) => tx("masN", { n })}
+            term={term1}
+          />
+        ) : vista === "mes" ? (
+          <MonthView
+            monthStart={monthStart}
+            today={today}
+            items={rangeItems}
+            placeNames={new Map(placeRows.map((p) => [p.id, p.name]))}
+            locale={intlLocale}
+            moreLabel={(n) => tx("masN", { n })}
+            term={term1}
+          />
+        ) : vista === "anio" ? (
+          <YearView
+            year={yy}
+            today={today}
+            items={rangeItems}
+            capacityMinutes={placeRows.reduce(
+              (sum, p) =>
+                sum +
+                (p.bookingEnabled ? p.closeMinute - p.openMinute : 14 * 60),
+              0
+            )}
+            locale={intlLocale}
+            monthHref={(d) => href("mes", d)}
+          />
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-border bg-card">
             <div

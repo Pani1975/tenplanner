@@ -2125,7 +2125,16 @@
       "hoy": "Hoy",
       "lugares": "Lugares",
       "2Pistas": " · 2 pistas",
-      "completada": " · completada"
+      "completada": " · completada",
+      "vista_dia": "Día",
+      "vista_semana": "Semana",
+      "vista_mes": "Mes",
+      "vista_anio": "Año",
+      "anterior": "Anterior",
+      "siguiente": "Siguiente",
+      "masN": "+{n} más",
+      "menos": "Menos uso",
+      "mas": "Más uso"
     },
     "s_resources_page": {
       "espacioDelClub": "Espacio del club",

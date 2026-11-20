@@ -2225,7 +2225,16 @@
       "hoy": "Today",
       "lugares": "Places",
       "2Pistas": " · 2 courts",
-      "completada": " · completed"
+      "completada": " · completed",
+      "vista_dia": "Day",
+      "vista_semana": "Week",
+      "vista_mes": "Month",
+      "vista_anio": "Year",
+      "anterior": "Previous",
+      "siguiente": "Next",
+      "masN": "+{n} more",
+      "menos": "Less use",
+      "mas": "More use"
     },
     "s_resources_page": {
       "espacioDelClub": "Club space",
