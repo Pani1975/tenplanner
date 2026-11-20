@@ -82,7 +82,29 @@ export type Organizer = {
   sport: Sport;
   // Datos de contacto de los inscritos: en club, solo su administrador.
   canSeeContacts: boolean;
+  /**
+   * Torneos de prueba sin cuenta (lib/tournaments/guest-server.ts): solo
+   * puede tocar los torneos cuyo enlace de edición tiene este navegador;
+   * create = datos para crear uno nuevo.
+   */
+  guest?: {
+    tournamentIds: string[];
+    create?: {
+      email: string;
+      name: string | null;
+      tokenHash: string;
+    };
+  };
 };
+
+/** Usuario de sistema que figura como creador de los torneos de prueba. */
+export const GUEST_USER_ID = "00000000-0000-4000-8000-00000000e5e5";
+
+/** Caducidad de un torneo de prueba: 30 días después de su último día. */
+export function guestExpiry(startDate: string, endDate: string | null) {
+  const [y, m, d] = (endDate ?? startDate).split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 30, 23, 59));
+}
 
 export type TournamentRow = typeof tournaments.$inferSelect;
 export type EntryRow = typeof tournamentEntries.$inferSelect;
@@ -107,6 +129,14 @@ export async function getOrganizer(userId: string): Promise<Organizer> {
 }
 
 function ownerWhere(o: Organizer): SQL {
+  if (o.guest) {
+    return o.guest.tournamentIds.length
+      ? and(
+          inArray(tournaments.id, o.guest.tournamentIds),
+          eq(tournaments.ownerType, "guest")
+        )!
+      : sql`false`;
+  }
   return o.clubId
     ? eq(tournaments.clubId, o.clubId)
     : and(eq(tournaments.coachId, o.userId), isNull(tournaments.clubId))!;
@@ -224,6 +254,9 @@ async function resolveCircuit(
     newCircuit?: { name: string; season: string | null } | null;
   }
 ): Promise<string | null | undefined> {
+  if (o.guest && (input.newCircuit || input.circuitId)) {
+    throw new TournamentError("guest_not_available", 403);
+  }
   if (input.newCircuit) {
     const name = input.newCircuit.name.trim();
     const season = input.newCircuit.season?.trim() || null;
@@ -429,6 +462,10 @@ export async function createTournament(
   o: Organizer,
   input: CreateTournamentInput
 ) {
+  // En modo prueba solo se crea desde /api/public/torneos/prueba.
+  if (o.guest && !o.guest.create) {
+    throw new TournamentError("guest_not_available", 403);
+  }
   await Promise.all([
     checkLevel(input.levelCode, o.sport),
     checkPlaces(o, input.placeIds),
@@ -449,9 +486,24 @@ export async function createTournament(
       const [row] = await db
         .insert(tournaments)
         .values({
-          ownerType: o.clubId ? "club" : "coach",
-          clubId: o.clubId,
-          coachId: o.clubId ? null : o.userId,
+          ...(o.guest?.create
+            ? {
+                ownerType: "guest",
+                clubId: null,
+                coachId: null,
+                guestEmail: o.guest.create.email,
+                guestName: o.guest.create.name,
+                guestTokenHash: o.guest.create.tokenHash,
+                guestExpiresAt: guestExpiry(
+                  input.startDate,
+                  input.endDate ?? null
+                ),
+              }
+            : {
+                ownerType: o.clubId ? "club" : "coach",
+                clubId: o.clubId,
+                coachId: o.clubId ? null : o.userId,
+              }),
           createdBy: o.userId,
           sport: o.sport,
           name: input.name,
@@ -472,7 +524,8 @@ export async function createTournament(
               ? input.playHours
               : null,
           circuitId,
-          visibility: input.visibility ?? "public",
+          // En modo prueba siempre público: es para la inscripción por enlace.
+          visibility: o.guest ? "public" : (input.visibility ?? "public"),
           ...(timeZone && { timeZone }),
           bestOf: input.bestOf,
           gamesPerSet: input.gamesPerSet,
@@ -605,7 +658,12 @@ export async function updateTournament(
               : null,
         }),
         ...(circuitId !== undefined && { circuitId }),
-        ...(input.visibility !== undefined && { visibility: input.visibility }),
+        ...(input.visibility !== undefined &&
+          !o.guest && { visibility: input.visibility }),
+        ...(o.guest &&
+          (input.startDate !== undefined || input.endDate !== undefined) && {
+            guestExpiresAt: guestExpiry(startDate, endDate),
+          }),
         ...(input.timeZone !== undefined && { timeZone: input.timeZone }),
         ...(input.photosPublic !== undefined && {
           photosPublic: input.photosPublic,

@@ -14,7 +14,12 @@ import {
 import { TOURNAMENT_CONSENT_VERSION } from "./consent";
 import { newsAuthor } from "./media";
 import { TOURNAMENT_TIME_ZONES } from "./schedule";
-import { checkLevel, TournamentError, type Organizer } from "./server";
+import {
+  checkLevel,
+  guestExpiry,
+  TournamentError,
+  type Organizer,
+} from "./server";
 import { tournamentSlug } from "./slug";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -90,7 +95,9 @@ export const importGuestSchema = z.object({
         nextSlot: z.enum(["a", "b"]).nullable(),
         score: z
           .object({
-            sets: z.array(points.extend({ tiebreak: points.optional() })).max(5),
+            sets: z
+              .array(points.extend({ tiebreak: points.optional() }))
+              .max(5),
             superTiebreak: points.optional(),
           })
           .nullable(),
@@ -144,15 +151,35 @@ export async function importGuestTournament(
     if (!v) throw new TournamentError("invalid_input", 400);
     return v;
   };
-  const author = input.news.length ? await newsAuthor(o) : null;
+  const author = input.news.length
+    ? o.guest
+      ? {
+          authorType: "organizer" as const,
+          authorName: o.guest.create?.name || "Organización",
+        }
+      : await newsAuthor(o)
+    : null;
 
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(tournaments)
       .values({
-        ownerType: o.clubId ? "club" : "coach",
-        clubId: o.clubId,
-        coachId: o.clubId ? null : o.userId,
+        ...(o.guest?.create
+          ? {
+              // Versión anterior del modo prueba (navegador) al servidor.
+              ownerType: "guest",
+              clubId: null,
+              coachId: null,
+              guestEmail: o.guest.create.email,
+              guestName: o.guest.create.name,
+              guestTokenHash: o.guest.create.tokenHash,
+              guestExpiresAt: guestExpiry(t.startDate, t.endDate),
+            }
+          : {
+              ownerType: o.clubId ? "club" : "coach",
+              clubId: o.clubId,
+              coachId: o.clubId ? null : o.userId,
+            }),
         createdBy: o.userId,
         sport: o.sport,
         name: t.name,
@@ -163,8 +190,8 @@ export async function importGuestTournament(
         format: t.format,
         status: t.status,
         // Al pasar a la cuenta empieza privado: el organizador decide
-        // después si lo hace público.
-        visibility: "private",
+        // después si lo hace público. En modo prueba, público (inscripción).
+        visibility: o.guest ? "public" : "private",
         photosPublic: false,
         posterTemplate:
           t.posterTemplate === "image" ? "classic" : t.posterTemplate,

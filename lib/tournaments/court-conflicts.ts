@@ -183,7 +183,9 @@ export async function cancelConflictingSessions(
 
   let notified = 0;
   const teacherIds = [
-    ...new Set(rows.map((r) => r.coachId ?? r.userId).filter((u) => u !== viewerId)),
+    ...new Set(
+      rows.map((r) => r.coachId ?? r.userId).filter((u) => u !== viewerId)
+    ),
   ];
   if (teacherIds.length) {
     const teachers = await db
@@ -201,7 +203,9 @@ export async function cancelConflictingSessions(
     for (const t of teachers) {
       if (!t.email) continue;
       const mine = rows.filter((r) => (r.coachId ?? r.userId) === t.id);
-      const lines = mine.map((r) => `«${r.title}», ${fmt.format(r.scheduledAt)}`);
+      const lines = mine.map(
+        (r) => `«${r.title}», ${fmt.format(r.scheduledAt)}`
+      );
       const subject =
         mine.length === 1
           ? `Sesión cancelada por el torneo «${tournamentName}»`
@@ -220,7 +224,8 @@ export async function cancelConflictingSessions(
           paragraphs,
           buttonLabel: "Ver mis sesiones",
           buttonUrl: url,
-          footnote: "Te llega este correo porque impartes esa sesión en Ten Planner.",
+          footnote:
+            "Te llega este correo porque impartes esa sesión en Ten Planner.",
         }),
         text: [...paragraphs, "", url].join("\n"),
       });

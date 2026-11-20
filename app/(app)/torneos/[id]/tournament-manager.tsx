@@ -73,6 +73,8 @@ export type ManagerTournament = {
   description: string | null;
   rules: ScoringRules;
   circuit: { name: string; season: string | null; slug: string } | null;
+  /** Modo prueba: correo confirmado (hay página de inscripción). */
+  guestVerified?: boolean;
 };
 
 export type ManagerEntry = {
@@ -436,16 +438,17 @@ export function TournamentManager({
         />
       )}
 
-      {!api.guest && (
-      <PublicLinks
-        tournamentId={t.id}
-        slug={t.slug}
-        isDraft={t.status === "draft"}
-        visibility={t.visibility}
-        isClub={t.isClub}
-        circuitSlug={t.circuit?.slug ?? null}
-        baseUrl={baseUrl}
-      />
+      {(!api.guest || t.guestVerified) && (
+        <PublicLinks
+          guest={api.guest}
+          tournamentId={t.id}
+          slug={t.slug}
+          isDraft={t.status === "draft"}
+          visibility={t.visibility}
+          isClub={t.isClub}
+          circuitSlug={t.circuit?.slug ?? null}
+          baseUrl={baseUrl}
+        />
       )}
 
       {!canSeeContacts && t.isClub && (
@@ -461,17 +464,17 @@ export function TournamentManager({
           {editable && (
             <div className="flex flex-wrap gap-2">
               {!api.guest && (
-              <button
-                type="button"
-                onClick={() =>
-                  setPanel(panel === "students" ? "none" : "students")
-                }
-                aria-expanded={panel === "students"}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black"
-              >
-                <Users className="size-4" />
-                {tr("manager.addStudents")}
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPanel(panel === "students" ? "none" : "students")
+                  }
+                  aria-expanded={panel === "students"}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black"
+                >
+                  <Users className="size-4" />
+                  {tr("manager.addStudents")}
+                </button>
               )}
               <button
                 type="button"

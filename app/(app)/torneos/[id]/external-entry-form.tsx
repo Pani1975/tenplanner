@@ -29,15 +29,13 @@ const empty: Person = {
   guardianPhone: "",
 };
 
-// En modo prueba (sin cuenta) basta con el nombre: es solo para probar.
-const personValid = (p: Person, guest = false) =>
+const personValid = (p: Person) =>
   p.firstName.trim() !== "" &&
   p.lastName.trim() !== "" &&
-  (guest ||
-    (p.isMinor
-      ? p.guardianName.trim() !== "" &&
-        (p.guardianEmail.trim() !== "" || p.guardianPhone.trim() !== "")
-      : p.email.trim() !== "" || p.phone.trim() !== ""));
+  (p.isMinor
+    ? p.guardianName.trim() !== "" &&
+      (p.guardianEmail.trim() !== "" || p.guardianPhone.trim() !== "")
+    : p.email.trim() !== "" || p.phone.trim() !== "");
 
 const toBody = (p: Person) => ({
   firstName: p.firstName.trim(),
@@ -76,9 +74,7 @@ export function ExternalEntryForm({
   const [imageConsent, setImageConsent] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const valid =
-    personValid(player, api.guest) &&
-    (!doubles || personValid(partner, api.guest));
+  const valid = personValid(player) && (!doubles || personValid(partner));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
-  TOURNAMENT_TIME_ZONES,
   zonedParts,
   zonedToIso,
   type TournamentTimeZone,
@@ -213,23 +212,6 @@ export function EditTournamentForm({
               className="tp-field h-11 w-28 px-3 text-base"
             />
           </div>
-        </label>
-        <label className="block space-y-1.5">
-          <span className={label}>{tr("wizard.timeZone")}</span>
-          <select
-            value={f.timeZone}
-            onChange={(e) => set("timeZone", e.target.value)}
-            aria-label={tr("wizard.timeZone")}
-            className="tp-field h-11 w-full px-3 text-base"
-          >
-            {TOURNAMENT_TIME_ZONES.map((z) => (
-              <option key={z} value={z}>
-                {tr(
-                  `wizard.tz.${z === "Atlantic/Canary" ? "canary" : "peninsula"}`
-                )}
-              </option>
-            ))}
-          </select>
         </label>
         <label className="block space-y-1.5">
           <span className={label}>{tr("wizard.maxEntries")}</span>

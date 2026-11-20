@@ -18,6 +18,7 @@ export function PublicLinks({
   isDraft,
   visibility,
   isClub,
+  guest = false,
   circuitSlug,
   baseUrl,
 }: {
@@ -26,6 +27,8 @@ export function PublicLinks({
   isDraft: boolean;
   visibility: "public" | "private";
   isClub: boolean;
+  /** Modo prueba: siempre público; solo el enlace de inscripción. */
+  guest?: boolean;
   circuitSlug: string | null;
   baseUrl: string;
 }) {
@@ -55,45 +58,49 @@ export function PublicLinks({
   return (
     <section className="tp-card-soft space-y-3 p-4">
       <p className="text-xs font-bold uppercase text-foreground/60">
-        {t("visibility.title")}
+        {guest ? t("guest.linkTitle") : t("visibility.title")}
       </p>
-      <div
-        className="grid grid-cols-2 gap-1 rounded-full bg-background p-1"
-        role="group"
-        aria-label={t("visibility.title")}
-      >
-        {(["public", "private"] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={visibility === v}
-            disabled={busy !== null}
-            onClick={() => change(v)}
-            className={cn(
-              "inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-bold disabled:opacity-60",
-              visibility === v
-                ? "bg-[#d6f04a] text-black"
-                : "text-foreground/70"
-            )}
+      {!guest && (
+        <>
+          <div
+            className="grid grid-cols-2 gap-1 rounded-full bg-background p-1"
+            role="group"
+            aria-label={t("visibility.title")}
           >
-            {busy === v ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : v === "public" ? (
-              <Globe className="size-4" />
-            ) : (
-              <Lock className="size-4" />
-            )}
-            {t(`visibility.${v}`)}
-          </button>
-        ))}
-      </div>
-      <p className="text-sm text-foreground/75">
-        {visibility === "public"
-          ? t("visibility.publicHelp")
-          : isClub
-            ? t("visibility.privateHelpClub")
-            : t("visibility.privateHelpCoach")}
-      </p>
+            {(["public", "private"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={visibility === v}
+                disabled={busy !== null}
+                onClick={() => change(v)}
+                className={cn(
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-bold disabled:opacity-60",
+                  visibility === v
+                    ? "bg-[#d6f04a] text-black"
+                    : "text-foreground/70"
+                )}
+              >
+                {busy === v ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : v === "public" ? (
+                  <Globe className="size-4" />
+                ) : (
+                  <Lock className="size-4" />
+                )}
+                {t(`visibility.${v}`)}
+              </button>
+            ))}
+          </div>
+          <p className="text-sm text-foreground/75">
+            {visibility === "public"
+              ? t("visibility.publicHelp")
+              : isClub
+                ? t("visibility.privateHelpClub")
+                : t("visibility.privateHelpCoach")}
+          </p>
+        </>
+      )}
 
       {visibility === "public" &&
         (isDraft ? (

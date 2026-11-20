@@ -1,67 +1,37 @@
 "use client";
 
-// Torneos de prueba (sin cuenta): mismas pantallas que con cuenta, pero los
-// datos viven en el navegador (lib/tournaments/guest).
+// Modo prueba de torneos (sin cuenta): mismas pantallas que con cuenta y la
+// misma API; el servidor reconoce el torneo por el enlace de edición que
+// guarda este navegador (lib/tournaments/guest-server.ts).
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
-import {
-  CalendarDays,
-  ChevronRight,
-  Info,
-  Plus,
-  Trash2,
-  Trophy,
-  Users,
-} from "lucide-react";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { Info, Loader2, Mail, MailCheck } from "lucide-react";
 import {
   GUEST_PATHS,
   TournamentApiProvider,
   type TournamentApi,
 } from "@/app/(app)/torneos/tournament-api";
-import { TournamentManager } from "@/app/(app)/torneos/[id]/tournament-manager";
-import { guestFetch } from "@/lib/tournaments/guest/backend";
-import {
-  GUEST_CHANGED,
-  loadGuestDb,
-  type GuestDb,
-} from "@/lib/tournaments/guest/store";
-import { guestDetail, guestList } from "@/lib/tournaments/guest/view";
-import { formatDateRange, STATUS_BADGE } from "@/lib/tournaments/labels";
-import type { TournamentStatus } from "@/lib/tournaments/status";
-import { cn } from "@/lib/utils";
-
-/** Datos del navegador, recargados cada vez que cambian. */
-function useGuestDb() {
-  const [db, setDb] = useState<GuestDb | null>(null);
-  const [failed, setFailed] = useState(false);
-  const reload = useCallback(() => {
-    loadGuestDb()
-      .then(setDb)
-      .catch(() => setFailed(true));
-  }, []);
-  useEffect(() => {
-    reload();
-    window.addEventListener(GUEST_CHANGED, reload);
-    return () => window.removeEventListener(GUEST_CHANGED, reload);
-  }, [reload]);
-  return { db, failed, reload };
-}
+import { loadGuestDb, saveGuestDb } from "@/lib/tournaments/guest/store";
+import { AcceptTerms } from "./accept-terms";
 
 export function GuestProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const value = useMemo<TournamentApi>(
     () => ({
-      fetch: guestFetch,
-      // Los datos se recargan solos al guardar (evento GUEST_CHANGED).
-      refresh: () => window.dispatchEvent(new Event(GUEST_CHANGED)),
+      fetch: (input, init) => fetch(input, init),
+      refresh: () => router.refresh(),
       guest: true,
       paths: GUEST_PATHS,
     }),
-    []
+    [router]
   );
-  return <TournamentApiProvider value={value}>{children}</TournamentApiProvider>;
+  return (
+    <TournamentApiProvider value={value}>{children}</TournamentApiProvider>
+  );
 }
 
 /** Aviso del modo prueba: qué se puede hacer y qué pide una cuenta. */
@@ -84,163 +54,216 @@ export function GuestBanner() {
   );
 }
 
-function StorageError() {
+/** Estado del correo: pendiente de confirmar o enlace de inscripción listo. */
+export function GuestEmailStatus({
+  verified,
+  email,
+  justConfirmed,
+}: {
+  verified: boolean;
+  email: string;
+  justConfirmed: boolean;
+}) {
   const t = useTranslations("tournaments.guest");
-  return <p className="tp-card-soft p-6 text-sm">{t("storageError")}</p>;
-}
-
-export function GuestTournamentList() {
-  const t = useTranslations("tournaments");
-  const tg = useTranslations("tournaments.guest");
-  const locale = useLocale();
-  const { db, failed } = useGuestDb();
-  const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(
-    null
-  );
-  const rows = db ? guestList(db) : [];
-
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (justConfirmed) toast.success(t("confirmedToast"));
+  }, [justConfirmed, t]);
+  if (verified) return null;
+  async function resend() {
+    setBusy(true);
+    await fetch("/api/public/torneos/prueba/reenviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setBusy(false);
+    toast.success(t("resentToast"));
+  }
   return (
-    <div className="tp-page-pad mx-auto w-full max-w-5xl space-y-6">
-      <header className="tp-card-blue flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
-        <div>
-          <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/80">
-            <Trophy className="size-4" />
-            {tg("kicker")}
-          </p>
-          <h1 className="tp-title text-4xl leading-tight sm:text-5xl">
-            {t("list.title")}
-          </h1>
-          <p className="mt-2 max-w-xl text-sm text-white/85">{tg("intro")}</p>
-        </div>
-        <Link
-          href={GUEST_PATHS.create}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black transition hover:bg-[#c5df3c]"
-        >
-          <Plus className="size-4" />
-          {t("list.new")}
-        </Link>
-      </header>
-
-      <GuestBanner />
-
-      {failed ? (
-        <StorageError />
-      ) : !db ? null : rows.length === 0 ? (
-        <div className="tp-card-soft p-8 text-center">
-          <Trophy className="mx-auto mb-3 size-8 text-[var(--brand-ink)]" />
-          <p className="tp-title text-xl">{tg("emptyTitle")}</p>
-          <p className="mt-1 text-sm text-foreground/70">{tg("emptyText")}</p>
-        </div>
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {rows.map((r) => {
-            const status = r.status as TournamentStatus;
-            return (
-              <li key={r.id} className="relative">
-                <Link
-                  href={GUEST_PATHS.detail(r.id)}
-                  className="tp-card group flex h-full flex-col gap-3 p-5 transition hover:border-[var(--brand-ink)]"
-                >
-                  <div className="flex items-start justify-between gap-3 pr-10">
-                    <h2 className="tp-title text-xl leading-snug">{r.name}</h2>
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold",
-                        STATUS_BADGE[status]
-                      )}
-                    >
-                      {t(`status.${status}`)}
-                    </span>
-                  </div>
-                  <p className="flex items-center gap-2 text-sm text-foreground/70">
-                    <CalendarDays className="size-4" />
-                    {formatDateRange(r.startDate, r.endDate, locale)}
-                  </p>
-                  <p className="text-sm text-foreground/70">
-                    {t(`modality.${r.modality}`)} · {t(`format.${r.format}`)}
-                  </p>
-                  <div className="mt-auto flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 font-semibold">
-                      <Users className="size-4 text-[var(--brand-ink)]" />
-                      {r.maxEntries
-                        ? t("list.spots", { taken: r.taken, max: r.maxEntries })
-                        : t("list.entries", { count: r.taken })}
-                    </span>
-                    <ChevronRight className="size-4 text-foreground/40 transition group-hover:translate-x-0.5" />
-                  </div>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setToDelete({ id: r.id, name: r.name })}
-                  aria-label={tg("delete")}
-                  title={tg("delete")}
-                  className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full text-foreground/50 hover:bg-foreground/5 hover:text-red-600"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      <ConfirmDialog
-        open={toDelete !== null}
-        onOpenChange={(open) => !open && setToDelete(null)}
-        title={tg("deleteTitle")}
-        description={toDelete ? tg("deleteText", { name: toDelete.name }) : undefined}
-        confirmLabel={tg("delete")}
-        destructive
-        onConfirm={async () => {
-          if (toDelete) {
-            await guestFetch(`/api/tournaments/${toDelete.id}`, {
-              method: "DELETE",
-            });
-          }
-          setToDelete(null);
-        }}
-      />
+    <div className="tp-card flex flex-col gap-3 border-amber-500/40 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="flex items-start gap-2">
+        <Mail className="mt-0.5 size-4 shrink-0 text-amber-600" />
+        <span>{t("pendingEmail", { email })}</span>
+      </p>
+      <button
+        type="button"
+        onClick={resend}
+        disabled={busy}
+        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-foreground/5 px-4 text-sm font-semibold disabled:opacity-50"
+      >
+        {busy && <Loader2 className="size-4 animate-spin" />}
+        {t("resend")}
+      </button>
     </div>
   );
 }
 
-export function GuestTournamentDetail({
-  id,
-  levels,
-  baseUrl,
-}: {
-  id: string;
-  levels: { code: string; label: string }[];
-  baseUrl: string;
-}) {
-  const tg = useTranslations("tournaments.guest");
-  const { db, failed } = useGuestDb();
-  if (failed) return <StorageError />;
-  if (!db) return null;
-  const detail = guestDetail(db, id);
-  if (!detail) {
-    return (
-      <div className="tp-page-pad mx-auto w-full max-w-5xl space-y-4">
-        <p className="tp-card-soft p-6 text-sm">{tg("notFound")}</p>
-        <Link href={GUEST_PATHS.list} className="font-bold underline">
-          {tg("backToList")}
-        </Link>
-      </div>
-    );
+/** «¿Has perdido el enlace?»: lo reenvía al correo. */
+export function LostLinkForm({ expired }: { expired: boolean }) {
+  const t = useTranslations("tournaments.guest");
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const res = await fetch("/api/public/torneos/prueba/reenviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setBusy(false);
+    if (res.ok) setSent(true);
+    else toast.error(t("resendError"));
   }
   return (
-    <>
-      <div className="tp-page-pad mx-auto w-full max-w-5xl pb-0">
-        <GuestBanner />
+    <form onSubmit={submit} className="tp-card-soft space-y-3 p-4 text-sm">
+      {expired && (
+        <p className="font-semibold text-red-600">{t("linkExpired")}</p>
+      )}
+      <p className="font-semibold">{t("lostTitle")}</p>
+      {sent ? (
+        <p className="flex items-center gap-2 text-foreground/75">
+          <MailCheck className="size-4 text-emerald-600" />
+          {t("lostSent")}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("emailPlaceholder")}
+            aria-label={t("email")}
+            className="tp-field h-11 min-w-0 flex-1 px-4 text-base"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-muted)] px-5 text-sm font-bold disabled:opacity-50"
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            {t("lostButton")}
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
+
+/**
+ * Torneos de la versión anterior del modo prueba (guardados solo en este
+ * navegador): se pasan al servidor con un correo, como uno nuevo.
+ */
+export function LegacyGuestTournaments() {
+  const t = useTranslations("tournaments.guest");
+  const router = useRouter();
+  const [names, setNames] = useState<string[]>([]);
+  const [email, setEmail] = useState("");
+  const [accept, setAccept] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    loadGuestDb()
+      .then((db) => setNames(db.tournaments.map((x) => x.name)))
+      .catch(() => setNames([]));
+  }, []);
+  if (!names.length) return null;
+
+  async function move(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const db = await loadGuestDb();
+    const done = new Set<string>();
+    for (const tour of db.tournaments) {
+      const entries = db.entries.filter((x) => x.tournamentId === tour.id);
+      const res = await fetch("/api/public/torneos/prueba", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          accept,
+          legacy: {
+            tournament: {
+              name: tour.name,
+              modality: tour.modality,
+              levelCode: tour.levelCode,
+              format: tour.format,
+              status: tour.status,
+              posterTemplate:
+                tour.posterTemplate === "image"
+                  ? "classic"
+                  : tour.posterTemplate,
+              timeZone: tour.timeZone,
+              maxEntries: tour.maxEntries,
+              startDate: tour.startDate,
+              endDate: tour.endDate,
+              registrationDeadline: tour.registrationDeadline,
+              description: tour.description,
+              bestOf: tour.bestOf,
+              gamesPerSet: tour.gamesPerSet,
+              finalSet: tour.finalSet,
+            },
+            // El servidor ignora los campos que no usa.
+            entries,
+            matches: db.matches
+              .filter((m) => m.tournamentId === tour.id)
+              .map((m) => ({ ...m, score: m.score ?? null })),
+            news: db.news
+              .filter((n) => n.tournamentId === tour.id)
+              .map((n) => ({
+                title: n.title,
+                body: n.body,
+                publishedAt: n.publishedAt,
+                createdAt: n.createdAt,
+              })),
+          },
+        }),
+      });
+      if (res.ok) done.add(tour.id);
+    }
+    await saveGuestDb({
+      ...db,
+      tournaments: db.tournaments.filter((x) => !done.has(x.id)),
+      entries: db.entries.filter((x) => !done.has(x.tournamentId)),
+      matches: db.matches.filter((x) => !done.has(x.tournamentId)),
+      news: db.news.filter((x) => !done.has(x.tournamentId)),
+      photos: db.photos.filter((x) => !done.has(x.tournamentId)),
+    });
+    setBusy(false);
+    setNames((await loadGuestDb()).tournaments.map((x) => x.name));
+    if (done.size) toast.success(t("legacyDone", { count: done.size }));
+    else toast.error(t("importError"));
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={move} className="tp-card space-y-3 p-4 text-sm">
+      <p className="font-semibold">
+        {t("legacyTitle", { count: names.length })}
+      </p>
+      <p className="text-foreground/70">{t("legacyText")}</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t("emailPlaceholder")}
+          aria-label={t("email")}
+          className="tp-field h-11 min-w-0 flex-1 px-4 text-base"
+        />
+        <button
+          type="submit"
+          disabled={busy || !accept}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-50"
+        >
+          {busy && <Loader2 className="size-4 animate-spin" />}
+          {t("legacyButton")}
+        </button>
       </div>
-      <TournamentManager
-        tournament={detail.tournament}
-        entries={detail.entries}
-        matches={detail.matches}
-        levels={levels}
-        canSeeContacts
-        baseUrl={baseUrl}
-      />
-    </>
+      <AcceptTerms checked={accept} onChange={setAccept} />
+    </form>
   );
 }

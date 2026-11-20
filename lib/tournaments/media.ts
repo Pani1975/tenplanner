@@ -12,6 +12,7 @@ import {
   tournamentNews,
   tournamentPhotos,
   tournamentPhotoTags,
+  tournaments,
   users,
 } from "@/db/schema";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -26,7 +27,19 @@ export const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 // ── Noticias ───────────────────────────────────────────────────────────
 
 /** Autor: el club si escribe su cuenta (administrador), si no el monitor. */
-export async function newsAuthor(o: Organizer) {
+export async function newsAuthor(o: Organizer, tournamentId?: string) {
+  // Modo prueba: el nombre que dio quien organiza (o «Organización»).
+  if (o.guest && tournamentId) {
+    const [t] = await db
+      .select({ name: tournaments.guestName })
+      .from(tournaments)
+      .where(eq(tournaments.id, tournamentId))
+      .limit(1);
+    return {
+      authorType: "organizer" as const,
+      authorName: t?.name || "Organización",
+    };
+  }
   if (o.clubId && o.canSeeContacts) {
     const [c] = await db
       .select({ name: clubs.name })
@@ -58,7 +71,7 @@ export async function createNews(
   input: { title: string; body: string; publish: boolean }
 ) {
   await getTournament(o, tournamentId);
-  const author = await newsAuthor(o);
+  const author = await newsAuthor(o, tournamentId);
   const [row] = await db
     .insert(tournamentNews)
     .values({

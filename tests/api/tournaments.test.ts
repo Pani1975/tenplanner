@@ -6,6 +6,18 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({ auth: { getUser: mockGetUser } })),
 }));
 
+// Modo prueba (sin cuenta): por defecto, este navegador no tiene torneos.
+const mockGuestIds = vi.fn(async (): Promise<string[]> => []);
+vi.mock("@/lib/tournaments/guest-server", () => ({
+  guestOrganizer: vi.fn(async () => ({
+    userId: "guest-user",
+    clubId: null,
+    sport: "tenis",
+    canSeeContacts: true,
+    guest: { tournamentIds: await mockGuestIds() },
+  })),
+}));
+
 // La capa de datos se sustituye: aquí se prueba la protección, la
 // validación y la traducción de errores de las rutas.
 vi.mock("@/lib/tournaments/server", async () => {
@@ -63,6 +75,17 @@ describe("API de torneos", () => {
     const res = await GET();
     expect(res.status).toBe(401);
     expect(server.listTournaments).not.toHaveBeenCalled();
+  });
+
+  it("sin sesión con enlace de un torneo de prueba: solo ese torneo", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+    mockGuestIds.mockResolvedValueOnce(["t-prueba"]);
+    const { GET } = await import("@/app/api/tournaments/route");
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(server.listTournaments).toHaveBeenCalledWith(
+      expect.objectContaining({ guest: { tournamentIds: ["t-prueba"] } })
+    );
   });
 
   it("crear: valida y usa el organizador de la sesión", async () => {

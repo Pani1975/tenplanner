@@ -50,7 +50,10 @@ import { acceptsRegistrations, canEditEntries } from "./status";
 async function organizerName(t: {
   clubId: string | null;
   coachId: string | null;
+  ownerType?: string;
+  guestName?: string | null;
 }): Promise<string | null> {
+  if (t.ownerType === "guest") return t.guestName ?? null;
   if (t.clubId) {
     const [c] = await db
       .select({ name: clubs.name })
@@ -122,6 +125,10 @@ export async function getPublicTournament(
     .limit(1);
   if (!t) return null;
   if (t.visibility === "private" && !opts.allowPrivate) return null;
+  // Torneo de prueba sin cuenta: sin página hasta confirmar el correo.
+  if (t.ownerType === "guest" && !t.guestVerifiedAt && !opts.allowDraft) {
+    return null;
+  }
 
   const [entries, matches, organizer, circuit, placeRows] = await Promise.all([
     db
@@ -216,6 +223,8 @@ export async function getPublicTournament(
     registeredCount: entries.length,
     waitlistCount: waiting.length,
     organizer,
+    // Creado en modo prueba (sin cuenta): la página lo indica.
+    isGuest: t.ownerType === "guest",
     circuit,
     places: placeRows.map((p) => p.name),
     entrants: inField.map((e) => names.get(e.id)!),
@@ -277,7 +286,11 @@ export async function registerPublic(
       .where(eq(tournaments.id, found.id))
       .for("update")
       .limit(1)) as TournamentRow[];
-    if (t.visibility !== "public" || !acceptsRegistrations(statusInput(t))) {
+    if (
+      t.visibility !== "public" ||
+      !acceptsRegistrations(statusInput(t)) ||
+      (t.ownerType === "guest" && !t.guestVerifiedAt)
+    ) {
       throw new TournamentError("registration_closed", 409);
     }
     const doubles = t.modality === "doubles";

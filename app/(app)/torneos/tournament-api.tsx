@@ -33,9 +33,12 @@ export const GUEST_PATHS: TournamentPaths = {
   detail: (id) => `/probar-torneos/${id}`,
 };
 
-const Ctx = createContext<Omit<TournamentApi, "paths"> & {
-  paths: TournamentPaths;
-} | null>(null);
+const Ctx = createContext<
+  | (Omit<TournamentApi, "paths"> & {
+      paths: TournamentPaths;
+    })
+  | null
+>(null);
 
 export function TournamentApiProvider({
   value,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { json, parseBody, withOrganizer } from "@/lib/tournaments/api";
+import { json, parseBody, withAccountOrganizer } from "@/lib/tournaments/api";
 import { findCourtConflicts } from "@/lib/tournaments/court-conflicts";
 import { tournamentHoursSchema } from "@/lib/tournaments/hours";
 import { TOURNAMENT_TIME_ZONES } from "@/lib/tournaments/schedule";
@@ -20,7 +20,7 @@ const schema = z.object({
 // Antes de guardar un torneo: sesiones y reservas que ya ocupan sus pistas
 // en esos días y horas. El asistente pregunta qué hacer con cada sesión.
 export async function POST(request: Request) {
-  return withOrganizer(async (o) => {
+  return withAccountOrganizer(async (o) => {
     const input = await parseBody(request, schema);
     await checkPlaces(o, input.placeIds);
     return json(await findCourtConflicts(input, o.userId));

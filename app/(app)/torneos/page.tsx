@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { GuestImportCard } from "./guest-import";
+import { GuestClaimCard } from "./guest-claim";
+import { guestTournamentIds } from "@/lib/tournaments/guest-server";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CalendarDays, ChevronRight, Plus, Trophy, Users } from "lucide-react";
@@ -39,6 +41,8 @@ export default async function TorneosPage({ searchParams }: Props) {
       : Promise.resolve(null),
   ]);
   const archivedCount = allRows.filter((r) => r.archivedAt).length;
+  // Torneos de prueba (sin cuenta) cuyo enlace tiene este navegador.
+  const guestIds = await guestTournamentIds();
   const rows = allRows.filter((r) => !!r.archivedAt === showArchived);
 
   return (
@@ -70,6 +74,7 @@ export default async function TorneosPage({ searchParams }: Props) {
         </Link>
       </header>
 
+      {guestIds.length > 0 && <GuestClaimCard count={guestIds.length} />}
       <GuestImportCard />
 
       <nav

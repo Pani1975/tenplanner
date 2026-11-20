@@ -140,20 +140,26 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
 
   async function patch(n: News, published: boolean) {
     setBusy(n.id);
-    const res = await api.fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ published }),
-    });
+    const res = await api.fetch(
+      `/api/tournaments/${tournamentId}/news/${n.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published }),
+      }
+    );
     setBusy(null);
     if (!res.ok) return toast.error(await apiError(res));
     load();
   }
 
   async function remove(n: News) {
-    const res = await api.fetch(`/api/tournaments/${tournamentId}/news/${n.id}`, {
-      method: "DELETE",
-    });
+    const res = await api.fetch(
+      `/api/tournaments/${tournamentId}/news/${n.id}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!res.ok) return toast.error(await apiError(res));
     toast.success(t("newsDeleted"));
     load();

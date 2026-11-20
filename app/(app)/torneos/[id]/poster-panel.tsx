@@ -176,31 +176,6 @@ export function PosterPanel({
     }
   }
 
-  /** Modo prueba: el PDF llega en memoria y se descarga o se abre. */
-  async function openPdf(inline: boolean) {
-    setBusy("pdf");
-    const tab = inline ? window.open("", "_blank") : null;
-    try {
-      const res = await api.fetch(`${base}/poster${inline ? "?inline=1" : ""}`);
-      if (!res.ok) {
-        tab?.close();
-        toast.error(await apiError(res));
-        return;
-      }
-      const url = URL.createObjectURL(await res.blob());
-      if (tab) tab.location.href = url;
-      else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "cartel-torneo.pdf";
-        a.click();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } finally {
-      setBusy(null);
-    }
-  }
-
   async function removeImage() {
     setBusy("remove");
     const res = await api.fetch(`${base}/poster-image`, { method: "DELETE" });
@@ -293,32 +268,6 @@ export function PosterPanel({
         />
       </div>
 
-      {api.guest ? (
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => openPdf(false)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
-          >
-            {busy === "pdf" ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Download className="size-4" />
-            )}
-            {t("download")}
-          </button>
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => openPdf(true)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-background px-4 text-sm font-bold disabled:opacity-60"
-          >
-            <ExternalLink className="size-4" />
-            {t("open")}
-          </button>
-        </div>
-      ) : (
       <div className="flex flex-wrap gap-2">
         <a
           href={`${base}/poster`}
@@ -337,7 +286,6 @@ export function PosterPanel({
           {t("open")}
         </a>
       </div>
-      )}
     </section>
   );
 }
