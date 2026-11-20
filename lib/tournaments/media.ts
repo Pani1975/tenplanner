@@ -3,7 +3,7 @@
 // Fotos en el bucket privado tournament-media, con URLs firmadas.
 
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import {
   clubs,
@@ -22,6 +22,9 @@ import { getTournament, TournamentError, type Organizer } from "./server";
 export const MEDIA_BUCKET = "tournament-media";
 const SIGNED_URL_SECONDS = 60 * 60;
 export const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
+/** Modo prueba (sin cuenta): como mucho 5 fotos y 5 noticias por torneo. */
+export const GUEST_MEDIA_LIMIT = 5;
+
 export const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 // ── Noticias ───────────────────────────────────────────────────────────
@@ -71,6 +74,17 @@ export async function createNews(
   input: { title: string; body: string; publish: boolean }
 ) {
   await getTournament(o, tournamentId);
+  if (o.guest) {
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(tournamentNews)
+      .where(eq(tournamentNews.tournamentId, tournamentId));
+    if (n >= GUEST_MEDIA_LIMIT) {
+      throw new TournamentError("guest_news_limit", 409, {
+        max: GUEST_MEDIA_LIMIT,
+      });
+    }
+  }
   const author = await newsAuthor(o, tournamentId);
   const [row] = await db
     .insert(tournamentNews)
@@ -291,6 +305,17 @@ export async function uploadPhoto(
   caption: string | null
 ) {
   await getTournament(o, tournamentId);
+  if (o.guest) {
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(tournamentPhotos)
+      .where(eq(tournamentPhotos.tournamentId, tournamentId));
+    if (n >= GUEST_MEDIA_LIMIT) {
+      throw new TournamentError("guest_photo_limit", 409, {
+        max: GUEST_MEDIA_LIMIT,
+      });
+    }
+  }
   if (!(PHOTO_TYPES as readonly string[]).includes(file.type)) {
     throw new TournamentError("photo_type", 400);
   }

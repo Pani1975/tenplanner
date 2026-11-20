@@ -3847,7 +3847,9 @@
       "schedule_club_only": "El orden de juego, de momento, solo está en los torneos de club.",
       "guest_no_students": "Para añadir a tus alumnos necesitas una cuenta.",
       "guest_not_available": "Esto necesita una cuenta.",
-      "guest_limit": "Ya tienes 5 torneos de prueba con ese correo. Crea una cuenta gratis para seguir."
+      "guest_limit": "Ya tienes 5 torneos de prueba con ese correo. Crea una cuenta gratis para seguir.",
+      "guest_news_limit": "En el modo prueba caben 5 noticias por torneo.",
+      "guest_photo_limit": "En el modo prueba caben 5 fotos por torneo."
     },
     "public": {
       "organizer": "Organiza: {name}",
@@ -4096,7 +4098,9 @@
       "photoDeleted": "Foto borrada",
       "photoAlt": "Foto del torneo",
       "publicNewsTitle": "Noticias",
-      "publicPhotosTitle": "Fotos"
+      "publicPhotosTitle": "Fotos",
+      "guestNewsLimit": "En el modo prueba caben {max} noticias. Borra una para escribir otra, o crea una cuenta gratis.",
+      "guestPhotoLimit": "En el modo prueba caben {max} fotos por torneo."
     },
     "poster": {
       "title": "Cartel",

@@ -424,7 +424,7 @@ export function TournamentManager({
         />
       )}
 
-      {matchCount > 0 && t.isClub && (
+      {matchCount > 0 && (t.isClub || api.guest) && (
         <SchedulePanel
           tournamentId={t.id}
           format={t.format}

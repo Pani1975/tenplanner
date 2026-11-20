@@ -3,7 +3,7 @@ import {
   checkIds,
   json,
   parseBody,
-  withAccountOrganizer,
+  withOrganizer,
 } from "@/lib/tournaments/api";
 import {
   saveSchedule,
@@ -27,7 +27,7 @@ const putSchema = z.object({
 // Guarda el orden de juego (día y hora, pista) de varios partidos.
 export async function PUT(request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  return withAccountOrganizer(async (o) => {
+  return withOrganizer(async (o) => {
     checkIds(id);
     const { items } = await parseBody(request, putSchema);
     await saveSchedule(o, id, items);
@@ -38,7 +38,7 @@ export async function PUT(request: Request, ctx: Ctx) {
 // Publicar o retirar el orden de juego.
 export async function POST(request: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  return withAccountOrganizer(async (o) => {
+  return withOrganizer(async (o) => {
     checkIds(id);
     const { published } = await parseBody(
       request,

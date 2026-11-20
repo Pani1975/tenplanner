@@ -4236,7 +4236,9 @@
       "schedule_club_only": "For now, the order of play is only for club tournaments.",
       "guest_no_students": "You need an account to add your students.",
       "guest_not_available": "This needs an account.",
-      "guest_limit": "You already have 5 trial tournaments with that email. Create a free account to continue."
+      "guest_limit": "You already have 5 trial tournaments with that email. Create a free account to continue.",
+      "guest_news_limit": "Trial mode allows 5 news posts per tournament.",
+      "guest_photo_limit": "Trial mode allows 5 photos per tournament."
     },
     "public": {
       "organizer": "Organised by {name}",
@@ -4485,7 +4487,9 @@
       "photoDeleted": "Photo deleted",
       "photoAlt": "Tournament photo",
       "publicNewsTitle": "News",
-      "publicPhotosTitle": "Photos"
+      "publicPhotosTitle": "Photos",
+      "guestNewsLimit": "Trial mode allows {max} news posts. Delete one to write another, or create a free account.",
+      "guestPhotoLimit": "Trial mode allows {max} photos per tournament."
     },
     "poster": {
       "title": "Poster",

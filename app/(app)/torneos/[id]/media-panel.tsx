@@ -45,6 +45,9 @@ type Photo = {
 
 const key = (p: { entryId: string; side: string }) => `${p.entryId}:${p.side}`;
 
+/** Modo prueba (sin cuenta): fotos y noticias por torneo. */
+const GUEST_LIMIT = 5;
+
 async function getData<T>(
   doFetch: (input: string) => Promise<Response>,
   url: string
@@ -165,13 +168,25 @@ function NewsSection({ tournamentId }: { tournamentId: string }) {
     load();
   }
 
-  const canSend = title.trim() && body.trim() && !busy;
+  // Modo prueba: como mucho 5 noticias.
+  const atLimit = api.guest && (items?.length ?? 0) >= GUEST_LIMIT;
+  const canSend = title.trim() && body.trim() && !busy && !atLimit;
   return (
     <section className="space-y-3">
       <h2 className="tp-title flex items-center gap-2 text-2xl">
         <Newspaper className="size-5" />
         {t("newsTitle")}
+        {api.guest && (
+          <span className="text-sm font-normal text-foreground/60">
+            ({items?.length ?? 0}/{GUEST_LIMIT})
+          </span>
+        )}
       </h2>
+      {atLimit && (
+        <p className="text-sm text-foreground/70">
+          {t("guestNewsLimit", { max: GUEST_LIMIT })}
+        </p>
+      )}
       <div className="tp-card-soft space-y-3 p-4">
         <input
           value={title}
@@ -324,8 +339,20 @@ function PhotosSection({
     };
   }, [fetchPhotos]);
 
+  // Modo prueba: como mucho 5 fotos.
+  const photoCount = data?.photos.length ?? 0;
+  const photoFull = api.guest && photoCount >= GUEST_LIMIT;
+
   async function upload(files: FileList) {
-    const list = [...files];
+    let list = [...files];
+    if (api.guest) {
+      const room = Math.max(0, GUEST_LIMIT - photoCount);
+      if (list.length > room) {
+        toast.error(t("guestPhotoLimit", { max: GUEST_LIMIT }));
+        list = list.slice(0, room);
+      }
+      if (!list.length) return;
+    }
     setUploading(list.length);
     let failed = 0;
     for (const f of list) {
@@ -404,11 +431,17 @@ function PhotosSection({
         <h2 className="tp-title flex items-center gap-2 text-2xl">
           <Camera className="size-5" />
           {t("photosTitle")}
+          {api.guest && (
+            <span className="text-sm font-normal text-foreground/60">
+              ({photoCount}/{GUEST_LIMIT})
+            </span>
+          )}
         </h2>
         <button
           type="button"
           onClick={() => input.current?.click()}
-          disabled={uploading > 0}
+          disabled={uploading > 0 || photoFull}
+          title={photoFull ? t("guestPhotoLimit", { max: GUEST_LIMIT }) : undefined}
           className="inline-flex h-11 items-center gap-2 rounded-full bg-[#d6f04a] px-5 text-sm font-bold text-black disabled:opacity-60"
         >
           {uploading > 0 ? (
