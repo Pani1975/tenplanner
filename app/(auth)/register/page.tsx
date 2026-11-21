@@ -108,6 +108,9 @@ export default function RegisterPage() {
   // una invitación (/familia/<token>) o la elige el propio usuario aquí.
   const [familyKind, setFamilyKind] = useState<FamilyKind | null>(null);
   const isFamily = familyKind !== null;
+  // Jugador: primero se pregunta si es mayor de 18. Un menor no se registra
+  // como jugador: su cuenta la gestiona su familia (padre, madre o tutor).
+  const [ageAnswer, setAgeAnswer] = useState<"si" | "no" | null>(null);
   // El tipo viene ya decidido en el enlace: no se ofrece cambiarlo.
   const [typeLocked, setTypeLocked] = useState(false);
   const [nextPath, setNextPath] = useState<string | null>(null);
@@ -142,6 +145,7 @@ export default function RegisterPage() {
     const kind: FamilyKind | null =
       type === "familia" || type === "jugador" ? type : null;
     setFamilyKind(kind);
+    setAgeAnswer(null);
     setForm((prev) => ({
       ...prev,
       isClub: type === "club",
@@ -202,7 +206,11 @@ export default function RegisterPage() {
     const callback = new URL(`${window.location.origin}/auth/callback`);
     if (familyKind) {
       callback.searchParams.set("account_type", familyKind);
-      callback.searchParams.set("next", nextPath ?? "/mi-familia/calendario");
+      if (familyKind === "jugador" && form.confirmAdult) {
+        callback.searchParams.set("adult", "1");
+      }
+      callback.searchParams.set("next", nextPath ??
+          (familyKind === "jugador" ? "/jugador" : "/mi-familia/calendario"));
     } else if (nextPath) {
       callback.searchParams.set("next", nextPath);
     }
@@ -247,6 +255,9 @@ export default function RegisterPage() {
             full_name: parsed.data.name,
             role: "coach",
             ...(familyKind ? { account_type: familyKind } : {}),
+            ...(parsed.data.isPlayer && parsed.data.confirmAdult
+              ? { adult_confirmed_at: new Date().toISOString() }
+              : {}),
             ...(parsed.data.isClub && parsed.data.clubName
               ? {
                   club_name: parsed.data.clubName,
@@ -312,7 +323,9 @@ export default function RegisterPage() {
         router.push(
           nextPath ??
             (familyKind
-              ? "/mi-familia/calendario"
+              ? familyKind === "jugador"
+                ? "/jugador"
+                : "/mi-familia/calendario"
               : parsed.data.isClub
                 ? "/club"
                 : "/dashboard")
@@ -538,6 +551,54 @@ export default function RegisterPage() {
         </p>
       </div>
 
+      {form.isPlayer && (
+        <div className="mt-6 space-y-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-4 dark:border-white/10 dark:bg-white/[0.04]">
+          <p id="age-question" className="text-sm font-semibold text-foreground">
+            {t("ageQuestion")}
+          </p>
+          <div
+            className="grid grid-cols-2 gap-2"
+            role="group"
+            aria-labelledby="age-question"
+          >
+            {(["si", "no"] as const).map((answer) => (
+              <button
+                key={answer}
+                type="button"
+                aria-pressed={ageAnswer === answer}
+                onClick={() => {
+                  setAgeAnswer(answer);
+                  update("confirmAdult", answer === "si");
+                }}
+                className={`h-11 rounded-full border text-sm font-semibold transition ${
+                  ageAnswer === answer
+                    ? "border-brand bg-brand text-brand-foreground"
+                    : "border-[#050505]/15 bg-background text-foreground hover:border-brand/50 dark:border-white/15"
+                }`}
+              >
+                {answer === "si" ? t("ageYes") : t("ageNo")}
+              </button>
+            ))}
+          </div>
+          {ageAnswer === "no" && (
+            <div className="space-y-3 text-sm leading-6 text-foreground/70">
+              <p>{t("minorInfo")}</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 w-full rounded-full"
+                onClick={() => selectAccountType("familia")}
+              >
+                {t("minorToFamily")}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Jugador: el acceso (Google o email) solo aparece si es mayor de 18. */}
+      {(!form.isPlayer || ageAnswer === "si") && (
+      <>
       <div className="mt-6 space-y-4">
         <Button
           type="button"
@@ -736,27 +797,6 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {form.isPlayer && (
-          <>
-            <label className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-3 text-sm text-foreground/62 dark:border-white/10 dark:bg-white/[0.04]">
-              <input
-                type="checkbox"
-                checked={form.confirmAdult}
-                onChange={(e) => update("confirmAdult", e.target.checked)}
-                className="mt-1"
-              />
-              <span>
-                {t("adultConfirm")}
-              </span>
-            </label>
-            {fieldErrors.confirmAdult && (
-              <p className="text-xs text-destructive">
-                {fieldErrors.confirmAdult}
-              </p>
-            )}
-          </>
-        )}
-
         <label className="flex items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-3 text-sm text-foreground/62 dark:border-white/10 dark:bg-white/[0.04]">
           <input
             type="checkbox"
@@ -798,6 +838,8 @@ export default function RegisterPage() {
           {t("submit")}
         </Button>
       </form>
+      </>
+      )}
 
       <p className="mt-5 text-center text-sm text-muted-foreground">
         {t("haveAccount")}{" "}

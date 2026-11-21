@@ -1,3 +1,4 @@
+import { defaultAutoriaFor } from "@/lib/family-account";
 import {
   and,
   count,
@@ -488,7 +489,9 @@ export async function POST(request: Request) {
         situacionJuego: normalizeMultiValue(rest.situacionJuego),
         tipoCompeticion: normalizeMultiValue(rest.tipoCompeticion),
         isGlobal,
-        autoria: isAdmin ? (requestedAutoria ?? "ten_planner") : "libre",
+        autoria: isAdmin
+          ? (requestedAutoria ?? "ten_planner")
+          : defaultAutoriaFor(user.user_metadata),
         createdBy: user.id,
         // Creado trabajando como un club → compartido en "Mis ejercicios"
         // del espacio de ese club. Los globales (biblioteca) no son de club.

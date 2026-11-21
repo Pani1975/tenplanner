@@ -337,6 +337,8 @@ export const AUTORIA_VALUES = AUTORIAS.map((a) => a.id) as unknown as readonly [
 export type Autoria = (typeof AUTORIAS)[number]["id"];
 
 export function autoriaLabel(id: string | null | undefined) {
+  // Lo que crea una cuenta de jugador en su espacio privado.
+  if (id === "jugador") return "Jugador";
   if (!id) return AUTORIAS.find((a) => a.id === "libre")!.label;
   return AUTORIAS.find((a) => a.id === id)?.label ?? id.replace(/_/g, " ");
 }

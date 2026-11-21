@@ -2963,3 +2963,77 @@ export const tournamentPhotoTags = pgTable(
     }),
   ]
 );
+
+// Mis partidos (migración 0115_player_matches): registro privado de la
+// actividad del jugador. Solo lo ve y edita su dueño; el club no lo ve. Los
+// datos del rival son de terceros: nunca en listados públicos ni en la API
+// de otros usuarios. Validación en lib/matches/validation.ts.
+export const matchTypeEnum = pgEnum("match_type", [
+  "torneo",
+  "partido_oficial",
+  "amistoso",
+  "entrenamiento",
+]);
+
+export const matches = pgTable(
+  "matches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    matchType: matchTypeEnum("match_type").notNull(),
+    matchDate: date("match_date").notNull(),
+    tournamentUrl: text("tournament_url"),
+    rivalFirstName: text("rival_first_name"),
+    rivalLastName: text("rival_last_name"),
+    rivalLicense: text("rival_license"),
+    finalResult: text("final_result"),
+    // Nombre del torneo (opcional). Sale en el perfil público si el partido
+    // se marca para mostrarse; el rival nunca.
+    tournamentName: varchar("tournament_name", { length: 120 }),
+    showOnProfile: boolean("show_on_profile").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("matches_user_date_idx").on(t.userId, t.matchDate)]
+);
+
+// Perfil del jugador (migración 0116_player_profiles): independiente de su
+// ficha de alumno en un club. Puede hacerse público (/j/<slug>); un menor no.
+// birthDate nunca se publica: solo sirve para la categoría
+// (lib/players/category.ts). La foto es la de la cuenta (users.image) si
+// showPhoto está activado.
+export const playerProfiles = pgTable(
+  "player_profiles",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    firstName: varchar("first_name", { length: 80 }).notNull(),
+    lastName: varchar("last_name", { length: 120 }).notNull(),
+    birthDate: date("birth_date"),
+    showPhoto: boolean("show_photo").default(false).notNull(),
+    clubName: varchar("club_name", { length: 120 }),
+    dominantHand: varchar("dominant_hand", { length: 10 }), // "right" | "left"
+    favoriteShot: varchar("favorite_shot", { length: 20 }),
+    startedAge: smallint("started_age"),
+    favoritePlayer: varchar("favorite_player", { length: 80 }),
+    birthPlace: varchar("birth_place", { length: 120 }),
+    isPublic: boolean("is_public").default(false).notNull(),
+    slug: varchar("slug", { length: 80 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [uniqueIndex("player_profiles_slug_uniq").on(t.slug)]
+);

@@ -403,7 +403,12 @@
       "confirmPassword": "Confirmar contraseña",
       "adultConfirm": "Confirmo que tengo 18 años o más. Si eres menor, la cuenta la crea tu madre, padre o tutor como familia.",
       "accept": "Acepto la <privacy>privacidad</privacy> y los <terms>términos</terms>.",
-      "submit": "Crear cuenta"
+      "submit": "Crear cuenta",
+      "ageQuestion": "¿Tienes 18 años o más?",
+      "ageYes": "Sí",
+      "ageNo": "No",
+      "minorInfo": "Si tienes menos de 18 años, tu cuenta la gestiona tu familia: tu madre, padre o tutor se registra como familia y gestiona tus datos desde su cuenta.",
+      "minorToFamily": "Registrar como familia"
     }
   },
   "nav": {
@@ -458,7 +463,8 @@
     "navMenu": "Menú de navegación",
     "closeNavMenu": "Cerrar menú de navegación",
     "closeMenu": "Cerrar menú",
-    "tournaments": "Torneos"
+    "tournaments": "Torneos",
+    "myMatches": "Mis partidos"
   },
   "dashboard": {
     "greeting": {

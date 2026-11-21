@@ -54,7 +54,14 @@ export async function GET(request: Request) {
             isFamilyAccountType({ account_type: requestedAccountType })
           ) {
             await supabase.auth.updateUser({
-              data: { account_type: requestedAccountType },
+              data: {
+                account_type: requestedAccountType,
+                // Jugador: confirmó en /register que tiene 18 años o más.
+                ...(requestedAccountType === "jugador" &&
+                searchParams.get("adult") === "1"
+                  ? { adult_confirmed_at: new Date().toISOString() }
+                  : {}),
+              },
             });
           }
         } catch (error) {

@@ -35,6 +35,7 @@ import {
   UserCircle,
   UserRound,
   Users,
+  Swords,
   Users2,
   X,
   XCircle,
@@ -256,7 +257,7 @@ const managementNavItems: NavItem[] = [
 ];
 
 // Las etiquetas del menú se definen en español; se traducen al pintarlas.
-const NAV_LABEL_KEYS: Record<string, string> = {"Inicio":"home","Ejercicios":"exercises","Ver todos":"viewAllM","Biblioteca":"library","Mis ejercicios":"myExercises","Favoritos":"favorites","Borradores":"drafts","Nuevo ejercicio":"newExercise","Clases":"classes","Ver todas":"viewAllF","Mis clases":"myClasses","Mis listas":"myLists","Nueva clase":"newClass","Sesiones":"sessions","Mis sesiones":"mySessions","Listas":"lists","Canceladas":"cancelled","Nueva sesión":"newSession","Calendario":"calendar","Torneos":"tournaments","Alumnos":"students","Lista de alumnos":"studentList","Grupos":"groups","Objetivos":"goals","Mensajes":"messages","Lugares":"places","Reservas de pistas":"courtBookings","Mis recursos":"myResources","Mi club":"myClub","Perfil":"profile","Ayuda":"help","Informes":"reports","Panel":"panel","Monitores":"coaches","Jugador":"player","Clases club":"clubClasses","Ejercicios club":"clubExercises","Favoritos club":"clubFavorites","Listas club":"clubLists","Recursos club":"clubResources","Sesiones club":"clubSessions"};
+const NAV_LABEL_KEYS: Record<string, string> = {"Inicio":"home","Ejercicios":"exercises","Ver todos":"viewAllM","Biblioteca":"library","Mis ejercicios":"myExercises","Mis partidos":"myMatches","Favoritos":"favorites","Borradores":"drafts","Nuevo ejercicio":"newExercise","Clases":"classes","Ver todas":"viewAllF","Mis clases":"myClasses","Mis listas":"myLists","Nueva clase":"newClass","Sesiones":"sessions","Mis sesiones":"mySessions","Listas":"lists","Canceladas":"cancelled","Nueva sesión":"newSession","Calendario":"calendar","Torneos":"tournaments","Alumnos":"students","Lista de alumnos":"studentList","Grupos":"groups","Objetivos":"goals","Mensajes":"messages","Lugares":"places","Reservas de pistas":"courtBookings","Mis recursos":"myResources","Mi club":"myClub","Perfil":"profile","Ayuda":"help","Informes":"reports","Panel":"panel","Monitores":"coaches","Jugador":"player","Clases club":"clubClasses","Ejercicios club":"clubExercises","Favoritos club":"clubFavorites","Listas club":"clubLists","Recursos club":"clubResources","Sesiones club":"clubSessions"};
 
 /** Indicador fijo de la cuenta de la plataforma (no cambia de modo). */
 function PlatformBadge() {
@@ -273,6 +274,26 @@ function PlatformBadge() {
     </div>
   );
 }
+
+// Cuenta de jugador (se registró "Como jugador"; ver lib/family-account.ts):
+// biblioteca, su espacio privado (Mis ejercicios, Mis clases, Mis partidos)
+// y lo que el club comparte con él.
+const playerNavItems: NavItem[] = [
+  { href: "/jugador", label: "Inicio", icon: LayoutDashboard },
+  { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
+  { href: "/classes", label: "Clases", icon: GraduationCap },
+  { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
+  { href: "/exercises?tab=mine", label: "Mis ejercicios", icon: Dumbbell },
+  { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
+  { href: "/torneos", label: "Torneos", icon: Trophy },
+  { href: "/mis-partidos", label: "Mis partidos", icon: Swords },
+  // Mensajes del club: un jugador adulto vinculado ya los recibe.
+  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
+  // Perfil de jugador (público si él quiere); la cuenta sigue en /profile.
+  { href: "/jugador/perfil", label: "Perfil", icon: UserCircle },
+  { href: "/mi-familia/informes", label: "Informes", icon: FileText },
+  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+];
 
 const familyNavItems: NavItem[] = [
   { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
@@ -395,6 +416,8 @@ interface WorkModeProps {
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes, Perfil y Ayuda */
   familyOnly?: boolean;
+  /** Cuenta de jugador (solo con familyOnly): menú del jugador. */
+  playerAccount?: boolean;
   /** Mensajes recibidos sin leer (contador junto a "Mensajes") */
   unreadMessages?: number;
 }
@@ -442,6 +465,7 @@ function NavContent({
   managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
+  playerAccount = false,
   unreadMessages = 0,
 }: {
   pathname: string;
@@ -456,7 +480,9 @@ function NavContent({
   appName?: string;
 } & WorkModeProps) {
   const items = familyOnly
-    ? familyNavItems
+    ? playerAccount
+      ? playerNavItems
+      : familyNavItems
     : tenPlannerMode
       ? platformNavItems
       : managementMode
@@ -503,7 +529,9 @@ function NavContent({
         <Link
           href={
             familyOnly
-              ? "/mi-familia/calendario"
+              ? playerAccount
+                ? "/jugador"
+                : "/mi-familia/calendario"
               : tenPlannerMode
                 ? "/informes"
                 : managementMode
@@ -564,8 +592,21 @@ function NavContent({
               // también /gestion (Informes).
               const matches = (h: string) =>
                 pathname === h || pathname.startsWith(h + "/");
+              // Con consulta (/exercises?tab=mine, menú del jugador): activo
+              // solo si la consulta coincide; sin ella, no si la de otro sí.
+              const [hrefPath, hrefQuery] = href.split("?");
+              const sp = new URLSearchParams(search);
+              const queryMatches = (q: string) =>
+                [...new URLSearchParams(q)].every(([k, v]) => sp.get(k) === v);
               const isActive =
-                matches(href) &&
+                matches(hrefPath) &&
+                (hrefQuery
+                  ? queryMatches(hrefQuery)
+                  : !items.some(
+                      (other) =>
+                        other.href.startsWith(hrefPath + "?") &&
+                        queryMatches(other.href.split("?")[1])
+                    )) &&
                 !items.some(
                   (other) =>
                     other.href.length > href.length &&
@@ -902,6 +943,7 @@ function SidebarNavInner({
   managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
+  playerAccount = false,
   unreadMessages: initialUnread = 0,
   search,
 }: SidebarNavProps & { search: string }) {
@@ -999,6 +1041,7 @@ function SidebarNavInner({
           managementMode={managementMode}
           activeSport={activeSport}
           familyOnly={familyOnly}
+          playerAccount={playerAccount}
           unreadMessages={unreadMessages}
         />
       </aside>
@@ -1009,7 +1052,9 @@ function SidebarNavInner({
             <Link
               href={
                 familyOnly
-                  ? "/mi-familia/calendario"
+                  ? playerAccount
+                    ? "/jugador"
+                    : "/mi-familia/calendario"
                   : tenPlannerMode
                     ? "/informes"
                     : managementMode
@@ -1127,6 +1172,7 @@ function SidebarNavInner({
               managementMode={managementMode}
               activeSport={activeSport}
               familyOnly={familyOnly}
+              playerAccount={playerAccount}
               unreadMessages={unreadMessages}
             />
           </aside>

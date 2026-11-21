@@ -13,7 +13,10 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
-import { isFamilyAccountType } from "@/lib/family-account";
+import {
+  isFamilyAccountType,
+  isPlayerAccountType,
+} from "@/lib/family-account";
 import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
@@ -139,6 +142,7 @@ export default async function AppLayout({
       managementMode={!!clubAccountClubId && !!row?.managementMode}
       activeSport={activeSport}
       familyOnly={familyOnly}
+      playerAccount={familyOnly && isPlayerAccountType(user.user_metadata)}
       pendingInvites={pendingInvites}
       unreadMessages={unreadMessages}
     >

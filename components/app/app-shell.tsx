@@ -35,6 +35,7 @@ interface AppShellProps {
   activeSport?: Sport;
   /** Vista simplificada para familias: solo Mensajes (ver lib/family.ts) */
   familyOnly?: boolean;
+  playerAccount?: boolean;
   /** Invitaciones de club pendientes para el email del usuario */
   pendingInvites?: PendingClubInvite[];
   /** Mensajes recibidos sin leer */
@@ -58,6 +59,7 @@ export default function AppShell({
   managementMode = false,
   activeSport = "tenis",
   familyOnly = false,
+  playerAccount = false,
   pendingInvites = [],
   unreadMessages = 0,
 }: AppShellProps) {
@@ -82,6 +84,7 @@ export default function AppShell({
         managementMode={managementMode}
         activeSport={activeSport}
         familyOnly={familyOnly}
+        playerAccount={playerAccount}
         unreadMessages={unreadMessages}
       />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">

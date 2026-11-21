@@ -1,3 +1,4 @@
+import { defaultAutoriaFor } from "@/lib/family-account";
 import { normalizeTags } from "@/lib/tags";
 import { isTenPlannerMode } from "@/lib/work-mode";
 import { NextResponse } from "next/server";
@@ -371,7 +372,9 @@ export async function POST(request: Request) {
           golpes: d.golpes ?? null,
           tags: normalizeTags(d.tags),
           isLibrary: isAdmin && d.isLibrary === true,
-          autoria: isAdmin ? (d.autoria ?? "ten_planner") : "libre",
+          autoria: isAdmin
+            ? (d.autoria ?? "ten_planner")
+            : defaultAutoriaFor(user.user_metadata),
           clubId,
           sport,
           courts: d.courts === 2 ? 2 : 1,

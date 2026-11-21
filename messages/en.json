@@ -403,7 +403,12 @@
       "confirmPassword": "Confirm password",
       "adultConfirm": "I confirm that I am 18 or older. If you are under 18, your parent or guardian creates the account as a family.",
       "accept": "I accept the <privacy>privacy policy</privacy> and the <terms>terms</terms>.",
-      "submit": "Create account"
+      "submit": "Create account",
+      "ageQuestion": "Are you 18 or older?",
+      "ageYes": "Yes",
+      "ageNo": "No",
+      "minorInfo": "If you are under 18, your family manages your account: your parent or guardian signs up as a family and manages your details from their account.",
+      "minorToFamily": "Sign up as a family"
     }
   },
   "nav": {
@@ -458,7 +463,8 @@
     "navMenu": "Navigation menu",
     "closeNavMenu": "Close navigation menu",
     "closeMenu": "Close menu",
-    "tournaments": "Tournaments"
+    "tournaments": "Tournaments",
+    "myMatches": "My matches"
   },
   "dashboard": {
     "greeting": {

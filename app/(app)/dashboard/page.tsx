@@ -37,7 +37,10 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { isFamilyOnlyUser } from "@/lib/family";
-import { isFamilyAccountType } from "@/lib/family-account";
+import {
+  isFamilyAccountType,
+  isPlayerAccountType,
+} from "@/lib/family-account";
 import { HoyTocaCard } from "@/components/app/dashboard/hoy-toca-card";
 
 function formatDayMonth(date: Date, loc: string) {
@@ -570,7 +573,9 @@ export default async function DashboardPage() {
       isFamilyAccountType(user.user_metadata)
     ).catch(() => false)
   ) {
-    redirect("/mi-familia/calendario");
+    redirect(
+      isPlayerAccountType(user.user_metadata) ? "/jugador" : "/mi-familia/calendario"
+    );
   }
   // La cuenta de la plataforma no tiene sesiones ni alumnos: va a Informes.
   // El Espacio gestión tampoco tiene panel de sesiones: va a su Informes.

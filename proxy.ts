@@ -26,6 +26,8 @@ const PUBLIC_PREFIXES = [
   "/api/public/reservas/",
   "/reservar/",
   "/t/",
+  // Perfil público del jugador (solo si él lo activa).
+  "/j/",
   "/api/public/torneos/",
   // Torneos de prueba sin registro (datos en el navegador).
   "/probar-torneos",
@@ -44,6 +46,8 @@ const PRIVATE_PAGE_PREFIXES = [
   "/groups",
   "/mi-espacio",
   "/mi-familia",
+  "/mis-partidos",
+  "/jugador",
   "/places",
   "/profile",
   "/resources",
