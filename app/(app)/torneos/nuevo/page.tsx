@@ -1,3 +1,4 @@
+import { isPlayerView } from "@/lib/players/view";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
@@ -19,6 +20,8 @@ export default async function NuevoTorneoPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Un jugador no organiza torneos.
+  if (await isPlayerView(user)) redirect("/jugador/torneos");
 
   const organizer = await getOrganizer(user.id);
   const [levels, places, circuits, club] = await Promise.all([

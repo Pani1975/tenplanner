@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { readViewAsCookie } from "@/lib/view-as";
 import { and, desc, eq, gt, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import type { AnyColumn } from "drizzle-orm";
 import { db } from "@/db";
@@ -53,6 +54,9 @@ export async function getClubAccountClubId(
     getOwnedClub(userId),
   ]);
   if (!owned || row?.isPlatformAccount) return null;
+  // «Ver como» monitor o jugador (solo administradores, lib/view-as.ts): se
+  // comporta como un monitor miembro de su club, no como la cuenta del club.
+  if (row?.isAdmin && (await readViewAsCookie())) return null;
   return owned.id;
 }
 

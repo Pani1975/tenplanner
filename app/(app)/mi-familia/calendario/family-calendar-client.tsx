@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarOff, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import Link from "next/link";
+import {
+  CalendarOff,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  PartyPopper,
+  Trophy,
+} from "lucide-react";
+import type { PlayerCalendarItem } from "@/lib/players/club";
 import {
   holidayAppliesTo,
   type CalendarHolidayData,
@@ -57,10 +66,13 @@ export function FamilyCalendarClient({
   sessions,
   holidays,
   groupNames,
+  items = [],
 }: {
   sessions: SessionData[];
   holidays: CalendarHolidayData[];
   groupNames: Record<string, string>;
+  /** Calendario del jugador: eventos del club y torneos. */
+  items?: PlayerCalendarItem[];
 }) {
   const intlLocale = useLocale() === "en" ? "en-GB" : "es-ES";
   const tx = useTranslations("ui.s_calendario_familycalendarclient");
@@ -77,6 +89,9 @@ export function FamilyCalendarClient({
     sessionsByDay.get(k)!.push(s);
   }
 
+  function itemsOn(k: string) {
+    return items.filter((i) => k >= i.startDate && k <= i.endDate);
+  }
   function holidaysOn(k: string) {
     return holidays.filter((h) => k >= h.startDate && k <= h.endDate);
   }
@@ -102,6 +117,7 @@ export function FamilyCalendarClient({
 
   const selectedSessions = sessionsByDay.get(selected) ?? [];
   const selectedHolidays = holidaysOn(selected);
+  const selectedItems = itemsOn(selected);
   const [sy, sm, sd] = selected.split("-").map(Number);
   const selectedLabel = new Intl.DateTimeFormat(intlLocale, {
     weekday: "long",
@@ -165,6 +181,7 @@ export function FamilyCalendarClient({
               const k = dateKey(new Date(year, month, dayNum));
               const daySessions = sessionsByDay.get(k) ?? [];
               const dayHolidays = holidaysOn(k);
+              const dayItems = itemsOn(k);
               return (
                 <button
                   key={idx}
@@ -198,6 +215,19 @@ export function FamilyCalendarClient({
                         {h.title}
                       </div>
                     ))}
+                    {dayItems.slice(0, 2).map((i) => (
+                      <div
+                        key={i.id}
+                        className={cn(
+                          "truncate rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                          i.kind === "torneo"
+                            ? "bg-[#d6f04a] text-black"
+                            : "bg-foreground/10 text-foreground"
+                        )}
+                      >
+                        {i.title}
+                      </div>
+                    ))}
                     {daySessions.slice(0, 2).map((s) => (
                       <div
                         key={s.id}
@@ -225,7 +255,9 @@ export function FamilyCalendarClient({
       <section className="space-y-3">
         <h3 className="text-lg font-black capitalize text-foreground">
           {selectedLabel}
-          {selectedSessions.length === 0 && selectedHolidays.length === 0 && (
+          {selectedSessions.length === 0 &&
+            selectedHolidays.length === 0 &&
+            selectedItems.length === 0 && (
             <span className="ml-2 text-sm font-semibold normal-case text-muted-foreground">
               {tx("sinClases")}
             </span>
@@ -258,6 +290,56 @@ export function FamilyCalendarClient({
             </span>
           </div>
         ))}
+
+        {selectedItems.map((i) => {
+          const body = (
+            <>
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06]">
+                {i.kind === "torneo" ? (
+                  <Trophy className="size-5" />
+                ) : (
+                  <PartyPopper className="size-5" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">{i.title}</p>
+                {i.startAt && (
+                  <p className="text-xs text-muted-foreground">
+                    {timeLabel(new Date(i.startAt), intlLocale)}
+                  </p>
+                )}
+                {i.description && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">{i.description}</p>
+                )}
+              </div>
+              <span
+                className={cn(
+                  "ml-auto shrink-0 rounded-full px-3 py-1.5 text-xs font-black",
+                  i.kind === "torneo" ? "bg-[#d6f04a] text-black" : "bg-foreground/10"
+                )}
+              >
+                {i.kind === "torneo"
+                  ? i.registered
+                    ? "Torneo · inscrito"
+                    : "Torneo del club"
+                  : "Evento del club"}
+              </span>
+            </>
+          );
+          return i.href ? (
+            <Link
+              key={i.id}
+              href={i.href}
+              className="tp-panel flex items-center gap-4 p-4 hover:bg-foreground/[0.03]"
+            >
+              {body}
+            </Link>
+          ) : (
+            <div key={i.id} className="tp-panel flex items-center gap-4 p-4">
+              {body}
+            </div>
+          );
+        })}
 
         {selectedSessions.map((s) => {
           const start = new Date(s.scheduledAt);

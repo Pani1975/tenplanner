@@ -1,5 +1,6 @@
 "use client";
 
+import { ViewAsSwitcher } from "@/components/app/view-as-switcher";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "./language-switcher";
@@ -275,25 +276,32 @@ function PlatformBadge() {
   );
 }
 
-// Cuenta de jugador (se registró "Como jugador"; ver lib/family-account.ts):
-// biblioteca, su espacio privado (Mis ejercicios, Mis clases, Mis partidos)
-// y lo que el club comparte con él.
-const playerNavItems: NavItem[] = [
-  { href: "/jugador", label: "Inicio", icon: LayoutDashboard },
-  { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
-  { href: "/classes", label: "Clases", icon: GraduationCap },
-  { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
-  { href: "/exercises?tab=mine", label: "Mis ejercicios", icon: Dumbbell },
-  { href: "/classes?tab=mine", label: "Mis clases", icon: GraduationCap },
-  { href: "/torneos", label: "Torneos", icon: Trophy },
-  { href: "/mis-partidos", label: "Mis partidos", icon: Swords },
-  // Mensajes del club: un jugador adulto vinculado ya los recibe.
-  { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
-  // Perfil de jugador (público si él quiere); la cuenta sigue en /profile.
-  { href: "/jugador/perfil", label: "Perfil", icon: UserCircle },
-  { href: "/mi-familia/informes", label: "Informes", icon: FileText },
-  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
-];
+// Cuenta de jugador (se registró "Como jugador", o un administrador con
+// «Ver como: jugador»; ver lib/players/view.ts). Mis sesiones, Informes y
+// Mensajes solo si está vinculado a un club. Sin «Mis ejercicios» ni «Mis
+// clases»: ya están dentro de Ejercicios y Clases. Torneos: los suyos (no
+// crea torneos).
+function playerNavItems(linked: boolean): NavItem[] {
+  return [
+    { href: "/jugador", label: "Inicio", icon: LayoutDashboard },
+    { href: "/jugador/calendario", label: "Calendario", icon: CalendarDays },
+    { href: "/classes", label: "Clases", icon: GraduationCap },
+    { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
+    ...(linked
+      ? [{ href: "/mi-familia/jugador", label: "Mis sesiones", icon: CalendarCheck }]
+      : []),
+    { href: "/jugador/torneos", label: "Torneos", icon: Trophy },
+    { href: "/mis-partidos", label: "Mis partidos", icon: Swords },
+    ...(linked
+      ? [
+          { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
+          { href: "/mi-familia/informes", label: "Informes", icon: FileText },
+        ]
+      : []),
+    { href: "/jugador/perfil", label: "Perfil", icon: UserCircle },
+    { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
+  ];
+}
 
 const familyNavItems: NavItem[] = [
   { href: "/mi-familia/calendario", label: "Calendario", icon: CalendarDays },
@@ -418,6 +426,8 @@ interface WorkModeProps {
   familyOnly?: boolean;
   /** Cuenta de jugador (solo con familyOnly): menú del jugador. */
   playerAccount?: boolean;
+  /** Jugador vinculado a un club: Mis sesiones, Mensajes e Informes. */
+  playerLinked?: boolean;
   /** Mensajes recibidos sin leer (contador junto a "Mensajes") */
   unreadMessages?: number;
 }
@@ -466,6 +476,7 @@ function NavContent({
   activeSport = "tenis",
   familyOnly = false,
   playerAccount = false,
+  playerLinked = false,
   unreadMessages = 0,
 }: {
   pathname: string;
@@ -481,7 +492,7 @@ function NavContent({
 } & WorkModeProps) {
   const items = familyOnly
     ? playerAccount
-      ? playerNavItems
+      ? playerNavItems(playerLinked)
       : familyNavItems
     : tenPlannerMode
       ? platformNavItems
@@ -836,6 +847,7 @@ function NavContent({
               <ShieldCheck className="size-3.5 shrink-0" strokeWidth={1.8} />
               {tNav("admin")}
             </Link>
+            <ViewAsSwitcher />
           </div>
         )}
         {user ? (
@@ -944,6 +956,7 @@ function SidebarNavInner({
   activeSport = "tenis",
   familyOnly = false,
   playerAccount = false,
+  playerLinked = false,
   unreadMessages: initialUnread = 0,
   search,
 }: SidebarNavProps & { search: string }) {
@@ -1042,6 +1055,7 @@ function SidebarNavInner({
           activeSport={activeSport}
           familyOnly={familyOnly}
           playerAccount={playerAccount}
+          playerLinked={playerLinked}
           unreadMessages={unreadMessages}
         />
       </aside>
@@ -1173,6 +1187,7 @@ function SidebarNavInner({
               activeSport={activeSport}
               familyOnly={familyOnly}
               playerAccount={playerAccount}
+              playerLinked={playerLinked}
               unreadMessages={unreadMessages}
             />
           </aside>

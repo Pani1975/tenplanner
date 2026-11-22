@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isPlayerView } from "@/lib/players/view";
 import { GuestImportCard } from "./guest-import";
 import { GuestClaimCard } from "./guest-claim";
 import { guestTournamentIds } from "@/lib/tournaments/guest-server";
@@ -23,6 +24,8 @@ export default async function TorneosPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Un jugador no organiza torneos: ve los suyos.
+  if (await isPlayerView(user)) redirect("/jugador/torneos");
 
   const [t, locale, organizer] = await Promise.all([
     getTranslations("tournaments"),

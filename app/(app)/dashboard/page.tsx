@@ -37,10 +37,8 @@ import { getBooleanSetting } from "@/lib/app-settings";
 import { getActiveWorkClubId, sharedWithClubCondition } from "@/lib/clubs";
 import { cn } from "@/lib/utils";
 import { isFamilyOnlyUser } from "@/lib/family";
-import {
-  isFamilyAccountType,
-  isPlayerAccountType,
-} from "@/lib/family-account";
+import { isFamilyAccountType } from "@/lib/family-account";
+import { isPlayerView } from "@/lib/players/view";
 import { HoyTocaCard } from "@/components/app/dashboard/hoy-toca-card";
 
 function formatDayMonth(date: Date, loc: string) {
@@ -566,6 +564,8 @@ export default async function DashboardPage() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (!user) redirect("/login");
+  // Vista de jugador (cuenta de jugador o «Ver como: jugador»): su Inicio.
+  if (await isPlayerView(user)) redirect("/jugador");
   // Las familias no usan el panel del entrenador: van a su panel
   if (
     await isFamilyOnlyUser(
@@ -574,7 +574,7 @@ export default async function DashboardPage() {
     ).catch(() => false)
   ) {
     redirect(
-      isPlayerAccountType(user.user_metadata) ? "/jugador" : "/mi-familia/calendario"
+      (await isPlayerView(user, true)) ? "/jugador" : "/mi-familia/calendario"
     );
   }
   // La cuenta de la plataforma no tiene sesiones ni alumnos: va a Informes.

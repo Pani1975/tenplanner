@@ -1,4 +1,7 @@
 import { json, parseBody, withOrganizer } from "@/lib/tournaments/api";
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { isPlayerView } from "@/lib/players/view";
 import { cancelConflictingSessions } from "@/lib/tournaments/court-conflicts";
 import { createTournamentSchema } from "@/lib/tournaments/schemas";
 import { createTournament, listTournaments } from "@/lib/tournaments/server";
@@ -9,6 +12,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  // Solo clubes y monitores crean torneos; un jugador no.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user && (await isPlayerView(user)))
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   return withOrganizer(async (o) => {
     const input = await parseBody(request, createTournamentSchema);
     const row = await createTournament(o, input);

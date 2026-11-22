@@ -13,10 +13,9 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
-import {
-  isFamilyAccountType,
-  isPlayerAccountType,
-} from "@/lib/family-account";
+import { isFamilyAccountType } from "@/lib/family-account";
+import { isPlayerView } from "@/lib/players/view";
+import { playerClubIds } from "@/lib/players/club";
 import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
@@ -96,6 +95,13 @@ export default async function AppLayout({
   ]);
 
   const isAdmin = row?.isAdmin ?? false;
+  // Vista de jugador: cuenta de jugador o administrador con «Ver como:
+  // jugador» (lib/players/view.ts). Con club vinculado ve también Mis
+  // sesiones, Mensajes e Informes.
+  const playerView = await isPlayerView(user, familyOnly);
+  const playerLinked = playerView
+    ? (await playerClubIds(user.id).catch(() => [])).length > 0
+    : false;
   const avatarUrl =
     row?.image ??
     (typeof user.user_metadata?.avatar_url === "string"
@@ -141,8 +147,9 @@ export default async function AppLayout({
       clubAccountClubId={clubAccountClubId}
       managementMode={!!clubAccountClubId && !!row?.managementMode}
       activeSport={activeSport}
-      familyOnly={familyOnly}
-      playerAccount={familyOnly && isPlayerAccountType(user.user_metadata)}
+      familyOnly={familyOnly || playerView}
+      playerAccount={playerView}
+      playerLinked={playerLinked}
       pendingInvites={pendingInvites}
       unreadMessages={unreadMessages}
     >
