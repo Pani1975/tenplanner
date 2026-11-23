@@ -311,6 +311,8 @@
       "errGeneric": "No hay una cuenta confirmada con ese correo o la contraseña no es correcta.",
       "errMissingEmail": "No hemos podido leer el email de tu proveedor. Prueba con otro método de acceso.",
       "errCallbackFailed": "No hemos podido completar la verificación. Vuelve a intentarlo desde el correo recibido.",
+      "errOtherBrowser": "Has abierto el enlace en otro navegador. Si era para confirmar tu cuenta, ya está confirmada: inicia sesión con tu correo y contraseña. Si era para cambiar la contraseña, pide otro enlace.",
+      "errLinkExpired": "El enlace ha caducado o ya se usó. Inicia sesión o pide un enlace nuevo.",
       "errResend": "No se pudo reenviar el correo. Prueba de nuevo en unos minutos.",
       "confirmSentTitle": "Correo de confirmación enviado",
       "confirmSent": "Hemos enviado un enlace de verificación. Confirma tu cuenta para poder iniciar sesión.",

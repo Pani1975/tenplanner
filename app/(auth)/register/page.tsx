@@ -599,6 +599,9 @@ export default function RegisterPage() {
       {/* Jugador: el acceso (Google o email) solo aparece si es mayor de 18. */}
       {(!form.isPlayer || ageAnswer === "si") && (
       <>
+      {/* Club: el alta necesita el nombre del club, que Google no trae; solo
+          por correo (antes, con Google se creaba una cuenta de monitor). */}
+      {!form.isClub && (
       <div className="mt-6 space-y-4">
         <Button
           type="button"
@@ -633,6 +636,7 @@ export default function RegisterPage() {
           <Separator className="flex-1" />
         </div>
       </div>
+      )}
 
       <form onSubmit={onSubmit} className="mt-4 space-y-4">
         {form.isClub && (
