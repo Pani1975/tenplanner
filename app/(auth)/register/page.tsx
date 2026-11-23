@@ -15,7 +15,6 @@ import {
   Mail,
   User,
   UserRound,
-  Users,
 } from "lucide-react";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
@@ -432,13 +431,13 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-6 grid gap-3">
           <button
             type="button"
             onClick={() => selectAccountType("club")}
-            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
+            className="flex items-start gap-4 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
               <Building2 className="size-5" />
             </span>
             <span>
@@ -454,9 +453,9 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={() => selectAccountType("monitor")}
-            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
+            className="flex items-start gap-4 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
               <User className="size-5" />
             </span>
             <span>
@@ -471,28 +470,10 @@ export default function RegisterPage() {
 
           <button
             type="button"
-            onClick={() => selectAccountType("familia")}
-            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
-          >
-            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-              <Users className="size-5" />
-            </span>
-            <span>
-              <span className="block text-base font-black text-foreground">
-                {t("asFamily")}
-              </span>
-              <span className="mt-1 block text-sm leading-5 text-foreground/62">
-                {t("asFamilyText")}
-              </span>
-            </span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => selectAccountType("jugador")}
-            className="flex flex-col items-start gap-3 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
+            className="flex items-start gap-4 rounded-[22px] border border-[#050505]/10 bg-[#F4F4F1] p-5 text-left transition-colors hover:border-brand dark:border-white/10 dark:bg-white/[0.04]"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-brand/15 text-brand">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
               <UserRound className="size-5" />
             </span>
             <span>
@@ -583,14 +564,6 @@ export default function RegisterPage() {
           {ageAnswer === "no" && (
             <div className="space-y-3 text-sm leading-6 text-foreground/70">
               <p>{t("minorInfo")}</p>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 w-full rounded-full"
-                onClick={() => selectAccountType("familia")}
-              >
-                {t("minorToFamily")}
-              </Button>
             </div>
           )}
         </div>

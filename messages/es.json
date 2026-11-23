@@ -409,7 +409,7 @@
       "ageQuestion": "¿Tienes 18 años o más?",
       "ageYes": "Sí",
       "ageNo": "No",
-      "minorInfo": "Si tienes menos de 18 años, tu cuenta la gestiona tu familia: tu madre, padre o tutor se registra como familia y gestiona tus datos desde su cuenta.",
+      "minorInfo": "Si tienes menos de 18 años, no puedes crear tu propia cuenta: pide a tu club que te dé de alta.",
       "minorToFamily": "Registrar como familia"
     }
   },
