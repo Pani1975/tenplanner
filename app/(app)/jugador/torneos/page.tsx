@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FamilyHeader } from "@/components/family/family-header";
 import { listPlayerTournaments, type PlayerTournament } from "@/lib/players/club";
 import { formatMatchDate } from "@/lib/matches/format";
+import { todayInSpain } from "@/lib/matches/validation";
 
 export const metadata = { title: "Torneos" };
 
@@ -57,6 +58,12 @@ export default async function JugadorTorneosPage() {
   if (!user) redirect("/login");
 
   const data = await listPlayerTournaments(user.id, user.email);
+  // Jugados: terminados o ya pasados. Próximos: el resto (en curso incluido).
+  const today = todayInSpain();
+  const played = data.registered
+    .filter((t) => t.status === "finished" || (t.endDate ?? t.startDate) < today)
+    .reverse();
+  const upcoming = data.registered.filter((t) => !played.includes(t));
   const view = (t: PlayerTournament) =>
     t.visibility === "public" ? `/t/${t.slug}` : `/mi-familia/torneos/${t.slug}`;
 
@@ -67,23 +74,41 @@ export default async function JugadorTorneosPage() {
           icon={Trophy}
           kicker="Jugador"
           title="Torneos"
-          description="Los torneos organizados con Ten Planner en los que participas."
+          description="Los torneos organizados con Ten Planner en los que estás inscrito: los que vas a jugar y los que ya has jugado."
         />
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-black">Mis torneos</h2>
-          {data.registered.length === 0 ? (
-            <div className="tp-panel flex flex-col items-center gap-3 border-dashed py-12 text-center">
-              <Trophy className="size-8 text-foreground/30" />
-              <p className="max-w-sm text-sm leading-6 text-foreground/60">
-                No has sido inscrito en ningún torneo organizado con la
-                plataforma Ten Planner.
-              </p>
-            </div>
-          ) : (
-            <TournamentList items={data.registered} hrefFor={view} />
-          )}
-        </section>
+        {data.registered.length === 0 ? (
+          <div className="tp-panel flex flex-col items-center gap-3 border-dashed py-12 text-center">
+            <Trophy className="size-8 text-foreground/30" />
+            <p className="max-w-sm text-sm leading-6 text-foreground/60">
+              No has sido inscrito en ningún torneo organizado con la
+              plataforma Ten Planner.
+            </p>
+          </div>
+        ) : (
+          <>
+            <section className="space-y-3">
+              <h2 className="text-lg font-black">Próximos</h2>
+              {upcoming.length === 0 ? (
+                <p className="text-sm text-foreground/55">
+                  No tienes torneos por jugar.
+                </p>
+              ) : (
+                <TournamentList items={upcoming} hrefFor={view} />
+              )}
+            </section>
+            <section className="space-y-3">
+              <h2 className="text-lg font-black">Jugados</h2>
+              {played.length === 0 ? (
+                <p className="text-sm text-foreground/55">
+                  Aún no has jugado ningún torneo.
+                </p>
+              ) : (
+                <TournamentList items={played} hrefFor={view} />
+              )}
+            </section>
+          </>
+        )}
 
         {data.linked && (
           <section className="space-y-3">
