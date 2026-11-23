@@ -2,28 +2,30 @@
  * Mis partidos: tipos, reglas por tipo y validación. Se usa igual en el
  * formulario (errores bajo cada campo) y en la API (la que manda).
  *
- * Reglas por tipo:
- * - Torneo y Partido oficial: resultado obligatorio; enlace y rival
- *   (nombre, apellidos, licencia) opcionales.
- * - Amistoso: resultado y nombre del rival obligatorios; apellidos y enlace
- *   opcionales; sin licencia.
- * - Entrenamiento: todo opcional salvo la fecha; sin enlace ni licencia.
+ * Tres tipos (decisión de David, 2026-11-23, migración 0117_match_types):
+ * - Torneo federado: resultado obligatorio; torneo, enlace y rival (nombre,
+ *   apellidos, licencia) opcionales.
+ * - Torneo no federado: igual, pero sin licencia del rival.
+ * - Entrenamiento: todo opcional salvo la fecha; sin torneo, enlace ni
+ *   licencia.
  */
 
 export const MATCH_TYPES = [
-  "torneo",
-  "partido_oficial",
-  "amistoso",
+  "torneo_federado",
+  "torneo_no_federado",
   "entrenamiento",
 ] as const;
 
 export type MatchType = (typeof MATCH_TYPES)[number];
 
-export const MATCH_TYPE_LABELS: Record<MatchType, string> = {
-  torneo: "Torneo",
-  partido_oficial: "Partido oficial",
-  amistoso: "Amistoso",
+/** Valores que puede tener la base: "partido_oficial" quedó sin uso. */
+export type StoredMatchType = MatchType | "partido_oficial";
+
+export const MATCH_TYPE_LABELS: Record<StoredMatchType, string> = {
+  torneo_federado: "Torneo federado",
+  torneo_no_federado: "Torneo no federado",
   entrenamiento: "Entrenamiento",
+  partido_oficial: "Partido oficial",
 };
 
 export function isMatchType(value: unknown): value is MatchType {
@@ -43,26 +45,19 @@ export const MATCH_TYPE_RULES: Record<
     rivalFirstNameRequired: boolean;
   }
 > = {
-  torneo: {
+  torneo_federado: {
     resultRequired: true,
     url: true,
     urlLabel: "Enlace del torneo",
     license: true,
     rivalFirstNameRequired: false,
   },
-  partido_oficial: {
+  torneo_no_federado: {
     resultRequired: true,
     url: true,
-    urlLabel: "Enlace",
-    license: true,
-    rivalFirstNameRequired: false,
-  },
-  amistoso: {
-    resultRequired: true,
-    url: true,
-    urlLabel: "Enlace del torneo (si existe)",
+    urlLabel: "Enlace del torneo",
     license: false,
-    rivalFirstNameRequired: true,
+    rivalFirstNameRequired: false,
   },
   entrenamiento: {
     resultRequired: false,

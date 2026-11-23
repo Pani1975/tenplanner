@@ -2969,9 +2969,10 @@ export const tournamentPhotoTags = pgTable(
 // datos del rival son de terceros: nunca en listados públicos ni en la API
 // de otros usuarios. Validación en lib/matches/validation.ts.
 export const matchTypeEnum = pgEnum("match_type", [
-  "torneo",
+  // Orden de la base tras 0117_match_types. "partido_oficial" sin uso.
+  "torneo_federado",
   "partido_oficial",
-  "amistoso",
+  "torneo_no_federado",
   "entrenamiento",
 ]);
 

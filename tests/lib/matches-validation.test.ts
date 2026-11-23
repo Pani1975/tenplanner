@@ -56,14 +56,14 @@ describe("validateMatch", () => {
 
   it("torneo: resultado obligatorio, rival y licencia opcionales", () => {
     const sinResultado = validateMatch(
-      { matchType: "torneo", matchDate: TODAY },
+      { matchType: "torneo_federado", matchDate: TODAY },
       TODAY
     );
     expect(!sinResultado.ok && sinResultado.errors.finalResult).toBeTruthy();
 
     const ok = validateMatch(
       {
-        matchType: "torneo",
+        matchType: "torneo_federado",
         matchDate: TODAY,
         finalResult: "6-4 6-2",
         rivalLicense: "  12345 ",
@@ -82,7 +82,7 @@ describe("validateMatch", () => {
   it("valida el enlace", () => {
     const r = validateMatch(
       {
-        matchType: "partido_oficial",
+        matchType: "torneo_no_federado",
         matchDate: TODAY,
         finalResult: "6-4 6-2",
         tournamentUrl: "javascript:alert(1)",
@@ -92,16 +92,22 @@ describe("validateMatch", () => {
     expect(!r.ok && r.errors.tournamentUrl).toBeTruthy();
   });
 
-  it("amistoso: nombre del rival obligatorio y sin licencia", () => {
-    const sinNombre = validateMatch(
-      { matchType: "amistoso", matchDate: TODAY, finalResult: "6-4" },
+  it("torneo no federado: resultado obligatorio, rival opcional y sin licencia", () => {
+    const sinResultado = validateMatch(
+      { matchType: "torneo_no_federado", matchDate: TODAY },
       TODAY
     );
-    expect(!sinNombre.ok && sinNombre.errors.rivalFirstName).toBeTruthy();
+    expect(!sinResultado.ok && sinResultado.errors.finalResult).toBeTruthy();
+
+    const sinNombre = validateMatch(
+      { matchType: "torneo_no_federado", matchDate: TODAY, finalResult: "6-4" },
+      TODAY
+    );
+    expect(sinNombre.ok).toBe(true);
 
     const ok = validateMatch(
       {
-        matchType: "amistoso",
+        matchType: "torneo_no_federado",
         matchDate: TODAY,
         finalResult: "6-4",
         rivalFirstName: "Ana",
@@ -151,7 +157,7 @@ describe("torneo y perfil público", () => {
   it("guarda el nombre del torneo salvo en entrenamiento", () => {
     const t = validateMatch(
       {
-        matchType: "torneo",
+        matchType: "torneo_federado",
         matchDate: TODAY,
         finalResult: "6-4",
         tournamentName: " Open de Invierno ",
@@ -168,5 +174,14 @@ describe("torneo y perfil público", () => {
     );
     expect(e.ok && e.data.tournamentName).toBeNull();
     expect(e.ok && e.data.showOnProfile).toBe(false);
+  });
+});
+
+describe("tipos de partido", () => {
+  it("solo admite los tres tipos actuales", () => {
+    for (const old of ["torneo", "partido_oficial", "amistoso"]) {
+      const r = validateMatch({ matchType: old, matchDate: TODAY }, TODAY);
+      expect(!r.ok && r.errors.matchType).toBeTruthy();
+    }
   });
 });

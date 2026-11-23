@@ -77,7 +77,7 @@ export default async function MisPartidosPage({
           icon={Swords}
           kicker="Jugador"
           title="Mis partidos"
-          description="Tus torneos, partidos oficiales, amistosos y entrenamientos. Solo los ves tú."
+          description="Tus torneos federados, no federados y entrenamientos. Solo los ves tú."
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">

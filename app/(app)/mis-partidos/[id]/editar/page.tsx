@@ -42,7 +42,8 @@ export default async function EditarPartidoPage({
         <MatchForm
           matchId={match.id}
           initial={{
-            matchType: match.matchType,
+            matchType:
+              match.matchType === "partido_oficial" ? "torneo_federado" : match.matchType,
             matchDate: match.matchDate,
             finalResult: match.finalResult ?? "",
             tournamentUrl: match.tournamentUrl ?? "",
