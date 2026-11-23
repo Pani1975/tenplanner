@@ -94,11 +94,11 @@ export default async function PublicPlayerPage({ params }: Props) {
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-lg font-black">
             <Trophy className="size-5" />
-            Partidos
+            Palmarés
           </h2>
           {p.matches.length === 0 ? (
             <p className="text-sm text-foreground/60">
-              Todavía no hay partidos publicados.
+              Todavía no hay partidos publicados en el palmarés.
             </p>
           ) : (
             <ul className="divide-y divide-[#050505]/8 overflow-hidden rounded-lg border border-[#050505]/10 bg-white dark:divide-white/10 dark:border-white/10 dark:bg-white/[0.045]">
@@ -109,7 +109,13 @@ export default async function PublicPlayerPage({ params }: Props) {
                       {m.tournamentName ?? MATCH_TYPE_LABELS[m.matchType]}
                     </p>
                     <p className="text-xs text-foreground/55">
-                      {MATCH_TYPE_LABELS[m.matchType]} · {formatMatchDate(m.matchDate)}
+                      {[
+                        MATCH_TYPE_LABELS[m.matchType],
+                        m.round,
+                        formatMatchDate(m.matchDate),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                   {m.finalResult && (

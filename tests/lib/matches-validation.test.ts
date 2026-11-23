@@ -185,3 +185,41 @@ describe("tipos de partido", () => {
     }
   });
 });
+
+describe("ronda del partido", () => {
+  const base = { matchType: "torneo_federado", matchDate: TODAY, finalResult: "6-4" };
+
+  it("acepta una ronda de la lista y la guarda", () => {
+    const r = validateMatch({ ...base, round: "semifinal" }, TODAY);
+    expect(r.ok && r.data.round).toBe("semifinal");
+  });
+
+  it("rechaza una ronda que no está en la lista", () => {
+    const r = validateMatch({ ...base, round: "repesca" }, TODAY);
+    expect(!r.ok && r.errors.round).toBeTruthy();
+  });
+
+  it("«otra» exige el texto de la ronda", () => {
+    const sin = validateMatch({ ...base, round: "otra" }, TODAY);
+    expect(!sin.ok && sin.errors.roundOther).toBeTruthy();
+    const con = validateMatch({ ...base, round: "otra", roundOther: " Consolación " }, TODAY);
+    expect(con.ok && con.data.roundOther).toBe("Consolación");
+  });
+
+  it("el entrenamiento no guarda ronda", () => {
+    const r = validateMatch(
+      { matchType: "entrenamiento", matchDate: TODAY, round: "final" },
+      TODAY
+    );
+    expect(r.ok && r.data.round).toBeNull();
+  });
+});
+
+describe("roundLabel", () => {
+  it("muestra el texto de la ronda", async () => {
+    const { roundLabel } = await import("@/lib/matches/rounds");
+    expect(roundLabel("final", null)).toBe("Final");
+    expect(roundLabel("otra", "Consolación")).toBe("Consolación");
+    expect(roundLabel(null, null)).toBeNull();
+  });
+});

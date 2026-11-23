@@ -48,6 +48,8 @@ export default async function EditarPartidoPage({
             finalResult: match.finalResult ?? "",
             tournamentUrl: match.tournamentUrl ?? "",
             tournamentName: match.tournamentName ?? "",
+            round: match.round ?? "",
+            roundOther: match.roundOther ?? "",
             showOnProfile: match.showOnProfile,
             rivalFirstName: match.rivalFirstName ?? "",
             rivalLastName: match.rivalLastName ?? "",

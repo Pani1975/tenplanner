@@ -7,6 +7,7 @@ import { DeleteMatchButton } from "@/components/matches/delete-match-button";
 import { getMatch } from "@/lib/matches/server";
 import { MATCH_TYPE_LABELS, rivalName } from "@/lib/matches/validation";
 import { formatMatchDate } from "@/lib/matches/format";
+import { roundLabel } from "@/lib/matches/rounds";
 
 export const metadata = { title: "Partido" };
 
@@ -69,10 +70,13 @@ export default async function PartidoPage({
             </span>
           </Row>
           {match.tournamentName && <Row label="Torneo">{match.tournamentName}</Row>}
+          {roundLabel(match.round, match.roundOther) && (
+            <Row label="Ronda">{roundLabel(match.round, match.roundOther)}</Row>
+          )}
           <Row label="Rival">{rival ?? "Sin rival indicado"}</Row>
           {match.rivalLicense && <Row label="Licencia del rival">{match.rivalLicense}</Row>}
-          <Row label="Perfil público">
-            {match.showOnProfile ? "Se muestra (sin el rival)" : "No se muestra"}
+          <Row label="Palmarés público">
+            {match.showOnProfile ? "Publicado (sin el rival)" : "No publicado"}
           </Row>
           {match.tournamentUrl && (
             <Row label="Enlace">

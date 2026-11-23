@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { MATCH_ROUNDS } from "@/lib/matches/rounds";
 import {
   MATCH_TYPES,
   MATCH_TYPE_LABELS,
@@ -23,6 +24,8 @@ export interface MatchFormValues {
   finalResult: string;
   tournamentUrl: string;
   tournamentName: string;
+  round: string;
+  roundOther: string;
   showOnProfile: boolean;
   rivalFirstName: string;
   rivalLastName: string;
@@ -35,6 +38,8 @@ const EMPTY: MatchFormValues = {
   finalResult: "",
   tournamentUrl: "",
   tournamentName: "",
+  round: "",
+  roundOther: "",
   showOnProfile: false,
   rivalFirstName: "",
   rivalLastName: "",
@@ -111,7 +116,7 @@ export function MatchForm({
   }
 
   const field = (
-    key: Exclude<MatchField, "matchType" | "showOnProfile">,
+    key: Exclude<MatchField, "matchType" | "showOnProfile" | "round">,
     label: string,
     opts: {
       required?: boolean;
@@ -203,6 +208,36 @@ export function MatchForm({
             </div>
           )}
 
+          {rules.url && (
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-semibold text-foreground">
+                Ronda{" "}
+                <span className="font-normal text-muted-foreground">(opcional)</span>
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {MATCH_ROUNDS.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    aria-pressed={values.round === r.id}
+                    onClick={() => set("round", values.round === r.id ? "" : r.id)}
+                    className={cn(
+                      "min-h-10 rounded-full border px-4 text-sm font-semibold transition",
+                      values.round === r.id
+                        ? "border-brand bg-brand text-brand-foreground"
+                        : "border-[#050505]/15 bg-background text-foreground hover:border-brand/50 dark:border-white/15"
+                    )}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+              <FieldError id="round-error" message={errors.round} />
+              {values.round === "otra" &&
+                field("roundOther", "¿Qué ronda?", { required: true })}
+            </fieldset>
+          )}
+
           <fieldset className="space-y-4">
             <legend className="text-sm font-semibold text-foreground">Rival</legend>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -228,9 +263,9 @@ export function MatchForm({
             className="mt-1 size-4"
           />
           <span>
-            Mostrar en mi perfil público
+            Publicar en mi palmarés
             <span className="block text-xs text-muted-foreground">
-              Se ven la fecha, el tipo, el torneo y el resultado. El rival, nunca.
+              Aparece en tu perfil público con el torneo, la ronda, la fecha y el resultado. El rival, nunca.
             </span>
           </span>
         </label>

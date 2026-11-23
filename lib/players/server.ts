@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { matches, playerProfiles, users } from "@/db/schema";
 import { isAdult } from "@/lib/age";
 import { playerCategory } from "./category";
+import { roundLabel } from "@/lib/matches/rounds";
 import { slugBase, type ProfileData } from "./profile";
 
 export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
@@ -62,6 +63,8 @@ export interface PublicMatch {
   matchType: (typeof matches.$inferSelect)["matchType"];
   matchDate: string;
   tournamentName: string | null;
+  /** Ronda ya en texto («Semifinal»), o null. */
+  round: string | null;
   finalResult: string | null;
 }
 
@@ -103,6 +106,8 @@ export async function getPublicPlayerProfile(
       matchType: matches.matchType,
       matchDate: matches.matchDate,
       tournamentName: matches.tournamentName,
+      round: matches.round,
+      roundOther: matches.roundOther,
       finalResult: matches.finalResult,
     })
     .from(matches)
@@ -119,6 +124,9 @@ export async function getPublicPlayerProfile(
     startedAge: p.startedAge,
     favoritePlayer: p.favoritePlayer,
     birthPlace: p.birthPlace,
-    matches: publicMatches,
+    matches: publicMatches.map(({ roundOther, ...m }) => ({
+      ...m,
+      round: roundLabel(m.round, roundOther),
+    })),
   };
 }

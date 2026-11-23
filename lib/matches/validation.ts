@@ -1,3 +1,5 @@
+import { isMatchRound } from "./rounds";
+
 /**
  * Mis partidos: tipos, reglas por tipo y validación. Se usa igual en el
  * formulario (errores bajo cada campo) y en la API (la que manda).
@@ -83,6 +85,8 @@ export interface MatchInput {
   finalResult?: unknown;
   tournamentUrl?: unknown;
   tournamentName?: unknown;
+  round?: unknown;
+  roundOther?: unknown;
   showOnProfile?: unknown;
   rivalFirstName?: unknown;
   rivalLastName?: unknown;
@@ -97,7 +101,11 @@ export interface MatchData {
   tournamentUrl: string | null;
   /** Nombre del torneo (no en Entrenamiento). Sale en el perfil público. */
   tournamentName: string | null;
-  /** Mostrar en el perfil público del jugador (nunca el rival). */
+  /** Ronda (solo en torneos): código de lib/matches/rounds.ts. */
+  round: string | null;
+  /** Texto de la ronda si es «otra». */
+  roundOther: string | null;
+  /** Publicar en el palmarés del perfil público (nunca el rival). */
   showOnProfile: boolean;
   rivalFirstName: string | null;
   rivalLastName: string | null;
@@ -200,6 +208,25 @@ export function validateMatch(input: MatchInput, today: string): MatchValidation
     else tournamentName = name || null;
   }
 
+  let round: string | null = null;
+  let roundOther: string | null = null;
+  if (rules.url) {
+    const raw = text(input.round);
+    if (raw) {
+      if (!isMatchRound(raw)) errors.round = "Elige una ronda de la lista.";
+      else {
+        round = raw;
+        if (raw === "otra") {
+          const other = text(input.roundOther);
+          if (!other) errors.roundOther = "Indica cuál es la ronda.";
+          else if (other.length > 60)
+            errors.roundOther = "Máximo 60 caracteres.";
+          else roundOther = other;
+        }
+      }
+    }
+  }
+
   const rivalFirstName = text(input.rivalFirstName);
   if (!rivalFirstName && rules.rivalFirstNameRequired)
     errors.rivalFirstName = "Indica el nombre del rival.";
@@ -228,6 +255,8 @@ export function validateMatch(input: MatchInput, today: string): MatchValidation
       finalResult,
       tournamentUrl,
       tournamentName,
+      round,
+      roundOther,
       showOnProfile: input.showOnProfile === true,
       rivalFirstName: rivalFirstName || null,
       rivalLastName: rivalLastName || null,

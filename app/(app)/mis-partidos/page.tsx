@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, Plus, Swords } from "lucide-react";
+import { ChevronRight, Globe, Plus, Swords } from "lucide-react";
+import { CopyLink } from "@/components/matches/copy-link";
+import { PublishToggle } from "@/components/matches/publish-toggle";
+import { getPlayerProfile } from "@/lib/players/server";
+import { roundLabel } from "@/lib/matches/rounds";
+import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyHeader } from "@/components/family/family-header";
 import { listMatches, listMatchYears } from "@/lib/matches/server";
@@ -64,10 +69,14 @@ export default async function MisPartidosPage({
   const anioNum = Number(sp.anio);
   const anio = Number.isInteger(anioNum) && anioNum > 1900 ? anioNum : null;
 
-  const [rows, years] = await Promise.all([
+  const [rows, years, profile] = await Promise.all([
     listMatches(user.id, { type: tipo, year: anio }),
     listMatchYears(user.id),
+    getPlayerProfile(user.id),
   ]);
+  // Palmarés: el perfil público /j/<enlace>; solo existe si el jugador lo activa.
+  const palmaresUrl =
+    profile?.isPublic && profile.slug ? `${siteUrl}/j/${profile.slug}` : null;
   const filtered = !!tipo || !!anio;
 
   return (
@@ -89,6 +98,37 @@ export default async function MisPartidosPage({
             Añadir partido
           </Link>
         </div>
+
+        <section className="tp-panel space-y-3 p-4 sm:p-5" aria-label="Palmarés público">
+          <div className="flex items-center gap-2">
+            <Globe className="size-4 text-brand-ink" />
+            <h2 className="text-base font-black">Tu palmarés público</h2>
+          </div>
+          {palmaresUrl ? (
+            <>
+              <p className="text-sm leading-6 text-foreground/65">
+                Comparte este enlace. Solo salen los partidos que publiques con el
+                botón del mundo, con torneo, ronda, fecha y resultado; nunca el
+                rival.
+              </p>
+              <CopyLink url={palmaresUrl} />
+            </>
+          ) : (
+            <>
+              <p className="text-sm leading-6 text-foreground/65">
+                Para tener un enlace público con tus partidos, activa tu perfil
+                público (solo mayores de 18 años). Después podrás publicar cada
+                partido en tu palmarés.
+              </p>
+              <Link
+                href="/jugador/perfil"
+                className="inline-flex min-h-11 items-center text-sm font-bold text-brand-ink hover:underline"
+              >
+                Ir a mi perfil
+              </Link>
+            </>
+          )}
+        </section>
 
         <nav aria-label="Filtros" className="space-y-2">
           <div className="flex flex-wrap gap-2">
@@ -129,10 +169,10 @@ export default async function MisPartidosPage({
             {rows.map((m) => {
               const rival = rivalName(m);
               return (
-                <li key={m.id}>
+                <li key={m.id} className="flex items-center pr-1 hover:bg-foreground/[0.03]">
                   <Link
                     href={`/mis-partidos/${m.id}`}
-                    className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-foreground/[0.03]"
+                    className="flex min-h-16 min-w-0 flex-1 items-center gap-3 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -144,7 +184,11 @@ export default async function MisPartidosPage({
                         </span>
                       </div>
                       <p className="mt-1 truncate text-sm font-semibold text-foreground">
-                        {[m.tournamentName, rival ? `vs ${rival}` : null]
+                        {[
+                          m.tournamentName,
+                          roundLabel(m.round, m.roundOther),
+                          rival ? `vs ${rival}` : null,
+                        ]
                           .filter(Boolean)
                           .join(" · ") || "Sin rival indicado"}
                       </p>
@@ -156,6 +200,7 @@ export default async function MisPartidosPage({
                     )}
                     <ChevronRight className="size-4 shrink-0 text-foreground/35" />
                   </Link>
+                  <PublishToggle matchId={m.id} published={m.showOnProfile} />
                 </li>
               );
             })}

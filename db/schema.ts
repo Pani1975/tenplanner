@@ -2994,6 +2994,10 @@ export const matches = pgTable(
     // se marca para mostrarse; el rival nunca.
     tournamentName: varchar("tournament_name", { length: 120 }),
     showOnProfile: boolean("show_on_profile").default(false).notNull(),
+    // Ronda (palmarés público): código de lib/matches/rounds.ts; con "otra",
+    // el texto libre de roundOther. Migración 0118_match_round.
+    round: varchar("round", { length: 20 }),
+    roundOther: varchar("round_other", { length: 60 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
