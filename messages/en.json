@@ -311,6 +311,8 @@
       "errGeneric": "There is no confirmed account with that email, or the password is wrong.",
       "errMissingEmail": "We couldn't read the email from your provider. Try another sign-in method.",
       "errCallbackFailed": "We couldn't complete the verification. Try again from the email you received.",
+      "errOtherBrowser": "You opened the link in another browser. If it was to confirm your account, it is already confirmed: sign in with your email and password. If it was to change your password, request a new link.",
+      "errLinkExpired": "The link has expired or was already used. Sign in or request a new link.",
       "errResend": "The email could not be resent. Try again in a few minutes.",
       "confirmSentTitle": "Confirmation email sent",
       "confirmSent": "We have sent a verification link. Confirm your account to be able to log in.",
@@ -407,7 +409,7 @@
       "ageQuestion": "Are you 18 or older?",
       "ageYes": "Yes",
       "ageNo": "No",
-      "minorInfo": "If you are under 18, your family manages your account: your parent or guardian signs up as a family and manages your details from their account.",
+      "minorInfo": "If you are under 18, you cannot create your own account: ask your club to sign you up.",
       "minorToFamily": "Sign up as a family"
     }
   },

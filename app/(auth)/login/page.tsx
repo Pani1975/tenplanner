@@ -30,6 +30,8 @@ function LoginForm() {
   const callbackErrors: Record<string, string> = {
     missing_email: t("errMissingEmail"),
     auth_callback_failed: t("errCallbackFailed"),
+    other_browser: t("errOtherBrowser"),
+    link_expired: t("errLinkExpired"),
   };
   const router = useRouter();
   const searchParams = useSearchParams();
