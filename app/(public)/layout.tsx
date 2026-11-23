@@ -10,6 +10,7 @@ import {
   getClubOptionsForUser,
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
+import { getFamilyNavState } from "@/lib/players/view";
 
 export default async function PublicLayout({
   children,
@@ -28,6 +29,7 @@ export default async function PublicLayout({
     activeWorkClubId,
     activeSport,
     clubAccountClubId,
+    navState,
   ] = await Promise.all([
     user
       ? db
@@ -55,6 +57,10 @@ export default async function PublicLayout({
     user ? getActiveWorkClubId(user.id) : Promise.resolve(null),
     user ? getActiveSport(user.id) : Promise.resolve(undefined),
     user ? getClubAccountClubId(user.id) : Promise.resolve(null),
+    // Familias y jugadores ven aquí también su menú (no el del monitor).
+    user
+      ? getFamilyNavState(user)
+      : Promise.resolve({ familyOnly: false, playerView: false, playerLinked: false }),
   ]);
 
   const isAdmin = adminRows[0]?.isAdmin ?? false;
@@ -85,6 +91,9 @@ export default async function PublicLayout({
       platformAccount={!!row?.isPlatformAccount}
       clubAccountClubId={clubAccountClubId}
       managementMode={!!clubAccountClubId && !!row?.managementMode}
+      familyOnly={navState.familyOnly}
+      playerAccount={navState.playerView}
+      playerLinked={navState.playerLinked}
     >
       {children}
     </AppShell>

@@ -1,5 +1,5 @@
 import { effectiveAttended } from "@/lib/sessions/attendance";
-import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { db } from "@/db";
 import {
   calendarHolidays,
@@ -124,10 +124,8 @@ export async function getPlayerCalendar(
   if (!player.clubId) return { sessions: [], holidays: [] };
   const groupIds = player.groups.map((g) => g.id);
 
-  const sessionRows =
-    groupIds.length === 0
-      ? []
-      : await db
+  // Sesiones de sus grupos y sesiones sueltas en las que figura él.
+  const sessionRows = await db
           .select({
             id: sessions.id,
             title: sessions.title,
@@ -150,7 +148,12 @@ export async function getPlayerCalendar(
           .where(
             and(
               eq(sessions.clubId, player.clubId),
-              inArray(sessions.groupId, groupIds),
+              groupIds.length > 0
+                ? or(
+                    inArray(sessions.groupId, groupIds),
+                    isNotNull(sessionStudents.studentId)
+                  )
+                : isNotNull(sessionStudents.studentId),
               gte(sessions.scheduledAt, from),
               lte(sessions.scheduledAt, to)
             )

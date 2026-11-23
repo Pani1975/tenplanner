@@ -2,6 +2,8 @@ import { and, asc, eq, gte, inArray, isNull, lte, ne, or, sql } from "drizzle-or
 import { db } from "@/db";
 import {
   calendarEvents,
+  groups,
+  sessions,
   students,
   studentGuardians,
   tournamentEntries,
@@ -189,6 +191,8 @@ export type PlayerCalendarItem = {
   description: string | null;
   href: string | null;
   registered: boolean;
+  /** Evento o torneo de uno de sus clubes («Calendario club»). */
+  fromClub: boolean;
 };
 
 /**
@@ -252,9 +256,11 @@ export async function getPlayerCalendarItems(
     description: e.description,
     href: null,
     registered: false,
+    fromClub: true,
   }));
 
   const registeredIds = new Set(mine.registered.map((t) => t.id));
+  const clubTournamentIds = new Set(clubTournaments.map((t) => t.id));
   const allTournaments = new Map<string, PlayerTournament>();
   for (const t of mine.registered) allTournaments.set(t.id, t);
   for (const t of clubTournaments)
@@ -281,7 +287,52 @@ export async function getPlayerCalendarItems(
       description: null,
       href: t.visibility === "public" ? `/t/${t.slug}` : `/mi-familia/torneos/${t.slug}`,
       registered: registeredIds.has(t.id),
+      fromClub: clubTournamentIds.has(t.id),
     });
   }
   return items;
+}
+
+/** Sesión del club vista por un jugador: sin alumnos, ejercicios ni asistencia. */
+export type ClubSessionSummary = {
+  id: string;
+  title: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  status: string;
+  objective: string | null;
+  location: string | null;
+  groupName: string | null;
+};
+
+/** Sesiones de sus clubes (pasadas y futuras) en el periodo. */
+export async function listClubSessionsForPlayer(
+  userId: string,
+  from: Date,
+  to: Date
+): Promise<ClubSessionSummary[]> {
+  const clubIds = await playerClubIds(userId);
+  if (!clubIds.length) return [];
+  return db
+    .select({
+      id: sessions.id,
+      title: sessions.title,
+      scheduledAt: sessions.scheduledAt,
+      durationMinutes: sessions.durationMinutes,
+      status: sessions.status,
+      objective: sessions.objective,
+      location: sessions.location,
+      groupName: groups.name,
+    })
+    .from(sessions)
+    .leftJoin(groups, eq(groups.id, sessions.groupId))
+    .where(
+      and(
+        inArray(sessions.clubId, clubIds),
+        gte(sessions.scheduledAt, from),
+        lte(sessions.scheduledAt, to)
+      )
+    )
+    .orderBy(asc(sessions.scheduledAt))
+    .limit(500);
 }

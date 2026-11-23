@@ -145,7 +145,7 @@ export default async function JugadorInicioPage() {
           <Section
             title="Próximas sesiones"
             icon={CalendarDays}
-            href="/mi-familia/calendario"
+            href="/jugador/calendario"
             linkLabel="Calendario"
           >
             {linked.length === 0 ? (
@@ -160,7 +160,7 @@ export default async function JugadorInicioPage() {
                 {upcoming.map((s) => (
                   <ItemLink
                     key={s.id}
-                    href="/mi-familia/calendario"
+                    href="/jugador/calendario"
                     title={s.objective ?? s.title}
                     meta={
                       <>

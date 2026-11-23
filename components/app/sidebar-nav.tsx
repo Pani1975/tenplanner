@@ -277,20 +277,19 @@ function PlatformBadge() {
 }
 
 // Cuenta de jugador (se registró "Como jugador", o un administrador con
-// «Ver como: jugador»; ver lib/players/view.ts). Mis sesiones, Informes y
-// Mensajes solo si está vinculado a un club. Sin «Mis ejercicios» ni «Mis
-// clases»: ya están dentro de Ejercicios y Clases. Torneos: los suyos (no
-// crea torneos).
+// «Ver como: jugador»; ver lib/players/view.ts). Sesiones, Mensajes e
+// Informes solo si está vinculado a un club. Sin Torneos, Objetivos, Lugares
+// ni Reservas: los torneos salen en su Calendario.
 function playerNavItems(linked: boolean): NavItem[] {
   return [
     { href: "/jugador", label: "Inicio", icon: LayoutDashboard },
-    { href: "/jugador/calendario", label: "Calendario", icon: CalendarDays },
-    { href: "/classes", label: "Clases", icon: GraduationCap },
     { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
+    { href: "/classes", label: "Clases", icon: GraduationCap },
     ...(linked
-      ? [{ href: "/mi-familia/jugador", label: "Mis sesiones", icon: CalendarCheck }]
+      ? [{ href: "/jugador/sesiones", label: "Sesiones", icon: CalendarCheck }]
       : []),
-    { href: "/jugador/torneos", label: "Torneos", icon: Trophy },
+    { href: "/jugador/calendario", label: "Calendario", icon: CalendarDays },
+    { href: "/resources", label: "Mis recursos", icon: BookMarked },
     { href: "/mis-partidos", label: "Mis partidos", icon: Swords },
     ...(linked
       ? [
