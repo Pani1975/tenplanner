@@ -30,7 +30,12 @@ export async function GET(request: Request) {
         if (!user.email) {
           return NextResponse.redirect(`${origin}/login?error=missing_email`);
         }
-        await finishSignIn(supabase, user, requestedAccountType);
+        await finishSignIn(
+          supabase,
+          user,
+          requestedAccountType,
+          searchParams.get("adult") === "1"
+        );
       }
 
       return NextResponse.redirect(`${origin}${next}`);

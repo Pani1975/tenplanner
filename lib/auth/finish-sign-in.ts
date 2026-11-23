@@ -29,7 +29,9 @@ export function safeNext(raw: string | null, fallback = "/dashboard"): string {
 export async function finishSignIn(
   supabase: ServerSupabase,
   user: User,
-  requestedAccountType: string | null
+  requestedAccountType: string | null,
+  // Jugador que confirmó en /register que tiene 18 años o más.
+  adultConfirmed = false
 ): Promise<void> {
   if (!user.email) return;
 
@@ -52,7 +54,12 @@ export async function finishSignIn(
       isFamilyAccountType({ account_type: requestedAccountType })
     ) {
       await supabase.auth.updateUser({
-        data: { account_type: requestedAccountType },
+        data: {
+          account_type: requestedAccountType,
+          ...(requestedAccountType === "jugador" && adultConfirmed
+            ? { adult_confirmed_at: new Date().toISOString() }
+            : {}),
+        },
       });
     }
   } catch (error) {
