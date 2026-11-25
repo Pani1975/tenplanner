@@ -181,7 +181,7 @@ export async function listPlayerTournaments(
 /** Elemento del calendario del jugador que no es una sesión. */
 export type PlayerCalendarItem = {
   id: string;
-  kind: "evento" | "torneo";
+  kind: "evento" | "torneo" | "tarea";
   title: string;
   /** AAAA-MM-DD, ambos incluidos. */
   startDate: string;

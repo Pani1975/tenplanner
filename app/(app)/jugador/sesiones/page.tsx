@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarCheck, CircleCheck, CircleX, Clock, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FamilyHeader } from "@/components/family/family-header";
 import { LocalDateTime } from "@/components/family/local-time";
-import { getFamilyPlayers, getPlayerCalendar } from "@/lib/family-data";
 import { listClubSessionsForPlayer } from "@/lib/players/club";
 import { cn } from "@/lib/utils";
 
@@ -90,62 +88,26 @@ function SessionList({ rows, showAttendance }: { rows: Row[]; showAttendance: bo
 }
 
 /**
- * Sesiones del jugador vinculado a un club: las suyas (con asistencia) y las
- * del club (sin alumnos, ejercicios ni asistencia). Un jugador no crea
- * sesiones.
+ * Sesiones del club al que está vinculado el jugador, pasadas y próximas
+ * (sin alumnos, ejercicios ni asistencia). Un jugador no crea sesiones.
  */
-export default async function JugadorSesionesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ vista?: string }>;
-}) {
+export default async function JugadorSesionesPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const vista = (await searchParams).vista === "club" ? "club" : "mias";
   const now = new Date();
   const from = new Date(now.getTime() - 180 * DAY);
   const to = new Date(now.getTime() + 180 * DAY);
 
-  let rows: Row[] = [];
-  if (vista === "mias") {
-    const players = (await getFamilyPlayers(user.id).catch(() => [])).filter((p) => p.clubId);
-    const calendars = await Promise.all(
-      players.map((p) => getPlayerCalendar(p, from, to).catch(() => ({ sessions: [], holidays: [] })))
-    );
-    rows = [
-      ...new Map(
-        calendars.flatMap((c) => c.sessions).map((s) => [
-          s.id,
-          { ...s, extra: null } satisfies Row,
-        ])
-      ).values(),
-    ];
-  } else {
-    rows = (await listClubSessionsForPlayer(user.id, from, to).catch(() => [])).map((s) => ({
-      ...s,
-      extra: s.groupName ? `Grupo ${s.groupName}` : null,
-    }));
-  }
+  const rows: Row[] = (await listClubSessionsForPlayer(user.id, from, to).catch(() => [])).map(
+    (s) => ({ ...s, extra: s.groupName ? `Grupo ${s.groupName}` : null })
+  );
   rows.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
   const upcoming = rows.filter((r) => r.scheduledAt >= now);
   const past = rows.filter((r) => r.scheduledAt < now).reverse();
-
-  const tab = (id: "mias" | "club", label: string) => (
-    <Link
-      href={id === "club" ? "/jugador/sesiones?vista=club" : "/jugador/sesiones"}
-      aria-current={vista === id ? "page" : undefined}
-      className={cn(
-        "flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-bold",
-        vista === id ? "bg-brand text-brand-foreground" : "text-foreground/70"
-      )}
-    >
-      {label}
-    </Link>
-  );
 
   return (
     <div className="tp-page">
@@ -153,20 +115,16 @@ export default async function JugadorSesionesPage({
         <FamilyHeader
           icon={CalendarCheck}
           kicker="Jugador"
-          title="Sesiones"
+          title="Sesiones del club"
           description="Las sesiones de tu club, pasadas y próximas. Las crea el club; tú las consultas."
         />
-        <nav className="grid grid-cols-2 gap-1 rounded-full bg-foreground/5 p-1" aria-label="Sesiones">
-          {tab("mias", "Mis sesiones")}
-          {tab("club", "Del club")}
-        </nav>
         <section className="space-y-3">
           <h2 className="text-lg font-black">Próximas</h2>
           <SessionList rows={upcoming} showAttendance={false} />
         </section>
         <section className="space-y-3">
           <h2 className="text-lg font-black">Pasadas</h2>
-          <SessionList rows={past} showAttendance={vista === "mias"} />
+          <SessionList rows={past} showAttendance={false} />
         </section>
       </div>
     </div>

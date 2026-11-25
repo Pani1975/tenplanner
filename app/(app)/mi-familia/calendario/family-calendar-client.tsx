@@ -6,6 +6,7 @@ import {
   CalendarOff,
   ChevronLeft,
   ChevronRight,
+  ListTodo,
   MapPin,
   PartyPopper,
   Trophy,
@@ -297,6 +298,8 @@ export function FamilyCalendarClient({
               <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06]">
                 {i.kind === "torneo" ? (
                   <Trophy className="size-5" />
+                ) : i.kind === "tarea" ? (
+                  <ListTodo className="size-5" />
                 ) : (
                   <PartyPopper className="size-5" />
                 )}
@@ -322,7 +325,11 @@ export function FamilyCalendarClient({
                   ? i.registered
                     ? "Torneo · inscrito"
                     : "Torneo del club"
-                  : "Evento del club"}
+                  : i.kind === "tarea"
+                    ? i.registered
+                      ? "Mi tarea · hecha"
+                      : "Mi tarea"
+                    : "Evento del club"}
               </span>
             </>
           );

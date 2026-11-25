@@ -4,6 +4,8 @@ import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getFamilyPlayers, getPlayerCalendar } from "@/lib/family-data";
 import { getPlayerCalendarItems } from "@/lib/players/club";
+import { listPlayerTasks } from "@/lib/players/tasks";
+import { PlayerTasksPanel } from "@/components/players/player-tasks-panel";
 import { FamilyHeader } from "@/components/family/family-header";
 import { FamilyCalendarClient } from "../../mi-familia/calendario/family-calendar-client";
 import { cn } from "@/lib/utils";
@@ -32,9 +34,10 @@ export default async function JugadorCalendarioPage({
   const from = new Date(now.getTime() - 120 * DAY);
   const to = new Date(now.getTime() + 365 * DAY);
 
-  const [players, items] = await Promise.all([
+  const [players, items, tasks] = await Promise.all([
     getFamilyPlayers(user.id).catch(() => []),
     getPlayerCalendarItems(user.id, user.email, from, to).catch(() => []),
+    listPlayerTasks(user.id).catch(() => []),
   ]);
   const linked = players.filter((p) => p.clubId);
   // «Mi calendario»: sus sesiones, festivos y torneos en los que está
@@ -67,7 +70,7 @@ export default async function JugadorCalendarioPage({
             vista === "club"
               ? "Eventos y torneos de tu club."
               : linked.length
-                ? "Tus sesiones del club, los festivos y los torneos en los que estás inscrito."
+                ? "Tus sesiones del club, los festivos, tus tareas y los torneos en los que estás inscrito."
                 : "Los torneos de Ten Planner en los que estás inscrito. Cuando tu club te vincule, verás también tus sesiones."
           }
         />
@@ -105,10 +108,29 @@ export default async function JugadorCalendarioPage({
           groupNames={Object.fromEntries(
             linked.flatMap((p) => p.groups.map((g) => [g.id, g.name]))
           )}
-          items={items.filter((i) =>
-            vista === "club" ? i.fromClub : i.kind === "torneo" && i.registered
-          )}
+          items={[
+            ...items.filter((i) =>
+              vista === "club" ? i.fromClub : i.kind === "torneo" && i.registered
+            ),
+            ...(vista === "club"
+              ? []
+              : tasks
+                  .filter((t) => t.dueDate)
+                  .map((t) => ({
+                    id: `t-${t.id}`,
+                    kind: "tarea" as const,
+                    title: t.title,
+                    startDate: t.dueDate!,
+                    endDate: t.dueDate!,
+                    startAt: null,
+                    description: t.description,
+                    href: null,
+                    registered: t.done,
+                    fromClub: false,
+                  }))),
+          ]}
         />
+        {vista === "mio" && <PlayerTasksPanel tasks={tasks} />}
       </div>
     </div>
   );

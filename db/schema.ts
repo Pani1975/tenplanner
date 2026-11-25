@@ -3042,3 +3042,22 @@ export const playerProfiles = pgTable(
   },
   (t) => [uniqueIndex("player_profiles_slug_uniq").on(t.slug)]
 );
+
+/** Tareas personales del jugador («Mis tareas»); solo las ve su dueño. */
+export const playerTasks = pgTable(
+  "player_tasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    dueDate: date("due_date", { mode: "string" }),
+    doneAt: timestamp("done_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("player_tasks_user_idx").on(t.userId, t.dueDate)]
+);
