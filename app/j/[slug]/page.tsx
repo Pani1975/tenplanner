@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { dmSans } from "@/app/fonts/dm-sans";
 import { getPublicPlayerProfile } from "@/lib/players/server";
-import { handLabel, shotLabel } from "@/lib/players/profile";
+import { handLabel } from "@/lib/players/profile";
+import { OUTCOME_LABELS } from "@/lib/matches/outcome";
 import { MATCH_TYPE_LABELS } from "@/lib/matches/validation";
 import { formatMatchDate } from "@/lib/matches/format";
 
@@ -82,7 +83,6 @@ export default async function PublicPlayerPage({ params }: Props) {
       <main className="mx-auto max-w-3xl space-y-8 px-5 py-8">
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Stat label="Mano" value={handLabel(p.dominantHand)} />
-          <Stat label="Golpe preferido" value={shotLabel(p.favoriteShot)} />
           <Stat
             label="Empezó a jugar"
             value={p.startedAge != null ? `A los ${p.startedAge} años` : null}
@@ -110,19 +110,37 @@ export default async function PublicPlayerPage({ params }: Props) {
                     </p>
                     <p className="text-xs text-foreground/55">
                       {[
-                        MATCH_TYPE_LABELS[m.matchType],
+                        m.tournamentName ? MATCH_TYPE_LABELS[m.matchType] : null,
                         m.round,
                         formatMatchDate(m.matchDate),
                       ]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
+                    {m.rival && (
+                      <p className="truncate text-xs font-semibold text-foreground/70">
+                        vs {m.rival}
+                      </p>
+                    )}
                   </div>
-                  {m.finalResult && (
-                    <span className="shrink-0 font-mono text-sm font-bold tabular-nums">
-                      {m.finalResult}
-                    </span>
-                  )}
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {m.finalResult && (
+                      <span className="font-mono text-sm font-bold tabular-nums">
+                        {m.finalResult}
+                      </span>
+                    )}
+                    {m.outcome && (
+                      <span
+                        className={
+                          m.outcome === "victoria"
+                            ? "rounded-full bg-[#d6f04a] px-2 py-0.5 text-[11px] font-black uppercase text-[#050505]"
+                            : "rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] font-black uppercase text-foreground/70"
+                        }
+                      >
+                        {OUTCOME_LABELS[m.outcome]}
+                      </span>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

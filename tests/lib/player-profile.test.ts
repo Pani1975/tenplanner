@@ -53,15 +53,14 @@ describe("validateProfile", () => {
     }
   });
 
-  it("valida mano, golpe y edad de inicio", () => {
+  it("valida mano y edad de inicio", () => {
     const r = validateProfile(
-      { ...base, dominantHand: "ambas", favoriteShot: "x", startedAge: "1" },
+      { ...base, dominantHand: "ambas", startedAge: "1" },
       TODAY
     );
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errors.dominantHand).toBeDefined();
-      expect(r.errors.favoriteShot).toBeDefined();
       expect(r.errors.startedAge).toBeDefined();
     }
   });

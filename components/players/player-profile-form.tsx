@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { todayInSpain } from "@/lib/matches/validation";
 import { playerCategory } from "@/lib/players/category";
 import {
-  FAVORITE_SHOTS,
   HANDS,
   validateProfile,
   type ProfileField,
@@ -24,7 +23,6 @@ export interface ProfileFormValues {
   showPhoto: boolean;
   clubName: string;
   dominantHand: string;
-  favoriteShot: string;
   startedAge: string;
   favoritePlayer: string;
   birthPlace: string;
@@ -206,20 +204,6 @@ export function PlayerProfileForm({
             onChange={(v) => set("dominantHand", v)}
           />
           <FieldError id="dominantHand-error" message={errors.dominantHand} />
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-medium">
-            Golpe preferido{" "}
-            <span className="font-normal text-muted-foreground">(opcional)</span>
-          </p>
-          <Choice
-            label="Golpe preferido"
-            options={FAVORITE_SHOTS}
-            value={values.favoriteShot}
-            onChange={(v) => set("favoriteShot", v)}
-          />
-          <FieldError id="favoriteShot-error" message={errors.favoriteShot} />
         </div>
       </section>
 

@@ -10,21 +10,8 @@ export const HANDS = [
   { id: "left", label: "Zurdo" },
 ] as const;
 
-export const FAVORITE_SHOTS = [
-  { id: "derecha", label: "Derecha" },
-  { id: "reves", label: "Revés" },
-  { id: "saque", label: "Saque" },
-  { id: "resto", label: "Resto" },
-  { id: "volea", label: "Volea" },
-  { id: "dejada", label: "Dejada" },
-  { id: "globo", label: "Globo" },
-  { id: "smash", label: "Smash" },
-] as const;
-
 export const handLabel = (id: string | null) =>
   HANDS.find((h) => h.id === id)?.label ?? null;
-export const shotLabel = (id: string | null) =>
-  FAVORITE_SHOTS.find((s) => s.id === id)?.label ?? null;
 
 export interface ProfileInput {
   firstName?: unknown;
@@ -33,7 +20,6 @@ export interface ProfileInput {
   showPhoto?: unknown;
   clubName?: unknown;
   dominantHand?: unknown;
-  favoriteShot?: unknown;
   startedAge?: unknown;
   favoritePlayer?: unknown;
   birthPlace?: unknown;
@@ -47,7 +33,6 @@ export interface ProfileData {
   showPhoto: boolean;
   clubName: string | null;
   dominantHand: string | null;
-  favoriteShot: string | null;
   startedAge: number | null;
   favoritePlayer: string | null;
   birthPlace: string | null;
@@ -112,10 +97,6 @@ export function validateProfile(
   if (hand && !HANDS.some((h) => h.id === hand))
     errors.dominantHand = "Elige una opción de la lista.";
 
-  const shot = text(input.favoriteShot);
-  if (shot && !FAVORITE_SHOTS.some((s) => s.id === shot))
-    errors.favoriteShot = "Elige una opción de la lista.";
-
   let startedAge: number | null = null;
   const ageRaw =
     typeof input.startedAge === "number"
@@ -157,7 +138,6 @@ export function validateProfile(
       showPhoto: input.showPhoto === true,
       clubName,
       dominantHand: hand || null,
-      favoriteShot: shot || null,
       startedAge,
       favoritePlayer,
       birthPlace,

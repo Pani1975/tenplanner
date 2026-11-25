@@ -62,7 +62,6 @@ export default async function PerfilJugadorPage() {
             showPhoto: profile?.showPhoto ?? false,
             clubName: profile?.clubName ?? "",
             dominantHand: profile?.dominantHand ?? "",
-            favoriteShot: profile?.favoriteShot ?? "",
             startedAge: profile?.startedAge != null ? String(profile.startedAge) : "",
             favoritePlayer: profile?.favoritePlayer ?? "",
             birthPlace: profile?.birthPlace ?? "",

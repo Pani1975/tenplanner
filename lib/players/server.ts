@@ -4,6 +4,8 @@ import { matches, playerProfiles, users } from "@/db/schema";
 import { isAdult } from "@/lib/age";
 import { playerCategory } from "./category";
 import { roundLabel } from "@/lib/matches/rounds";
+import { matchOutcome } from "@/lib/matches/outcome";
+import { rivalName } from "@/lib/matches/validation";
 import { slugBase, type ProfileData } from "./profile";
 
 export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
@@ -65,7 +67,10 @@ export interface PublicMatch {
   tournamentName: string | null;
   /** Ronda ya en texto («Semifinal»), o null. */
   round: string | null;
+  /** Rival (nombre y apellidos), solo de los partidos publicados. Sin licencia. */
+  rival: string | null;
   finalResult: string | null;
+  outcome: "victoria" | "derrota" | null;
 }
 
 export interface PublicPlayerProfile {
@@ -74,7 +79,6 @@ export interface PublicPlayerProfile {
   category: string | null;
   clubName: string | null;
   dominantHand: string | null;
-  favoriteShot: string | null;
   startedAge: number | null;
   favoritePlayer: string | null;
   birthPlace: string | null;
@@ -108,6 +112,8 @@ export async function getPublicPlayerProfile(
       tournamentName: matches.tournamentName,
       round: matches.round,
       roundOther: matches.roundOther,
+      rivalFirstName: matches.rivalFirstName,
+      rivalLastName: matches.rivalLastName,
       finalResult: matches.finalResult,
     })
     .from(matches)
@@ -120,13 +126,16 @@ export async function getPublicPlayerProfile(
     category: playerCategory(p.birthDate),
     clubName: p.clubName,
     dominantHand: p.dominantHand,
-    favoriteShot: p.favoriteShot,
     startedAge: p.startedAge,
     favoritePlayer: p.favoritePlayer,
     birthPlace: p.birthPlace,
-    matches: publicMatches.map(({ roundOther, ...m }) => ({
-      ...m,
-      round: roundLabel(m.round, roundOther),
-    })),
+    matches: publicMatches.map(
+      ({ roundOther, rivalFirstName, rivalLastName, ...m }): PublicMatch => ({
+        ...m,
+        round: roundLabel(m.round, roundOther),
+        rival: rivalName({ rivalFirstName, rivalLastName }),
+        outcome: matchOutcome(m.finalResult),
+      })
+    ),
   };
 }
