@@ -1,0 +1,1 @@
+- **2026-11-25, commit `267f193` publicado (sin migración):** `/jugador/sesiones` pasa a «Mis sesiones» con Todas/Próximas/Pasadas/Canceladas (solo sesiones del club; las de un monitor sin club no están) y nuevo `/jugador/club` («Mi club», solo con club). Comprobado sin sesión (307 a login); sin probar con la cuenta de David.
