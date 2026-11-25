@@ -35,7 +35,11 @@ export async function GET(request: Request) {
   if (ids.length === 0) return NextResponse.json({ data: {} });
 
   const rows = await db
-    .select({ id: exercises.id, imageUrls: exercises.imageUrls })
+    .select({
+      id: exercises.id,
+      imageUrl: exercises.imageUrl,
+      imageUrls: exercises.imageUrls,
+    })
     .from(exercises)
     .where(
       and(inArray(exercises.id, ids), exerciseVisibleToUserCondition(user.id))
@@ -43,9 +47,10 @@ export async function GET(request: Request) {
 
   const data: Record<string, ExerciseVisual> = {};
   for (const r of rows) {
+    // Primero la lista de fotos; si no, el campo antiguo de una sola foto.
     const imageUrl =
-      (Array.isArray(r.imageUrls) ? r.imageUrls : []).find(
-        (u) => typeof u === "string" && u.startsWith("https://")
+      [...(Array.isArray(r.imageUrls) ? r.imageUrls : []), r.imageUrl].find(
+        (u): u is string => typeof u === "string" && u.startsWith("https://")
       ) ?? null;
     const diagram = getExerciseDiagram(r.id);
     if (imageUrl || diagram) data[r.id] = { imageUrl, diagram };

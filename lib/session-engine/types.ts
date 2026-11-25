@@ -46,6 +46,9 @@ export type EngineExercise = {
   hasSteps: boolean;
   hasVariantes: boolean;
   hasMedia: boolean;
+  /** Tiene foto o esquema de pista: lo que el monitor ve en la miniatura
+   * del asistente. Opcional para no romper los datos de prueba. */
+  hasVisual?: boolean;
   /** Media de exercise_ratings (1-5) o null. */
   ratingAvg: number | null;
   /** direccion | profundidad | altura | velocidad. */

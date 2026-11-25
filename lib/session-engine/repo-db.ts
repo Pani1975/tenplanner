@@ -30,6 +30,7 @@ import {
 import { sharedWithClubCondition } from "@/lib/clubs";
 import { exerciseOwnOrClubCondition } from "@/lib/exercise-access";
 import { loadSkillLevels } from "@/lib/skill-levels-repo";
+import { getExerciseDiagram } from "@/lib/exercise-diagrams";
 import type { GroupScheduleEntry } from "@/lib/groups/schedule";
 import {
   GOLPES,
@@ -177,6 +178,7 @@ async function queryPool(where: SQL): Promise<PoolRow[]> {
       hasSteps: sql<boolean>`coalesce(json_typeof(${exercises.steps}) = 'array' and json_array_length(${exercises.steps}) > 0, false)`,
       hasVariantes: sql<boolean>`coalesce(length(trim(${exercises.variantes})) > 0, false)`,
       hasMedia: sql<boolean>`(${exercises.imageUrl} is not null or ${exercises.animationScene} is not null or coalesce(json_typeof(${exercises.imageUrls}) = 'array' and json_array_length(${exercises.imageUrls}) > 0, false))`,
+      hasPhoto: sql<boolean>`(${exercises.imageUrl} is not null or coalesce(json_typeof(${exercises.imageUrls}) = 'array' and json_array_length(${exercises.imageUrls}) > 0, false))`,
     })
     .from(exercises)
     .where(where);
@@ -197,6 +199,7 @@ async function queryPool(where: SQL): Promise<PoolRow[]> {
       hasSteps: !!r.hasSteps,
       hasVariantes: !!r.hasVariantes,
       hasMedia: !!r.hasMedia,
+      hasVisual: !!r.hasPhoto || getExerciseDiagram(r.id) !== null,
       parametros: arr(r.parametros),
       situaciones: arr(r.situaciones),
       text: normalizeSearchText(`${r.name} ${r.objectivesText ?? ""}`),

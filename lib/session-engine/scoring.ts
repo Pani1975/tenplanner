@@ -36,7 +36,10 @@ export function scoreExercise(
   if (ex.golpes.includes(ctx.focus)) s += 2;
   if (ex.hasSteps) s += 1.5;
   if (ex.hasVariantes) s += 1;
-  if (ex.hasMedia) s += 0.8;
+  // Con foto o esquema la sesión se entiende de un vistazo: se prefiere,
+  // pero sin pasar por encima del nivel ni de los objetivos.
+  if (ex.hasVisual) s += 1.5;
+  else if (ex.hasMedia) s += 0.8;
   if (ex.ratingAvg !== null) s += 0.5 * (ex.ratingAvg / 5);
   // La intensidad no filtra (exercises.intensity está vacío): prefiere un
   // carácter. En el hueco de puntos ya se exige "competitivo".
