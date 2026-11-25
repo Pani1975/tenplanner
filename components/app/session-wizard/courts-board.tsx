@@ -129,21 +129,16 @@ export function CourtsBoardView({
   const tx = useTranslations("ui.s_sessionwizard_courtsboard");
   if (!twoCourts) {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-foreground/15 bg-card px-4 py-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">
-            {tx("usasDosPistas")}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {tx("enUnaPistaUn")}
-          </p>
-        </div>
+      // La pregunta ya se hizo al empezar: aquí solo queda un enlace
+      // discreto por si el monitor cambia de idea.
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={() => onSetTwoCourts(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-foreground/15 px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand hover:text-brand"
+          title={tx("enUnaPistaUn")}
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <Columns2 className="size-4" />
+          <Columns2 className="size-3.5" />
           {tx("usarDosPistas")}
         </button>
       </div>

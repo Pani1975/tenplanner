@@ -45,6 +45,8 @@ interface PageProps {
     pistas?: string;
     lugar?: string;
     lugar2?: string;
+    /** Viene de «Nueva sesión», donde ya se eligieron pistas y lugar. */
+    destino?: string;
   }>;
 }
 
@@ -228,6 +230,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                 places={ctx.places}
                 defaultPlaceId={params.lugar ?? null}
                 defaultTwoCourts={params.pistas === "2"}
+                placeChosen={params.destino === "1"}
                 defaultBall={ballFromLevels([ctx.levelCode])}
               />
             </div>
@@ -342,6 +345,7 @@ export default async function MontarSessionPage({ searchParams }: PageProps) {
                 places={ctx.places}
                 defaultPlaceId={target.placeId ?? params.lugar ?? null}
                 defaultTwoCourts={params.pistas === "2"}
+                placeChosen={params.destino === "1"}
                 defaultBall={ballFromLevels([ctx.levelCode])}
               />
             </div>

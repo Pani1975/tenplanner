@@ -60,7 +60,7 @@ export function TargetModeCards({ target, label }: TargetModeCardsProps) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <button
           type="button"
-          onClick={() => go("/sessions/new/montar", {}, true)}
+          onClick={() => go("/sessions/new/montar", { destino: "1" }, true)}
           className={CARD}
         >
           <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-[#D6FF38]/20">

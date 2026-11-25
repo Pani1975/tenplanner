@@ -42,7 +42,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { ExerciseThumb } from "@/components/app/exercise-thumb";
 import { CourtsBoard } from "./courts-board";
+import { SessionTimelineBar } from "./session-timeline-bar";
 import {
   EMPTY_PICKER_FILTERS,
   ExercisePickerFilters,
@@ -58,7 +60,7 @@ import {
   type AspectoJuego,
   type StationDraftItem,
 } from "@/lib/block-items";
-import { ASPECTO_JUEGO_LABELS } from "@/lib/exercise-taxonomy";
+import { ASPECTO_JUEGO_LABELS, NIVEL_IDS } from "@/lib/exercise-taxonomy";
 import {
   pickExerciseHref,
   useExercisePickListener,
@@ -132,6 +134,9 @@ interface StepExercisesProps {
   onAutoChange?: (flatIdx: number) => void;
   canAutoChange?: (ex: WizardExercise) => boolean;
   autoChangingIdx?: number | null;
+  /** Nivel del grupo (código de skill_levels): el buscador se abre filtrado
+   * por él, y el monitor puede quitarlo. */
+  groupLevel?: string | null;
 }
 
 function formatMinutes(minutes: number) {
@@ -198,6 +203,7 @@ export function StepExercises({
   onAutoChange,
   canAutoChange,
   autoChangingIdx = null,
+  groupLevel = null,
 }: StepExercisesProps) {
   const term = useTerm();
   const tx = useTranslations("ui.s_sessionwizard_stepexercises");
@@ -205,8 +211,23 @@ export function StepExercises({
   const [sourceTab, setSourceTab] = useState<"library" | "lists">("library");
   const [search, setSearch] = useState("");
   const [libCategoryFilter, setLibCategoryFilter] = useState<string>("all");
-  const [pickerFilters, setPickerFilters] =
+  const [rawPickerFilters, setPickerFilters] =
     useState<PickerFilters>(EMPTY_PICKER_FILTERS);
+  // El buscador empieza filtrado por el nivel del grupo hasta que el monitor
+  // toque el filtro de nivel.
+  const [nivelTouched, setNivelTouched] = useState(false);
+  const groupNivel =
+    groupLevel && (NIVEL_IDS as readonly string[]).includes(groupLevel)
+      ? groupLevel
+      : "";
+  const pickerFilters: PickerFilters =
+    nivelTouched || !groupNivel
+      ? rawPickerFilters
+      : { ...rawPickerFilters, nivel: groupNivel };
+  function changePickerFilters(next: PickerFilters) {
+    if (next.nivel !== pickerFilters.nivel) setNivelTouched(true);
+    setPickerFilters(next);
+  }
   const [editingDurationIdx, setEditingDurationIdx] = useState<number | null>(
     null
   );
@@ -1111,7 +1132,7 @@ export function StepExercises({
             <ExercisePickerFilters
               exercises={libraryExercises}
               value={pickerFilters}
-              onChange={setPickerFilters}
+              onChange={changePickerFilters}
               className="mt-2"
             />
           </div>
@@ -1160,6 +1181,7 @@ export function StepExercises({
                     )}
                   />
                   <GripVertical className="size-3.5 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
+                  <ExerciseThumb exerciseId={ex.id} name={ex.name} />
                   <div className="flex-1 min-w-0">
                     <p className="flex items-start gap-1.5 text-sm font-medium text-foreground leading-snug">
                       <NextLink
@@ -1317,6 +1339,7 @@ export function StepExercises({
             <span className="text-sm font-bold text-foreground">
               {tx("totalV1", { v1: formatMinutes(totalDuration) })}
             </span>
+            <SessionTimelineBar state={state} totalMinutes={totalDuration} />
           </div>
         )}
 
@@ -1427,7 +1450,25 @@ export function StepExercises({
                                     )}
                                   />
                                   <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
-                                  <div className="min-w-0 flex-[1_1_calc(100%-3rem)] sm:flex-1">
+                                  {!isTextItem(ex) &&
+                                    !isWarmupItem(ex) &&
+                                    !isStationsItem(ex) && (
+                                      <ExerciseThumb
+                                        exerciseId={ex.exerciseId}
+                                        name={ex.name}
+                                        className="sm:size-16"
+                                      />
+                                    )}
+                                  <div
+                                    className={cn(
+                                      "min-w-0 sm:flex-1",
+                                      !isTextItem(ex) &&
+                                        !isWarmupItem(ex) &&
+                                        !isStationsItem(ex)
+                                        ? "flex-[1_1_calc(100%-7rem)]"
+                                        : "flex-[1_1_calc(100%-3rem)]"
+                                    )}
+                                  >
                                     {isTextItem(ex) ? (
                                       <div className="space-y-1">
                                         <input

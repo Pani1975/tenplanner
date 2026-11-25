@@ -122,3 +122,25 @@ export function ExerciseDiagramView({
     </figure>
   );
 }
+
+/** Miniatura del esquema (sin pie): cabe en una caja fija, p. ej. 56×56. */
+export function ExerciseDiagramThumb({
+  diagram,
+  className,
+}: {
+  diagram: Diagram;
+  className?: string;
+}) {
+  const scene = buildScene(diagram);
+  return (
+    <svg
+      viewBox={`0 0 ${scene.width} ${scene.height}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label={diagram.caption ?? "Esquema del ejercicio"}
+      className={cn("block h-full w-full", className)}
+    >
+      {scene.prims.map(renderPrim)}
+    </svg>
+  );
+}
