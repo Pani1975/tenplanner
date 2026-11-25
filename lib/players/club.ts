@@ -2,6 +2,7 @@ import { and, asc, eq, gte, inArray, isNull, lte, ne, or, sql } from "drizzle-or
 import { db } from "@/db";
 import {
   calendarEvents,
+  clubs,
   groups,
   sessions,
   students,
@@ -335,4 +336,31 @@ export async function listClubSessionsForPlayer(
     )
     .orderBy(asc(sessions.scheduledAt))
     .limit(500);
+}
+
+/** Datos públicos del club al que pertenece el jugador (sin datos de otros alumnos). */
+export type PlayerClubInfo = {
+  id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+};
+
+export async function listPlayerClubs(userId: string): Promise<PlayerClubInfo[]> {
+  const ids = await playerClubIds(userId);
+  if (!ids.length) return [];
+  return db
+    .select({
+      id: clubs.id,
+      name: clubs.name,
+      address: clubs.address,
+      phone: clubs.phone,
+      email: clubs.email,
+      website: clubs.website,
+    })
+    .from(clubs)
+    .where(inArray(clubs.id, ids))
+    .orderBy(asc(clubs.name));
 }

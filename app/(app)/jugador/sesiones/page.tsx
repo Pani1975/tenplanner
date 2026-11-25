@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarCheck, CircleCheck, CircleX, Clock, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -6,7 +7,14 @@ import { LocalDateTime } from "@/components/family/local-time";
 import { listClubSessionsForPlayer } from "@/lib/players/club";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Sesiones" };
+export const metadata = { title: "Mis sesiones" };
+
+const TABS = [
+  { id: "todas", label: "Todas" },
+  { id: "proximas", label: "Próximas" },
+  { id: "pasadas", label: "Pasadas" },
+  { id: "canceladas", label: "Canceladas" },
+] as const;
 
 const DAY = 24 * 60 * 60 * 1000;
 const dateTime: Intl.DateTimeFormatOptions = {
@@ -91,7 +99,13 @@ function SessionList({ rows, showAttendance }: { rows: Row[]; showAttendance: bo
  * Sesiones del club al que está vinculado el jugador, pasadas y próximas
  * (sin alumnos, ejercicios ni asistencia). Un jugador no crea sesiones.
  */
-export default async function JugadorSesionesPage() {
+export default async function JugadorSesionesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ vista?: string }>;
+}) {
+  const { vista } = await searchParams;
+  const tab = TABS.find((t) => t.id === vista)?.id ?? "todas";
   const supabase = await createClient();
   const {
     data: { user },
@@ -106,8 +120,14 @@ export default async function JugadorSesionesPage() {
     (s) => ({ ...s, extra: s.groupName ? `Grupo ${s.groupName}` : null })
   );
   rows.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
-  const upcoming = rows.filter((r) => r.scheduledAt >= now);
-  const past = rows.filter((r) => r.scheduledAt < now).reverse();
+  const shown = rows.filter((r) => {
+    const cancelled = r.status === "cancelled";
+    if (tab === "canceladas") return cancelled;
+    if (tab === "proximas") return !cancelled && r.scheduledAt >= now;
+    if (tab === "pasadas") return !cancelled && r.scheduledAt < now;
+    return true;
+  });
+  if (tab !== "proximas") shown.reverse();
 
   return (
     <div className="tp-page">
@@ -115,17 +135,27 @@ export default async function JugadorSesionesPage() {
         <FamilyHeader
           icon={CalendarCheck}
           kicker="Jugador"
-          title="Sesiones del club"
-          description="Las sesiones de tu club, pasadas y próximas. Las crea el club; tú las consultas."
+          title="Mis sesiones"
+          description="Las sesiones de tu club o de tu monitor. Las crean ellos; tú las consultas."
         />
-        <section className="space-y-3">
-          <h2 className="text-lg font-black">Próximas</h2>
-          <SessionList rows={upcoming} showAttendance={false} />
-        </section>
-        <section className="space-y-3">
-          <h2 className="text-lg font-black">Pasadas</h2>
-          <SessionList rows={past} showAttendance={false} />
-        </section>
+        <nav className="flex flex-wrap gap-2" aria-label="Filtro de sesiones">
+          {TABS.map((t) => (
+            <Link
+              key={t.id}
+              href={t.id === "todas" ? "/jugador/sesiones" : `/jugador/sesiones?vista=${t.id}`}
+              aria-current={tab === t.id ? "page" : undefined}
+              className={cn(
+                "min-h-10 rounded-full border px-4 py-2 text-sm font-semibold transition",
+                tab === t.id
+                  ? "border-brand bg-brand text-brand-foreground"
+                  : "border-[#050505]/15 hover:border-brand/50 dark:border-white/15"
+              )}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </nav>
+        <SessionList rows={shown} showAttendance={false} />
       </div>
     </div>
   );

@@ -287,7 +287,7 @@ function playerNavItems(linked: boolean): NavItem[] {
     { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
     { href: "/classes", label: "Clases", icon: GraduationCap },
     ...(linked
-      ? [{ href: "/jugador/sesiones", label: "Sesiones", icon: CalendarCheck }]
+      ? [{ href: "/jugador/sesiones", label: "Mis sesiones", icon: CalendarCheck }]
       : []),
     { href: "/jugador/calendario", label: "Calendario", icon: CalendarDays },
     { href: "/jugador/torneos", label: "Torneos", icon: Trophy },
@@ -298,6 +298,9 @@ function playerNavItems(linked: boolean): NavItem[] {
           { href: "/mensajes", label: "Mensajes", icon: MessageSquare },
           { href: "/mi-familia/informes", label: "Informes", icon: FileText },
         ]
+      : []),
+    ...(linked
+      ? [{ href: "/jugador/club", label: "Mi club", icon: Building2 }]
       : []),
     { href: "/jugador/perfil", label: "Perfil", icon: UserCircle },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
