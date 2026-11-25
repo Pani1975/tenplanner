@@ -3,7 +3,8 @@
     "skipToContent": "Ir al contenido principal",
     "language": "Idioma",
     "spanish": "Español",
-    "english": "English"
+    "english": "English",
+    "unsavedChanges": "Tienes cambios sin guardar. Si sales ahora, se perderán. ¿Salir igualmente?"
   },
   "landing": {
     "content": {

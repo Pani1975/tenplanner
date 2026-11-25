@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import { LevelBalls } from "@/components/app/level-balls";
@@ -165,6 +166,13 @@ function jsonbArrayHasAny(column: AnyColumn, values: string[]) {
     )
   );
 }
+
+export const metadata: Metadata = {
+  title: "Biblioteca de ejercicios de tenis",
+  description:
+    "Más de 1.700 ejercicios de tenis para monitores, por nivel, golpe y objetivo. Úsalos en tus clases y sesiones con Ten Planner.",
+  alternates: { canonical: "/exercises" },
+};
 
 export default async function ExercisesPage({ searchParams }: PageProps) {
   const term = await getTerm();

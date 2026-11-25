@@ -1,6 +1,7 @@
 "use client";
 
 import { TagInput } from "@/components/app/tag-input";
+import { useUnsavedChangesWarning } from "@/lib/hooks/use-unsaved-changes-warning";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
@@ -300,6 +301,8 @@ export function ClassForm({
   // ficha de un ejercicio y se vuelve atrás (o el móvil recarga la página),
   // la clase en curso se recupera tal cual.
   const autosaveEnabled = mode === "create" && !initialData;
+  // Sin autoguardado (al editar): aviso antes de salir con texto sin guardar.
+  const unsaved = useUnsavedChangesWarning();
   const autosaveReadyRef = useRef(false);
   const autosaveDoneRef = useRef(false);
   const [recoveredDraft, setRecoveredDraft] = useState(false);
@@ -981,6 +984,7 @@ export function ClassForm({
     }
 
     clearAutosave();
+    unsaved.markSaved();
     if (mode === "edit") {
       router.push(`/classes/${classId}`);
     } else {
@@ -1063,7 +1067,11 @@ export function ClassForm({
         </DialogContent>
       </Dialog>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        onInputCapture={autosaveEnabled ? undefined : unsaved.markDirty}
+        className="space-y-5"
+      >
         {recoveredDraft ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/30 bg-brand/10 px-4 py-2.5 text-sm text-foreground">
             <span>{tx("hemosRecuperadoLaClase")}</span>

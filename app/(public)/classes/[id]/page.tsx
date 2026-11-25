@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { classMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { getClubMonitorSpaceClubs, isTenPlannerMode } from "@/lib/work-mode";
 import { notFound } from "next/navigation";
@@ -159,6 +161,15 @@ function ExerciseCard({
       </span>
     </Link>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return classMetadata(id);
 }
 
 export default async function ClassDetailPage({

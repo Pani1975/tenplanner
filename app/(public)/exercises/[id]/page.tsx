@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { exerciseMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { getClubMonitorSpaceClubs, isTenPlannerMode } from "@/lib/work-mode";
 import { db } from "@/db";
@@ -17,6 +19,15 @@ import {
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return exerciseMetadata(id);
 }
 
 export default async function ExercisePage({

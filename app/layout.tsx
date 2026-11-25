@@ -59,13 +59,11 @@ export async function generateMetadata(): Promise<Metadata> {
   description: t("description"),
   keywords: t("keywords").split(","),
   applicationName: "TenPlanner",
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "TenPlanner",
     title: t("title"),
     description: t("ogDescription"),
-    url: "/",
     locale: locale === "en" ? "en_US" : "es_ES",
   },
   twitter: {

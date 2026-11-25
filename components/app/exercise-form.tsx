@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnsavedChangesWarning } from "@/lib/hooks/use-unsaved-changes-warning";
 import {
   type ElementType,
   type FormEvent,
@@ -549,6 +550,8 @@ export function ExerciseForm({
 }: ExerciseFormProps) {
   const tx = useTranslations("ui.s_app_exerciseform");
   const router = useRouter();
+  // Sin borrador automático: aviso antes de salir con texto sin guardar.
+  const unsaved = useUnsavedChangesWarning();
   const NIVELES_PMV = nivelesPmvForSport(sport);
   const showPelota = showsTipoPelota(sport);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -1099,6 +1102,7 @@ export function ExerciseForm({
       return;
     }
 
+    unsaved.markSaved();
     if (mode === "create") {
       if (draftIdRef.current) {
         removeExerciseDraft(draftIdRef.current);
@@ -2243,7 +2247,13 @@ export function ExerciseForm({
   );
 
   return (
-    <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
+    <form
+      onSubmit={handleFormSubmit}
+      onInputCapture={
+        enableDrafts && mode === "create" ? undefined : unsaved.markDirty
+      }
+      className="flex flex-col gap-5"
+    >
       {/* Mode selector */}
       <div className="flex flex-col gap-4 rounded-lg border border-foreground/10 bg-card p-3 shadow-sm shadow-black/5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="min-w-0">

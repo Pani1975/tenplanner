@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import Link from "next/link";
@@ -123,6 +124,13 @@ function paramList(value: string | string[] | undefined) {
   if (typeof value === "string" && value.trim()) return [value.trim()];
   return [];
 }
+
+export const metadata: Metadata = {
+  title: "Plantillas de clases de tenis",
+  description:
+    "Plantillas de clase de tenis por niveles, listas para usar o adaptar. Planifica tus sesiones en minutos con Ten Planner.",
+  alternates: { canonical: "/classes" },
+};
 
 export default async function ClassesPage({ searchParams }: PageProps) {
   const term = await getTerm();
