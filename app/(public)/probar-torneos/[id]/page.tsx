@@ -44,7 +44,7 @@ export default async function TorneoPruebaPage({ params }: Props) {
   const data = await managerData(detail);
   const token = await guestEditToken(id);
   const baseUrl = getSiteUrl(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://tenplanner.com"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.tenplanner.com"
   );
   return (
     <>
