@@ -1,6 +1,6 @@
-import { NO_PLAYER_LINKS, type PlayerLinks } from "@/lib/players/links";
 "use client";
 
+import { NO_PLAYER_LINKS, type PlayerLinks } from "@/lib/players/links";
 import { ViewAsSwitcher } from "@/components/app/view-as-switcher";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
