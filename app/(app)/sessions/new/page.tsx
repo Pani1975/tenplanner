@@ -188,13 +188,22 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
   // Preasignar un grupo (p. ej. desde "Asignar clase" en la ficha de grupo):
   // precarga el grupo y a sus alumnos, igual que si se eligieran a mano en
   // el paso de alumnos.
-  let fromGroup: { id: string; name: string; objetivos: string | null } | null =
-    null;
+  let fromGroup: {
+    id: string;
+    name: string;
+    objetivos: string | null;
+    defaultLevel: string | null;
+  } | null = null;
   let fromGroupStudentIds: string[] = [];
   if (groupIdParam) {
     const groupActiveClubId = await getActiveWorkClubId(user.id);
     const [grp] = await db
-      .select({ id: groups.id, name: groups.name, objetivos: groups.objetivos })
+      .select({
+        id: groups.id,
+        name: groups.name,
+        objetivos: groups.objetivos,
+        defaultLevel: groups.defaultLevel,
+      })
       .from(groups)
       .where(
         and(
@@ -691,6 +700,7 @@ export default async function NewSessionPage({ searchParams }: PageProps) {
               initialLocation={fromSession?.location ?? undefined}
               initialGroupId={fromGroup?.id ?? null}
               initialGroupName={fromGroup?.name}
+              groupLevel={fromGroup?.defaultLevel ?? null}
               initialStudentIds={Array.from(
                 new Set([
                   ...fromGroupStudentIds,

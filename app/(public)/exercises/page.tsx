@@ -95,12 +95,22 @@ const CATEGORY_LABEL: Record<Category, string> = {
   "warm-up": "Calentamiento",
 };
 
-const CATEGORY_CODE: Record<Category, string> = {
-  technique: "TÉC",
-  tactics: "TÁC",
-  fitness: "FÍS",
-  "warm-up": "CAL",
-};
+/** Tarjetas de la cabecera: un solo criterio, el "aspecto del juego". */
+const STAT_ASPECTS = [
+  { id: "tecnica", code: "TÉC", label: "Técnica" },
+  { id: "tactica", code: "TÁC", label: "Táctica" },
+  { id: "fisico", code: "FÍS", label: "Físico / movilidad" },
+  { id: "mental", code: "MEN", label: "Mental / cognitivo" },
+] as const;
+type StatAspect = (typeof STAT_ASPECTS)[number]["id"];
+
+/** Ejercicios con ese aspecto (en la lista multivalor o en el campo antiguo). */
+function aspectCount(aspect: StatAspect) {
+  return sql<number>`count(*) filter (where ${or(
+    jsonbArrayHasAny(exercisesTable.aspectosJuego, [aspect])!,
+    inArray(exercisesTable.aspectoJuego, [aspect])
+  )})`.mapWith(Number);
+}
 
 const CATEGORIES = [
   "all",
@@ -514,8 +524,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     allRows,
     globalRows,
     mineRows,
-    categoryRows,
-    fisicoAspectoRows,
+    aspectRows,
   ] = await Promise.all([
     db
       .select({
@@ -559,27 +568,17 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
           .from(exercisesTable)
           .where(and(sportWhere, mineWhere))
       : Promise.resolve([{ total: 0 }]),
+    // Tarjetas por "aspecto del juego" (etiqueta multivalor): un ejercicio
+    // puede contar en varias, así que no tienen por qué sumar el total.
     db
-      .select({ category: exercisesTable.category, total: count() })
+      .select({
+        tecnica: aspectCount("tecnica"),
+        tactica: aspectCount("tactica"),
+        fisico: aspectCount("fisico"),
+        mental: aspectCount("mental"),
+      })
       .from(exercisesTable)
-      .where(visibilityWhere)
-      .groupBy(exercisesTable.category),
-    // "Aspectos del juego" es una etiqueta multivalor (jsonb), no la
-    // categoría exclusiva de arriba: un ejercicio puede tener varios
-    // aspectos a la vez, así que este conteo no tiene por qué cuadrar
-    // con el total de ejercicios.
-    db
-      .select({ total: count() })
-      .from(exercisesTable)
-      .where(
-        and(
-          visibilityWhere,
-          or(
-            jsonbArrayHasAny(exercisesTable.aspectosJuego, ["fisico"])!,
-            inArray(exercisesTable.aspectoJuego, ["fisico"])
-          )
-        )
-      ),
+      .where(visibilityWhere),
   ]);
 
   const hasNextPage = rowPage.length > PAGE_SIZE;
@@ -612,10 +611,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     exerciseListCountRows.map((row) => [row.exerciseId, Number(row.total)])
   );
 
-  const byCategoryMap = new Map(
-    categoryRows.map((row) => [row.category, Number(row.total)])
-  );
-  const fisicoAspectoCount = Number(fisicoAspectoRows[0]?.total ?? 0);
+  const aspectCounts = aspectRows[0];
 
   const tabCounts: Record<Tab, number> = {
     all: Number(allRows[0]?.total ?? 0),
@@ -692,13 +688,9 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     return `/exercises${s ? `?${s}` : ""}`;
   }
 
-  // Tira de 4 tarjetas: Técnica/Táctica/Físico siguen viniendo de la
-  // categoría exclusiva del ejercicio; la 4ª tarjeta (antes "Calentamiento")
-  // pasa a mostrar los ejercicios etiquetados con el aspecto de juego
-  // "Físico/Movilidad" en vez de la categoría "warm-up". Al venir de una
-  // etiqueta multivalor (aspectosJuego), esta tarjeta no tiene por qué
-  // cuadrar con el total de ejercicios: un ejercicio puede tener varios
-  // aspectos a la vez.
+  // Tira de 4 tarjetas, todas por "aspecto del juego" (antes mezclaba la
+  // categoría antigua "Físico" con el aspecto "Físico/Movilidad" y salía
+  // Físico dos veces). Pulsar una filtra por ese aspecto.
   const statStrip: Array<{
     key: string;
     code: string;
@@ -706,39 +698,24 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
     count: number;
     isActive: boolean;
     href: string;
-  }> = (["technique", "tactics", "fitness"] as const).map((cat) => {
-    const isActive = activeCategory === cat;
+  }> = STAT_ASPECTS.map((a) => {
+    const isActive =
+      activeAspectoJuego.length === 1 && activeAspectoJuego[0] === a.id;
     return {
-      key: cat,
-      code: CATEGORY_CODE[cat],
-      label: CATEGORY_LABEL[cat],
-      count: byCategoryMap.get(cat) ?? 0,
+      key: `aspecto-${a.id}`,
+      code: a.code,
+      label: a.label,
+      count: aspectCounts?.[a.id] ?? 0,
       isActive,
       href: buildHref({
-        category: isActive ? "all" : cat,
+        aspectoJuego: isActive ? undefined : [a.id],
+        category: activeCategory,
         difficulty: activeDifficulty,
         q: searchTerm || undefined,
         tab: activeTab,
       }),
     };
   });
-  {
-    const isActive = activeAspectoJuego.includes("fisico");
-    statStrip.push({
-      key: "aspecto-fisico",
-      code: "FÍS/MOV",
-      label: tx("fisicoMovilidad"),
-      count: fisicoAspectoCount,
-      isActive,
-      href: buildHref({
-        aspectoJuego: isActive ? undefined : ["fisico"],
-        category: activeCategory,
-        difficulty: activeDifficulty,
-        q: searchTerm || undefined,
-        tab: activeTab,
-      }),
-    });
-  }
 
   const FORMATO_LABEL: Record<string, string> = {
     individual: "Individual",

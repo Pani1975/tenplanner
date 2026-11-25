@@ -29,6 +29,7 @@ export function BeforeProposalForm({
   defaultPlaceId,
   defaultBall,
   defaultTwoCourts = false,
+  placeChosen = false,
 }: {
   /** URL del asistente sin los parámetros de esta pantalla. */
   baseHref: string;
@@ -41,6 +42,9 @@ export function BeforeProposalForm({
   defaultBall: BallId | null;
   /** Ya se eligieron dos pistas en el primer paso. */
   defaultTwoCourts?: boolean;
+  /** Pistas y lugar ya se eligieron en «Nueva sesión»: no se vuelven a
+   * preguntar (solo la rotación, si hay dos pistas). */
+  placeChosen?: boolean;
 }) {
   const tx = useTranslations("ui.s_montar_beforeproposalform");
   const router = useRouter();
@@ -224,8 +228,26 @@ export function BeforeProposalForm({
         )}
       </section>
 
+      {/* Pistas y lugar ya elegidos al empezar: solo la rotación con dos pistas. */}
+      {placeChosen && twoCourts && (
+        <label className="flex w-fit cursor-pointer items-start gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={rotate}
+            onChange={(e) => setRotate(e.target.checked)}
+            className="mt-0.5 size-4 accent-[#D6FF38]"
+          />
+          <span>
+            {tx("losGruposRotan")}
+            <span className="block text-xs text-muted-foreground">
+              {tx("elGrupoSeParte")}
+            </span>
+          </span>
+        </label>
+      )}
+
       {/* 3. Lugar */}
-      <section className="space-y-2">
+      <section className={cn("space-y-2", placeChosen && "hidden")}>
         <h3 className={label}>
           3. {ANTES.placeQ}{" "}
           <span className="normal-case tracking-normal">{ANTES.optional}</span>

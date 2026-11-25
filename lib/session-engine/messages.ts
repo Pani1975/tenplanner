@@ -120,7 +120,7 @@ export const HOY_TOCA = {
 /** Textos de "Que la diseñe Ten Planner" en nueva sesión (elegir grupo). */
 export const MONTAR = {
   title: "Que la diseñe Ten Planner",
-  subtitle: "Elige el grupo y la monta con su nivel y su historial.",
+  subtitle: "Te propone la clase según el nivel y el historial del grupo.",
   kicker: "Propuesta de Ten Planner",
   chooseGroup: "Elige el grupo",
   noSchedule: "Sin días de clase fijados",

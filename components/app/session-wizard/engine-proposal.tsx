@@ -32,6 +32,8 @@ type EngineInfo = {
   slotByExercise: Record<string, number>;
   input: Proposal["input"];
   trace: unknown;
+  /** Nivel del grupo según el motor (código de skill_levels). */
+  groupLevel: string;
 };
 
 function stepOneKey(state: WizardState): string {
@@ -126,6 +128,7 @@ export function useEngineProposal({
         slotByExercise,
         input: p.input,
         trace: { explanations: p.plan.explanations, slots: p.plan.trace },
+        groupLevel: p.plan.groupLevel,
       });
       // La duración la fija el calendario: no se recalcula con el plan.
       update({

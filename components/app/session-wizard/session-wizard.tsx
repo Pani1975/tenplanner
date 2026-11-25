@@ -81,6 +81,9 @@ interface SessionWizardProps {
   /** Monitor preseleccionado (al crear, el propio usuario). */
   initialCoachId?: string | null;
   allowDraftRestore?: boolean;
+  /** Nivel por defecto del grupo (código de skill_levels): filtra de entrada
+   * el buscador de ejercicios. */
+  groupLevel?: string | null;
   /**
    * "Que la diseñe Ten Planner": al pasar al Paso 2 el motor rellena los
    * ejercicios con el nivel y el historial del grupo y los objetivos.
@@ -410,6 +413,7 @@ export function SessionWizard({
   coaches = [],
   initialCoachId = null,
   allowDraftRestore = true,
+  groupLevel = null,
   edit,
   engine,
 }: SessionWizardProps) {
@@ -1146,6 +1150,7 @@ export function SessionWizard({
               }
               canAutoChange={proposal.canChange}
               autoChangingIdx={proposal.changingIdx}
+              groupLevel={proposal.info?.groupLevel ?? groupLevel}
             />
           </div>
         )}
