@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DraftStatusPill } from "@/components/app/draft-status-pill";
+import { useUnsavedChangesWarning } from "@/lib/hooks/use-unsaved-changes-warning";
 import {
   generateDraftId,
   getSessionDraft,
@@ -420,6 +421,9 @@ export function SessionWizard({
   // Se llega aquí al cerrar una sesión que no se dio según lo planificado:
   // tras guardar se vuelve a la sesión para la valoración final.
   const closingAfterChange = isEdit && searchParams.get("cierre") === "1";
+  // Al editar una sesión no hay borrador automático: si se ha escrito algo,
+  // se avisa antes de salir sin guardar.
+  const unsaved = useUnsavedChangesWarning();
   // El paso vive en el estado del asistente (y se refleja en la URL sin
   // navegar): cambiar de paso con el router podía volver a montar el
   // asistente y perder lo escrito en el paso 1 (objetivo, lugar, duración…).
@@ -751,6 +755,14 @@ export function SessionWizard({
 
       const exercisesPayload = buildExercisesPayload(state);
       const blocksPayload = buildBlocksPayload(state);
+      // Una sesión completada solo vuelve a "pendiente" si cambia su plan
+      // (ejercicios o bloques). Cambiar la fecha, el título o las notas no
+      // debe borrar su cierre ni su valoración.
+      const planChanged =
+        JSON.stringify(exercisesPayload) !==
+          JSON.stringify(buildExercisesPayload(baselineState)) ||
+        JSON.stringify(blocksPayload) !==
+          JSON.stringify(buildBlocksPayload(baselineState));
       // Por si el efecto de sincronización aún no ha corrido (p. ej. se
       // envía justo tras el último cambio): recalcula aquí también, para
       // que lo guardado siempre sea el contenido real del plan.
@@ -813,7 +825,7 @@ export function SessionWizard({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            reopenIfCompleted: !closingAfterChange,
+            reopenIfCompleted: !closingAfterChange && planChanged,
             title: state.title.trim(),
             scheduledAt: scheduledIso,
             durationMinutes,
@@ -850,6 +862,7 @@ export function SessionWizard({
           );
           return;
         }
+        unsaved.markSaved();
         router.push(
           closingAfterChange
             ? `/sessions/${edit.sessionId}?valorar=1`
@@ -976,7 +989,9 @@ export function SessionWizard({
   const visibleErrors = showErrors ? errors : {};
 
   return (
-    <div className="flex w-full flex-col gap-8 rounded-lg border border-[#050505]/10 bg-white p-4 pb-28 shadow-[0_18px_60px_rgba(5,5,5,0.05)] dark:border-white/10 dark:bg-white/[0.045] sm:p-5 md:pb-6">
+    <div
+      onInputCapture={isEdit ? unsaved.markDirty : undefined}
+      className="flex w-full flex-col gap-8 rounded-lg border border-[#050505]/10 bg-white p-4 pb-28 shadow-[0_18px_60px_rgba(5,5,5,0.05)] dark:border-white/10 dark:bg-white/[0.045] sm:p-5 md:pb-6">
       {conflictWarning && (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
           <div
