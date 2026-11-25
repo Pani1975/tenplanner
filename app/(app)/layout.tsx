@@ -15,7 +15,8 @@ import { getActiveSport } from "@/lib/sports";
 import { isFamilyOnlyUser } from "@/lib/family";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { isPlayerView } from "@/lib/players/view";
-import { playerClubIds } from "@/lib/players/club";
+import { getPlayerLinks } from "@/lib/players/club";
+import { NO_PLAYER_LINKS } from "@/lib/players/links";
 import { countUnreadMessages } from "@/lib/messages";
 
 const APP_LAYOUT_SETTING_KEYS = [
@@ -99,9 +100,9 @@ export default async function AppLayout({
   // jugador» (lib/players/view.ts). Con club vinculado ve también Mis
   // sesiones, Mensajes e Informes.
   const playerView = await isPlayerView(user, familyOnly);
-  const playerLinked = playerView
-    ? (await playerClubIds(user.id).catch(() => [])).length > 0
-    : false;
+  const playerLinks = playerView
+    ? await getPlayerLinks(user.id).catch(() => NO_PLAYER_LINKS)
+    : NO_PLAYER_LINKS;
   const avatarUrl =
     row?.image ??
     (typeof user.user_metadata?.avatar_url === "string"
@@ -149,7 +150,7 @@ export default async function AppLayout({
       activeSport={activeSport}
       familyOnly={familyOnly || playerView}
       playerAccount={playerView}
-      playerLinked={playerLinked}
+      playerLinks={playerLinks}
       pendingInvites={pendingInvites}
       unreadMessages={unreadMessages}
     >

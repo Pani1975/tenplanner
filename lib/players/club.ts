@@ -1,9 +1,12 @@
-import { and, asc, eq, gte, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   calendarEvents,
   clubs,
+  groupStudents,
   groups,
+  sessionStudents,
+  users,
   sessions,
   students,
   studentGuardians,
@@ -13,6 +16,7 @@ import {
 import { acceptsRegistrations, type TournamentStatus } from "@/lib/tournaments/status";
 import { playerCategory } from "./category";
 import { getPlayerProfile } from "./server";
+import type { PlayerLinks } from "./links";
 
 /**
  * Lo que un jugador ve de sus clubes y de los torneos de Ten Planner.
@@ -24,6 +28,7 @@ import { getPlayerProfile } from "./server";
 type LinkedStudent = {
   id: string;
   clubId: string | null;
+  coachId: string;
   birthDate: string | null;
 };
 
@@ -32,6 +37,7 @@ async function linkedStudents(userId: string): Promise<LinkedStudent[]> {
     .select({
       id: students.id,
       clubId: students.clubId,
+      coachId: students.coachId,
       birthDate: students.birthDate,
     })
     .from(studentGuardians)
@@ -50,6 +56,31 @@ async function linkedStudents(userId: string): Promise<LinkedStudent[]> {
 export async function playerClubIds(userId: string): Promise<string[]> {
   const linked = await linkedStudents(userId);
   return [...new Set(linked.map((s) => s.clubId).filter(Boolean))] as string[];
+}
+
+/** Monitores (sin club) que lo tienen como alumno vinculado. */
+export async function listPlayerCoaches(
+  userId: string
+): Promise<{ id: string; name: string; email: string | null }[]> {
+  const ids = [
+    ...new Set(
+      (await linkedStudents(userId)).filter((s) => !s.clubId).map((s) => s.coachId)
+    ),
+  ];
+  if (!ids.length) return [];
+  return db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(inArray(users.id, ids))
+    .orderBy(asc(users.name));
+}
+
+export async function getPlayerLinks(userId: string): Promise<PlayerLinks> {
+  const linked = await linkedStudents(userId);
+  return {
+    club: linked.some((s) => s.clubId),
+    monitor: linked.some((s) => !s.clubId),
+  };
 }
 
 /** Categoría del jugador: de su perfil o, si no, de su ficha en el club. */
@@ -312,30 +343,70 @@ export async function listClubSessionsForPlayer(
   from: Date,
   to: Date
 ): Promise<ClubSessionSummary[]> {
-  const clubIds = await playerClubIds(userId);
-  if (!clubIds.length) return [];
-  return db
-    .select({
-      id: sessions.id,
-      title: sessions.title,
-      scheduledAt: sessions.scheduledAt,
-      durationMinutes: sessions.durationMinutes,
-      status: sessions.status,
-      objective: sessions.objective,
-      location: sessions.location,
-      groupName: groups.name,
-    })
-    .from(sessions)
-    .leftJoin(groups, eq(groups.id, sessions.groupId))
-    .where(
-      and(
-        inArray(sessions.clubId, clubIds),
-        gte(sessions.scheduledAt, from),
-        lte(sessions.scheduledAt, to)
+  const linked = await linkedStudents(userId);
+  const clubIds = [...new Set(linked.map((s) => s.clubId).filter(Boolean))] as string[];
+  const solo = linked.filter((s) => !s.clubId);
+  if (!clubIds.length && !solo.length) return [];
+
+  const select = {
+    id: sessions.id,
+    title: sessions.title,
+    scheduledAt: sessions.scheduledAt,
+    durationMinutes: sessions.durationMinutes,
+    status: sessions.status,
+    objective: sessions.objective,
+    location: sessions.location,
+    groupName: groups.name,
+  };
+  const range = and(gte(sessions.scheduledAt, from), lte(sessions.scheduledAt, to));
+
+  const clubRows = clubIds.length
+    ? await db
+        .select(select)
+        .from(sessions)
+        .leftJoin(groups, eq(groups.id, sessions.groupId))
+        .where(and(inArray(sessions.clubId, clubIds), range))
+        .orderBy(asc(sessions.scheduledAt))
+        .limit(500)
+    : [];
+
+  // Monitor sin club: solo las sesiones de sus grupos o en las que figura el
+  // jugador, creadas por su monitor (nunca las de otros alumnos del monitor).
+  let coachRows: typeof clubRows = [];
+  if (solo.length) {
+    const studentIds = solo.map((s) => s.id);
+    const coachIds = [...new Set(solo.map((s) => s.coachId))];
+    const groupRows = await db
+      .select({ id: groupStudents.groupId })
+      .from(groupStudents)
+      .where(inArray(groupStudents.studentId, studentIds));
+    const groupIds = groupRows.map((g) => g.id);
+    coachRows = await db
+      .select(select)
+      .from(sessions)
+      .leftJoin(groups, eq(groups.id, sessions.groupId))
+      .leftJoin(
+        sessionStudents,
+        and(
+          eq(sessionStudents.sessionId, sessions.id),
+          inArray(sessionStudents.studentId, studentIds)
+        )
       )
-    )
-    .orderBy(asc(sessions.scheduledAt))
-    .limit(500);
+      .where(
+        and(
+          isNull(sessions.clubId),
+          inArray(sessions.userId, coachIds),
+          groupIds.length
+            ? or(inArray(sessions.groupId, groupIds), isNotNull(sessionStudents.studentId))
+            : isNotNull(sessionStudents.studentId),
+          range
+        )
+      )
+      .orderBy(asc(sessions.scheduledAt))
+      .limit(500);
+  }
+  const all = new Map([...clubRows, ...coachRows].map((r) => [r.id, r]));
+  return [...all.values()].sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
 }
 
 /** Datos públicos del club al que pertenece el jugador (sin datos de otros alumnos). */

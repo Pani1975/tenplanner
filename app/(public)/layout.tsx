@@ -60,7 +60,7 @@ export default async function PublicLayout({
     // Familias y jugadores ven aquí también su menú (no el del monitor).
     user
       ? getFamilyNavState(user)
-      : Promise.resolve({ familyOnly: false, playerView: false, playerLinked: false }),
+      : Promise.resolve({ familyOnly: false, playerView: false, playerLinks: { club: false, monitor: false } }),
   ]);
 
   const isAdmin = adminRows[0]?.isAdmin ?? false;
@@ -93,7 +93,7 @@ export default async function PublicLayout({
       managementMode={!!clubAccountClubId && !!row?.managementMode}
       familyOnly={navState.familyOnly}
       playerAccount={navState.playerView}
-      playerLinked={navState.playerLinked}
+      playerLinks={navState.playerLinks}
     >
       {children}
     </AppShell>

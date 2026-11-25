@@ -1,6 +1,7 @@
 import { isFamilyOnlyUser } from "@/lib/family";
 import { isFamilyAccountType, isPlayerAccountType } from "@/lib/family-account";
-import { playerClubIds } from "@/lib/players/club";
+import { getPlayerLinks } from "@/lib/players/club";
+import { NO_PLAYER_LINKS, type PlayerLinks } from "@/lib/players/links";
 import { adminViewAs } from "@/lib/view-as";
 
 /**
@@ -24,14 +25,14 @@ export async function isPlayerView(
 export async function getFamilyNavState(user: {
   id: string;
   user_metadata?: Record<string, unknown> | null;
-}): Promise<{ familyOnly: boolean; playerView: boolean; playerLinked: boolean }> {
+}): Promise<{ familyOnly: boolean; playerView: boolean; playerLinks: PlayerLinks }> {
   const familyOnly = await isFamilyOnlyUser(
     user.id,
     isFamilyAccountType(user.user_metadata)
   ).catch(() => false);
   const playerView = await isPlayerView(user, familyOnly);
-  const playerLinked = playerView
-    ? (await playerClubIds(user.id).catch(() => [])).length > 0
-    : false;
-  return { familyOnly: familyOnly || playerView, playerView, playerLinked };
+  const playerLinks = playerView
+    ? await getPlayerLinks(user.id).catch(() => NO_PLAYER_LINKS)
+    : NO_PLAYER_LINKS;
+  return { familyOnly: familyOnly || playerView, playerView, playerLinks };
 }

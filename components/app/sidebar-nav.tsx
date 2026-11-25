@@ -1,3 +1,4 @@
+import { NO_PLAYER_LINKS, type PlayerLinks } from "@/lib/players/links";
 "use client";
 
 import { ViewAsSwitcher } from "@/components/app/view-as-switcher";
@@ -281,7 +282,8 @@ function PlatformBadge() {
 // Informes solo si está vinculado a un club. Torneos: en los que está
 // inscrito (jugados y por jugar); no los crea. Sin Objetivos, Lugares ni
 // Reservas.
-function playerNavItems(linked: boolean): NavItem[] {
+function playerNavItems(links: PlayerLinks): NavItem[] {
+  const linked = links.club || links.monitor;
   return [
     { href: "/jugador", label: "Inicio", icon: LayoutDashboard },
     { href: "/exercises", label: "Ejercicios", icon: Dumbbell },
@@ -299,8 +301,11 @@ function playerNavItems(linked: boolean): NavItem[] {
           { href: "/mi-familia/informes", label: "Informes", icon: FileText },
         ]
       : []),
-    ...(linked
+    ...(links.club
       ? [{ href: "/jugador/club", label: "Mi club", icon: Building2 }]
+      : []),
+    ...(links.monitor
+      ? [{ href: "/jugador/monitor", label: "Mi monitor", icon: UserRound }]
       : []),
     { href: "/jugador/perfil", label: "Perfil", icon: UserCircle },
     { href: "/ayuda", label: "Ayuda", icon: LifeBuoy, publicAccess: true },
@@ -431,7 +436,7 @@ interface WorkModeProps {
   /** Cuenta de jugador (solo con familyOnly): menú del jugador. */
   playerAccount?: boolean;
   /** Jugador vinculado a un club: Mis sesiones, Mensajes e Informes. */
-  playerLinked?: boolean;
+  playerLinks?: PlayerLinks;
   /** Mensajes recibidos sin leer (contador junto a "Mensajes") */
   unreadMessages?: number;
 }
@@ -480,7 +485,7 @@ function NavContent({
   activeSport = "tenis",
   familyOnly = false,
   playerAccount = false,
-  playerLinked = false,
+  playerLinks = NO_PLAYER_LINKS,
   unreadMessages = 0,
 }: {
   pathname: string;
@@ -496,7 +501,7 @@ function NavContent({
 } & WorkModeProps) {
   const items = familyOnly
     ? playerAccount
-      ? playerNavItems(playerLinked)
+      ? playerNavItems(playerLinks)
       : familyNavItems
     : tenPlannerMode
       ? platformNavItems
@@ -960,7 +965,7 @@ function SidebarNavInner({
   activeSport = "tenis",
   familyOnly = false,
   playerAccount = false,
-  playerLinked = false,
+  playerLinks = NO_PLAYER_LINKS,
   unreadMessages: initialUnread = 0,
   search,
 }: SidebarNavProps & { search: string }) {
@@ -1059,7 +1064,7 @@ function SidebarNavInner({
           activeSport={activeSport}
           familyOnly={familyOnly}
           playerAccount={playerAccount}
-          playerLinked={playerLinked}
+          playerLinks={playerLinks}
           unreadMessages={unreadMessages}
         />
       </aside>
@@ -1191,7 +1196,7 @@ function SidebarNavInner({
               activeSport={activeSport}
               familyOnly={familyOnly}
               playerAccount={playerAccount}
-              playerLinked={playerLinked}
+              playerLinks={playerLinks}
               unreadMessages={unreadMessages}
             />
           </aside>
