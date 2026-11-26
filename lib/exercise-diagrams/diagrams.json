@@ -27138,5 +27138,332 @@
         "text": "hacia atrás"
       }
     ]
+  },
+  "75bfaea1-b251-574d-87be-b230b57fd96c": {
+    "court": "libre",
+    "caption": "Salidas en diagonal de cono a cono; en cada uno, frenar sobre una pierna 2 s y cambiar",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          10,
+          50
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "cone",
+        "at": [
+          32,
+          20
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          76,
+          20
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            14,
+            46
+          ],
+          [
+            31,
+            24
+          ],
+          [
+            53,
+            76
+          ],
+          [
+            75,
+            24
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          54,
+          10
+        ],
+        "text": "frena 2 s"
+      },
+      {
+        "t": "text",
+        "at": [
+          28,
+          86
+        ],
+        "text": "a una pierna"
+      }
+    ]
+  },
+  "300e079a-17b7-589f-9851-d929b984fa16": {
+    "court": "tenis",
+    "caption": "Con un pie sobre el bosu, golpes de derecha y de revés; estable antes y después de golpear",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          38
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          38
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            42
+          ],
+          [
+            42,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          44,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            92
+          ],
+          [
+            24,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            92
+          ],
+          [
+            76,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          70,
+          100
+        ],
+        "text": "sobre bosu"
+      },
+      {
+        "t": "text",
+        "at": [
+          82,
+          66
+        ],
+        "text": "derecha y revés"
+      }
+    ]
+  },
+  "88b65590-b005-5a39-8c95-6f7aa9ed49a4": {
+    "court": "tenis",
+    "caption": "Golpes con chaleco lastrado o en superficie inestable, estable antes y después",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          38
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          38
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            42
+          ],
+          [
+            58,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            92
+          ],
+          [
+            26,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          30,
+          100
+        ],
+        "text": "con chaleco"
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          74
+        ],
+        "text": "estable"
+      }
+    ]
+  },
+  "8f8a8118-e2a9-5646-b480-ddb2c61ad342": {
+    "court": "libre",
+    "caption": "Sobre una pierna, recibe con la raqueta pelotas a distintas alturas y las controla",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          22,
+          50
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          80,
+          50
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            76,
+            46
+          ],
+          [
+            50,
+            14
+          ],
+          [
+            26,
+            44
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            76,
+            52
+          ],
+          [
+            26,
+            52
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            76,
+            56
+          ],
+          [
+            50,
+            86
+          ],
+          [
+            26,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          84
+        ],
+        "text": "a una pierna"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          6
+        ],
+        "text": "alta"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          96
+        ],
+        "text": "baja"
+      }
+    ]
   }
 }
