@@ -1,36 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  isStationsItem,
-  isTextItem,
-  isWarmupItem,
-  phaseToBlockOrder,
-} from "./timeline";
+import { isStationsItem, isWarmupItem, phaseToBlockOrder } from "./timeline";
 import type { WizardExercise, WizardState } from "./types";
 
-// Mismos colores que la barrita de cada tarjeta (CATEGORY_BAR en step-exercises).
-const SEGMENT_COLOR: Record<string, string> = {
-  text: "bg-foreground/30",
-  technique: "bg-blue-400",
-  tactics: "bg-purple-400",
-  fitness: "bg-amber-400",
-  "warm-up": "bg-brand",
-  warmup: "bg-sky-400",
-  stations: "bg-emerald-400",
-};
-
 const BLOCK_LABELS = ["Inicial", "Principal", "Final"] as const;
+/** Un color por bloque: la barra enseña la forma de la clase, no el tipo
+ * de cada ejercicio (eso ya lo dice la etiqueta de cada tarjeta). */
+const BLOCK_COLORS = ["bg-sky-400", "bg-brand", "bg-violet-400"] as const;
 
 function minutesOf(e: WizardExercise) {
   return e.overrideDuration ?? e.durationMinutes;
-}
-
-function colorOf(e: WizardExercise) {
-  if (isWarmupItem(e)) return SEGMENT_COLOR.warmup;
-  if (isStationsItem(e)) return SEGMENT_COLOR.stations;
-  if (isTextItem(e)) return SEGMENT_COLOR.text;
-  return SEGMENT_COLOR[e.category] ?? "bg-muted-foreground/40";
 }
 
 function labelOf(e: WizardExercise) {
@@ -84,8 +64,8 @@ export function SessionTimelineBar({
                   key={`${e.exerciseId}-${i}`}
                   title={`${BLOCK_LABELS[b]} · ${labelOf(e)} · ${minutesOf(e)} min`}
                   className={cn(
-                    "h-full min-w-[3px] border-r border-background/60 last:border-r-0",
-                    colorOf(e)
+                    "h-full min-w-[3px] border-r border-background/40 last:border-r-0",
+                    BLOCK_COLORS[b]
                   )}
                   style={{ flexGrow: minutesOf(e), flexBasis: 0 }}
                 />
@@ -98,7 +78,11 @@ export function SessionTimelineBar({
         <span className="flex flex-wrap gap-x-3">
           {blocks.map((blockItems, b) =>
             blockItems.length === 0 ? null : (
-              <span key={b}>
+              <span key={b} className="inline-flex items-center gap-1">
+                <span
+                  className={cn("inline-block size-2 rounded-full", BLOCK_COLORS[b])}
+                  aria-hidden
+                />
                 {BLOCK_LABELS[b]}{" "}
                 <strong className="font-semibold text-foreground">
                   {blockItems.reduce((n, e) => n + minutesOf(e), 0)} min

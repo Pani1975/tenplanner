@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageOff } from "lucide-react";
+import { Dumbbell, ImageOff, MessageCircle, Wind } from "lucide-react";
 import {
   ExerciseDiagramThumb,
   ExerciseDiagramView,
@@ -65,6 +65,12 @@ function useExerciseVisual(id: string | null | undefined) {
     visual: cache.get(id!) ?? null,
   };
 }
+
+const SIN_PISTA = {
+  charla: { Icon: MessageCircle, label: "Charla" },
+  calma: { Icon: Wind, label: "Calma" },
+  fisico: { Icon: Dumbbell, label: "Físico" },
+} as const;
 
 /**
  * Miniatura de un ejercicio: su primera foto o, si no tiene, el esquema de
@@ -152,6 +158,24 @@ export function ExerciseThumb({
           </div>
         )}
       </>
+    );
+  }
+
+  if (visual?.sinPista) {
+    const { Icon, label } = SIN_PISTA[visual.sinPista];
+    return (
+      <div
+        className={cn(
+          box,
+          "flex flex-col items-center justify-center gap-0.5 bg-brand/10"
+        )}
+        title={`${label}: sin organización de pista`}
+      >
+        <Icon className="size-5 text-brand" aria-hidden />
+        <span className="text-[9px] font-semibold leading-none text-muted-foreground">
+          {label}
+        </span>
+      </div>
     );
   }
 

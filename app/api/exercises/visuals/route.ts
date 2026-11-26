@@ -4,14 +4,23 @@ import { db } from "@/db";
 import { exercises } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
-import { getExerciseDiagram } from "@/lib/exercise-diagrams";
+import {
+  getExerciseDiagram,
+  getExerciseSinPista,
+  type SinPistaKind,
+} from "@/lib/exercise-diagrams";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_IDS = 100;
 
-export type ExerciseVisual = { imageUrl: string | null; diagram: Diagram | null };
+export type ExerciseVisual = {
+  imageUrl: string | null;
+  diagram: Diagram | null;
+  /** Ejercicio sin organización de pista (charla, calma, físico). */
+  sinPista: SinPistaKind | null;
+};
 
 /**
  * Miniaturas de ejercicios para el asistente de sesión: primera imagen
@@ -35,7 +44,11 @@ export async function GET(request: Request) {
   if (ids.length === 0) return NextResponse.json({ data: {} });
 
   const rows = await db
-    .select({ id: exercises.id, imageUrls: exercises.imageUrls })
+    .select({
+      id: exercises.id,
+      imageUrl: exercises.imageUrl,
+      imageUrls: exercises.imageUrls,
+    })
     .from(exercises)
     .where(
       and(inArray(exercises.id, ids), exerciseVisibleToUserCondition(user.id))
@@ -43,12 +56,15 @@ export async function GET(request: Request) {
 
   const data: Record<string, ExerciseVisual> = {};
   for (const r of rows) {
+    // Primero la lista de fotos; si no, el campo antiguo de una sola foto.
     const imageUrl =
-      (Array.isArray(r.imageUrls) ? r.imageUrls : []).find(
-        (u) => typeof u === "string" && u.startsWith("https://")
+      [...(Array.isArray(r.imageUrls) ? r.imageUrls : []), r.imageUrl].find(
+        (u): u is string => typeof u === "string" && u.startsWith("https://")
       ) ?? null;
     const diagram = getExerciseDiagram(r.id);
-    if (imageUrl || diagram) data[r.id] = { imageUrl, diagram };
+    const sinPista = getExerciseSinPista(r.id);
+    if (imageUrl || diagram || sinPista)
+      data[r.id] = { imageUrl, diagram, sinPista };
   }
 
   return NextResponse.json(

@@ -14,6 +14,7 @@ import {
   parseObjectives,
 } from "@/lib/session-engine/objectives";
 import { buildSkeleton } from "@/lib/session-engine/skeleton";
+import { scoreExercise } from "@/lib/session-engine/scoring";
 import type { SkillLevel } from "@/lib/skill-levels";
 
 const LEVELS: SkillLevel[] = [
@@ -489,5 +490,52 @@ describe("generateSession con dos pistas y rotación", () => {
     const a = generateSession(input({ courts: 2 }), data());
     const b = generateSession(input({ courts: 2, rotate: false }), data());
     expect(a.items).toEqual(b.items);
+  });
+});
+
+describe("preferencia por ejercicios con foto o esquema", () => {
+  const base: EngineExercise = {
+    id: "a",
+    name: "Peloteo",
+    durationMinutes: 10,
+    fases: ["main"],
+    niveles: ["consolidacion"],
+    golpes: ["derecha"],
+    caracter: [],
+    aspectos: ["tecnica"],
+    tipoActividad: null,
+    tipoPelota: null,
+    numJugadores: null,
+    hasSteps: false,
+    hasVariantes: false,
+    hasMedia: false,
+    ratingAvg: null,
+  };
+  const ctx = {
+    level: "consolidacion",
+    focus: "derecha" as const,
+    intensity: "media" as const,
+    recent3: new Set<string>(),
+    recent8: new Set<string>(),
+    previousIds: new Set<string>(),
+    prev: null,
+  };
+  const slot = { kind: "tecnica" as const, phase: "main" as const, minutes: 10 };
+
+  it("puntúa más el que tiene foto o esquema, a igualdad de lo demás", () => {
+    const plain = scoreExercise(base, slot, ctx);
+    const visual = scoreExercise({ ...base, hasVisual: true }, slot, ctx);
+    const anim = scoreExercise({ ...base, hasMedia: true }, slot, ctx);
+    expect(visual).toBeGreaterThan(anim);
+    expect(anim).toBeGreaterThan(plain);
+  });
+
+  it("no pasa por encima del nivel del grupo", () => {
+    const otherLevelVisual = scoreExercise(
+      { ...base, niveles: ["competicion"], hasVisual: true },
+      slot,
+      ctx
+    );
+    expect(scoreExercise(base, slot, ctx)).toBeGreaterThan(otherLevelVisual);
   });
 });
