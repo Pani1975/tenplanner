@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   ChevronLeft,
   CheckCircle2,
+  ChevronRight,
   Clock,
   X,
   Play,
@@ -359,6 +360,17 @@ export function ExecuteSessionClient({
       return;
     }
     beginSession();
+  }
+
+  /** Empezar directamente en un ejercicio del plan (pulsándolo en la lista). */
+  function startAt(idx: number) {
+    setCurrentIdx(idx);
+    if (students.length > 0) {
+      setAttendanceStage(true);
+      return;
+    }
+    resetTimerForExercise(exercises[idx]);
+    setStarted(true);
   }
 
   async function confirmAttendance() {
@@ -1222,7 +1234,13 @@ export function ExecuteSessionClient({
             </div>
             <div className="divide-y divide-[#050505]/10 dark:divide-white/10">
               {exercises.map((ex, idx) => (
-                <div key={ex.key} className="flex items-center gap-3 px-5 py-3">
+                <button
+                  key={ex.key}
+                  type="button"
+                  onClick={() => startAt(idx)}
+                  title="Empezar por este ejercicio"
+                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/60 active:bg-muted"
+                >
                   <span className="text-[10px] font-mono text-muted-foreground/50 w-4 shrink-0 text-right">
                     {idx + 1}
                   </span>
@@ -1256,7 +1274,8 @@ export function ExecuteSessionClient({
                     <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                       {tx("v1Min", { v1: ex.durationMinutes })}</span>
                   )}
-                </div>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground/50" />
+                </button>
               ))}
             </div>
           </div>
