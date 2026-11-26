@@ -30605,5 +30605,1064 @@
         "text": "3 remate"
       }
     ]
+  },
+  "33d597fc-fafc-55fd-adfd-6374ffa663fb": {
+    "court": "tenis",
+    "caption": "Puntos de fondo: la bola alta que llega a media pista se ataca sin dejarla botar",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          -2
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            2
+          ],
+          [
+            54,
+            40
+          ],
+          [
+            46,
+            72
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            40,
+            98
+          ],
+          [
+            42,
+            78
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            74
+          ],
+          [
+            18,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          74,
+          74
+        ],
+        "text": "sin bote"
+      }
+    ]
+  },
+  "2a853791-e315-5035-ba34-7a64f285f88b": {
+    "court": "tenis",
+    "caption": "Relevos: derecha de aproximación sobre bola corta, split step y volea a la pista libre",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          34
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          34
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          102
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            38,
+            98
+          ],
+          [
+            42,
+            76
+          ],
+          [
+            46,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            74
+          ],
+          [
+            84,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          78
+        ],
+        "text": "1 aprox."
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          62
+        ],
+        "text": "2 volea"
+      }
+    ]
+  },
+  "184a1514-3ed8-5150-a4c3-a48a38f3353a": {
+    "court": "tenis",
+    "caption": "Bola corta del monitor: el alumno ataca, sube con split step y juega el punto en la red",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          100,
+          54
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            96,
+            56
+          ],
+          [
+            62,
+            70
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            52,
+            98
+          ],
+          [
+            58,
+            74
+          ],
+          [
+            54,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            70
+          ],
+          [
+            28,
+            6
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          30,
+          62
+        ],
+        "text": "split step"
+      }
+    ]
+  },
+  "7fc46647-ca76-5ed7-a27a-ed9c0f8dc2c9": {
+    "court": "tenis",
+    "caption": "Un jugador ataca siempre al revés del otro; este neutraliza y, si puede, cambia el punto",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          56,
+          6
+        ],
+        "to": [
+          87.5,
+          24
+        ],
+        "label": "Revés"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          -2
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            98
+          ],
+          [
+            62,
+            18
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            74,
+            4
+          ],
+          [
+            90,
+            50
+          ],
+          [
+            44,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          30
+        ],
+        "text": "neutraliza"
+      }
+    ]
+  },
+  "a342d351-7e06-5aa4-8f32-86147c6ed8f4": {
+    "court": "tenis",
+    "caption": "Bola alta al revés dentro de la pista: atacarla con revés plano; si gana, vale doble",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          60,
+          -2
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            2
+          ],
+          [
+            46,
+            40
+          ],
+          [
+            32,
+            72
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            30,
+            96
+          ],
+          [
+            30,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            32,
+            76
+          ],
+          [
+            78,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          66
+        ],
+        "text": "revés plano"
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          30
+        ],
+        "text": "gana: x2"
+      }
+    ]
+  },
+  "425ba259-2f7b-5f40-ad2d-d135ffe971fb": {
+    "court": "tenis",
+    "caption": "Derecha de ataque rápida: dentro de la zona suma dos; cada error no forzado resta dos",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          50,
+          0
+        ],
+        "to": [
+          87.5,
+          20
+        ],
+        "label": "+2"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          34
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          32,
+          34
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            38
+          ],
+          [
+            62,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          80
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            76
+          ],
+          [
+            74,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          24,
+          84
+        ],
+        "text": "error: −2"
+      }
+    ]
+  },
+  "3c94edfa-3807-5ff0-b832-f78b21bf6d59": {
+    "court": "tenis",
+    "caption": "Uno ataca siempre; el otro solo defiende alto y profundo. Si aguanta 6 golpes, gana",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          46,
+          72
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          -2
+        ],
+        "role": "rival",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            68
+          ],
+          [
+            82,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            80,
+            4
+          ],
+          [
+            30,
+            24
+          ],
+          [
+            40,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          24,
+          80
+        ],
+        "text": "ataca"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          12
+        ],
+        "text": "defiende alto"
+      }
+    ]
+  },
+  "9895d9c3-5127-54d9-b756-f1677122eb26": {
+    "court": "tenis",
+    "caption": "Bolas variadas del monitor; el compañero que espera dice «bien» o «mal» a cada decisión",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            42,
+            70
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            60,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          94,
+          100
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          62
+        ],
+        "text": "¿atacar?"
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          86
+        ],
+        "text": "bien / mal"
+      }
+    ]
+  },
+  "4d01fecb-7a1a-5bfd-81f9-61ce881509d0": {
+    "court": "tenis",
+    "caption": "Pelotas muy altas del monitor; de lado, señalando, los alumnos las atrapan con la mano",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          -2
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            2
+          ],
+          [
+            24,
+            40
+          ],
+          [
+            34,
+            84
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            2
+          ],
+          [
+            76,
+            40
+          ],
+          [
+            66,
+            84
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          90
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          90
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          104
+        ],
+        "text": "atrapa con la mano"
+      }
+    ]
+  },
+  "2cefe2f8-b344-5154-a9c7-cf0ba5740ceb": {
+    "court": "tenis",
+    "caption": "Junto a la red, uno lanza suave y el otro atrapa sin bote delante del cuerpo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          38
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          64
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            42
+          ],
+          [
+            50,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          78,
+          70
+        ],
+        "text": "atrapa sin bote"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          30
+        ],
+        "text": "lanza suave"
+      }
+    ]
+  },
+  "a29cdba0-9acb-5e6f-bc2c-47ce4b220cf7": {
+    "court": "libre",
+    "caption": "Para la bola con el centro de la raqueta y la lleva a su cubo sin tocarla con la mano",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          84,
+          50
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            80,
+            48
+          ],
+          [
+            62,
+            30
+          ],
+          [
+            46,
+            48
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          42,
+          52
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "basket",
+        "at": [
+          10,
+          50
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            38,
+            56
+          ],
+          [
+            16,
+            56
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          28,
+          84
+        ],
+        "text": "a su cubo"
+      }
+    ]
+  },
+  "a476175c-64db-5ea8-add6-0b80f1986444": {
+    "court": "tenis",
+    "caption": "Avanzar desde el fondo; cuando el monitor levanta la raqueta, split step y parar sin bote",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            40,
+            98
+          ],
+          [
+            40,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            34
+          ],
+          [
+            44,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          18,
+          64
+        ],
+        "text": "split step"
+      }
+    ]
+  },
+  "0fedb595-2782-5d4f-8e8e-ff5c9e5bcb0c": {
+    "court": "tenis",
+    "caption": "Saques a las tres zonas con distintos efectos; se tacha cada combinación conseguida",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          12.5,
+          28
+        ],
+        "to": [
+          24,
+          48
+        ],
+        "label": "1"
+      },
+      {
+        "t": "zone",
+        "from": [
+          25.5,
+          28
+        ],
+        "to": [
+          37,
+          48
+        ],
+        "label": "2"
+      },
+      {
+        "t": "zone",
+        "from": [
+          38.5,
+          28
+        ],
+        "to": [
+          50,
+          48
+        ],
+        "label": "3"
+      },
+      {
+        "t": "player",
+        "at": [
+          62,
+          102
+        ],
+        "role": "alumno",
+        "label": "S"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            98
+          ],
+          [
+            20,
+            26
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            98
+          ],
+          [
+            44,
+            26
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          34
+        ],
+        "text": "x 2 efectos"
+      }
+    ]
+  },
+  "d578b6f9-5bc8-5410-bd43-934fa19a8b7e": {
+    "court": "libre",
+    "caption": "Relevos con la bola sobre la raqueta hasta el cono y vuelta, sin que se caiga",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          10,
+          34
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          10,
+          66
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "cone",
+        "at": [
+          84,
+          34
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          84,
+          66
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            16,
+            30
+          ],
+          [
+            80,
+            28
+          ],
+          [
+            80,
+            40
+          ],
+          [
+            16,
+            40
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            16,
+            62
+          ],
+          [
+            80,
+            60
+          ],
+          [
+            80,
+            72
+          ],
+          [
+            16,
+            72
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          92
+        ],
+        "text": "bola en raqueta"
+      }
+    ]
   }
 }
