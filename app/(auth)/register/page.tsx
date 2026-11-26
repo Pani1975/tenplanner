@@ -92,6 +92,10 @@ export default function RegisterPage() {
   const registerSchema = useMemo(() => makeRegisterSchema(t), [t]);
   const router = useRouter();
   const [step, setStep] = useState<Step>("choice");
+  const [limitReached, setLimitReached] = useState(false);
+  useEffect(() => {
+    setLimitReached(new URLSearchParams(window.location.search).has("limite"));
+  }, []);
   const [form, setForm] = useState<RegisterForm>(initialForm);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -421,6 +425,15 @@ export default function RegisterPage() {
   if (step === "choice") {
     return (
       <div className="w-full rounded-[32px] border border-[#050505]/10 bg-white p-5 shadow-[0_28px_90px_-50px_rgba(5,5,5,0.65)] dark:border-white/10 dark:bg-[#10100e] sm:p-7">
+        {limitReached && (
+          <p
+            role="status"
+            className="mb-4 rounded-[22px] border border-brand/30 bg-brand/10 px-4 py-3 text-sm font-semibold text-foreground"
+          >
+            Has visto las 10 páginas gratuitas de la biblioteca. Regístrate
+            gratis para seguir viendo ejercicios y clases.
+          </p>
+        )}
         <div>
           <p className="tp-kicker">{t("earlyAccess")}</p>
           <h1 className="mt-3 text-3xl font-black leading-tight text-foreground">

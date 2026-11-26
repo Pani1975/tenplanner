@@ -1,5 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  countView,
+  FREE_VIEWS_COOKIE,
+  FREE_VIEWS_MAX_AGE,
+  isBotUserAgent,
+  isLibraryPath,
+  viewKey,
+} from "./lib/free-views";
 
 const PUBLIC_PREFIXES = [
   "/login",
@@ -261,8 +269,24 @@ export async function proxy(request: NextRequest) {
   const isPrivatePage = PRIVATE_PAGE_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
+  // Biblioteca pública: máximo 10 páginas para visitantes sin cuenta.
+  const isPrefetch =
+    request.headers.has("next-router-prefetch") ||
+    /prefetch/i.test(request.headers.get("purpose") ?? "") ||
+    /prefetch/i.test(request.headers.get("sec-purpose") ?? "");
+  const gateLibrary =
+    request.method === "GET" &&
+    isLibraryPath(pathname) &&
+    !isPrefetch &&
+    !isBotUserAgent(request.headers.get("user-agent"));
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
   const shouldCheckUser =
-    !isPublic || pathname === "/login" || pathname === "/register";
+    !isPublic ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    (gateLibrary && hasAuthCookie);
 
   let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] =
     null;
@@ -302,6 +326,28 @@ export async function proxy(request: NextRequest) {
     const response = NextResponse.redirect(url);
     if (shouldClearAuthCookies) clearSupabaseAuthCookies(request, response);
     return withSecurityHeaders(response, csp);
+  }
+
+  if (gateLibrary && !user) {
+    const result = countView(
+      request.cookies.get(FREE_VIEWS_COOKIE)?.value,
+      viewKey(pathname, request.nextUrl.search)
+    );
+    if (!result.allowed) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/register";
+      url.search = "?limite=1";
+      return withSecurityHeaders(NextResponse.redirect(url), csp);
+    }
+    if (result.changed) {
+      supabaseResponse.cookies.set(FREE_VIEWS_COOKIE, result.views.join("."), {
+        path: "/",
+        maxAge: FREE_VIEWS_MAX_AGE,
+        sameSite: "lax",
+        httpOnly: true,
+        secure: isProd,
+      });
+    }
   }
 
   if (user && (pathname === "/login" || pathname === "/register")) {
