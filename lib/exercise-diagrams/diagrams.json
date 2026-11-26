@@ -25462,5 +25462,757 @@
         "text": "tras cada serie"
       }
     ]
+  },
+  "1a8f242c-64c1-5bca-8d8c-ca7aa98305ec": {
+    "court": "libre",
+    "caption": "A la señal del monitor: adelante, lateral, atrás o en diagonal, y frena",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          55
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            51
+          ],
+          [
+            50,
+            28
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            46,
+            55
+          ],
+          [
+            20,
+            55
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            54,
+            55
+          ],
+          [
+            80,
+            55
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            59
+          ],
+          [
+            50,
+            78
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            53,
+            52
+          ],
+          [
+            72,
+            33
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          96
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          92
+        ],
+        "text": "señal"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          20
+        ],
+        "text": "frena controlado"
+      }
+    ]
+  },
+  "bd7c2e96-39d3-5825-aac2-f1b7dadfb9a9": {
+    "court": "libre",
+    "caption": "El monitor señala una dirección (o la dice); el alumno sale y frena",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          18,
+          50
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          82,
+          50
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          18
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          50
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            46,
+            50
+          ],
+          [
+            22,
+            50
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          90
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          74,
+          86
+        ],
+        "text": "señala o grita"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          40
+        ],
+        "text": "sale y frena"
+      }
+    ]
+  },
+  "9c47f83a-7648-5f51-b0b2-368d8253484b": {
+    "court": "tenis",
+    "caption": "Desde el centro del fondo, a cada uno de los 5 conos y vuelta al centro",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          101
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "cone",
+        "at": [
+          12,
+          100
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          88,
+          100
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          22,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          78,
+          80
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          50,
+          72
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            46,
+            100
+          ],
+          [
+            16,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            54,
+            100
+          ],
+          [
+            84,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            47,
+            97
+          ],
+          [
+            25,
+            83
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            53,
+            97
+          ],
+          [
+            75,
+            83
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            97
+          ],
+          [
+            50,
+            75
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          26,
+          64
+        ],
+        "text": "y vuelta al centro"
+      }
+    ]
+  },
+  "f3b06007-f03e-59cc-a5ec-40ec24a68941": {
+    "court": "tenis",
+    "caption": "El entrenador señala en el último momento; el jugador sale, frena y vuelve",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          94
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            46,
+            94
+          ],
+          [
+            22,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            54,
+            94
+          ],
+          [
+            78,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            90
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          60
+        ],
+        "text": "señal tardía"
+      },
+      {
+        "t": "text",
+        "at": [
+          24,
+          84
+        ],
+        "text": "sale y frena"
+      }
+    ]
+  },
+  "7bd1d1f3-3f4c-55be-a6c4-c9cd7e860966": {
+    "court": "tenis",
+    "caption": "Salida al cono que señala el monitor, frena con el pie de fuera y vuelve",
+    "elements": [
+      {
+        "t": "cone",
+        "at": [
+          22,
+          90
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          78,
+          90
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          32,
+          76
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          68,
+          76
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            54,
+            94
+          ],
+          [
+            75,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            74,
+            86
+          ],
+          [
+            54,
+            92
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          82
+        ],
+        "text": "frena y pivota"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          56
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          28,
+          62
+        ],
+        "text": "señala el cono"
+      }
+    ]
+  },
+  "f7af38b5-5348-591a-8e19-4f026372f61a": {
+    "court": "tenis",
+    "caption": "Los de la red volean entre sí y los del fondo pelotean en cruzado",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          30,
+          64
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          36
+        ],
+        "role": "rival",
+        "label": "C"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            32,
+            62
+          ],
+          [
+            68,
+            38
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          74
+        ],
+        "text": "voleas"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          102
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          -2
+        ],
+        "role": "rival",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            100
+          ],
+          [
+            52,
+            50
+          ],
+          [
+            32,
+            4
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          80
+        ],
+        "text": "cruzado"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          16
+        ],
+        "text": "luego globo-remate"
+      }
+    ]
+  },
+  "45411dc4-3bea-5261-ab72-03df1f269ec2": {
+    "court": "tenis",
+    "caption": "Voleas en la red; a la señal, el de la red cruza; los del fondo restan cruzado",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          68,
+          64
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          32,
+          36
+        ],
+        "role": "rival",
+        "label": "C"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            62
+          ],
+          [
+            34,
+            38
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          46
+        ],
+        "text": "voleas"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            64,
+            68
+          ],
+          [
+            38,
+            68
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          76
+        ],
+        "text": "cruza a la señal"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          102
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          -2
+        ],
+        "role": "rival",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            0
+          ],
+          [
+            86,
+            40
+          ],
+          [
+            34,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          90
+        ],
+        "text": "resto"
+      }
+    ]
+  },
+  "5052bc19-e040-52ea-bf2c-4de9f79eec0f": {
+    "court": "tenis",
+    "caption": "Vueltas por las líneas: tramos rápidos por el fondo y la red, trote por los lados",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          0,
+          104
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            2,
+            100
+          ],
+          [
+            100,
+            100
+          ],
+          [
+            100,
+            50
+          ],
+          [
+            0,
+            50
+          ],
+          [
+            0,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          94
+        ],
+        "text": "rápido"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          56
+        ],
+        "text": "rápido"
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          75
+        ],
+        "text": "trote"
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          75
+        ],
+        "text": "trote"
+      }
+    ]
   }
 }
