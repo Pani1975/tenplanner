@@ -26445,5 +26445,698 @@
         "text": "sin elástico"
       }
     ]
+  },
+  "6faad3f2-12a5-557c-9e32-4d9f4b78f0e2": {
+    "court": "tenis",
+    "caption": "Dos diagonales, derecha y revés, cada vez más profundo y sin buscar el fallo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          28,
+          -2
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          102
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          102
+        ],
+        "role": "alumno",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            2
+          ],
+          [
+            48,
+            40
+          ],
+          [
+            70,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            2
+          ],
+          [
+            52,
+            60
+          ],
+          [
+            30,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          90
+        ],
+        "text": "derecha"
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          90
+        ],
+        "text": "revés"
+      }
+    ]
+  },
+  "1691a78e-bec0-5401-ac06-0c60dd1764c4": {
+    "court": "tenis",
+    "caption": "Tres golpes en cruzado y uno en paralelo; quien cambia al paralelo lo avisa en voz alta",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          28,
+          -2
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          102
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            2
+          ],
+          [
+            56,
+            44
+          ],
+          [
+            70,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          66,
+          30
+        ],
+        "text": "3 cruzados"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            24,
+            2
+          ],
+          [
+            22,
+            50
+          ],
+          [
+            24,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          34,
+          76
+        ],
+        "text": "1 paralelo"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            66,
+            104
+          ],
+          [
+            34,
+            104
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          44,
+          8
+        ],
+        "text": "¡avisa!"
+      }
+    ]
+  },
+  "078437a9-2dd3-5ecf-8a30-023ed1ca8c76": {
+    "court": "tenis",
+    "caption": "Peloteo en las dos diagonales a la vez; a la señal, cada pareja cambia de diagonal",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          28,
+          -2
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          102
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          102
+        ],
+        "role": "alumno",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            2
+          ],
+          [
+            48,
+            40
+          ],
+          [
+            70,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            2
+          ],
+          [
+            52,
+            60
+          ],
+          [
+            30,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          92,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          62
+        ],
+        "text": "señal: cambio"
+      }
+    ]
+  },
+  "dc4acc79-2158-5abe-bc48-ac5eca7fcf36": {
+    "court": "tenis",
+    "caption": "Dos diagonales; cada pocos golpes la bola va más rápida, hasta el ritmo de partido",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          28,
+          -2
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          72,
+          102
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          102
+        ],
+        "role": "alumno",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            2
+          ],
+          [
+            48,
+            40
+          ],
+          [
+            70,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            2
+          ],
+          [
+            52,
+            60
+          ],
+          [
+            30,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          30
+        ],
+        "text": "+ velocidad"
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          70
+        ],
+        "text": "ritmo partido"
+      }
+    ]
+  },
+  "797ad4fd-4c51-5462-bfbb-367195d356d7": {
+    "court": "tenis",
+    "caption": "Calentamiento de dobles: saque con subida, resto cruzado, volea y cruce del de la red",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          66,
+          102
+        ],
+        "role": "alumno",
+        "label": "S"
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          64
+        ],
+        "role": "alumno",
+        "label": "R1"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          -2
+        ],
+        "role": "rival",
+        "label": "T"
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          36
+        ],
+        "role": "rival",
+        "label": "R2"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            98
+          ],
+          [
+            36,
+            20
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            2
+          ],
+          [
+            8,
+            46
+          ],
+          [
+            62,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            68,
+            100
+          ],
+          [
+            66,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          90
+        ],
+        "text": "sube"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            34,
+            60
+          ],
+          [
+            50,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          74
+        ],
+        "text": "cruce"
+      }
+    ]
+  },
+  "1f8b3242-0e9b-520f-966b-315d43cfb530": {
+    "court": "tenis",
+    "caption": "Dos contra dos: una pareja en la red y otra al fondo; a la señal, las parejas se cambian",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          34,
+          64
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          64
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          -2
+        ],
+        "role": "rival",
+        "label": "C"
+      },
+      {
+        "t": "player",
+        "at": [
+          70,
+          -2
+        ],
+        "role": "rival",
+        "label": "D"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            60
+          ],
+          [
+            28,
+            4
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            70,
+            2
+          ],
+          [
+            64,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            34
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          20
+        ],
+        "text": "suben"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            84,
+            66
+          ],
+          [
+            84,
+            98
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          106
+        ],
+        "text": "bajan"
+      }
+    ]
+  },
+  "664dd6f2-a90a-5f04-9ab6-2a9b1d6125a5": {
+    "court": "tenis",
+    "caption": "Caminar muy despacio por las líneas con la bola sobre la raqueta, sin que se caiga",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          12.5,
+          92
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            12.5,
+            88
+          ],
+          [
+            12.5,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          100
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            44,
+            100
+          ],
+          [
+            70,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            50,
+            34
+          ],
+          [
+            50,
+            46
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          96,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          30
+        ],
+        "text": "más lento"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          70
+        ],
+        "text": "hacia atrás"
+      }
+    ]
   }
 }
