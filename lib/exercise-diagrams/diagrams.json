@@ -26214,5 +26214,236 @@
         "text": "trote"
       }
     ]
+  },
+  "3b56a857-cb26-582c-9553-51ff1b37a5ca": {
+    "court": "tenis",
+    "caption": "Cesta de derecha: pegado al fondo, golpea la bola en subida",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          40
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          32,
+          40
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            42
+          ],
+          [
+            64,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          90
+        ],
+        "to": [
+          87.5,
+          100
+        ],
+        "label": "En subida"
+      },
+      {
+        "t": "player",
+        "at": [
+          68,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            96
+          ],
+          [
+            24,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          82,
+          80
+        ],
+        "text": "sin retroceder"
+      }
+    ]
+  },
+  "3a60ee44-f534-593d-97db-28ba1ca99ab6": {
+    "court": "tenis",
+    "caption": "Cesta de revés cruzado, a ritmo alto y siempre profundo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          62,
+          40
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          70,
+          40
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            42
+          ],
+          [
+            30,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            96
+          ],
+          [
+            76,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "zone",
+        "from": [
+          50,
+          0
+        ],
+        "to": [
+          87.5,
+          18
+        ],
+        "label": "Profundo"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          74
+        ],
+        "text": "revés cruzado"
+      }
+    ]
+  },
+  "39045e53-0426-5b53-acc5-44831b221614": {
+    "court": "tenis",
+    "caption": "Lateral con elástico sujeto por el entrenador; después, sin elástico a tope",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          22,
+          106
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "line",
+        "from": [
+          24,
+          104
+        ],
+        "to": [
+          34,
+          96
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            40,
+            96
+          ],
+          [
+            76,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          60,
+          90
+        ],
+        "text": "con elástico"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            36,
+            80
+          ],
+          [
+            76,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          56,
+          74
+        ],
+        "text": "sin elástico"
+      }
+    ]
   }
 }
