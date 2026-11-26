@@ -7,7 +7,7 @@ import type { WizardExercise, WizardState } from "./types";
 const BLOCK_LABELS = ["Inicial", "Principal", "Final"] as const;
 /** Un color por bloque: la barra enseña la forma de la clase, no el tipo
  * de cada ejercicio (eso ya lo dice la etiqueta de cada tarjeta). */
-const BLOCK_COLORS = ["bg-sky-400", "bg-green-500", "bg-violet-400"] as const;
+const BLOCK_COLORS = ["bg-sky-400", "bg-brand", "bg-violet-400"] as const;
 
 function minutesOf(e: WizardExercise) {
   return e.overrideDuration ?? e.durationMinutes;
