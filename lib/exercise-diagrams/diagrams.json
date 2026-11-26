@@ -29369,5 +29369,1241 @@
         "text": "volea-volea"
       }
     ]
+  },
+  "758aa061-f324-5265-b68f-6f9f31800872": {
+    "court": "tenis",
+    "caption": "Desde detrás del fondo, bola alta y profunda; desde dentro de la pista, bola más tensa",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          18,
+          99
+        ],
+        "to": [
+          82,
+          106
+        ],
+        "label": "Alta"
+      },
+      {
+        "t": "zone",
+        "from": [
+          18,
+          78
+        ],
+        "to": [
+          82,
+          90
+        ],
+        "label": "Tensa"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          26,
+          103
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            26,
+            99
+          ],
+          [
+            10,
+            50
+          ],
+          [
+            30,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          84
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            74,
+            80
+          ],
+          [
+            70,
+            10
+          ]
+        ]
+      }
+    ]
+  },
+  "8877a8b5-b15e-505b-b207-9e01852912d1": {
+    "court": "tenis",
+    "caption": "Puntos: quien abre un ángulo corto y sube a cerrar en la red gana doble",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          -2
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            40,
+            96
+          ],
+          [
+            92,
+            32
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            44,
+            96
+          ],
+          [
+            58,
+            62
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          16
+        ],
+        "text": "ángulo corto"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          74
+        ],
+        "text": "a la red"
+      }
+    ]
+  },
+  "9256eb54-447e-546e-83db-1b16e4dfd22f": {
+    "court": "tenis",
+    "caption": "Abre un ángulo y toca el cono de la bisectriz antes de la siguiente bola del monitor",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            30,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          28,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            30,
+            94
+          ],
+          [
+            92,
+            32
+          ]
+        ]
+      },
+      {
+        "t": "cone",
+        "at": [
+          54,
+          100
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            32,
+            100
+          ],
+          [
+            50,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          74,
+          92
+        ],
+        "text": "toca el cono"
+      }
+    ]
+  },
+  "bb20b9d1-f927-5b3a-a28d-54ce3a19b61c": {
+    "court": "tenis",
+    "caption": "Voleas a las zonas pequeñas de los ángulos cortos: cada bote dentro suma tres",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          0,
+          26
+        ],
+        "to": [
+          20,
+          42
+        ],
+        "label": "+3"
+      },
+      {
+        "t": "zone",
+        "from": [
+          80,
+          26
+        ],
+        "to": [
+          100,
+          42
+        ],
+        "label": "+3"
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          -2
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            32,
+            2
+          ],
+          [
+            48,
+            56
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          62
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            58
+          ],
+          [
+            10,
+            38
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            58
+          ],
+          [
+            90,
+            38
+          ]
+        ]
+      }
+    ]
+  },
+  "1fe6896c-ddd6-5a96-a496-f9df421e6994": {
+    "court": "tenis",
+    "caption": "Dos equipos golpean el lanzamiento del monitor; bola en el pasillo corto vale doble",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          0,
+          16
+        ],
+        "to": [
+          12.5,
+          34
+        ],
+        "label": "x2"
+      },
+      {
+        "t": "zone",
+        "from": [
+          87.5,
+          16
+        ],
+        "to": [
+          100,
+          34
+        ],
+        "label": "x2"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          60
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          60
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            64
+          ],
+          [
+            38,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          100
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            96
+          ],
+          [
+            6,
+            28
+          ]
+        ]
+      }
+    ]
+  },
+  "66485ed5-cb15-5d27-8f2a-ac06ef55ec5d": {
+    "court": "tenis",
+    "caption": "Uno saca a la esquina o a la T; el otro se desplaza justo antes del impacto",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          60,
+          102
+        ],
+        "role": "alumno",
+        "label": "S"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            98
+          ],
+          [
+            16,
+            28
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            98
+          ],
+          [
+            48,
+            26
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          -2
+        ],
+        "role": "alumno",
+        "label": "R"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            26,
+            0
+          ],
+          [
+            14,
+            6
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            34,
+            0
+          ],
+          [
+            44,
+            6
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          12
+        ],
+        "text": "lee y sale"
+      }
+    ]
+  },
+  "491fb8fb-9229-5009-ae0a-1d9fe11d9824": {
+    "court": "libre",
+    "caption": "Recibe el balón medicinal y lo devuelve con apoyo abierto o cerrado, pasando el peso",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          80,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "player",
+        "at": [
+          22,
+          50
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            76,
+            46
+          ],
+          [
+            50,
+            24
+          ],
+          [
+            26,
+            46
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            26,
+            56
+          ],
+          [
+            50,
+            76
+          ],
+          [
+            76,
+            56
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          86
+        ],
+        "text": "abierto/cerrado"
+      }
+    ]
+  },
+  "9dfcf1c8-a621-51d0-9763-e59b2ba9892c": {
+    "court": "tenis",
+    "caption": "Aproximación cortada en paralelo a la zona del pasillo; si luego entra la volea, uno más",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          87.5,
+          0
+        ],
+        "to": [
+          100,
+          22
+        ],
+        "label": "+2"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            62,
+            98
+          ],
+          [
+            70,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            72,
+            72
+          ],
+          [
+            94,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            68,
+            70
+          ],
+          [
+            62,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          40,
+          80
+        ],
+        "text": "cortada"
+      },
+      {
+        "t": "text",
+        "at": [
+          40,
+          58
+        ],
+        "text": "+1 volea"
+      }
+    ]
+  },
+  "c269105c-f7fb-5eca-9fa0-cf8774f44d0d": {
+    "court": "tenis",
+    "caption": "Aproximación en paralelo al rincón: cada bote en la zona del pasillo suma tres",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          0,
+          0
+        ],
+        "to": [
+          12.5,
+          22
+        ],
+        "label": "+3"
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            38,
+            98
+          ],
+          [
+            30,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            28,
+            72
+          ],
+          [
+            6,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          60,
+          80
+        ],
+        "text": "aproximación"
+      }
+    ]
+  },
+  "85719f2e-cee6-57c6-b235-beaef89c8ba2": {
+    "court": "tenis",
+    "caption": "Relevos: aproximación sobre bola corta, volea tras el split step y remate del globo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          36
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          36
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          36,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          102
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            38,
+            98
+          ],
+          [
+            42,
+            76
+          ],
+          [
+            46,
+            60
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            74
+          ],
+          [
+            84,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          78
+        ],
+        "text": "1 aprox."
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          64
+        ],
+        "text": "2 volea"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          54
+        ],
+        "text": "3 remate"
+      }
+    ]
+  },
+  "ad0548a3-6f47-5bdd-bebd-950812b9ddf8": {
+    "court": "tenis",
+    "caption": "El punto empieza con bola corta: aproximación en paralelo y se juega en la red",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          46,
+          -2
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            2
+          ],
+          [
+            62,
+            68
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            64,
+            98
+          ],
+          [
+            66,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            68,
+            72
+          ],
+          [
+            84,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            62,
+            70
+          ],
+          [
+            56,
+            58
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          30,
+          80
+        ],
+        "text": "bola corta"
+      },
+      {
+        "t": "text",
+        "at": [
+          88,
+          36
+        ],
+        "text": "paralelo"
+      }
+    ]
+  },
+  "3a075ee2-8e1d-5cc3-95b2-918a1909880d": {
+    "court": "tenis",
+    "caption": "Por equipos, derecha y revés altos por encima de la cuerda colocada sobre la red",
+    "elements": [
+      {
+        "t": "line",
+        "from": [
+          12.5,
+          46
+        ],
+        "to": [
+          87.5,
+          46
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            36,
+            92
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          100
+        ],
+        "role": "rival",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            96
+          ],
+          [
+            16,
+            40
+          ],
+          [
+            26,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          40
+        ],
+        "text": "cuerda"
+      }
+    ]
+  },
+  "4a85c79b-b507-53a3-a43c-c1f09a4f8e38": {
+    "court": "tenis",
+    "caption": "Puntos con un solo saque: el restador entra y ataca el segundo saque",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          62,
+          102
+        ],
+        "role": "alumno",
+        "label": "S"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            60,
+            98
+          ],
+          [
+            34,
+            30
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          34,
+          6
+        ],
+        "role": "rival",
+        "label": "R"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            30,
+            -2
+          ],
+          [
+            32,
+            4
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            36,
+            10
+          ],
+          [
+            80,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          18,
+          20
+        ],
+        "text": "ataca"
+      },
+      {
+        "t": "text",
+        "at": [
+          18,
+          70
+        ],
+        "text": "un solo saque"
+      }
+    ]
+  },
+  "2d0a5a55-a676-5e7e-ba1a-e6515153ca71": {
+    "court": "tenis",
+    "caption": "Bola profunda: peloteo seguro. Bola corta: avanzar y atacar antes del segundo bote",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            36,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            34
+          ],
+          [
+            62,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            44,
+            98
+          ],
+          [
+            58,
+            72
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          56
+        ],
+        "text": "corta: ataca"
+      },
+      {
+        "t": "text",
+        "at": [
+          18,
+          84
+        ],
+        "text": "larga: seguro"
+      }
+    ]
+  },
+  "f6ebba70-97cb-509f-b12f-71edfb4202b3": {
+    "court": "tenis",
+    "caption": "Circuito por relevos: derecha desde el centro, carrera a la red, volea y remate",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          32
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          32
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          46,
+          88
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            84
+          ],
+          [
+            76,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            44,
+            84
+          ],
+          [
+            40,
+            62
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          88
+        ],
+        "text": "1 derecha"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          66
+        ],
+        "text": "2 volea"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          56
+        ],
+        "text": "3 remate"
+      }
+    ]
   }
 }
