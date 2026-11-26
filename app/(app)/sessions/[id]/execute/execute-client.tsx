@@ -37,42 +37,13 @@ import {
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { useTerm } from "@/lib/i18n-terms";
-
-const CATEGORY_COLORS: Record<string, string> = {
-  technique: "border-blue-500/40 bg-blue-500/5",
-  tactics: "border-purple-500/40 bg-purple-500/5",
-  fitness: "border-amber-500/40 bg-amber-500/5",
-  "warm-up": "border-brand/40 bg-brand/5",
-  warmup: "border-sky-500/40 bg-sky-500/5",
-  stations: "border-emerald-500/40 bg-emerald-500/5",
-};
-
-const CATEGORY_ACCENT: Record<string, string> = {
-  technique: "text-blue-400",
-  tactics: "text-purple-400",
-  fitness: "text-amber-400",
-  "warm-up": "text-brand",
-  warmup: "text-sky-400",
-  stations: "text-emerald-400",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  technique: "Técnica",
-  tactics: "Táctica",
-  fitness: "Fitness",
-  "warm-up": "Calentamiento",
-  warmup: "Descanso",
-  stations: "Estaciones",
-};
-
-const CATEGORY_BAR: Record<string, string> = {
-  technique: "bg-blue-400",
-  tactics: "bg-purple-400",
-  fitness: "bg-amber-400",
-  "warm-up": "bg-brand",
-  warmup: "bg-sky-400",
-  stations: "bg-emerald-400",
-};
+import {
+  PHASE_BAR,
+  PHASE_CARD,
+  PHASE_LABEL,
+  PHASE_TEXT,
+  phaseFromBlockOrder,
+} from "@/lib/sessions/phase-colors";
 
 interface ExerciseData {
   /** Clave única del elemento del plan. */
@@ -1258,20 +1229,7 @@ export function ExecuteSessionClient({
                   <div
                     className={cn(
                       "w-1 h-7 rounded-full shrink-0",
-                      ex.category === "technique" && "bg-blue-400",
-                      ex.category === "tactics" && "bg-purple-400",
-                      ex.category === "fitness" && "bg-amber-400",
-                      ex.category === "warm-up" && "bg-brand",
-                      ex.category === "warmup" && "bg-sky-400",
-                      ex.category === "stations" && "bg-emerald-400",
-                      ![
-                        "technique",
-                        "tactics",
-                        "fitness",
-                        "warm-up",
-                        "warmup",
-                        "stations",
-                      ].includes(ex.category) && "bg-muted"
+                      PHASE_BAR[phaseFromBlockOrder(ex.blockOrder)]
                     )}
                   />
                   <div className="flex-1 min-w-0">
@@ -1288,10 +1246,10 @@ export function ExecuteSessionClient({
                     <p
                       className={cn(
                         "text-[10px] font-semibold",
-                        CATEGORY_ACCENT[ex.category] ?? "text-muted-foreground"
+                        PHASE_TEXT[phaseFromBlockOrder(ex.blockOrder)]
                       )}
                     >
-                      {CATEGORY_LABELS[ex.category] ?? ex.category}
+                      {PHASE_LABEL[phaseFromBlockOrder(ex.blockOrder)]}
                     </p>
                   </div>
                   {ex.durationMinutes > 0 && (
@@ -1377,7 +1335,7 @@ export function ExecuteSessionClient({
                   <span
                     className={cn(
                       "h-7 w-1 shrink-0 rounded-full",
-                      CATEGORY_BAR[ex.category] ?? "bg-muted"
+                      PHASE_BAR[phaseFromBlockOrder(ex.blockOrder)]
                     )}
                   />
                   <span className="min-w-0 flex-1">
@@ -1550,17 +1508,16 @@ export function ExecuteSessionClient({
             ref={exerciseTopRef}
             className={cn(
               "scroll-mt-24 rounded-[28px] border p-6 shadow-[0_24px_80px_-64px_rgba(5,5,5,0.7)]",
-              CATEGORY_COLORS[current.category] ??
-                "border-[#050505]/10 bg-white dark:border-white/10 dark:bg-[#10100e]"
+              PHASE_CARD[phaseFromBlockOrder(current.blockOrder)]
             )}
           >
             <p
               className={cn(
                 "mb-2 text-[10px] font-black uppercase",
-                CATEGORY_ACCENT[current.category] ?? "text-brand"
+                PHASE_TEXT[phaseFromBlockOrder(current.blockOrder)]
               )}
             >
-              {CATEGORY_LABELS[current.category] ?? current.category}
+              {PHASE_LABEL[phaseFromBlockOrder(current.blockOrder)]}
             </p>
             {current.kind === "text" ? (
               <p className="mb-3 whitespace-pre-line text-xl font-bold leading-snug text-foreground">

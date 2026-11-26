@@ -61,6 +61,7 @@ import {
   type StationDraftItem,
 } from "@/lib/block-items";
 import { ASPECTO_JUEGO_LABELS, NIVEL_IDS } from "@/lib/exercise-taxonomy";
+import { PHASE_BAR } from "@/lib/sessions/phase-colors";
 import {
   pickExerciseHref,
   useExercisePickListener,
@@ -1446,7 +1447,7 @@ export function StepExercises({
                                   <div
                                     className={cn(
                                       "w-0.5 h-8 rounded-full shrink-0",
-                                      CATEGORY_BAR[ex.category] ?? "bg-muted"
+                                      PHASE_BAR[phase]
                                     )}
                                   />
                                   <GripVertical className="size-4 text-muted-foreground/30 group-hover:text-muted-foreground shrink-0 transition-colors" />
@@ -1517,24 +1518,17 @@ export function StepExercises({
                                         {ex.name}
                                       </p>
                                     )}
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                      <span
-                                        className={cn(
-                                          "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                                          isTextItem(ex)
-                                            ? "text-foreground/70 bg-muted"
-                                            : (CATEGORY_COLORS[ex.category] ??
-                                                "text-muted-foreground bg-muted")
-                                        )}
-                                      >
-                                        {isTextItem(ex)
-                                          ? ex.overrideDuration === null
+                                    {/* El color ya lo da el bloque; solo se
+                                        etiquetan las notas del monitor. */}
+                                    {isTextItem(ex) && (
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-foreground/70 bg-muted">
+                                          {ex.overrideDuration === null
                                             ? "Anotación"
-                                            : "Actividad"
-                                          : (CATEGORY_LABELS[ex.category] ??
-                                            ex.category)}
-                                      </span>
-                                    </div>
+                                            : "Actividad"}
+                                        </span>
+                                      </div>
+                                    )}
                                     {!isTextItem(ex) &&
                                       !isWarmupItem(ex) &&
                                       !isStationsItem(ex) && (

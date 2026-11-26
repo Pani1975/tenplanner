@@ -126,7 +126,9 @@ export default async function ExecuteSessionPage({ params }: PageProps) {
   );
   const exercisesForClient = resolvedExercises.map((e, i) => {
     const item = plan.items[i];
-    if (!twoCourts || !item) return e;
+    if (!item) return e;
+    // El bloque decide el color de la tarjeta (calentamiento, principal, calma).
+    if (!twoCourts) return { ...e, blockOrder: item.blockOrder };
     return {
       ...e,
       court: item.court === 2 ? (2 as const) : (1 as const),
