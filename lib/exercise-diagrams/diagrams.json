@@ -27465,5 +27465,164 @@
         "text": "baja"
       }
     ]
+  },
+  "92f1eb90-ddf6-50ba-985e-69bc69a00b7b": {
+    "court": "tenis",
+    "caption": "Lanza el monitor; golpe y 3 s en equilibrio al terminar. Después, sobre cojín",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          56,
+          72
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            76
+          ],
+          [
+            44,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          40,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            92
+          ],
+          [
+            24,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            92
+          ],
+          [
+            74,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          94
+        ],
+        "text": "aguanta 3 s"
+      }
+    ]
+  },
+  "405735d3-6fc7-5fba-8af9-3b2ac74ee01e": {
+    "court": "tenis",
+    "caption": "Por las líneas, pie delante de pie con la bola en la raqueta; al final, 5 s a un pie",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          12.5,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            12.5,
+            92
+          ],
+          [
+            12.5,
+            56
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          87.5,
+          96
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            87.5,
+            92
+          ],
+          [
+            87.5,
+            56
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          30,
+          100
+        ],
+        "role": "alumno",
+        "label": "C"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            34,
+            100
+          ],
+          [
+            64,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          74
+        ],
+        "text": "pie delante de pie"
+      },
+      {
+        "t": "text",
+        "at": [
+          50,
+          42
+        ],
+        "text": "al final: 5 s"
+      }
+    ]
   }
 }
