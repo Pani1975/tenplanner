@@ -1,5 +1,6 @@
 import raw from "./diagrams.json";
 import animated from "./diagrams-animated.json";
+import sinPistaRaw from "./sin-pista.json";
 import type { Diagram, DiagramMap } from "./types";
 
 // "diagrams-animated" son los ejercicios de Ten Planner con animación (piloto):
@@ -25,6 +26,22 @@ export function getExerciseDiagrams(
     if (id && diagrams[id]) out[id] = diagrams[id];
   }
   return out;
+}
+
+/**
+ * Ejercicios que no se juegan en una organización de pista (charlas,
+ * vuelta a la calma, trabajo físico sin pista): no llevan esquema y se
+ * muestran con un icono de su tipo en lugar de un hueco vacío.
+ */
+export type SinPistaKind = "charla" | "calma" | "fisico";
+
+const sinPista = sinPistaRaw as Record<string, SinPistaKind>;
+
+export function getExerciseSinPista(
+  exerciseId: string | null | undefined
+): SinPistaKind | null {
+  if (!exerciseId) return null;
+  return sinPista[exerciseId] ?? null;
 }
 
 export function countExerciseDiagrams() {

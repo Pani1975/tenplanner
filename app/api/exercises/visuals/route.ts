@@ -4,14 +4,23 @@ import { db } from "@/db";
 import { exercises } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { exerciseVisibleToUserCondition } from "@/lib/exercise-access";
-import { getExerciseDiagram } from "@/lib/exercise-diagrams";
+import {
+  getExerciseDiagram,
+  getExerciseSinPista,
+  type SinPistaKind,
+} from "@/lib/exercise-diagrams";
 import type { Diagram } from "@/lib/exercise-diagrams/types";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_IDS = 100;
 
-export type ExerciseVisual = { imageUrl: string | null; diagram: Diagram | null };
+export type ExerciseVisual = {
+  imageUrl: string | null;
+  diagram: Diagram | null;
+  /** Ejercicio sin organización de pista (charla, calma, físico). */
+  sinPista: SinPistaKind | null;
+};
 
 /**
  * Miniaturas de ejercicios para el asistente de sesión: primera imagen
@@ -53,7 +62,9 @@ export async function GET(request: Request) {
         (u): u is string => typeof u === "string" && u.startsWith("https://")
       ) ?? null;
     const diagram = getExerciseDiagram(r.id);
-    if (imageUrl || diagram) data[r.id] = { imageUrl, diagram };
+    const sinPista = getExerciseSinPista(r.id);
+    if (imageUrl || diagram || sinPista)
+      data[r.id] = { imageUrl, diagram, sinPista };
   }
 
   return NextResponse.json(
