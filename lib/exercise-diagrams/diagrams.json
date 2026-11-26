@@ -27624,5 +27624,629 @@
         "text": "al final: 5 s"
       }
     ]
+  },
+  "a4f1a204-86d5-5879-844f-b2870431b154": {
+    "court": "tenis",
+    "caption": "Peloteo en los cuadros de saque con la consigna del monitor; luego, atrás hasta el fondo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          72
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          28
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            68
+          ],
+          [
+            58,
+            32
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            58,
+            32
+          ],
+          [
+            72,
+            50
+          ],
+          [
+            44,
+            68
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          100,
+          50
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          64
+        ],
+        "text": "solo derecha…"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            30,
+            74
+          ],
+          [
+            30,
+            98
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          92
+        ],
+        "text": "al fondo"
+      }
+    ]
+  },
+  "17c623aa-06e9-56b6-841e-7dbf03498e42": {
+    "court": "tenis",
+    "caption": "Peloteo de fondo: tras cada golpe, frenar estable un instante y luego recuperar",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          36,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            38,
+            98
+          ],
+          [
+            62,
+            4
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            4
+          ],
+          [
+            84,
+            50
+          ],
+          [
+            40,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          84
+        ],
+        "text": "frena estable"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            32,
+            104
+          ],
+          [
+            48,
+            104
+          ]
+        ]
+      }
+    ]
+  },
+  "8553f834-eed6-57db-81a7-f81014b662db": {
+    "court": "tenis",
+    "caption": "Calentamiento como en un partido oficial: fondo, red, remates y saques, con sus tiempos",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          46,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          54,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            98
+          ],
+          [
+            30,
+            40
+          ],
+          [
+            52,
+            4
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          72,
+          62
+        ],
+        "text": "1 fondo"
+      },
+      {
+        "t": "text",
+        "at": [
+          72,
+          70
+        ],
+        "text": "2 red"
+      },
+      {
+        "t": "text",
+        "at": [
+          72,
+          78
+        ],
+        "text": "3 remates"
+      },
+      {
+        "t": "text",
+        "at": [
+          72,
+          86
+        ],
+        "text": "4 saques"
+      }
+    ]
+  },
+  "45de87cc-78e9-5ed2-8241-acb3c1de1a7a": {
+    "court": "tenis",
+    "caption": "Peloteo de fondo a zonas amplias, lejos de las líneas, a ritmo alto y contando golpes",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          25,
+          6
+        ],
+        "to": [
+          75,
+          26
+        ],
+        "label": "Zona amplia"
+      },
+      {
+        "t": "zone",
+        "from": [
+          25,
+          74
+        ],
+        "to": [
+          75,
+          94
+        ],
+        "label": "Zona amplia"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          -2
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            98
+          ],
+          [
+            30,
+            22
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            2
+          ],
+          [
+            70,
+            78
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          88,
+          40
+        ],
+        "text": "sin fallo"
+      }
+    ]
+  },
+  "a68d76df-4ee9-546f-96fd-1b6cfb7188fa": {
+    "court": "tenis",
+    "caption": "Desde el cuadro de saque: 10 golpes seguidos, paso atrás; si fallan, paso adelante",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          74
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          26
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            70
+          ],
+          [
+            50,
+            30
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            62,
+            76
+          ],
+          [
+            62,
+            98
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            38,
+            24
+          ],
+          [
+            38,
+            2
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          30,
+          90
+        ],
+        "text": "10 seguidos"
+      },
+      {
+        "t": "text",
+        "at": [
+          70,
+          10
+        ],
+        "text": "paso atrás"
+      }
+    ]
+  },
+  "7e6095cb-f5d8-566e-aefc-14c9ffc49239": {
+    "court": "tenis",
+    "caption": "Como antes de un partido: fondo, voleas, remates y saques, con tiempos de competición",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          44,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          56,
+          62
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            44,
+            98
+          ],
+          [
+            54,
+            66
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            56,
+            58
+          ],
+          [
+            30,
+            20
+          ],
+          [
+            42,
+            96
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          80
+        ],
+        "text": "fondo, voleas"
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          88
+        ],
+        "text": "remates, saques"
+      }
+    ]
+  },
+  "48eddbdc-4792-51ae-b924-fab1daf79e61": {
+    "court": "tenis",
+    "caption": "Desde los cuadros de saque hasta el fondo, subiendo la velocidad hasta el ritmo de partido",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          74
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          26
+        ],
+        "role": "alumno",
+        "label": "B"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            70
+          ],
+          [
+            58,
+            30
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            40,
+            78
+          ],
+          [
+            40,
+            98
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            60,
+            22
+          ],
+          [
+            60,
+            2
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          74,
+          92
+        ],
+        "text": "+ velocidad"
+      }
+    ]
+  },
+  "8ea40186-4e17-5908-bf1e-2e378191c218": {
+    "court": "tenis",
+    "caption": "Pies rápidos en la escalera y salida a golpear la bola que lanza el entrenador",
+    "elements": [
+      {
+        "t": "ladder",
+        "from": [
+          18,
+          98
+        ],
+        "to": [
+          18,
+          72
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          18,
+          104
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            22,
+            70
+          ],
+          [
+            46,
+            78
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          54,
+          42
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            46
+          ],
+          [
+            50,
+            74
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            78
+          ],
+          [
+            72,
+            12
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          62
+        ],
+        "text": "sale"
+      }
+    ]
   }
 }
