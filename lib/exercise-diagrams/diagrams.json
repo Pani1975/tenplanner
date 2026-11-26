@@ -31779,5 +31779,1206 @@
         "text": "bisectriz"
       }
     ]
+  },
+  "12038b6b-e7de-5036-95c4-2ebf502d5740": {
+    "court": "tenis",
+    "caption": "Derecha y revés con apoyo abierto o cerrado según llegue la bola, pasando el peso",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            34,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            66,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            34,
+            92
+          ],
+          [
+            24,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            92
+          ],
+          [
+            76,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          80
+        ],
+        "text": "abierto"
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          80
+        ],
+        "text": "cerrado"
+      }
+    ]
+  },
+  "d04fd2b8-2a33-57c6-9670-f5eac98e813a": {
+    "court": "tenis",
+    "caption": "Con la derecha como golpe principal, cambiar ritmo y efectos para dominar el punto",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            64,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            94
+          ],
+          [
+            90,
+            50
+          ],
+          [
+            76,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            94
+          ],
+          [
+            24,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          30
+        ],
+        "text": "plana"
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          70
+        ],
+        "text": "liftada"
+      }
+    ]
+  },
+  "e68b7a74-8cfa-508a-abd1-bb3e5aafd734": {
+    "court": "tenis",
+    "caption": "Ir hacia la bola para quitar tiempo y, tras el golpe, recuperar para cubrir la pista",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            24,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            46,
+            100
+          ],
+          [
+            28,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            24,
+            88
+          ],
+          [
+            62,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            30,
+            96
+          ],
+          [
+            46,
+            104
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          96
+        ],
+        "text": "cubre la pista"
+      }
+    ]
+  },
+  "3e11fa60-0dc9-518c-a407-b57108e6e313": {
+    "court": "tenis",
+    "caption": "Controlar el tempo: ralentizar con bolas altas o acelerar con bolas tensas",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            50,
+            34
+          ],
+          [
+            50,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            94
+          ],
+          [
+            14,
+            50
+          ],
+          [
+            30,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            54,
+            94
+          ],
+          [
+            74,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          12,
+          70
+        ],
+        "text": "ralentiza"
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          40
+        ],
+        "text": "acelera"
+      }
+    ]
+  },
+  "d0ff2cfa-faa4-5c91-b813-66b0839316fd": {
+    "court": "tenis",
+    "caption": "Golpear en equilibrio tras un desplazamiento largo y recuperar con paso cruzado",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            18,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          78,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            74,
+            98
+          ],
+          [
+            22,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            18,
+            90
+          ],
+          [
+            60,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            22,
+            104
+          ],
+          [
+            50,
+            104
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          74
+        ],
+        "text": "estable"
+      },
+      {
+        "t": "text",
+        "at": [
+          76,
+          106
+        ],
+        "text": "paso cruzado"
+      }
+    ]
+  },
+  "a5ae4d4c-03ba-5724-9c9d-5a1ae04493de": {
+    "court": "tenis",
+    "caption": "Golpes de emergencia: bolas muy abiertas, a la espalda o que obligan a correr hacia atrás",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            48,
+            34
+          ],
+          [
+            2,
+            92
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            64,
+            70
+          ],
+          [
+            60,
+            104
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          44,
+          90
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "text",
+        "at": [
+          14,
+          74
+        ],
+        "text": "muy abierta"
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          96
+        ],
+        "text": "a la espalda"
+      }
+    ]
+  },
+  "d99473f8-c587-568e-bfb4-df0a3ab2af93": {
+    "court": "tenis",
+    "caption": "Acelerar la derecha desde cualquier apoyo: abierto, cerrado, adelantado o retrasado",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          44,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          36,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            34
+          ],
+          [
+            58,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            34
+          ],
+          [
+            74,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            34
+          ],
+          [
+            64,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          90
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            66,
+            86
+          ],
+          [
+            30,
+            8
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          18,
+          74
+        ],
+        "text": "cualquier apoyo"
+      }
+    ]
+  },
+  "525665f3-6328-576b-a791-45102b69ba00": {
+    "court": "tenis",
+    "caption": "Derecha rápida y agresiva a una zona con margen, sin aumentar los errores",
+    "elements": [
+      {
+        "t": "zone",
+        "from": [
+          22,
+          6
+        ],
+        "to": [
+          78,
+          24
+        ],
+        "label": "Con margen"
+      },
+      {
+        "t": "player",
+        "at": [
+          50,
+          40
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          40
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            44
+          ],
+          [
+            64,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            92
+          ],
+          [
+            30,
+            20
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          16,
+          80
+        ],
+        "text": "sin regalos"
+      }
+    ]
+  },
+  "6e9d0e45-1d8b-5d5d-b723-99d1a2e85709": {
+    "court": "tenis",
+    "caption": "Según la bola: atacar si es corta, construir si es media y defender si es profunda",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          32,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            34
+          ],
+          [
+            60,
+            64
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            34
+          ],
+          [
+            64,
+            82
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            34
+          ],
+          [
+            68,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          74,
+          104
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          62
+        ],
+        "text": "ataca"
+      },
+      {
+        "t": "text",
+        "at": [
+          88,
+          82
+        ],
+        "text": "construye"
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          100
+        ],
+        "text": "defiende"
+      }
+    ]
+  },
+  "ee3f6dc0-49a4-5889-8362-9813e27f18ff": {
+    "court": "tenis",
+    "caption": "Derecha con fuerza desde las piernas y la rotación del tronco, usando todas las palancas",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            62,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            92
+          ],
+          [
+            28,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          64
+        ],
+        "text": "piernas → tronco"
+      }
+    ]
+  },
+  "92f651ca-262c-514c-93ae-c479a9414ae1": {
+    "court": "tenis",
+    "caption": "Bola muy abierta a la derecha: contraataque cruzado apoyando el pie exterior",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          40,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          32,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            42,
+            34
+          ],
+          [
+            90,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          60,
+          100
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            64,
+            100
+          ],
+          [
+            84,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            88,
+            90
+          ],
+          [
+            20,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          80,
+          106
+        ],
+        "text": "apoyo abierto"
+      }
+    ]
+  },
+  "1f2ce8c6-34b6-5f5f-80b7-611f3c419a73": {
+    "court": "tenis",
+    "caption": "Apoyo semiabierto como base; abierto o cerrado según la altura y distancia de la bola",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          44,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          36,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            34
+          ],
+          [
+            60,
+            88
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            46,
+            34
+          ],
+          [
+            78,
+            94
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          66,
+          98
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            64,
+            94
+          ],
+          [
+            30,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          86,
+          62
+        ],
+        "text": "semiabierto"
+      },
+      {
+        "t": "text",
+        "at": [
+          20,
+          86
+        ],
+        "text": "según la bola"
+      }
+    ]
+  },
+  "322cbe30-7bf2-5fa1-9b39-a0bfaf09c046": {
+    "court": "tenis",
+    "caption": "Asentar la empuñadura este o semioeste de derecha y mantenerla durante todo el peloteo",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            62,
+            90
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          64,
+          96
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            92
+          ],
+          [
+            40,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          22,
+          80
+        ],
+        "text": "este/semioeste"
+      }
+    ]
+  },
+  "11910e59-3052-5ed3-a281-c64f92986bf2": {
+    "court": "tenis",
+    "caption": "Entrar a por la bola y, tras el golpe, salir recuperando la posición",
+    "elements": [
+      {
+        "t": "player",
+        "at": [
+          50,
+          30
+        ],
+        "role": "monitor",
+        "label": "M"
+      },
+      {
+        "t": "basket",
+        "at": [
+          58,
+          30
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            52,
+            34
+          ],
+          [
+            62,
+            80
+          ]
+        ]
+      },
+      {
+        "t": "player",
+        "at": [
+          58,
+          102
+        ],
+        "role": "alumno",
+        "label": "A"
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            58,
+            98
+          ],
+          [
+            62,
+            86
+          ]
+        ]
+      },
+      {
+        "t": "shot",
+        "points": [
+          [
+            62,
+            82
+          ],
+          [
+            28,
+            10
+          ]
+        ]
+      },
+      {
+        "t": "move",
+        "points": [
+          [
+            68,
+            86
+          ],
+          [
+            68,
+            100
+          ]
+        ]
+      },
+      {
+        "t": "text",
+        "at": [
+          40,
+          90
+        ],
+        "text": "entra"
+      },
+      {
+        "t": "text",
+        "at": [
+          84,
+          94
+        ],
+        "text": "sale"
+      }
+    ]
   }
 }
