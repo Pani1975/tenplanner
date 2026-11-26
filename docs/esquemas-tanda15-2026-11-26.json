@@ -1,0 +1,1179 @@
+{
+ "bd53392c-027f-5a63-ae06-4d7a1037d93b": {
+  "court": "tenis",
+  "caption": "Puntos solo dentro de los cuadros con dejadas y golpes suaves",
+  "elements": [
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     23
+    ],
+    "to": [
+     87.5,
+     77
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     70
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     30
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      66
+     ],
+     [
+      38,
+      40
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      34
+     ],
+     [
+      62,
+      58
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     50,
+     88
+    ],
+    "text": "solo toques"
+   }
+  ]
+ },
+ "7019098b-74bf-502c-81ee-8f574d8b4a05": {
+  "court": "tenis",
+  "caption": "El sacador anuncia el efecto; suma si el saque entra con ese efecto",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     0
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      72,
+      40
+     ],
+     [
+      30,
+      30
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     78,
+     88
+    ],
+    "text": "«liftado»"
+   },
+   {
+    "t": "text",
+    "at": [
+     28,
+     10
+    ],
+    "text": "comprueba"
+   }
+  ]
+ },
+ "ee7f46fe-0f0e-594e-87fd-1dbcc18490c1": {
+  "court": "tenis",
+  "caption": "Lanzamiento dentro del aro: suma; si además entra el saque, doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     104
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "hoop",
+    "at": [
+     60,
+     96
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      60,
+      94
+     ],
+     [
+      32,
+      30
+     ]
+    ]
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     23
+    ],
+    "to": [
+     50,
+     50
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     92
+    ],
+    "text": "lanza al aro"
+   },
+   {
+    "t": "text",
+    "at": [
+     31,
+     15
+    ],
+    "text": "doble si entra"
+   }
+  ]
+ },
+ "76cc0660-50e7-5224-88c9-b4b6a1611bee": {
+  "court": "medio",
+  "caption": "Derechas con cinturón elástico sin levantarse antes de tiempo",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     20
+    ],
+    "role": "monitor",
+    "label": "M"
+   },
+   {
+    "t": "basket",
+    "at": [
+     58,
+     20
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      24
+     ],
+     [
+      40,
+      70
+     ]
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     40,
+     76
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "line",
+    "from": [
+     40,
+     76
+    ],
+    "to": [
+     40,
+     96
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     40,
+     98
+    ],
+    "role": "monitor",
+    "label": "E"
+   },
+   {
+    "t": "text",
+    "at": [
+     64,
+     86
+    ],
+    "text": "elástico tenso"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      42,
+      72
+     ],
+     [
+      70,
+      6
+     ]
+    ]
+   }
+  ]
+ },
+ "8a60f55a-61ce-5259-a545-f721325e9195": {
+  "court": "tenis",
+  "caption": "Red contra fondo: el del fondo gana doble con un globo bien elegido",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      50,
+      40
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      98
+     ],
+     [
+      30,
+      12
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     30,
+     6
+    ],
+    "text": "globo = doble"
+   }
+  ]
+ },
+ "8d888d4d-afc3-5feb-945e-879615d57313": {
+  "court": "tenis",
+  "caption": "Cada jugador anuncia un patrón; si lo ejecuta y gana, punto extra",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      24,
+      8
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      2
+     ],
+     [
+      26,
+      92
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      28,
+      92
+     ],
+     [
+      80,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     84,
+     88
+    ],
+    "text": "mi patrón"
+   }
+  ]
+ },
+ "57f63cfe-e731-56ca-87c5-44717f1ebe41": {
+  "court": "tenis",
+  "caption": "Empieza con bola de ataque para uno; el defensor gana doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     96,
+     50
+    ],
+    "role": "monitor",
+    "label": "M"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      94,
+      52
+     ],
+     [
+      60,
+      64
+     ]
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     60,
+     70
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     30,
+     -2
+    ],
+    "role": "rival",
+    "label": "D"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      60,
+      66
+     ],
+     [
+      28,
+      8
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     26,
+     16
+    ],
+    "text": "defiende: doble"
+   },
+   {
+    "t": "text",
+    "at": [
+     64,
+     84
+    ],
+    "text": "ataca"
+   }
+  ]
+ },
+ "dd958c21-d26b-5bc1-aab2-ee8f42f1bc87": {
+  "court": "tenis",
+  "caption": "Bola difícil para uno; si da la vuelta y gana atacando, vale tres",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     96,
+     50
+    ],
+    "role": "monitor",
+    "label": "M"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      94,
+      48
+     ],
+     [
+      82,
+      6
+     ]
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     84,
+     -2
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      84,
+      -2
+     ],
+     [
+      60,
+      18
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     50,
+     34
+    ],
+    "text": "vuelta = 3 pts"
+   }
+  ]
+ },
+ "3027f3d4-aee1-5a21-9758-42a1825097b5": {
+  "court": "tenis",
+  "caption": "Zonas junto a las laterales de los cuadros: tres puntos; el resto, uno",
+  "elements": [
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     23
+    ],
+    "to": [
+     24,
+     42
+    ],
+    "label": "3"
+   },
+   {
+    "t": "zone",
+    "from": [
+     76,
+     23
+    ],
+    "to": [
+     87.5,
+     42
+    ],
+    "label": "3"
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     58
+    ],
+    "to": [
+     24,
+     77
+    ],
+    "label": "3"
+   },
+   {
+    "t": "zone",
+    "from": [
+     76,
+     58
+    ],
+    "to": [
+     87.5,
+     77
+    ],
+    "label": "3"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      98
+     ],
+     [
+      18,
+      34
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      52,
+      2
+     ],
+     [
+      82,
+      68
+     ]
+    ]
+   }
+  ]
+ },
+ "2fa92f9d-4020-591b-aede-2c7c4a18a158": {
+  "court": "tenis",
+  "caption": "Golpe estable y dentro de la zona: dos puntos; desequilibrado, nada",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     30
+    ],
+    "role": "monitor",
+    "label": "M"
+   },
+   {
+    "t": "basket",
+    "at": [
+     58,
+     30
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      34
+     ],
+     [
+      64,
+      88
+     ]
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     66,
+     96
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      34,
+      100
+     ],
+     [
+      60,
+      98
+     ]
+    ]
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     0
+    ],
+    "to": [
+     50,
+     23
+    ],
+    "label": "2 pts"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      64,
+      92
+     ],
+     [
+      30,
+      12
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     84,
+     106
+    ],
+    "text": "frena y golpea"
+   }
+  ]
+ },
+ "cc510a57-9867-5b5a-8159-bbbcaea885d1": {
+  "court": "tenis",
+  "caption": "Fondo adelantado: quien pisa detrás de la línea de conos pierde el punto",
+  "elements": [
+   {
+    "t": "cone",
+    "at": [
+     14,
+     92
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     32,
+     92
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     50,
+     92
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     68,
+     92
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     86,
+     92
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     14,
+     8
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     32,
+     8
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     50,
+     8
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     68,
+     8
+    ]
+   },
+   {
+    "t": "cone",
+    "at": [
+     86,
+     8
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     98
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      94
+     ],
+     [
+      34,
+      14
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      6
+     ],
+     [
+      66,
+      86
+     ]
+    ]
+   }
+  ]
+ },
+ "81d08689-ab41-5269-b306-cd67ee9f1497": {
+  "court": "tenis",
+  "caption": "Uno en la red y otro en el fondo a 11; passing ganador vale doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      40
+     ],
+     [
+      50,
+      94
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      98
+     ],
+     [
+      14,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     16,
+     4
+    ],
+    "text": "passing doble"
+   }
+  ]
+ },
+ "b44d800e-b351-5d43-95e2-cdf5f2eaec9e": {
+  "court": "tenis",
+  "caption": "Bola alta desde el fondo: el compañero sube y juega volea liftada",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     40,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      40,
+      2
+     ],
+     [
+      56,
+      72
+     ]
+    ]
+   },
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      56,
+      102
+     ],
+     [
+      56,
+      78
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     76,
+     90
+    ],
+    "text": "sube"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      72
+     ],
+     [
+      26,
+      8
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     84,
+     60
+    ],
+    "text": "volea liftada"
+   }
+  ]
+ },
+ "ec11dad0-3c52-58dd-8591-3706cfe62e7b": {
+  "court": "tenis",
+  "caption": "Para ganar hay que encadenar fondo, ataque y volea",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      40,
+      4
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      40,
+      4
+     ],
+     [
+      56,
+      74
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      50,
+      102
+     ],
+     [
+      56,
+      78
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      74
+     ],
+     [
+      70,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      56,
+      78
+     ],
+     [
+      50,
+      58
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     92
+    ],
+    "text": "1 fondo"
+   },
+   {
+    "t": "text",
+    "at": [
+     82,
+     74
+    ],
+    "text": "2 ataque"
+   },
+   {
+    "t": "text",
+    "at": [
+     82,
+     58
+    ],
+    "text": "3 volea"
+   }
+  ]
+ },
+ "05024fe1-bf18-50d1-899e-3c46f5f29757": {
+  "court": "tenis",
+  "caption": "Globo por encima del compañero de red; cerca de la cesta suma",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     40,
+     38
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "zone",
+    "from": [
+     30,
+     0
+    ],
+    "to": [
+     70,
+     16
+    ]
+   },
+   {
+    "t": "basket",
+    "at": [
+     50,
+     6
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      64,
+      40
+     ],
+     [
+      52,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     78,
+     24
+    ],
+    "text": "cerca = 1"
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     6
+    ],
+    "text": "dentro = 3"
+   }
+  ]
+ }
+}
