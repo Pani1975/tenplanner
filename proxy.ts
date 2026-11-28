@@ -56,6 +56,7 @@ const PRIVATE_PAGE_PREFIXES = [
   "/mi-espacio",
   "/mi-familia",
   "/mis-partidos",
+  "/pasar-al-club",
   "/jugador",
   "/places",
   "/profile",

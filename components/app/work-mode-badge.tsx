@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -8,6 +9,7 @@ import {
   Check,
   Globe2,
   Loader2,
+  Send,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -143,6 +145,15 @@ export function WorkModeBadge({
           );
         })}
       </div>
+      {monitorAccount && options.length >= 2 && (
+        <Link
+          href="/pasar-al-club"
+          className="flex items-center gap-1.5 px-0.5 pt-0.5 text-[11px] font-bold text-sidebar-foreground/70 hover:text-sidebar-foreground"
+        >
+          <Send className="size-3" strokeWidth={2} />
+          Pasar al club
+        </Link>
+      )}
       {monitorAccount && options.length < 2 && (
         <p className="px-0.5 text-[11px] leading-4 text-sidebar-foreground/55">
           No estás vinculado a ningún club.
