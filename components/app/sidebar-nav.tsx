@@ -337,7 +337,9 @@ function navItemsForSpace(
   inClub: boolean,
   clubMonitorSpace = false,
   /** Cuenta de un club: sin "Perfil" (los datos del club están en Mi club). */
-  clubAccount = false
+  clubAccount = false,
+  /** Monitor (ni club ni administrador): sin "Mi club". */
+  monitorAccount = false
 ): NavItem[] {
   const labels = spaceLabels(inClub);
   const bySubHref: Record<string, string> = {
@@ -351,6 +353,9 @@ function navItemsForSpace(
     (item) =>
       !(clubMonitorSpace && CLUB_ONLY_HREFS.has(item.href)) &&
       !(clubAccount && item.href === "/profile") &&
+      // Monitor: los clubes a los que está vinculado salen como "Entorno
+      // <club>" en el selector de arriba; no hay apartado "Mi club".
+      !(monitorAccount && item.href === "/club") &&
       // Los mensajes del club se escriben solo desde el Modo gestión: hay
       // mensajes que los monitores no deben leer.
       !(clubAccount && item.href === "/mensajes")
@@ -512,7 +517,8 @@ function NavContent({
             // Modo monitor de un monitor de club (sin alumnos, objetivos ni
             // reservas: eso va en el modo del club).
             !activeWorkClubId && !clubAccountClubId && workModeClubs.length > 0,
-            !!clubAccountClubId
+            !!clubAccountClubId,
+            !clubAccountClubId && !isAdmin && !platformAccount
           );
   const displayName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Coach";
@@ -572,16 +578,13 @@ function NavContent({
 
       {user &&
         !familyOnly &&
-        (SHOW_SPORT_SELECTOR ||
-          platformAccount ||
-          workModeClubs.length > 0 ||
-          isAdmin) && (
+        (true) && (
           <div className="border-b border-sidebar-border px-3 py-3 space-y-2">
             {SHOW_SPORT_SELECTOR && <SportBadge activeSport={activeSport} />}
             {platformAccount ? (
               <PlatformBadge />
             ) : (
-              (workModeClubs.length > 0 || isAdmin) && (
+              (true) && (
                 <WorkModeBadge
                   key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
                   clubs={workModeClubs}
@@ -1124,16 +1127,13 @@ function SidebarNavInner({
         </div>
         {user &&
           !familyOnly &&
-          (SHOW_SPORT_SELECTOR ||
-            platformAccount ||
-            workModeClubs.length > 0 ||
-            isAdmin) && (
+          (true) && (
             <div className="px-4 pb-3 space-y-2">
               {SHOW_SPORT_SELECTOR && <SportBadge activeSport={activeSport} />}
               {platformAccount ? (
                 <PlatformBadge />
               ) : (
-                (workModeClubs.length > 0 || isAdmin) && (
+                (true) && (
                   <WorkModeBadge
                     key={`${tenPlannerMode ? "admin" : managementMode ? "gestion" : (activeWorkClubId ?? "particular")}`}
                     clubs={workModeClubs}

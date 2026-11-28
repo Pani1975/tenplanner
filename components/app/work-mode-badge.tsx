@@ -74,7 +74,12 @@ export function WorkModeBadge({
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (options.length < 2) return null;
+  // Monitor (ni cuenta de club ni administrador): se habla de "entornos" —
+  // Entorno particular y Entorno <club> — y el selector se ve siempre, también
+  // sin clubes (para saber que está en su entorno particular).
+  const monitorAccount = !clubAccountClubId && !canUseTenPlanner;
+  if (options.length < 2 && !monitorAccount) return null;
+  const heading = monitorAccount ? "Entorno" : tx("modoDeTrabajo");
 
   async function selectMode(key: string) {
     if (key === activeKey || saving !== null) return;
@@ -98,9 +103,9 @@ export function WorkModeBadge({
   return (
     <div className={cn("space-y-1.5", className)}>
       <p className="px-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-sidebar-foreground/55">
-        {tx("modoDeTrabajo")}
+        {heading}
       </p>
-      <div role="group" aria-label={tx("modoDeTrabajo")} className="grid gap-1">
+      <div role="group" aria-label={heading} className="grid gap-1">
         {options.map((option) => {
           const Icon = MODE_ICONS[option.kind];
           const active = option.key === activeKey;
@@ -127,7 +132,9 @@ export function WorkModeBadge({
                 />
               )}
               <span className="min-w-0 flex-1 truncate">
-                {capitalize(option.name)}
+                {monitorAccount
+                  ? `Entorno ${option.name}`
+                  : capitalize(option.name)}
               </span>
               {active && saving === null && (
                 <Check className="size-3.5 shrink-0 text-brand" />
@@ -136,6 +143,11 @@ export function WorkModeBadge({
           );
         })}
       </div>
+      {monitorAccount && options.length < 2 && (
+        <p className="px-0.5 text-[11px] leading-4 text-sidebar-foreground/55">
+          No estás vinculado a ningún club.
+        </p>
+      )}
       {error && <p className="text-[11px] text-destructive">{error}</p>}
     </div>
   );
