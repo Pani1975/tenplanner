@@ -41,9 +41,13 @@ export async function POST(request: Request) {
     );
   const v = parsed.data;
 
-  // Pistas que puede reservar: las suyas y, si trabaja como monitor de un
-  // club (entorno del club), también las del club.
-  const { ownerIds } = await usablePlaceOwners(user.id);
+  // Pistas que puede reservar: las suyas; en el entorno de un club, como
+  // monitor, solo las del club (igual que en Reservas de pistas).
+  const owners = await usablePlaceOwners(user.id);
+  const ownerIds =
+    owners.clubOwnerId && owners.clubOwnerId !== user.id
+      ? [owners.clubOwnerId]
+      : owners.ownerIds;
   const [place] = await db
     .select({ ownerId: places.coachId })
     .from(places)

@@ -88,10 +88,13 @@ export default async function CourtBookingsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  // Pistas que ve: las suyas y, si trabaja como monitor de un club, también
-  // las del club (en solo lectura: las gestiona el administrador del club).
-  const { ownerIds, clubOwnerId, clubName } = await usablePlaceOwners(user.id);
+  // Pistas que ve: las suyas; si trabaja como monitor en el entorno de un
+  // club, solo las del club (las gestiona el administrador; puede
+  // reservarlas). Sus pistas particulares, en su entorno particular.
+  const owners = await usablePlaceOwners(user.id);
+  const { clubOwnerId, clubName } = owners;
   const clubAsMonitor = !!clubOwnerId && clubOwnerId !== user.id;
+  const ownerIds = clubAsMonitor ? [clubOwnerId] : owners.ownerIds;
   // Hora del club («Mi club»); sin club, la de siempre.
   const tz = await timeZoneForOwner(clubAsMonitor ? clubOwnerId : user.id);
 
