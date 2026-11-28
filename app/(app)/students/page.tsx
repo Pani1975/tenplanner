@@ -25,6 +25,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import {
+  groupCoaches as groupCoachesTable,
   groupStudents as groupStudentsTable,
   groups as groupsTable,
   students as studentsTable,
@@ -110,11 +111,49 @@ export default async function StudentsPage({ searchParams }: PageProps) {
     // Los datos personales están en el Modo gestión.
     isStudentsLimited(user.id),
   ]);
+  // En el entorno de un club, los monitores del club con sus grupos. El
+  // monitor no se ve a sí mismo («Yo»): sus alumnos propios están en su
+  // Entorno particular. La cuenta del club sí sale (sus alumnos del club).
   const clubMembers = activeClubId
-    ? await getClubMembersDirectory([activeClubId])
+    ? (await getClubMembersDirectory([activeClubId])).filter(
+        (m) => clubAccountId || m.id !== user.id
+      )
     : [];
   const monitorFilter =
     monitor && clubMembers.some((m) => m.id === monitor) ? monitor : null;
+  const groupsByMonitor = new Map<string, string[]>();
+  if (activeClubId && clubMembers.length > 0) {
+    const memberIds = clubMembers.map((m) => m.id);
+    const [owned, assigned] = await Promise.all([
+      db
+        .select({ userId: groupsTable.coachId, name: groupsTable.name })
+        .from(groupsTable)
+        .where(
+          and(
+            eq(groupsTable.clubId, activeClubId),
+            inArray(groupsTable.coachId, memberIds)
+          )
+        ),
+      db
+        .select({ userId: groupCoachesTable.userId, name: groupsTable.name })
+        .from(groupCoachesTable)
+        .innerJoin(groupsTable, eq(groupsTable.id, groupCoachesTable.groupId))
+        .where(
+          and(
+            eq(groupsTable.clubId, activeClubId),
+            inArray(groupCoachesTable.userId, memberIds)
+          )
+        ),
+    ]);
+    for (const r of [...owned, ...assigned]) {
+      if (!r.userId) continue;
+      const list = groupsByMonitor.get(r.userId) ?? [];
+      if (!list.includes(r.name)) list.push(r.name);
+      groupsByMonitor.set(r.userId, list);
+    }
+    for (const list of groupsByMonitor.values())
+      list.sort((a, b) => a.localeCompare(b, "es"));
+  }
 
   const visibility = sharedWithClubCondition(
     studentsTable.coachId,
@@ -259,36 +298,57 @@ export default async function StudentsPage({ searchParams }: PageProps) {
         </header>
 
         {clubMembers.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#050505]/10 bg-white p-2 shadow-[0_12px_40px_rgba(5,5,5,0.04)] dark:border-white/10 dark:bg-white/[0.045]">
-            <span className="pl-2 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
-              {tx("monitor")}
-            </span>
-            <Link
-              href={buildHrefWithMonitor()}
-              className={cn(
-                "inline-flex h-8 items-center rounded-full px-3 text-[13px] font-semibold transition-colors",
-                !monitorFilter
-                  ? "bg-[#050505] text-white dark:bg-[#D6FF38] dark:text-[#050505]"
-                  : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
-              )}
-            >
-              {tx("todos")}
-            </Link>
-            {clubMembers.map((m) => (
+          <section className="tp-panel space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="pl-1 text-[11px] font-bold uppercase tracking-wide text-foreground/45">
+                Monitores
+              </p>
               <Link
-                key={m.id}
-                href={buildHrefWithMonitor(m.id)}
+                href={buildHrefWithMonitor()}
                 className={cn(
                   "inline-flex h-8 items-center rounded-full px-3 text-[13px] font-semibold transition-colors",
-                  monitorFilter === m.id
+                  !monitorFilter
                     ? "bg-[#050505] text-white dark:bg-[#D6FF38] dark:text-[#050505]"
                     : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                 )}
               >
-                {m.id === user.id ? "Yo" : m.name}
+                {tx("todos")}
               </Link>
-            ))}
-          </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {clubMembers.map((m) => {
+                const active = monitorFilter === m.id;
+                const memberGroups = groupsByMonitor.get(m.id) ?? [];
+                return (
+                  <Link
+                    key={m.id}
+                    href={buildHrefWithMonitor(m.id)}
+                    aria-current={active ? "true" : undefined}
+                    className={cn(
+                      "block rounded-2xl border px-4 py-3 transition-colors",
+                      active
+                        ? "border-[#050505] bg-[#050505] text-white dark:border-[#D6FF38] dark:bg-[#D6FF38] dark:text-[#050505]"
+                        : "border-foreground/10 hover:bg-foreground/[0.04]"
+                    )}
+                  >
+                    <span className="block truncate text-sm font-black">
+                      {m.name}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-1 block text-xs leading-5",
+                        active ? "opacity-75" : "text-foreground/55"
+                      )}
+                    >
+                      {memberGroups.length > 0
+                        ? memberGroups.join(" · ")
+                        : "Sin grupos"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Estadísticas: niveles, edades, grupos y procedencia */}
