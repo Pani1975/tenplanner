@@ -1,0 +1,1109 @@
+{
+ "912cbe5b-3740-5e0c-b349-8ad763b579e4": {
+  "court": "tenis",
+  "caption": "Empieza con globo; el de la red debe rematar y, si gana, vale doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      64,
+      46
+     ],
+     [
+      52,
+      26
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      50,
+      36
+     ],
+     [
+      52,
+      22
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      52,
+      22
+     ],
+     [
+      24,
+      92
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     78,
+     18
+    ],
+    "text": "remate = doble"
+   }
+  ]
+ },
+ "aefbd001-6f90-568b-b184-df85dcfed26e": {
+  "court": "tenis",
+  "caption": "El del fondo juega globos, el de la red remata y se juega el punto",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "player",
+    "at": [
+     40,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      60,
+      50
+     ],
+     [
+      42,
+      28
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      40,
+      32
+     ],
+     [
+      72,
+      90
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     30
+    ],
+    "text": "1.º remate"
+   },
+   {
+    "t": "text",
+    "at": [
+     88,
+     80
+    ],
+    "text": "se juega"
+   }
+  ]
+ },
+ "58e33345-48f0-524b-9c38-344afbc98d0f": {
+  "court": "tenis",
+  "caption": "El del fondo juega globos y defiende los remates",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     46,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "player",
+    "at": [
+     56,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      46,
+      98
+     ],
+     [
+      70,
+      52
+     ],
+     [
+      58,
+      30
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      32
+     ],
+     [
+      26,
+      88
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      46,
+      102
+     ],
+     [
+      28,
+      94
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      28,
+      90
+     ],
+     [
+      36,
+      50
+     ],
+     [
+      62,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     16,
+     106
+    ],
+    "text": "defiende"
+   }
+  ]
+ },
+ "1156c2c7-d66a-5528-b88f-9ab9646e6cad": {
+  "court": "tenis",
+  "caption": "Globos desde el fondo contra remate desde la red, a 11 y cambio de papeles",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      98
+     ],
+     [
+      30,
+      50
+     ],
+     [
+      44,
+      28
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      32
+     ],
+     [
+      76,
+      92
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     30
+    ],
+    "text": "a 11"
+   },
+   {
+    "t": "text",
+    "at": [
+     16,
+     70
+    ],
+    "text": "cambian papel"
+   }
+  ]
+ },
+ "5d0a29be-6ab8-51b4-84f2-398271ab43ed": {
+  "court": "tenis",
+  "caption": "Globos y passings contra la red, a 11; remate bueno = punto extra",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "F"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      98
+     ],
+     [
+      16,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      52,
+      98
+     ],
+     [
+      70,
+      48
+     ],
+     [
+      54,
+      28
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     18,
+     4
+    ],
+    "text": "passing"
+   },
+   {
+    "t": "text",
+    "at": [
+     84,
+     44
+    ],
+    "text": "globo"
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     20
+    ],
+    "text": "remate: +1"
+   }
+  ]
+ },
+ "6daac027-7e03-5b58-9f09-16e14d200e86": {
+  "court": "tenis",
+  "caption": "Globo a la zona del fondo sin que el de la red llegue a tocarlo",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     36
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     0
+    ],
+    "to": [
+     87.5,
+     14
+    ],
+    "label": "zona"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      64,
+      40
+     ],
+     [
+      44,
+      8
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      50,
+      36
+     ],
+     [
+      56,
+      26
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     24
+    ],
+    "text": "no llega"
+   }
+  ]
+ },
+ "055af3ff-348c-5cfe-a81f-ed6fdb51f8d0": {
+  "court": "tenis",
+  "caption": "El sacador anuncia el plan de la tercera bola; si lo cumple y gana, doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      34,
+      28
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      28,
+      2
+     ],
+     [
+      56,
+      86
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      90
+     ],
+     [
+      84,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     92
+    ],
+    "text": "1"
+   },
+   {
+    "t": "text",
+    "at": [
+     30,
+     18
+    ],
+    "text": "2"
+   },
+   {
+    "t": "text",
+    "at": [
+     88,
+     34
+    ],
+    "text": "3 = plan"
+   }
+  ]
+ },
+ "83a2fae7-7dcf-52b1-b148-f57c1e1c0d74": {
+  "court": "tenis",
+  "caption": "Ambos anuncian su plan antes del punto; gana doble quien lo cumple",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "player",
+    "at": [
+     98,
+     50
+    ],
+    "role": "monitor",
+    "label": "M"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      34,
+      28
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      28,
+      2
+     ],
+     [
+      70,
+      76
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     82,
+     100
+    ],
+    "text": "plan A"
+   },
+   {
+    "t": "text",
+    "at": [
+     18,
+     12
+    ],
+    "text": "plan B"
+   }
+  ]
+ },
+ "9ebe03cc-3f46-5c8f-9cad-6ef62095a315": {
+  "court": "tenis",
+  "caption": "Derechas invertidas desde el revés: se cuentan y se mide su eficacia",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      2
+     ],
+     [
+      30,
+      88
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      50,
+      102
+     ],
+     [
+      26,
+      98
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      28,
+      94
+     ],
+     [
+      80,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     78,
+     92
+    ],
+    "text": "contar"
+   },
+   {
+    "t": "text",
+    "at": [
+     18,
+     74
+    ],
+    "text": "invertida"
+   }
+  ]
+ },
+ "fdbe34dd-5e8b-5e9d-99f2-cd275391577a": {
+  "court": "tenis",
+  "caption": "Set corto jugando al punto débil del rival; extra si lo nombra al final",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      22,
+      8
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      2
+     ],
+     [
+      50,
+      90
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      48,
+      94
+     ],
+     [
+      24,
+      6
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     22,
+     18
+    ],
+    "text": "revés débil"
+   }
+  ]
+ },
+ "236ddebe-f793-5b4c-ac51-48b0a98c1d52": {
+  "court": "tenis",
+  "caption": "Subida con cortado profundo; si cierra en la red, el punto vale doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     50,
+     102
+    ],
+    "role": "alumno",
+    "label": "A"
+   },
+   {
+    "t": "player",
+    "at": [
+     50,
+     -2
+    ],
+    "role": "rival",
+    "label": "B"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      50,
+      98
+     ],
+     [
+      24,
+      6
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     78,
+     88
+    ],
+    "text": "cortado"
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      50,
+      102
+     ],
+     [
+      44,
+      62
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      44,
+      60
+     ],
+     [
+      80,
+      10
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     82,
+     64
+    ],
+    "text": "cierra = doble"
+   }
+  ]
+ },
+ "9ffd9b41-9569-5a63-8f1f-c694e1b0041c": {
+  "court": "tenis",
+  "caption": "Solo saca uno; la doble falta da punto extra al restador",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "S"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     -2
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      34,
+      30
+     ]
+    ]
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     23
+    ],
+    "to": [
+     50,
+     50
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     92
+    ],
+    "text": "solo saca él"
+   },
+   {
+    "t": "text",
+    "at": [
+     30,
+     16
+    ],
+    "text": "doble falta: +1"
+   }
+  ]
+ },
+ "7281b179-5891-54f0-b90a-d6e9b4a7a56e": {
+  "court": "tenis",
+  "caption": "Un solo saque por punto: hay que proteger el segundo saque",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "S"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     -2
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      70,
+      40
+     ],
+     [
+      38,
+      32
+     ]
+    ]
+   },
+   {
+    "t": "zone",
+    "from": [
+     12.5,
+     23
+    ],
+    "to": [
+     50,
+     50
+    ],
+    "label": "1 saque"
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     90
+    ],
+    "text": "segundo seguro"
+   }
+  ]
+ },
+ "91368bdf-4847-5740-92b8-bfe175325b3f": {
+  "court": "tenis",
+  "caption": "Juegos completos: cada punto ganado al resto vale doble",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     44,
+     102
+    ],
+    "role": "rival",
+    "label": "S"
+   },
+   {
+    "t": "player",
+    "at": [
+     72,
+     -2
+    ],
+    "role": "alumno",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      44,
+      98
+     ],
+     [
+      66,
+      30
+     ]
+    ]
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      72,
+      2
+     ],
+     [
+      30,
+      92
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     82,
+     12
+    ],
+    "text": "resto"
+   },
+   {
+    "t": "text",
+    "at": [
+     18,
+     84
+    ],
+    "text": "x2"
+   }
+  ]
+ },
+ "d0cc55f6-cbb3-50b0-8012-087e054dde5e": {
+  "court": "tenis",
+  "caption": "Juegos con saque: cada saque no devuelto suma un punto extra",
+  "elements": [
+   {
+    "t": "player",
+    "at": [
+     56,
+     102
+    ],
+    "role": "alumno",
+    "label": "S"
+   },
+   {
+    "t": "player",
+    "at": [
+     28,
+     -2
+    ],
+    "role": "rival",
+    "label": "R"
+   },
+   {
+    "t": "shot",
+    "points": [
+     [
+      56,
+      98
+     ],
+     [
+      20,
+      26
+     ]
+    ]
+   },
+   {
+    "t": "move",
+    "points": [
+     [
+      28,
+      -2
+     ],
+     [
+      16,
+      6
+     ]
+    ]
+   },
+   {
+    "t": "text",
+    "at": [
+     80,
+     90
+    ],
+    "text": "sin devolver"
+   },
+   {
+    "t": "text",
+    "at": [
+     30,
+     38
+    ],
+    "text": "+1"
+   }
+  ]
+ }
+}
