@@ -32,7 +32,7 @@ import { ExerciseListsSection } from "@/components/app/exercise-lists-section";
 import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { ExerciseDraftsPanel } from "@/components/app/exercise-drafts-panel";
 import { ImportTextDialog } from "@/components/app/import-text-dialog";
-import { EXERCISE_IMPORT_ENABLED } from "@/lib/feature-flags";
+import { TEXT_IMPORT_ENABLED } from "@/lib/feature-flags";
 import { FeatureLocked } from "@/components/app/feature-locked";
 import { getBooleanSetting } from "@/lib/app-settings";
 import {
@@ -781,7 +781,7 @@ export default async function ExercisesPage({ searchParams }: PageProps) {
               <div>
                 {user && exerciseCreationEnabled ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    {EXERCISE_IMPORT_ENABLED &&
+                    {TEXT_IMPORT_ENABLED &&
                       (activeTab === "mine" || activeTab === "drafts") && (
                       <ImportTextDialog
                         kind="exercises"

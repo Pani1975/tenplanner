@@ -3,6 +3,7 @@ import { SaveSearchToListButton } from "@/components/app/save-search-to-list";
 import { getWorkMode, libraryHeading } from "@/lib/work-mode";
 import Link from "next/link";
 import { ImportTextDialog } from "@/components/app/import-text-dialog";
+import { TEXT_IMPORT_ENABLED } from "@/lib/feature-flags";
 import {
   eq,
   or,
@@ -442,7 +443,8 @@ export default async function ClassesPage({ searchParams }: PageProps) {
               </div>
               {user && (
                 <div className="flex flex-wrap items-center gap-2">
-                  {(activeTab === "mine" || activeTab === "drafts") && (
+                  {TEXT_IMPORT_ENABLED &&
+                    (activeTab === "mine" || activeTab === "drafts") && (
                     <ImportTextDialog
                       kind="classes"
                       allowFile={!!activeClubId}
