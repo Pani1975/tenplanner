@@ -223,7 +223,6 @@ export default async function ExercisePage({
         isPublished: exercise.isPublished,
         autoria: exercise.autoria ?? null,
         isAiGenerated: exercise.isAiGenerated,
-        createdBy: exercise.createdBy,
         createdAt: exercise.createdAt.toISOString(),
         updatedAt: exercise.updatedAt.toISOString(),
       }}

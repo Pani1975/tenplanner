@@ -211,7 +211,6 @@ export default async function ClassesPage({ searchParams }: PageProps) {
     autoria: string | null;
     status: string | null;
     createdAt: Date;
-    createdBy: string | null;
   }> = [];
   let totalRows = 0;
   let currentPage = requestedPage;
@@ -360,7 +359,6 @@ export default async function ClassesPage({ searchParams }: PageProps) {
         autoria: classes.autoria,
         status: classes.status,
         createdAt: classes.createdAt,
-        createdBy: classes.createdBy,
       })
       .from(classes)
       .where(and(...conds))

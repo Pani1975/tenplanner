@@ -116,7 +116,6 @@ export interface ExerciseData {
   isPublished?: boolean;
   autoria: string | null;
   isAiGenerated: boolean;
-  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
