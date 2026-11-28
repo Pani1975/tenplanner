@@ -84,7 +84,10 @@ export default async function EditSessionPage({
         .select({ studentId: sessionStudents.studentId })
         .from(sessionStudents)
         .where(eq(sessionStudents.sessionId, id)),
-      listUsablePlaces(user.id, sessionRow.clubId),
+      listUsablePlaces(user.id, sessionRow.clubId, [
+        sessionRow.placeId,
+        sessionRow.secondPlaceId,
+      ]),
       db
         .select({ name: users.name })
         .from(users)

@@ -32,19 +32,27 @@ export async function usablePlaceOwners(
 }
 
 /**
- * Pistas para elegir en una sesión: primero las del club y después las
- * propias del monitor (marcadas «(mía)» si también hay del club).
+ * Pistas para elegir en una sesión. Monitor en el entorno de un club: solo
+ * las del club (sus pistas particulares, en su entorno particular). `keep` =
+ * pistas que ya usa la sesión que se edita: se siguen ofreciendo aunque sean
+ * particulares, para no perderlas al guardar (marcadas «(mía)»).
  */
 export async function listUsablePlaces(
   userId: string,
-  clubId?: string | null
+  clubId?: string | null,
+  keep: (string | null | undefined)[] = []
 ): Promise<{ id: string; name: string }[]> {
   const { ownerIds, clubOwnerId } = await usablePlaceOwners(userId, clubId);
-  const rows = await db
-    .select({ id: places.id, name: places.name, ownerId: places.coachId })
-    .from(places)
-    .where(inArray(places.coachId, ownerIds))
-    .orderBy(asc(places.name));
+  const clubAsMonitor = !!clubOwnerId && clubOwnerId !== userId;
+  const rows = (
+    await db
+      .select({ id: places.id, name: places.name, ownerId: places.coachId })
+      .from(places)
+      .where(inArray(places.coachId, ownerIds))
+      .orderBy(asc(places.name))
+  ).filter(
+    (r) => !clubAsMonitor || r.ownerId === clubOwnerId || keep.includes(r.id)
+  );
   const mixed = !!clubOwnerId && clubOwnerId !== userId &&
     rows.some((r) => r.ownerId === clubOwnerId) &&
     rows.some((r) => r.ownerId === userId);
