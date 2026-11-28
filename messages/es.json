@@ -2170,13 +2170,15 @@
       "paraQueEs": "¿Para qué es?",
       "mantenimientoTorneoInternoClase": "Mantenimiento, torneo interno, clase particular…",
       "cancelar": "Cancelar",
-      "reservar": "Reservar"
+      "reservar": "Reservar",
+      "reservarPista": "Reservar pista",
+      "ocupaLaPistaMonitor": "Ocupa la pista del club. El club verá tu nombre con el motivo y puedes cancelarla tú."
     },
     "s_reservaspistas_page": {
       "pistasDelClubTitulo": "Pistas de {club}",
       "pistasDelClubExplicacion": "Las da de alta y las gestiona el administrador del club. Puedes usarlas al montar tus sesiones. Abajo están tus lugares propios, fuera del club.",
       "verOcupacionPistasClub": "Ver su ocupación en Reservas de pistas",
-      "pistasDelClubSoloLectura": "Pistas de {club}: las gestiona el administrador del club. Ves su ocupación; los nombres de quien reserva solo los ve el club.",
+      "pistasDelClubSoloLectura": "Pistas de {club}: las gestiona el administrador del club. Puedes reservarlas y cancelar tus reservas; los nombres de quien reserva solo los ve el club.",
       "reservasDePistas": "Reservas de pistas",
       "ocupacionDeCadaPista": "Ocupación de cada pista: sesiones, reservas de clientes y reservas del club.",
       "pistasHorarioYEnlace": "Pistas, horario y enlace",
@@ -2199,7 +2201,8 @@
       "siguiente": "Siguiente",
       "masN": "+{n} más",
       "menos": "Menos uso",
-      "mas": "Más uso"
+      "mas": "Más uso",
+      "clubSinPistas": "{club} aún no tiene pistas dadas de alta. Pídeselo al administrador del club."
     },
     "s_resources_page": {
       "espacioDelClub": "Espacio del club",

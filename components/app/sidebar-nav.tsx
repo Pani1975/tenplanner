@@ -356,6 +356,9 @@ function navItemsForSpace(
       // Monitor: los clubes a los que está vinculado salen como "Entorno
       // <club>" en el selector de arriba; no hay apartado "Mi club".
       !(monitorAccount && item.href === "/club") &&
+      // Monitor en el entorno del club: las pistas son del club (las
+      // gestiona el administrador); las ve y reserva en Reservas de pistas.
+      !(inClub && !clubAccount && item.href === "/places") &&
       // Los mensajes del club se escriben solo desde el Modo gestión: hay
       // mensajes que los monitores no deben leer.
       !(clubAccount && item.href === "/mensajes")

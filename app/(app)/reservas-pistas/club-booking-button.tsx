@@ -9,14 +9,20 @@ import { useTranslations } from "next-intl";
 const START_MINUTES = Array.from({ length: 36 }, (_, i) => 6 * 60 + i * 30); // 06:00–23:30
 const DURATIONS = [30, 60, 90, 120, 180, 240, 360, 480];
 
-/** El club reserva una pista para lo que indique (sale en morado). */
+/**
+ * El club (o un monitor del club) reserva una pista para lo que indique
+ * (sale en morado).
+ */
 export function ClubBookingButton({
   places,
   date,
+  asMonitor = false,
 }: {
   places: { id: string; name: string }[];
   /** Día que se está viendo (YYYY-MM-DD), propuesto por defecto. */
   date: string;
+  /** Monitor en el entorno del club: reserva pistas del club. */
+  asMonitor?: boolean;
 }) {
   const tx = useTranslations("ui.s_reservaspistas_clubbookingbutton");
   const router = useRouter();
@@ -80,7 +86,7 @@ export function ClubBookingButton({
         className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-violet-700"
       >
         <CalendarPlus className="size-3.5" />
-        {tx("reservarPistaClub")}
+        {asMonitor ? tx("reservarPista") : tx("reservarPistaClub")}
       </button>
 
       {open && (
@@ -103,7 +109,7 @@ export function ClubBookingButton({
               {tx("reservaDelClub")}
             </h2>
             <p className="mb-4 text-xs text-muted-foreground">
-              {tx("ocupaLaPistaTambien")}
+              {asMonitor ? tx("ocupaLaPistaMonitor") : tx("ocupaLaPistaTambien")}
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">

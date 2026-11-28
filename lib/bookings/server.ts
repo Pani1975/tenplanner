@@ -378,12 +378,16 @@ export type ClubBookingError = "not_found" | "invalid_time" | "taken";
  */
 export async function createClubBooking({
   ownerId,
+  createdBy,
   placeId,
   start,
   durationMinutes,
   purpose,
 }: {
+  /** Dueño de la pista (el monitor o la cuenta del club). */
   ownerId: string;
+  /** Quién reserva: el dueño o un monitor del club. */
+  createdBy: string;
   placeId: string;
   start: Date;
   durationMinutes: number;
@@ -473,6 +477,7 @@ export async function createClubBooking({
         durationMinutes,
         fullName: purpose.trim().replace(/\s+/g, " ").slice(0, 120),
         kind: "club",
+        createdBy,
       })
       .returning({ id: courtBookings.id });
     return { ok: true as const, id: created.id };

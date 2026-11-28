@@ -2270,13 +2270,15 @@
       "paraQueEs": "What is it for?",
       "mantenimientoTorneoInternoClase": "Maintenance, internal tournament, private lesson…",
       "cancelar": "Cancel",
-      "reservar": "Book"
+      "reservar": "Book",
+      "reservarPista": "Book court",
+      "ocupaLaPistaMonitor": "Occupies the club court. The club will see your name with the reason, and you can cancel it yourself."
     },
     "s_reservaspistas_page": {
       "pistasDelClubTitulo": "{club} courts",
       "pistasDelClubExplicacion": "The club administrator adds and manages them. You can use them when you plan your sessions. Your own places, outside the club, are below.",
       "verOcupacionPistasClub": "See when they are busy in Court bookings",
-      "pistasDelClubSoloLectura": "{club} courts are managed by the club administrator. You can see when they are busy; only the club sees who booked them.",
+      "pistasDelClubSoloLectura": "{club} courts are managed by the club administrator. You can book them and cancel your bookings; only the club sees who booked them.",
       "reservasDePistas": "Court bookings",
       "ocupacionDeCadaPista": "Occupancy of each court: sessions, client bookings and club bookings.",
       "pistasHorarioYEnlace": "Courts, schedule and link",
@@ -2299,7 +2301,8 @@
       "siguiente": "Next",
       "masN": "+{n} more",
       "menos": "Less use",
-      "mas": "More use"
+      "mas": "More use",
+      "clubSinPistas": "{club} has not added any courts yet. Ask the club administrator."
     },
     "s_resources_page": {
       "espacioDelClub": "Club space",

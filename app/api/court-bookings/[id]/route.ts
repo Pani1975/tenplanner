@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { courtBookings } from "@/db/schema";
@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// El dueño de la pista cancela una reserva (queda registrada como cancelada).
+// El dueño de la pista, o quien hizo la reserva, la cancela (queda
+// registrada como cancelada).
 export async function DELETE(_request: Request, ctx: Ctx) {
   const supabase = await createClient();
   const {
@@ -25,7 +26,11 @@ export async function DELETE(_request: Request, ctx: Ctx) {
     .where(
       and(
         eq(courtBookings.id, id),
-        eq(courtBookings.ownerId, user.id),
+        or(
+          eq(courtBookings.ownerId, user.id),
+          // Un monitor del club cancela las reservas que hizo él.
+          eq(courtBookings.createdBy, user.id)
+        ),
         isNull(courtBookings.cancelledAt)
       )
     )

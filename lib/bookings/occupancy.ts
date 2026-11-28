@@ -25,6 +25,8 @@ export type OccupancyItem = {
   date: string;
   startMinute: number;
   minutes: number;
+  /** Reserva del club: quién la hizo. */
+  createdBy?: string | null;
 };
 
 export async function loadOccupancy(
@@ -61,6 +63,7 @@ export async function loadOccupancy(
         placeId: courtBookings.placeId,
         fullName: courtBookings.fullName,
         kind: courtBookings.kind,
+        createdBy: courtBookings.createdBy,
         start: courtBookings.startAt,
         minutes: courtBookings.durationMinutes,
       })
@@ -104,6 +107,7 @@ export async function loadOccupancy(
         placeId: b.placeId,
         label: b.kind === "club" ? `Club: ${b.fullName}` : b.fullName,
         minutes: b.minutes,
+        createdBy: b.createdBy,
         ...at(b.start),
       })),
     ...tournamentRows.map((t) => ({

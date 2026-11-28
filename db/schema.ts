@@ -368,6 +368,10 @@ export const courtBookings = pgTable(
     fullName: varchar("full_name", { length: 120 }).notNull(),
     // "public" = desde el enlace público; "club" = la hace el propio club.
     kind: varchar("kind", { length: 16 }).notNull().default("public"),
+    // Reserva del club: quién la hizo (administrador o monitor del club).
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

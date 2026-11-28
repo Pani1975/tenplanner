@@ -156,13 +156,17 @@ export default async function CourtBookingsPage({
     placeRows.filter((p) => p.ownerId === user.id).map((p) => p.id)
   );
   const clubPlaceCount = placeRows.length - ownedPlaceIds.size;
-  // Los nombres de quien reserva solo los ve el dueño de la pista.
+  // Los nombres de quien reserva solo los ve el dueño de la pista (y el
+  // monitor que hizo una reserva del club ve la suya).
+  const canSee = (placeId: string, createdBy: string | null | undefined) =>
+    ownedPlaceIds.has(placeId) || createdBy === user.id;
   const bookingLabel = (
     placeId: string,
     kind: string | null,
-    fullName: string
+    fullName: string,
+    createdBy: string | null
   ) =>
-    ownedPlaceIds.has(placeId)
+    canSee(placeId, createdBy)
       ? kind === "club"
         ? `Club: ${fullName}`
         : fullName
@@ -180,8 +184,8 @@ export default async function CourtBookingsPage({
           localToUtc(range.end, 0, tz),
           tz
         )
-  ).map((i) =>
-    (i.kind === "booking" || i.kind === "club") && !ownedPlaceIds.has(i.placeId)
+  ).map(({ createdBy, ...i }) =>
+    (i.kind === "booking" || i.kind === "club") && !canSee(i.placeId, createdBy)
       ? { ...i, label: i.kind === "club" ? "Reserva del club" : "Reservada" }
       : i
   );
@@ -218,6 +222,7 @@ export default async function CourtBookingsPage({
               placeId: courtBookings.placeId,
               fullName: courtBookings.fullName,
               bookingKind: courtBookings.kind,
+              createdBy: courtBookings.createdBy,
               start: courtBookings.startAt,
               minutes: courtBookings.durationMinutes,
             })
@@ -295,8 +300,8 @@ export default async function CourtBookingsPage({
       key: `b-${r.id}`,
       kind: r.bookingKind === "club" ? "club" : "booking",
       id: r.id,
-      label: bookingLabel(r.placeId, r.bookingKind, r.fullName),
-      owned: ownedPlaceIds.has(r.placeId),
+      label: bookingLabel(r.placeId, r.bookingKind, r.fullName, r.createdBy),
+      owned: canSee(r.placeId, r.createdBy),
       ...b,
     });
     blocksByPlace.set(r.placeId, list);
@@ -389,21 +394,24 @@ export default async function CourtBookingsPage({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {ownedPlaceIds.size > 0 && (
+            {/* El monitor de un club también reserva las pistas del club. */}
+            {placeRows.length > 0 && (
               <ClubBookingButton
-                places={placeRows
-                  .filter((p) => ownedPlaceIds.has(p.id))
-                  .map((p) => ({ id: p.id, name: p.name }))}
+                places={placeRows.map((p) => ({ id: p.id, name: p.name }))}
                 date={date}
+                asMonitor={clubAsMonitor}
               />
             )}
-            <Link
-              href="/places"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
-            >
-              <Settings2 className="size-3.5" />
-              {tx("pistasHorarioYEnlace")}
-            </Link>
+            {/* Las pistas del club las configura el administrador. */}
+            {!clubAsMonitor && (
+              <Link
+                href="/places"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <Settings2 className="size-3.5" />
+                {tx("pistasHorarioYEnlace")}
+              </Link>
+            )}
           </div>
         </header>
 
@@ -530,13 +538,19 @@ export default async function CourtBookingsPage({
         )}
 
         {placeRows.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            Aún no tienes pistas. Dalas de alta en{" "}
-            <Link href="/places" className="font-semibold underline">
-              {tx("lugares")}
-            </Link>
-            .
-          </p>
+          clubAsMonitor ? (
+            <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              {tx("clubSinPistas", { club: clubName ?? "" })}
+            </p>
+          ) : (
+            <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              Aún no tienes pistas. Dalas de alta en{" "}
+              <Link href="/places" className="font-semibold underline">
+                {tx("lugares")}
+              </Link>
+              .
+            </p>
+          )
         ) : vista === "semana" ? (
           <WeekView
             weekStart={range.start}

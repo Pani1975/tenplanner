@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { db } from "@/db";
+import { places, users } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { localToUtc } from "@/lib/bookings/availability";
-import { timeZoneForOwner } from "@/lib/bookings/places";
+import { timeZoneForOwner, usablePlaceOwners } from "@/lib/bookings/places";
 import { createClubBooking } from "@/lib/bookings/server";
 
 const schema = z.object({
@@ -14,7 +17,8 @@ const schema = z.object({
   purpose: z.string().trim().min(2).max(120),
 });
 
-// El club (dueño de las pistas) reserva una pista para lo que indique.
+// El club (dueño de las pistas) o un monitor del club reserva una pista para
+// lo que indique.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -37,12 +41,40 @@ export async function POST(request: Request) {
     );
   const v = parsed.data;
 
+  // Pistas que puede reservar: las suyas y, si trabaja como monitor de un
+  // club (entorno del club), también las del club.
+  const { ownerIds } = await usablePlaceOwners(user.id);
+  const [place] = await db
+    .select({ ownerId: places.coachId })
+    .from(places)
+    .where(and(eq(places.id, v.placeId), inArray(places.coachId, ownerIds)))
+    .limit(1);
+  if (!place)
+    return NextResponse.json({ error: "Esa pista no existe." }, { status: 422 });
+
+  // Un monitor reserva en una pista del club: su nombre va con el motivo,
+  // para que el club sepa quién la ha reservado.
+  let purpose = v.purpose;
+  if (place.ownerId !== user.id) {
+    const [me] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+    if (me?.name) purpose = `${v.purpose} · ${me.name}`.slice(0, 120);
+  }
+
   const result = await createClubBooking({
-    ownerId: user.id,
+    ownerId: place.ownerId,
+    createdBy: user.id,
     placeId: v.placeId,
-    start: localToUtc(v.date, v.startMinute, await timeZoneForOwner(user.id)),
+    start: localToUtc(
+      v.date,
+      v.startMinute,
+      await timeZoneForOwner(place.ownerId)
+    ),
     durationMinutes: v.durationMinutes,
-    purpose: v.purpose,
+    purpose,
   });
   if (!result.ok) {
     const error =
