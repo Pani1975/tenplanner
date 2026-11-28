@@ -24,6 +24,7 @@ import {
 } from "@/lib/clubs";
 import { getActiveSport } from "@/lib/sports";
 import { getTranslations } from "next-intl/server";
+import { adminViewAs } from "@/lib/view-as";
 
 export default async function ProfilePage() {
   const tx = await getTranslations("ui.s_profile_page");
@@ -83,6 +84,18 @@ export default async function ProfilePage() {
   ]);
 
   const clubAccountClubId = await getClubAccountClubId(user.id);
+
+  // Modo monitor: ni cuenta de club ni administrador trabajando como Ten
+  // Planner (o un administrador con «Ver como monitor»). Ahí el perfil no
+  // muestra el selector de deporte ni el de modo de trabajo (el modo se
+  // cambia desde el menú) y la cabecera lleva el nombre del monitor.
+  const viewAs = await adminViewAs(user.id);
+  const monitorMode =
+    viewAs === "monitor" ||
+    (!clubAccountClubId && !(dbUser[0]?.isAdmin && dbUser[0]?.adminMode));
+  const fullName = (
+    (user.user_metadata?.full_name as string | undefined) ?? ""
+  ).trim();
 
   // Perfil de monitor (su ficha): solo si es monitor de algún club y no es
   // la cuenta de un club. Lo controla él; el gestor lo ve en Gestión.
@@ -145,19 +158,19 @@ export default async function ProfilePage() {
       <div className="tp-page-pad space-y-6">
         <header className="tp-hero-panel p-6 text-white sm:p-8">
           <div className="mb-5 inline-flex rounded-full bg-[#D6FF38] px-3 py-1 text-[11px] font-black uppercase text-[#050505]">
-            {tx("cuenta")}
+            {monitorMode ? tx("perfil") : tx("cuenta")}
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
-            {tx("perfil")}
+            {monitorMode && fullName ? fullName : tx("perfil")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-white/62">
             {tx("ajustaTusDatosApariencia")}
           </p>
         </header>
 
-        <SportSwitcher activeSport={activeSport} />
+        {!monitorMode && <SportSwitcher activeSport={activeSport} />}
 
-        {!dbUser[0]?.isPlatformAccount && (
+        {!monitorMode && !dbUser[0]?.isPlatformAccount && (
           <WorkModeSwitcher
             key={
               dbUser[0]?.isAdmin && dbUser[0]?.adminMode
