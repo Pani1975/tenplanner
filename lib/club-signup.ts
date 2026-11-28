@@ -8,6 +8,7 @@
 // la misma creación se repite al entrar con contraseña: es idempotente.
 
 import { db } from "@/db";
+import { relinkOrphanUserRow } from "@/lib/auth/relink-user";
 import { clubMembers, clubs, users } from "@/db/schema";
 import { cleanOptionalText, normalizeWebsite } from "@/lib/club-identity";
 import { getOwnedClub } from "@/lib/clubs";
@@ -91,6 +92,9 @@ export async function ensureAccountFromSignup(user: SignupUser) {
               : null,
         })
         .onConflictDoNothing();
+      // Cuenta borrada y vuelta a registrar con el mismo correo: recupera
+      // su ficha antigua (ver lib/auth/relink-user.ts).
+      await relinkOrphanUserRow(user.id, user.email);
     }
     await createClubFromSignup(user);
   } catch (error) {

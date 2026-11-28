@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { createClubFromSignup } from "@/lib/club-signup";
 import { isFamilyAccountType } from "@/lib/family-account";
 import { resetToDefaultWorkMode } from "@/lib/work-mode";
+import { relinkOrphanUserRow } from "@/lib/auth/relink-user";
 
 type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -46,6 +47,10 @@ export async function finishSignIn(
       })
       .onConflictDoNothing()
       .returning({ id: users.id });
+
+    // Cuenta borrada y vuelta a registrar con el mismo correo: recupera su
+    // ficha antigua (club, contenido…) en lugar de quedarse sin fila.
+    if (inserted.length === 0) await relinkOrphanUserRow(user.id, user.email);
 
     // Solo en un alta nueva: una cuenta que ya existía (p. ej. un monitor
     // que entra con Google) no cambia de tipo por este enlace.
