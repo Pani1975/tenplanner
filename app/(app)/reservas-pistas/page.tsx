@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, eq, gte, inArray, isNull, lt, ne } from "drizzle-orm";
+import { and, gte, inArray, isNull, lt, ne } from "drizzle-orm";
 import {
   CalendarCheck,
   ChevronLeft,
@@ -17,7 +17,7 @@ import {
   minutesLabel,
 } from "@/lib/bookings/availability";
 import { loadTournamentBusy, sessionAtPlaces } from "@/lib/bookings/server";
-import { timeZoneForOwner } from "@/lib/bookings/places";
+import { timeZoneForOwner, usablePlaceOwners } from "@/lib/bookings/places";
 import { cn } from "@/lib/utils";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { loadOccupancy } from "@/lib/bookings/occupancy";
@@ -53,6 +53,8 @@ type Block = {
   /** Sesión de dos pistas: 2 = ocupa también la columna de al lado y se
    * dibuja una sola vez a lo ancho; "split" = pistas no contiguas. */
   span?: 2 | "split";
+  /** Reserva en una pista propia: se ve el nombre y se puede cancelar. */
+  owned?: boolean;
 };
 
 const VIEWS = ["dia", "semana", "mes", "anio"] as const;
@@ -86,8 +88,12 @@ export default async function CourtBookingsPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Pistas que ve: las suyas y, si trabaja como monitor de un club, también
+  // las del club (en solo lectura: las gestiona el administrador del club).
+  const { ownerIds, clubOwnerId, clubName } = await usablePlaceOwners(user.id);
+  const clubAsMonitor = !!clubOwnerId && clubOwnerId !== user.id;
   // Hora del club («Mi club»); sin club, la de siempre.
-  const tz = await timeZoneForOwner(user.id);
+  const tz = await timeZoneForOwner(clubAsMonitor ? clubOwnerId : user.id);
 
   const today = localDateOf(new Date(), tz);
   const { dia, vista: vistaParam } = await searchParams;
@@ -140,14 +146,32 @@ export default async function CourtBookingsPage({
       bookingEnabled: places.bookingEnabled,
       openMinute: places.bookingOpenMinute,
       closeMinute: places.bookingCloseMinute,
+      ownerId: places.coachId,
     })
     .from(places)
-    .where(eq(places.coachId, user.id))
+    .where(inArray(places.coachId, ownerIds))
     .orderBy(places.name);
   const placeIds = placeRows.map((p) => p.id);
+  const ownedPlaceIds = new Set(
+    placeRows.filter((p) => p.ownerId === user.id).map((p) => p.id)
+  );
+  const clubPlaceCount = placeRows.length - ownedPlaceIds.size;
+  // Los nombres de quien reserva solo los ve el dueño de la pista.
+  const bookingLabel = (
+    placeId: string,
+    kind: string | null,
+    fullName: string
+  ) =>
+    ownedPlaceIds.has(placeId)
+      ? kind === "club"
+        ? `Club: ${fullName}`
+        : fullName
+      : kind === "club"
+        ? "Reserva del club"
+        : "Reservada";
 
   // Semana, mes y año: ocupación del periodo (la vista Día carga lo suyo).
-  const rangeItems =
+  const rangeItems = (
     vista === "dia"
       ? []
       : await loadOccupancy(
@@ -155,7 +179,12 @@ export default async function CourtBookingsPage({
           localToUtc(range.start, 0, tz),
           localToUtc(range.end, 0, tz),
           tz
-        );
+        )
+  ).map((i) =>
+    (i.kind === "booking" || i.kind === "club") && !ownedPlaceIds.has(i.placeId)
+      ? { ...i, label: i.kind === "club" ? "Reserva del club" : "Reservada" }
+      : i
+  );
 
   const [sessionRows, bookingRows, tournamentRows] =
     placeIds.length === 0 || vista !== "dia"
@@ -266,7 +295,8 @@ export default async function CourtBookingsPage({
       key: `b-${r.id}`,
       kind: r.bookingKind === "club" ? "club" : "booking",
       id: r.id,
-      label: r.bookingKind === "club" ? `Club: ${r.fullName}` : r.fullName,
+      label: bookingLabel(r.placeId, r.bookingKind, r.fullName),
+      owned: ownedPlaceIds.has(r.placeId),
       ...b,
     });
     blocksByPlace.set(r.placeId, list);
@@ -359,10 +389,14 @@ export default async function CourtBookingsPage({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ClubBookingButton
-              places={placeRows.map((p) => ({ id: p.id, name: p.name }))}
-              date={date}
-            />
+            {ownedPlaceIds.size > 0 && (
+              <ClubBookingButton
+                places={placeRows
+                  .filter((p) => ownedPlaceIds.has(p.id))
+                  .map((p) => ({ id: p.id, name: p.name }))}
+                date={date}
+              />
+            )}
             <Link
               href="/places"
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
@@ -488,6 +522,12 @@ export default async function CourtBookingsPage({
             <YearLegend less={tx("menos")} more={tx("mas")} />
           )}
         </div>
+
+        {clubAsMonitor && clubPlaceCount > 0 && (
+          <p className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+            {tx("pistasDelClubSoloLectura", { club: clubName ?? "" })}
+          </p>
+        )}
 
         {placeRows.length === 0 ? (
           <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
@@ -658,7 +698,9 @@ export default async function CourtBookingsPage({
                           style={{ top: top(b.startMinute) + 1, height }}
                         >
                           <div className="min-w-0 flex-1">{content}</div>
-                          <CancelBookingButton id={b.id} name={b.label} />
+                          {b.owned && (
+                            <CancelBookingButton id={b.id} name={b.label} />
+                          )}
                         </div>
                       );
                     })}

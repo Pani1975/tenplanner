@@ -1,12 +1,15 @@
 import { headers } from "next/headers";
+import Link from "next/link";
+import { CalendarCheck, Lock } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, ne, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { courtBookings, places, sessions, users } from "@/db/schema";
 import { PlacesClient } from "./places-client";
 import { BookingsPanel } from "./bookings-panel";
-import { timeZoneForOwner } from "@/lib/bookings/places";
+import { timeZoneForOwner, usablePlaceOwners } from "@/lib/bookings/places";
 
 export default async function PlacesPage() {
   const supabase = await createClient();
@@ -14,6 +17,19 @@ export default async function PlacesPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const tx = await getTranslations("ui.s_reservaspistas_page");
+
+  // Monitor de un club: las pistas del club se ven aquí en solo lectura
+  // (las da de alta y las gestiona el administrador del club).
+  const { clubOwnerId, clubName } = await usablePlaceOwners(user.id);
+  const clubPlaces =
+    clubOwnerId && clubOwnerId !== user.id
+      ? await db
+          .select({ id: places.id, name: places.name })
+          .from(places)
+          .where(and(eq(places.coachId, clubOwnerId), ne(places.coachId, user.id)))
+          .orderBy(places.name)
+      : [];
 
   const rows = await db
     .select({
@@ -83,6 +99,34 @@ export default async function PlacesPage() {
   return (
     <div className="tp-page">
       <div className="tp-page-pad">
+        {clubPlaces.length > 0 && (
+          <section className="tp-panel mb-5 p-5">
+            <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-foreground/70">
+              <Lock className="size-4" />
+              {tx("pistasDelClubTitulo", { club: clubName ?? "" })}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {tx("pistasDelClubExplicacion")}
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {clubPlaces.map((p) => (
+                <li
+                  key={p.id}
+                  className="rounded-full border border-border bg-card px-3 py-1 text-sm font-semibold text-foreground"
+                >
+                  {p.name}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/reservas-pistas"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline"
+            >
+              <CalendarCheck className="size-4" />
+              {tx("verOcupacionPistasClub")}
+            </Link>
+          </section>
+        )}
         <BookingsPanel
           key={bookingPlaces.map((p) => p.id).join(",")}
           places={bookingPlaces}

@@ -2273,6 +2273,10 @@
       "reservar": "Book"
     },
     "s_reservaspistas_page": {
+      "pistasDelClubTitulo": "{club} courts",
+      "pistasDelClubExplicacion": "The club administrator adds and manages them. You can use them when you plan your sessions. Your own places, outside the club, are below.",
+      "verOcupacionPistasClub": "See when they are busy in Court bookings",
+      "pistasDelClubSoloLectura": "{club} courts are managed by the club administrator. You can see when they are busy; only the club sees who booked them.",
       "reservasDePistas": "Court bookings",
       "ocupacionDeCadaPista": "Occupancy of each court: sessions, client bookings and club bookings.",
       "pistasHorarioYEnlace": "Courts, schedule and link",

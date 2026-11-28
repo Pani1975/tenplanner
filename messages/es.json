@@ -2173,6 +2173,10 @@
       "reservar": "Reservar"
     },
     "s_reservaspistas_page": {
+      "pistasDelClubTitulo": "Pistas de {club}",
+      "pistasDelClubExplicacion": "Las da de alta y las gestiona el administrador del club. Puedes usarlas al montar tus sesiones. Abajo están tus lugares propios, fuera del club.",
+      "verOcupacionPistasClub": "Ver su ocupación en Reservas de pistas",
+      "pistasDelClubSoloLectura": "Pistas de {club}: las gestiona el administrador del club. Ves su ocupación; los nombres de quien reserva solo los ve el club.",
       "reservasDePistas": "Reservas de pistas",
       "ocupacionDeCadaPista": "Ocupación de cada pista: sesiones, reservas de clientes y reservas del club.",
       "pistasHorarioYEnlace": "Pistas, horario y enlace",
